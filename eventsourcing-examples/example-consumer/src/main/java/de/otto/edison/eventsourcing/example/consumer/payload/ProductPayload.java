@@ -24,4 +24,12 @@ public class ProductPayload {
     public void setPrice(long price) {
         this.price = price;
     }
+
+    @Override
+    public String toString() {
+        return "ProductPayload{" +
+                "id='" + id + '\'' +
+                ", price=" + price +
+                '}';
+    }
 }

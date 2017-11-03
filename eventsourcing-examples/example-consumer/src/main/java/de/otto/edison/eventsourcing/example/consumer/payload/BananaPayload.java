@@ -25,4 +25,12 @@ public class BananaPayload {
     public void setColor(String color) {
         this.color = color;
     }
+
+    @Override
+    public String toString() {
+        return "BananaPayload{" +
+                "id='" + id + '\'' +
+                ", color='" + color + '\'' +
+                '}';
+    }
 }

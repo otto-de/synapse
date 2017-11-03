@@ -9,6 +9,8 @@ import de.otto.edison.eventsourcing.example.consumer.payload.ProductPayload;
 import de.otto.edison.eventsourcing.example.consumer.state.BananaProduct;
 import de.otto.edison.eventsourcing.state.DefaultStateRepository;
 import de.otto.edison.eventsourcing.state.StateRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -43,6 +45,7 @@ public class ExampleConfiguration {
      * TODO: zu setzen und eine Methode mit @EventConsumer zu annotieren.
      */
 
+    private static Logger LOG = LoggerFactory.getLogger(ExampleConfiguration.class);
 
     @Autowired
     private MyServiceProperties properties;
@@ -67,15 +70,18 @@ public class ExampleConfiguration {
 
     @Bean
     public EventConsumer<ProductPayload> productEventConsumer(final StateRepository<BananaProduct> bananaProductStateRepository) {
-        return event -> bananaProductStateRepository.compute(event.key(), (s, bananaProduct) -> {
-            final BananaProduct.Builder builder = bananaProduct != null
-                    ? bananaProductBuilder(bananaProduct)
-                    : bananaProductBuilder();
-            return builder
-                    .withId(event.key())
-                    .withPrice(event.payload().getPrice())
-                    .build();
-        });
+        return event -> {
+            bananaProductStateRepository.compute(event.key(), (s, bananaProduct) -> {
+                final BananaProduct.Builder builder = bananaProduct != null
+                        ? bananaProductBuilder(bananaProduct)
+                        : bananaProductBuilder();
+                return builder
+                        .withId(event.key())
+                        .withPrice(event.payload().getPrice())
+                        .build();
+            });
+            LOG.info(bananaProductStateRepository.toString());
+        };
     }
 
     @Bean
@@ -96,15 +102,18 @@ public class ExampleConfiguration {
 
     @Bean
     public EventConsumer<BananaPayload> bananaEventConsumer(final StateRepository<BananaProduct> bananaProductStateRepository) {
-        return event -> bananaProductStateRepository.compute(event.key(), (s, bananaProduct) -> {
-            final BananaProduct.Builder builder = bananaProduct != null
-                    ? bananaProductBuilder(bananaProduct)
-                    : bananaProductBuilder();
-            return builder
+        return event -> {
+            bananaProductStateRepository.compute(event.key(), (s, bananaProduct) -> {
+                final BananaProduct.Builder builder = bananaProduct != null
+                        ? bananaProductBuilder(bananaProduct)
+                        : bananaProductBuilder();
+                return builder
                         .withId(event.key())
                         .withColor(event.payload().getColor())
                         .build();
-        });
+            });
+            LOG.info(bananaProductStateRepository.toString());
+        };
     }
 
     @Bean
