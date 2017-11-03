@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
@@ -149,8 +150,12 @@ public class KinesisEventSource<T> implements EventSource<T> {
                 final Duration durationBehind = ofMillis(recordsResponse.millisBehindLatest());
                 for (final Record record : recordsResponse.records()) {
                     final Event<T> event = kinesisEvent(streamName, durationBehind, record, byteBuffer -> {
-                        final Object json = UTF_8.decode(record.data()).toString();
-                        return objectMapper.convertValue(json, payloadType);
+                        try {
+                            final String json = UTF_8.decode(record.data()).toString();
+                            return objectMapper.readValue(json, payloadType);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     });
 
                     stopRetrieval = stopCondition.test(event);

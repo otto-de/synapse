@@ -1,8 +1,12 @@
 package de.otto.edison.eventsourcing.example.consumer.payload;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class ProductPayload {
 
+    @JsonProperty
     private String id;
+    @JsonProperty
     private long price;
 
     public String getId() {

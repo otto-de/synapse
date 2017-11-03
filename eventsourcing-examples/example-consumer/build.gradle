@@ -19,8 +19,8 @@ repositories {
 dependencies {
     compile project(':eventsourcing-core:')
     compile "de.otto.edison:edison-aws-s3:0.1.0-SNAPSHOT"
+    compile "software.amazon.awssdk:kinesis:${awsSdkVersion}"
 
-    compile 'com.google.guava:guava:23.0'
     compile("org.springframework.boot:spring-boot-starter-web") {
         exclude module: "spring-boot-starter-tomcat"
     }

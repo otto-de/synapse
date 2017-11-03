@@ -1,9 +1,13 @@
 package de.otto.edison.eventsourcing.example.consumer.payload;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class BananaPayload {
 
+    @JsonProperty
     private String id;
+    @JsonProperty
     private String color;
 
     public String getId() {
