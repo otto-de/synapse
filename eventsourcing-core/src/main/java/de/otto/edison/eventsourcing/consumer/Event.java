@@ -9,27 +9,27 @@ public class Event<T> {
 
     public static <T> Event<T> event(final String streamName,
                                      final String key,
-                                     final T data,
+                                     final T payload,
                                      final String sequenceNumber,
                                      final Instant approximateArrivalTimestamp) {
         return new Event<>(
                 streamName,
                 key,
-                data,
+                payload,
                 sequenceNumber,
                 approximateArrivalTimestamp, null);
     }
 
     public static <T> Event<T> event(final String streamName,
                                      final String key,
-                                     final T data,
+                                     final T payload,
                                      final String sequenceNumber,
                                      final Instant approximateArrivalTimestamp,
                                      final Duration durationBehind) {
         return new Event<>(
                 streamName,
                 key,
-                data,
+                payload,
                 sequenceNumber,
                 approximateArrivalTimestamp,
                 durationBehind);
