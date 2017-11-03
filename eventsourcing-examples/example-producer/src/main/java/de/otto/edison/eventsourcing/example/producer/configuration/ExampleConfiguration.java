@@ -1,12 +1,12 @@
-package de.otto.edison.eventsourcing.example.consumer.configuration;
+package de.otto.edison.eventsourcing.example.producer.configuration;
 
 import de.otto.edison.eventsourcing.EventSourceFactory;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.EventSourceConsumerProcess;
-import de.otto.edison.eventsourcing.example.consumer.payload.ProductPayload;
-import de.otto.edison.eventsourcing.example.consumer.payload.BananaPayload;
-import de.otto.edison.eventsourcing.example.consumer.state.BananaProduct;
+import de.otto.edison.eventsourcing.example.producer.payload.BananaPayload;
+import de.otto.edison.eventsourcing.example.producer.payload.ProductPayload;
+import de.otto.edison.eventsourcing.example.producer.state.BananaProduct;
 import de.otto.edison.eventsourcing.state.DefaultStateRepository;
 import de.otto.edison.eventsourcing.state.StateRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +14,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static de.otto.edison.eventsourcing.example.consumer.state.BananaProduct.bananaProductBuilder;
+import static de.otto.edison.eventsourcing.example.producer.state.BananaProduct.bananaProductBuilder;
 
 
 @Configuration

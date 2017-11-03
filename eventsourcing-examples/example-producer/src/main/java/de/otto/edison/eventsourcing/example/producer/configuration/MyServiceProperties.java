@@ -1,4 +1,4 @@
-package de.otto.edison.eventsourcing.example.consumer.configuration;
+package de.otto.edison.eventsourcing.example.producer.configuration;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

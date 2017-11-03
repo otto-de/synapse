@@ -1,4 +1,4 @@
-package de.otto.edison.eventsourcing.example.consumer.payload;
+package de.otto.edison.eventsourcing.example.producer.payload;
 
 public class ProductPayload {
 

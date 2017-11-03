@@ -1,4 +1,4 @@
-package de.otto.edison.eventsourcing.example.producer.consumer;
+package de.otto.edison.eventsourcing.example.producer;
 
 import de.otto.edison.eventsourcing.EventSourcingProperties;
 import org.springframework.boot.SpringApplication;

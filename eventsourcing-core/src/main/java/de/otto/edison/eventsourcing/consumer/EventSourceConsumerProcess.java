@@ -30,7 +30,7 @@ public class EventSourceConsumerProcess {
     public <T> EventSourceConsumerProcess(final EventSource<T> eventSource,
                                           final EventConsumer<T> eventConsumer) {
         final ThreadFactory threadFactory = new CustomizableThreadFactory(THREAD_NAME_PREFIX);
-        executorService =  newSingleThreadExecutor(threadFactory);
+        executorService = newSingleThreadExecutor(threadFactory);
         this.eventSource = (EventSource<Object>) eventSource;
         this.eventConsumer = (EventConsumer<Object>) eventConsumer;
     }
@@ -53,7 +53,7 @@ public class EventSourceConsumerProcess {
         LOG.info("Shutting down...");
         this.stopThread.set(true);
 
-        if(executorService != null){
+        if (executorService != null) {
             try {
                 // wait 1 second for closing all threads
                 // TODO: configure timeout for shutting down event consumers
