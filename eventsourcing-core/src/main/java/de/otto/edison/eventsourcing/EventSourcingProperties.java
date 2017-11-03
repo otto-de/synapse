@@ -7,7 +7,6 @@ import java.util.List;
 @ConfigurationProperties(prefix = "edison.eventsourcing")
 public class EventSourcingProperties {
     private String snapshotBucketTemplate;
-    private List<String> streamNames;
 
     public String getSnapshotBucketTemplate() {
         return snapshotBucketTemplate;
@@ -17,11 +16,4 @@ public class EventSourcingProperties {
         this.snapshotBucketTemplate = snapshotBucketTemplate;
     }
 
-    public List<String> getStreamNames() {
-        return streamNames;
-    }
-
-    public void setStreamNames(List<String> streamNames) {
-        this.streamNames = streamNames;
-    }
 }

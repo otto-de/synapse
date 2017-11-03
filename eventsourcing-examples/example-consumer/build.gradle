@@ -17,18 +17,21 @@ repositories {
 }
 
 dependencies {
+    compile project(':eventsourcing-core:')
+    compile "de.otto.edison:edison-aws-s3:0.1.0-SNAPSHOT"
+
     compile 'com.google.guava:guava:23.0'
-    compile 'de.otto.edison:eventsourcing-core:0.0.1-SNAPSHOT'
     compile("org.springframework.boot:spring-boot-starter-web") {
         exclude module: "spring-boot-starter-tomcat"
     }
     compile("org.springframework.boot:spring-boot-starter-jetty")
 
+    compile "ch.qos.logback:logback-core:1.2.3"
+    compile "ch.qos.logback:logback-classic:1.2.3"
+
 
     testCompile 'junit:junit:4.12'
 }
-
-
 
 // Define the main class for the application
 mainClassName = 'Server'

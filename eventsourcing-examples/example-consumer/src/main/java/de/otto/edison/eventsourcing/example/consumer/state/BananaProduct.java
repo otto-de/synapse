@@ -1,4 +1,4 @@
-package de.otto.edison.eventsourcing.example.state;
+package de.otto.edison.eventsourcing.example.consumer.state;
 
 public class BananaProduct {
     private final String id;

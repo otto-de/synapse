@@ -46,9 +46,6 @@ public class EventSourceConsumerProcess {
             }
         });
 
-        // TODO: ??????????
-        LOG.info("Shutting down ExecutorService...");
-        executorService.shutdown();
     }
 
     @PreDestroy
@@ -59,7 +56,8 @@ public class EventSourceConsumerProcess {
         if(executorService != null){
             try {
                 // wait 1 second for closing all threads
-                executorService.awaitTermination(1, TimeUnit.SECONDS);
+                // TODO: configure timeout for shutting down event consumers
+                executorService.awaitTermination(1, TimeUnit.MINUTES);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

@@ -1,0 +1,13 @@
+aws:
+  profile: edison-aws-test
+  region: eu-central-1
+
+edison:
+  eventsourcing:
+    snapshot-bucket-template: example-{stream-name}
+    stream-names:
+      - bananas
+      - products
+
+logging:
+    config: classpath:logback-console.xml

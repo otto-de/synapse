@@ -84,8 +84,7 @@ public class SnapshotService {
     }
 
     private String createBucketName(String streamName, String snapshotBucketTemplate) {
-        snapshotBucketTemplate.replace("{StreamName}", streamName);
-        return String.format(snapshotBucketTemplate, streamName);
+        return snapshotBucketTemplate.replace("{stream-name}", streamName);
     }
 
     Optional<S3Object> getLatestZip(String bucketName, String streamName) {

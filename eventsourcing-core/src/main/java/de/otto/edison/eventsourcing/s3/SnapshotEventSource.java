@@ -5,6 +5,7 @@ import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.slf4j.Logger;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +35,7 @@ public class SnapshotEventSource<T> implements EventSource<T> {
     /**
      * Returns the name of the EventSource.
      * <p>
-     *     For streaming event-sources, this is the name of the event stream.
+     * For streaming event-sources, this is the name of the event stream.
      * </p>
      *
      * @return name
@@ -74,7 +75,8 @@ public class SnapshotEventSource<T> implements EventSource<T> {
             deleteSnapshotFile(latestSnapshot);
             consumer.completed(name);
             return readPosition;
-        } catch (final IOException e) {
+        } catch (final IOException | S3Exception e) {
+            LOG.warn("Unable to load snapshot: {}", e.getMessage());
             deleteSnapshotFile(latestSnapshot);
             consumer.aborted(name);
             //throw new EventSourceException("Error consuming Events from snapshot EventSource: " + e.getMessage(), e);
@@ -88,7 +90,7 @@ public class SnapshotEventSource<T> implements EventSource<T> {
 
         Optional<File> latestSnapshot = snapshotService.getLatestSnapshotFromBucket(name);
         if (latestSnapshot.isPresent()) {
-            LOG.info(format("Finished downloading snapshot %s", latestSnapshot.get().getName()));
+            LOG.info("Finished downloading snapshot {}", latestSnapshot.get().getName());
             infoDiskUsage();
         } else {
             LOG.warn("No snapshot found.");
@@ -112,8 +114,8 @@ public class SnapshotEventSource<T> implements EventSource<T> {
         File file = null;
         try {
             file = File.createTempFile("tempFileForDiskUsage", ".txt");
-            float usableSpace = (float)file.getUsableSpace() / 1024 / 1024 / 1024;
-            float freeSpace = (float)file.getFreeSpace() / 1024 / 1024 / 1024;
+            float usableSpace = (float) file.getUsableSpace() / 1024 / 1024 / 1024;
+            float freeSpace = (float) file.getFreeSpace() / 1024 / 1024 / 1024;
             LOG.info(format("Available DiskSpace: usable %.3f GB / free %.3f GB", usableSpace, freeSpace));
         } catch (IOException e) {
             LOG.info("Error calculating disk usage: " + e.getMessage());

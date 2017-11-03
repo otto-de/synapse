@@ -1,11 +1,11 @@
-package de.otto.edison.eventsourcing.example.configuration;
+package de.otto.edison.eventsourcing.example.consumer.configuration;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "exampleservice")
 public class MyServiceProperties {
-    private String productStreamName = "product-stream";
-    private String bananaStreamName = "banana-stream";
+    private String productStreamName;
+    private String bananaStreamName;
 
     public String getProductStreamName() {
         return productStreamName;
