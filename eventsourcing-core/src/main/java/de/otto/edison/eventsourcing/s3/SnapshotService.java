@@ -1,12 +1,13 @@
 package de.otto.edison.eventsourcing.s3;
 
+import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.aws.s3.S3Service;
+import de.otto.edison.eventsourcing.EventSourcingProperties;
 import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.state.StateRepository;
-import de.otto.promo.compaction.configuration.CompactionProperties;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,7 +46,7 @@ public class SnapshotService {
 
     private JsonFactory jsonFactory = new JsonFactory();
     private S3Service s3Service;
-    private String snapshotBucket;
+    private String snapshotBucketTemplate;
 
     private final ObjectMapper objectMapper;
 
@@ -59,14 +60,15 @@ public class SnapshotService {
 
     @Autowired
     public SnapshotService(final S3Service s3Service,
-                           final CompactionProperties properties,
+                           final EventSourcingProperties properties,
                            final ObjectMapper objectMapper) {
         this.s3Service = s3Service;
-        snapshotBucket = properties.getSnapshotBucket();
+        snapshotBucketTemplate = properties.getSnapshotBucketTemplate();
         this.objectMapper = objectMapper;
     }
 
     Optional<File> getLatestSnapshotFromBucket(final String streamName) {
+        String snapshotBucket = createBucketName(streamName, snapshotBucketTemplate);
         Optional<S3Object> s3Object = getLatestZip(snapshotBucket, streamName);
         if (s3Object.isPresent()) {
             String latestSnapshotKey = s3Object.get().key();
@@ -79,6 +81,11 @@ public class SnapshotService {
         } else {
             return Optional.empty();
         }
+    }
+
+    private String createBucketName(String streamName, String snapshotBucketTemplate) {
+        snapshotBucketTemplate.replace("{StreamName}", streamName);
+        return String.format(snapshotBucketTemplate, streamName);
     }
 
     Optional<S3Object> getLatestZip(String bucketName, String streamName) {
@@ -154,7 +161,7 @@ public class SnapshotService {
         final File snapshotFile = createSnapshot(streamName, position, stateRepository);
         final String fileName = snapshotFile.getName();
         LOG.info(format("Finished creating snapshot file: %s", snapshotFile.getAbsolutePath()));
-        uploadSnapshot(snapshotFile);
+        uploadSnapshot(createBucketName(streamName, this.snapshotBucketTemplate), snapshotFile);
         LOG.info("Finished uploaded snapshot file to s3");
         snapshotFile.delete();
         return fileName;
@@ -258,8 +265,8 @@ public class SnapshotService {
         return StreamPosition.of(shardPositions);
     }
 
-    private void uploadSnapshot(final File snapshotFile) {
-        s3Service.upload(snapshotBucket, snapshotFile);
+    private void uploadSnapshot(String bucketName, final File snapshotFile) {
+        s3Service.upload(bucketName, snapshotFile);
     }
 
     private void writeSequenceNumbers(StreamPosition currentStreamPosition, JsonGenerator jGenerator) throws IOException {

@@ -1,13 +1,4 @@
-ext {
-    awsSdkVersion = "2.0.0-preview-4"
-    springVersion = "4.3.12.RELEASE"
-}
-
 apply plugin: 'java-library'
-
-repositories {
-    mavenCentral()
-}
 
 dependencies {
     implementation "de.otto.edison:edison-aws-s3:0.1.0-SNAPSHOT"
@@ -16,6 +7,8 @@ dependencies {
     implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
 
     implementation "org.springframework:spring-context:${springVersion}"
+
+    implementation "net.openhft:chronicle-map:3.14.1"
 
 //    // This dependency is exported to consumers, that is to say found on their compile classpath.
 //    api 'org.apache.commons:commons-math3:3.6.1'

@@ -1,8 +1,5 @@
 package de.otto.edison.eventsourcing.state;
 
-import de.otto.edison.status.domain.Status;
-import de.otto.edison.status.domain.StatusDetail;
-import de.otto.edison.status.indicator.StatusDetailIndicator;
 import net.openhft.chronicle.map.ChronicleMap;
 import net.openhft.chronicle.map.ChronicleMapBuilder;
 import org.jetbrains.annotations.NotNull;
@@ -11,10 +8,12 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import static java.lang.String.format;
+
 /**
  * @see <a href="https://github.com/OpenHFT/Chronicle-Map">https://github.com/OpenHFT/Chronicle-Map</a>
  */
-public class ChronicleMapStateRepository<V> implements StateRepository<V>, StatusDetailIndicator {
+public class ChronicleMapStateRepository<V> implements StateRepository<V> {
 
     private ChronicleMap<String, V> store;
 
@@ -30,18 +29,6 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V>, Statu
     // TODO: DetailStatusIndicator
     public String getStats() {
         return format("%s currently uses %.3f GB", store.name(), this.offHeapMemoryInGB());
-    }
-
-    @Override
-    public StatusDetail statusDetail() {
-        String message = format("ChronicleMap contains %d elements. Workload is %s.%n Used OffHeapMemory: %.3f GB", store.longSize(), workload(), this.offHeapMemoryInGB());
-        Status status = workload() > 1.0 ? Status.WARNING : Status.OK;
-
-        return StatusDetail.statusDetail(store.name(), status, message);
-    }
-
-    private double workload() {
-        return (double)store.size() / expectedNumberOfEntries;
     }
 
     private double offHeapMemoryInGB() {

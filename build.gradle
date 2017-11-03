@@ -1,0 +1,16 @@
+ext {
+    awsSdkVersion = "2.0.0-preview-4"
+    springVersion = "4.3.12.RELEASE"
+}
+
+subprojects {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url 'https://oss.sonatype.org/content/repositories/releases/' }
+        maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    }
+
+}
+
+
