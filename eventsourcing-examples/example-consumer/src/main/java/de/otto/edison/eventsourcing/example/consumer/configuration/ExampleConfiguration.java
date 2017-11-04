@@ -1,6 +1,7 @@
 package de.otto.edison.eventsourcing.example.consumer.configuration;
 
 import de.otto.edison.eventsourcing.EventSourceFactory;
+import de.otto.edison.eventsourcing.annotation.EnableEventSource;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.EventSourceConsumerProcess;
@@ -21,28 +22,34 @@ import static de.otto.edison.eventsourcing.example.consumer.state.BananaProduct.
 
 @Configuration
 @EnableConfigurationProperties({MyServiceProperties.class})
+@EnableEventSource(
+        name = "productEventSource",
+        streamName = "${exampleservice.product-stream-name}",
+        payloadType = ProductPayload.class)
+@EnableEventSource(
+        name = "bananaEventSource",
+        streamName = "${exampleservice.product-stream-name}",
+        payloadType = BananaPayload.class)
 public class ExampleConfiguration {
 
     /*
-     * TODO: 0.
-     * TODO: Move KinesisConfiguration to edison-aws
-     * TODO: Extract edison-eventsourcing library
-     * TODO: Extract example into sub-project / separate module
-     *
      * TODO: 1.
-     * TODO: Server startet noch nicht, da die CompactionProperties nicht gefunden werden.
+     * TODO: Move KinesisConfiguration to edison-aws
      *
      * TODO: 2.
-     * TODO: EventSourceConsumerProcess testen.
+     * TODO: Wenn man den example consumer startet, sieht man jede Menge "KinesisEventSource" message="Consumed 0 records from kinesis"
+     * TODO: Log messages. Warum 0 records??
      *
      * TODO: 3.
+     * TODO: Shutdown funktioniert noch nicht. EventSourceConsumerProcess reagiert nicht auf Shutdown Signal.
+     *
+     * TODO: 4.
+     * TODO: EventSourceConsumerProcess testen.
+     *
+     * TODO: 5.
      * TODO: Eine Annotation @EventConsumer könnte eine x-beliebige Funktion zum EventConsumer machen. Über
      * TODO: ein property der Annotation könnte man diesen auch direkt an eine EventSource hängen.
      *
-     * TODO: 4.
-     * TODO: Properties, die pro event stream die Konfiguration enthalten (s3 bucket, etc) + eine Factory, die
-     * TODO: auf Basis der properties das ganze Geraffel oben übernimmt. Am Ende sollte es reichen, die properties
-     * TODO: zu setzen und eine Methode mit @EventConsumer zu annotieren.
      */
 
     private static Logger LOG = LoggerFactory.getLogger(ExampleConfiguration.class);
@@ -63,10 +70,12 @@ public class ExampleConfiguration {
      * Consume Product Events: *
      ***************************/
 
+    /*
     @Bean
     public EventSource<ProductPayload> productEventSource(final EventSourceFactory factory) {
         return factory.compactedEventSource(properties.getProductStreamName(), ProductPayload.class);
     }
+    */
 
     @Bean
     public EventConsumer<ProductPayload> productEventConsumer(final StateRepository<BananaProduct> bananaProductStateRepository) {

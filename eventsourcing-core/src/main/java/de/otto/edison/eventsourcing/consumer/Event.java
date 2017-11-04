@@ -87,4 +87,15 @@ public class Event<T> {
         return Optional.ofNullable(durationBehind);
     }
 
+    @Override
+    public String toString() {
+        return "Event{" +
+                "key='" + key + '\'' +
+                ", payload=" + payload +
+                ", sequenceNumber='" + sequenceNumber + '\'' +
+                ", arrivalTimestamp=" + arrivalTimestamp +
+                ", streamName='" + streamName + '\'' +
+                ", durationBehind=" + durationBehind +
+                '}';
+    }
 }

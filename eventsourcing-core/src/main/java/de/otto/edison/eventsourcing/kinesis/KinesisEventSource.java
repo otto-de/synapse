@@ -164,7 +164,7 @@ public class KinesisEventSource<T> implements EventSource<T> {
                 }
                 final String durationString = format("%s days %s hrs %s min %s sec", durationBehind.toDays(), durationBehind.toHours() % 24, durationBehind.toMinutes() % 60, durationBehind.getSeconds() % 60);
                 LOG.info(format(
-                        "Consumed %s records from kinesis %s; behind latest: %s",
+                        "Consumed %d records from kinesis %s; behind latest: %s",
                         recordsResponse.records().size(),
                         streamName,
                         durationString));

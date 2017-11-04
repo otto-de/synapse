@@ -2,6 +2,24 @@ package de.otto.edison.eventsourcing.consumer;
 
 import java.util.function.Predicate;
 
+/**
+ * An event source of {@link Event events} with a payload type {@code T}.
+ * <p>
+ *     Event sources can be consumed by {@link EventConsumer event consumers}.
+ * </p>
+ * <p>
+ *     Event sources can be configured using {@link de.otto.edison.eventsourcing.annotation.EnableEventSource}:
+ * </p>
+ * <pre><code>
+ *    {@code @Configuration}
+ *    {@code @EnableEventSource}(name="foo", streamName="foo-event-stream", payloadType="MyPayload.class")
+ *     public class MyConfiguration {
+ *     ...
+ *     }
+ * </code></pre>
+ *
+ * @param <T> the type of the event payloads
+ */
 public interface EventSource<T> {
 
     /**

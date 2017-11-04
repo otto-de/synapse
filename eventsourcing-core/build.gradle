@@ -8,6 +8,7 @@ dependencies {
 
     implementation "org.springframework:spring-context:${springVersion}"
 
+
     implementation "net.openhft:chronicle-map:3.14.1"
 
 //    // This dependency is exported to consumers, that is to say found on their compile classpath.
@@ -18,5 +19,6 @@ dependencies {
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
+    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
 }
 

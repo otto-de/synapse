@@ -1,9 +1,17 @@
 ext {
     awsSdkVersion = "2.0.0-preview-4"
     springVersion = "4.3.12.RELEASE"
+    springBootVersion = "1.5.8.RELEASE"
 }
 
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+
 subprojects {
+    apply plugin: 'java'
+    apply plugin: 'idea'
+    apply plugin: 'eclipse'
+
     repositories {
         mavenLocal()
         mavenCentral()

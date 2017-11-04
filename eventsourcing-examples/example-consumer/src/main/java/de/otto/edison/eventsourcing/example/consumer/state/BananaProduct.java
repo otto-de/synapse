@@ -17,6 +17,15 @@ public class BananaProduct {
         return price;
     }
 
+    @Override
+    public String toString() {
+        return "BananaProduct{" +
+                "id='" + id + '\'' +
+                ", color='" + color + '\'' +
+                ", price=" + price +
+                '}';
+    }
+
     private BananaProduct(Builder builder) {
         id = builder.id;
         color = builder.color;
@@ -34,7 +43,6 @@ public class BananaProduct {
         builder.price = copy.getPrice();
         return builder;
     }
-
 
     public static final class Builder {
         private String id;

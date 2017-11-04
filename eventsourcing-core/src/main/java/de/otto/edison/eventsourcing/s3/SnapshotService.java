@@ -9,8 +9,6 @@ import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.state.StateRepository;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 import java.io.*;
@@ -36,7 +34,6 @@ import static java.util.Comparator.comparing;
 import static java.util.Comparator.reverseOrder;
 import static org.slf4j.LoggerFactory.getLogger;
 
-@Service
 public class SnapshotService {
 
     private static final Logger LOG = getLogger(SnapshotService.class);
@@ -58,7 +55,6 @@ public class SnapshotService {
     private static final String SHARD_FIELD_NAME = "shard";
     private static final String SEQUENCE_NUMBER_FIELD_NAME = "sequenceNumber";
 
-    @Autowired
     public SnapshotService(final S3Service s3Service,
                            final EventSourcingProperties properties,
                            final ObjectMapper objectMapper) {
