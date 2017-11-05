@@ -1,6 +1,5 @@
 package de.otto.edison.eventsourcing.example.consumer.configuration;
 
-import de.otto.edison.eventsourcing.EventSourceFactory;
 import de.otto.edison.eventsourcing.annotation.EnableEventSource;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
@@ -17,8 +16,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static de.otto.edison.eventsourcing.example.consumer.state.BananaProduct.bananaProductBuilder;
-
 
 @Configuration
 @EnableConfigurationProperties({MyServiceProperties.class})
@@ -28,7 +25,7 @@ import static de.otto.edison.eventsourcing.example.consumer.state.BananaProduct.
         payloadType = ProductPayload.class)
 @EnableEventSource(
         name = "bananaEventSource",
-        streamName = "${exampleservice.product-stream-name}",
+        streamName = "${exampleservice.banana-stream-name}",
         payloadType = BananaPayload.class)
 public class ExampleConfiguration {
 
@@ -70,29 +67,6 @@ public class ExampleConfiguration {
      * Consume Product Events: *
      ***************************/
 
-    /*
-    @Bean
-    public EventSource<ProductPayload> productEventSource(final EventSourceFactory factory) {
-        return factory.compactedEventSource(properties.getProductStreamName(), ProductPayload.class);
-    }
-    */
-
-    @Bean
-    public EventConsumer<ProductPayload> productEventConsumer(final StateRepository<BananaProduct> bananaProductStateRepository) {
-        return event -> {
-            bananaProductStateRepository.compute(event.key(), (s, bananaProduct) -> {
-                final BananaProduct.Builder builder = bananaProduct != null
-                        ? bananaProductBuilder(bananaProduct)
-                        : bananaProductBuilder();
-                return builder
-                        .withId(event.key())
-                        .withPrice(event.payload().getPrice())
-                        .build();
-            });
-            LOG.info(bananaProductStateRepository.toString());
-        };
-    }
-
     @Bean
     public EventSourceConsumerProcess productConsumerProcess(final EventSource<ProductPayload> productEventSource,
                                                              final EventConsumer<ProductPayload> productEventConsumer) {
@@ -102,28 +76,6 @@ public class ExampleConfiguration {
     /***************************
      * Consume Banana Events: *
      ***************************/
-
-
-    @Bean
-    public EventSource<BananaPayload> bananaEventSource(final EventSourceFactory factory) {
-        return factory.compactedEventSource(properties.getBananaStreamName(), BananaPayload.class);
-    }
-
-    @Bean
-    public EventConsumer<BananaPayload> bananaEventConsumer(final StateRepository<BananaProduct> bananaProductStateRepository) {
-        return event -> {
-            bananaProductStateRepository.compute(event.key(), (s, bananaProduct) -> {
-                final BananaProduct.Builder builder = bananaProduct != null
-                        ? bananaProductBuilder(bananaProduct)
-                        : bananaProductBuilder();
-                return builder
-                        .withId(event.key())
-                        .withColor(event.payload().getColor())
-                        .build();
-            });
-            LOG.info(bananaProductStateRepository.toString());
-        };
-    }
 
     @Bean
     public EventSourceConsumerProcess bananaConsumerProcess(final EventSource<BananaPayload> bananaEventSource,

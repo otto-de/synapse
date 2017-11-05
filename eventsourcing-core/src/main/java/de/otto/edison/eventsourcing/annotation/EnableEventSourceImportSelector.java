@@ -16,7 +16,7 @@ import static org.springframework.beans.factory.support.AbstractBeanDefinition.D
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.genericBeanDefinition;
 import static org.springframework.core.annotation.AnnotationUtils.findAnnotation;
 
-class EnableEventSourceImportSelector implements ImportSelector{
+public class EnableEventSourceImportSelector implements ImportSelector{
 
 
     @Override

@@ -55,9 +55,8 @@ public class EventSourceConsumerProcess {
 
         if (executorService != null) {
             try {
-                // wait 1 second for closing all threads
                 // TODO: configure timeout for shutting down event consumers
-                executorService.awaitTermination(5, TimeUnit.SECONDS);
+                executorService.awaitTermination(2, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

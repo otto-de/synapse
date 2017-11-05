@@ -15,9 +15,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties(EventSourcingProperties.class)
 @ImportAutoConfiguration({
+        AwsConfiguration.class,
         S3Configuration.class,
         KinesisConfiguration.class,
-        AwsConfiguration.class
+        EventSourcingBootstrapConfiguration.class
 })
 public class EventSourcingConfiguration {
 
