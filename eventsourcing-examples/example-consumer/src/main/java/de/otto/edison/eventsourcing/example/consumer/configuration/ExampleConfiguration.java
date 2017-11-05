@@ -1,6 +1,7 @@
 package de.otto.edison.eventsourcing.example.consumer.configuration;
 
 import de.otto.edison.eventsourcing.annotation.EnableEventSource;
+import de.otto.edison.eventsourcing.example.consumer.ExampleConsumer;
 import de.otto.edison.eventsourcing.example.consumer.payload.BananaPayload;
 import de.otto.edison.eventsourcing.example.consumer.payload.ProductPayload;
 import de.otto.edison.eventsourcing.example.consumer.state.BananaProduct;
@@ -9,19 +10,6 @@ import de.otto.edison.eventsourcing.state.StateRepository;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-
-@Configuration
-@EnableConfigurationProperties({MyServiceProperties.class})
-@EnableEventSource(
-        name = "productEventSource",
-        streamName = "${exampleservice.product-stream-name}",
-        payloadType = ProductPayload.class)
-@EnableEventSource(
-        name = "bananaEventSource",
-        streamName = "${exampleservice.banana-stream-name}",
-        payloadType = BananaPayload.class)
-public class ExampleConfiguration {
 
     /*
      * TODO: 1.
@@ -37,15 +25,28 @@ public class ExampleConfiguration {
      * TODO: 4.
      * TODO: EventSourceConsumerProcess testen.
      *
-     * TODO: 5.
-     * TODO: Eine Annotation @EventConsumer könnte eine x-beliebige Funktion zum EventConsumer machen. Über
-     * TODO: ein property der Annotation könnte man diesen auch direkt an eine EventSource hängen.
-     *
      */
+
+
+@Configuration
+@EnableConfigurationProperties({MyServiceProperties.class})
+@EnableEventSource(
+        name = "productEventSource",
+        streamName = "${exampleservice.product-stream-name}",
+        payloadType = ProductPayload.class)
+@EnableEventSource(
+        name = "bananaEventSource",
+        streamName = "${exampleservice.banana-stream-name}",
+        payloadType = BananaPayload.class)
+public class ExampleConfiguration {
 
     @Bean
     public StateRepository<BananaProduct> bananaProductStateRepository() {
         return new DefaultStateRepository<>();
     }
 
+    @Bean
+    public ExampleConsumer exampleConsumer(final StateRepository<BananaProduct> stateRepository) {
+        return new ExampleConsumer(stateRepository);
+    }
 }

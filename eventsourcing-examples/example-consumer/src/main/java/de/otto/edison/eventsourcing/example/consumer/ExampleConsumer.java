@@ -7,20 +7,16 @@ import de.otto.edison.eventsourcing.example.consumer.payload.ProductPayload;
 import de.otto.edison.eventsourcing.example.consumer.state.BananaProduct;
 import de.otto.edison.eventsourcing.state.StateRepository;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import static de.otto.edison.eventsourcing.example.consumer.state.BananaProduct.bananaProductBuilder;
 import static org.slf4j.LoggerFactory.getLogger;
 
-@Component
 public class ExampleConsumer {
 
     private static final Logger LOG = getLogger(ExampleConsumer.class);
 
     private final StateRepository<BananaProduct> stateRepository;
 
-    @Autowired
     public ExampleConsumer(StateRepository<BananaProduct> stateRepository) {
         this.stateRepository = stateRepository;
     }
