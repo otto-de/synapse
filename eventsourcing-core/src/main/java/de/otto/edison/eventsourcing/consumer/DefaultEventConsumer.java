@@ -9,10 +9,13 @@ public class DefaultEventConsumer<T> implements EventConsumer<T> {
 
     private static final Logger LOG = getLogger(DefaultEventConsumer.class);
 
+    private final String streamName;
     private final StateRepository<T> stateRepository;
     private int eventCount = 0;
 
-    public DefaultEventConsumer(final StateRepository<T> stateRepository) {
+    public DefaultEventConsumer(final String streamName,
+                                final StateRepository<T> stateRepository) {
+        this.streamName = streamName;
         this.stateRepository = stateRepository;
     }
 
@@ -29,6 +32,19 @@ public class DefaultEventConsumer<T> implements EventConsumer<T> {
     @Override
     public void aborted(final String eventSource) {
         LOG.info("Aborted consuming of events from {} after error", eventSource);
+    }
+
+    /**
+     * Returns the name of the EventSource.
+     * <p>
+     * For streaming event-sources, this is the name of the event stream.
+     * </p>
+     *
+     * @return name
+     */
+    @Override
+    public String streamName() {
+        return streamName;
     }
 
     @Override

@@ -6,12 +6,15 @@ import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static java.util.concurrent.Executors.newSingleThreadExecutor;
+import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class EventSourceConsumerProcess {
@@ -21,31 +24,40 @@ public class EventSourceConsumerProcess {
     private static final Logger LOG = getLogger(EventSourceConsumerProcess.class);
     public static final String THREAD_NAME_PREFIX = "edison-eventsourcing-consumer-";
 
-    private final ExecutorService executorService;
     private final AtomicBoolean stopThread = new AtomicBoolean(false);
-    private final EventConsumer<Object> eventConsumer;
-    private final EventSource<Object> eventSource;
 
-    @SuppressWarnings("unchecked")
-    public <T> EventSourceConsumerProcess(final EventSource<T> eventSource,
-                                          final EventConsumer<T> eventConsumer) {
-        final ThreadFactory threadFactory = new CustomizableThreadFactory(THREAD_NAME_PREFIX);
-        executorService = newSingleThreadExecutor(threadFactory);
-        this.eventSource = (EventSource<Object>) eventSource;
-        this.eventConsumer = (EventConsumer<Object>) eventConsumer;
+    private final ExecutorService executorService;
+    private final Map<EventSource, EventConsumer> eventSourceWithConsumer = new ConcurrentHashMap<>();
+
+    public EventSourceConsumerProcess(final List<EventSource> eventSources,
+                                      final List<EventConsumer> eventConsumers) {
+        eventConsumers.forEach(consumer -> {
+            eventSources
+                    .stream()
+                    .filter(es -> es.name().equals(consumer.streamName()))
+                    .findAny()
+                    .ifPresent(eventSource -> eventSourceWithConsumer.put(eventSource, consumer));
+        });
+        if (eventSourceWithConsumer.size() > 0) {
+            final ThreadFactory threadFactory = new CustomizableThreadFactory(THREAD_NAME_PREFIX);
+            executorService = newFixedThreadPool(eventSourceWithConsumer.size(), threadFactory);
+        } else {
+            executorService = null;
+        }
     }
 
     @PostConstruct
+    @SuppressWarnings("unchecked")
     public void init() {
-        executorService.execute(() -> {
+        LOG.info("Initializing EventSourceConsumerProcess...");
+        eventSourceWithConsumer.forEach((eventSource, eventConsumer) -> executorService.submit(() -> {
             try {
-                LOG.info("Starting...");
+                LOG.info("Starting {}...", eventConsumer.streamName());
                 eventSource.consumeAll(ignore -> stopThread.get(), eventConsumer);
             } catch (Exception e) {
                 LOG.error("Starting failed: " + e.getMessage(), e);
             }
-        });
-
+        }));
     }
 
     @PreDestroy

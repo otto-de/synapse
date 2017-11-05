@@ -1,8 +1,8 @@
 package de.otto.edison.eventsourcing.annotation;
 
 import de.otto.edison.eventsourcing.CompactingKinesisEventSource;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.context.annotation.ImportSelector;
@@ -11,13 +11,14 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.MultiValueMap;
 
+import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.beans.factory.support.AbstractBeanDefinition.AUTOWIRE_BY_NAME;
 import static org.springframework.beans.factory.support.AbstractBeanDefinition.DEPENDENCY_CHECK_ALL;
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.genericBeanDefinition;
-import static org.springframework.core.annotation.AnnotationUtils.findAnnotation;
 
-public class EnableEventSourceImportSelector implements ImportSelector{
+public class EnableEventSourceImportSelector implements ImportSelector {
 
+    private static final Logger LOG = getLogger(EnableEventSourceImportSelector.class);
 
     @Override
     public String[] selectImports(AnnotationMetadata metadata) {
@@ -92,14 +93,6 @@ public class EnableEventSourceImportSelector implements ImportSelector{
             }
         }
 
-        private String extractPrefix(Class<?> type) {
-            ConfigurationProperties annotation = findAnnotation(type, ConfigurationProperties.class);
-            if (annotation != null) {
-                return annotation.prefix();
-            }
-            return "";
-        }
-
         private Class<?> asClass(final Object payloadType) {
             if (payloadType instanceof Class && payloadType != void.class) {
                 return (Class<?>) payloadType;
@@ -121,12 +114,7 @@ public class EnableEventSourceImportSelector implements ImportSelector{
                             .setAutowireMode(AUTOWIRE_BY_NAME)
                             .getBeanDefinition()
             );
-            /*
-            ConfigurationProperties properties = findAnnotation(type, ConfigurationProperties.class);
-            Assert.notNull(properties,
-                    "No " + ConfigurationProperties.class.getSimpleName()
-                            + " annotation found on  '" + type.getName() + "'.");
-                            */
+            LOG.info("Registered CompactingKinesisEventSource with beanName {} for streamName {}", beanName, streamName);
         }
 
     }

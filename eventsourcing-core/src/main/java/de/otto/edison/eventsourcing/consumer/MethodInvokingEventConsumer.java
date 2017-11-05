@@ -11,10 +11,11 @@ public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
 
     private static final Logger LOG = getLogger(MethodInvokingEventConsumer.class);
 
+    private final String streamName;
     private final Object instance;
     private final Method method;
 
-    public MethodInvokingEventConsumer(final Object instance, final Method method) {
+    public MethodInvokingEventConsumer(final String streamName, final Object instance, final Method method) {
         if (instance == null) {
             throw new NullPointerException("Unable to build MethodInvokingEventConsumer: instance parameter is null");
         }
@@ -28,8 +29,22 @@ public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
         if (!paramType.equals(Event.class)) {
             throw new IllegalArgumentException("Unable to build MethodInvokingEventConsumer: expected parameter type is Event, not " + paramType.getName());
         }
+        this.streamName = streamName;
         this.method = method;
         this.instance = instance;
+    }
+
+    /**
+     * Returns the name of the EventSource.
+     * <p>
+     * For streaming event-sources, this is the name of the event stream.
+     * </p>
+     *
+     * @return name
+     */
+    @Override
+    public String streamName() {
+        return streamName;
     }
 
     @Override

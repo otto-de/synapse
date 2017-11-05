@@ -16,5 +16,4 @@ public class EventSourcingBootstrapConfiguration {
         return new EventSourceConsumerAnnotationBeanPostProcessor();
     }
 
-
 }

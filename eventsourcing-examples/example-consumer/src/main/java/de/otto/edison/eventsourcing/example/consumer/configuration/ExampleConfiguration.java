@@ -1,17 +1,11 @@
 package de.otto.edison.eventsourcing.example.consumer.configuration;
 
 import de.otto.edison.eventsourcing.annotation.EnableEventSource;
-import de.otto.edison.eventsourcing.consumer.EventConsumer;
-import de.otto.edison.eventsourcing.consumer.EventSource;
-import de.otto.edison.eventsourcing.consumer.EventSourceConsumerProcess;
 import de.otto.edison.eventsourcing.example.consumer.payload.BananaPayload;
 import de.otto.edison.eventsourcing.example.consumer.payload.ProductPayload;
 import de.otto.edison.eventsourcing.example.consumer.state.BananaProduct;
 import de.otto.edison.eventsourcing.state.DefaultStateRepository;
 import de.otto.edison.eventsourcing.state.StateRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,38 +43,9 @@ public class ExampleConfiguration {
      *
      */
 
-    private static Logger LOG = LoggerFactory.getLogger(ExampleConfiguration.class);
-
-    @Autowired
-    private MyServiceProperties properties;
-
-    /***************************
-     * The State Repository:   *
-     ***************************/
-
     @Bean
     public StateRepository<BananaProduct> bananaProductStateRepository() {
         return new DefaultStateRepository<>();
-    }
-
-    /***************************
-     * Consume Product Events: *
-     ***************************/
-
-    @Bean
-    public EventSourceConsumerProcess productConsumerProcess(final EventSource<ProductPayload> productEventSource,
-                                                             final EventConsumer<ProductPayload> productEventConsumer) {
-        return new EventSourceConsumerProcess(productEventSource, productEventConsumer);
-    }
-
-    /***************************
-     * Consume Banana Events: *
-     ***************************/
-
-    @Bean
-    public EventSourceConsumerProcess bananaConsumerProcess(final EventSource<BananaPayload> bananaEventSource,
-                                                            final EventConsumer<BananaPayload> bananaEventConsumer) {
-        return new EventSourceConsumerProcess(bananaEventSource, bananaEventConsumer);
     }
 
 }

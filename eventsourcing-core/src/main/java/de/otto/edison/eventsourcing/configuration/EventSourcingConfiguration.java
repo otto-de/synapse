@@ -1,38 +1,40 @@
 package de.otto.edison.eventsourcing.configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.aws.configuration.AwsConfiguration;
-import de.otto.edison.aws.s3.S3Service;
-import de.otto.edison.aws.s3.configuration.S3Configuration;
 import de.otto.edison.eventsourcing.EventSourcingProperties;
-import de.otto.edison.eventsourcing.s3.SnapshotService;
+import de.otto.edison.eventsourcing.consumer.EventConsumer;
+import de.otto.edison.eventsourcing.consumer.EventSource;
+import de.otto.edison.eventsourcing.consumer.EventSourceConsumerProcess;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
+import static java.util.Collections.emptyList;
+
 @Configuration
 @EnableConfigurationProperties(EventSourcingProperties.class)
 @ImportAutoConfiguration({
-        AwsConfiguration.class,
-        S3Configuration.class,
+        EventSourcingBootstrapConfiguration.class,
+        SnapshotConfiguration.class,
         KinesisConfiguration.class,
-        EventSourcingBootstrapConfiguration.class
 })
 public class EventSourcingConfiguration {
 
-    @Bean
-    @ConditionalOnMissingBean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper();
-    }
+    @Autowired(required = false)
+    private List<EventConsumer> eventConsumers;
+    @Autowired(required = false)
+    private List<EventSource> eventSources;
 
     @Bean
-    @ConditionalOnMissingBean
-    public SnapshotService snapshotService(final S3Service s3Service,
-                                           final ObjectMapper objectMapper,
-                                           final EventSourcingProperties eventSourcingProperties) {
-        return new SnapshotService(s3Service, eventSourcingProperties, objectMapper);
+    @ConditionalOnBean({EventSource.class, EventConsumer.class})
+    public EventSourceConsumerProcess eventSourceConsumerProcess() {
+        return new EventSourceConsumerProcess(
+                eventSources != null ? eventSources : emptyList(),
+                eventConsumers != null ? eventConsumers : emptyList()
+        );
     }
 }

@@ -2,7 +2,6 @@ package de.otto.edison.eventsourcing.consumer;
 
 import java.util.function.Consumer;
 
-@FunctionalInterface
 public interface EventConsumer<T> extends Consumer<Event<T>> {
 
     /**
@@ -40,6 +39,16 @@ public interface EventConsumer<T> extends Consumer<Event<T>> {
      */
     default void aborted(final String eventSource) {
     }
+
+    /**
+     * Returns the name of the EventSource.
+     * <p>
+     *     For streaming event-sources, this is the name of the event stream.
+     * </p>
+     *
+     * @return name
+     */
+    String streamName();
 
     void accept(Event<T> event);
 

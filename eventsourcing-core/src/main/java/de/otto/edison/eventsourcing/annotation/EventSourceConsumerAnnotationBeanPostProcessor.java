@@ -97,7 +97,8 @@ public class EventSourceConsumerAnnotationBeanPostProcessor implements BeanPostP
                                        final Method annotatedMethod,
                                        final Object bean,
                                        final String beanName) {
-        final MethodInvokingEventConsumer<?> eventConsumer = new MethodInvokingEventConsumer<>(bean, annotatedMethod);
+        final String streamName = applicationContext.getEnvironment().resolvePlaceholders(annotation.streamName());
+        final MethodInvokingEventConsumer eventConsumer = new MethodInvokingEventConsumer(streamName, bean, annotatedMethod);
         final ConfigurableListableBeanFactory beanFactory = applicationContext.getBeanFactory();
         if (!beanFactory.containsBean(annotation.name())) {
             this.applicationContext.getBeanFactory().registerSingleton(annotation.name(), eventConsumer);
