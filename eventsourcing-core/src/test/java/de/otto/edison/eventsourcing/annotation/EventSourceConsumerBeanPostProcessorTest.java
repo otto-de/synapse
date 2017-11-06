@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class EventSourceConsumerAnnotationBeanPostProcessorTest {
+public class EventSourceConsumerBeanPostProcessorTest {
 
     private AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 

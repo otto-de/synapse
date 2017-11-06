@@ -1,55 +1,50 @@
 package de.otto.edison.eventsourcing.consumer;
 
+import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
+
+import javax.annotation.concurrent.ThreadSafe;
 import java.util.function.Consumer;
 
+/**
+ * A consumer for Events with payload-type &lt;T&gt;.
+ * <p>
+ *     Multiple EventConsumers may listen at a single {@link EventSource}. A single EventConsumer
+ *     must be registered to multiple EventSources.
+ * </p>
+ * <p>
+ *     By default, Edison-Eventsourcing is auto-configuring a {@link EventSourceConsumerProcess} that is
+ *     running a separate thread for every EventConsumer. The thread is taking care for continuous
+ *     consumption of events using the consumers, until the application is shutting down.
+ * </p>
+ * <p>
+ *     If you need to manually consume events using EventConsumers, auto-configuration of the
+ *     {@code EventSourceConsumerProcess} can be disabled by setting
+ *     {@link EventSourcingProperties#getConsumerProcess() edison.eventsourcing.consumer-process.enabled=false}
+ * </p>
+ * <p>
+ *     EventConsumers are expected to be thread-safe.
+ * </p>
+ *
+ * @param <T> the type of the event's payload
+ */
+@ThreadSafe
 public interface EventConsumer<T> extends Consumer<Event<T>> {
 
     /**
-     * Called by an EventSource, if consumption of events is about to start.
-     * <p>
-     *     This method can be called multiple times for a single consumer and/or
-     *     EventSource. For example, a composite EventSource could consist of multiple
-     *     steps: for example, an EventSource could start reading a snapshot,
-     *     followed by reading from an event stream.
-     * </p>
-     *
-     * @param eventSource the name of the event source or event stream
-     */
-    default void init(final String eventSource) {
-    }
-
-    /**
-     * Called by an EventSource, if consumption of events was sucessfully finished.
-     * <p>
-     *     This method can be called multiple times for a single consumer and/or
-     *     EventSource. For example, a composite EventSource could consist of multiple
-     *     steps: for example, an EventSource could start reading a snapshot,
-     *     followed by reading from an event stream.
-     * </p>
-     *
-     * @param eventSource the name of the event source or event stream
-     */
-    default void completed(final String eventSource) {
-    }
-
-    /**
-     * Called by an EventSource, if consumption of events was aborted because of some error.
-     *
-     * @param eventSource the name of the event source or event stream
-     */
-    default void aborted(final String eventSource) {
-    }
-
-    /**
-     * Returns the name of the EventSource.
+     * Returns the name of the consumed {@link EventSource}.
      * <p>
      *     For streaming event-sources, this is the name of the event stream.
      * </p>
      *
-     * @return name
+     * @return event stream
      */
     String streamName();
 
+    /**
+     * Processes a single event.
+     *
+     * @param event the (surprise!) event to be processed
+     */
     void accept(Event<T> event);
 
 }

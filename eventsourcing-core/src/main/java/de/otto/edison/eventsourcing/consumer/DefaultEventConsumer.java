@@ -11,27 +11,11 @@ public class DefaultEventConsumer<T> implements EventConsumer<T> {
 
     private final String streamName;
     private final StateRepository<T> stateRepository;
-    private int eventCount = 0;
 
     public DefaultEventConsumer(final String streamName,
                                 final StateRepository<T> stateRepository) {
         this.streamName = streamName;
         this.stateRepository = stateRepository;
-    }
-
-    @Override
-    public void init(final String eventSource) {
-        LOG.info("Started consuming of events from eventSource " + eventSource);
-    }
-
-    @Override
-    public void completed(final String eventSource) {
-        LOG.info("Finished consuming {} events from snapshot {}", eventCount, eventSource);
-    }
-
-    @Override
-    public void aborted(final String eventSource) {
-        LOG.info("Aborted consuming of events from {} after error", eventSource);
     }
 
     /**
@@ -50,7 +34,6 @@ public class DefaultEventConsumer<T> implements EventConsumer<T> {
     @Override
     public void accept(final Event<T> event) {
         stateRepository.put(event.key(), event.payload());
-        ++eventCount;
     }
 
 }

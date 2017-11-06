@@ -130,7 +130,6 @@ public class SnapshotService {
                         case "data":
                             processSnapshotData(
                                     parser,
-                                    streamName,
                                     shardPositions.positionOf(streamName),
                                     stopCondition,
                                     callback,
@@ -204,7 +203,6 @@ public class SnapshotService {
     }
 
     private <T> void processSnapshotData(final JsonParser parser,
-                                     final String streamName,
                                      final String sequenceNumber,
                                      final Predicate<Event<T>> stopCondition,
                                      final Consumer<Event<T>> callback,
@@ -216,7 +214,6 @@ public class SnapshotService {
             JsonToken currentToken = parser.currentToken();
             if (currentToken == JsonToken.FIELD_NAME) {
                 final Event<T> event = event(
-                        streamName,
                         parser.getValueAsString(),
                         objectMapper.convertValue(parser.nextTextValue(), payloadType),
                         sequenceNumber,

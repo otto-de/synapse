@@ -7,27 +7,23 @@ import java.util.Optional;
 
 public class Event<T> {
 
-    public static <T> Event<T> event(final String streamName,
-                                     final String key,
+    public static <T> Event<T> event(final String key,
                                      final T payload,
                                      final String sequenceNumber,
                                      final Instant approximateArrivalTimestamp) {
         return new Event<>(
-                streamName,
                 key,
                 payload,
                 sequenceNumber,
                 approximateArrivalTimestamp, null);
     }
 
-    public static <T> Event<T> event(final String streamName,
-                                     final String key,
+    public static <T> Event<T> event(final String key,
                                      final T payload,
                                      final String sequenceNumber,
                                      final Instant approximateArrivalTimestamp,
                                      final Duration durationBehind) {
         return new Event<>(
-                streamName,
                 key,
                 payload,
                 sequenceNumber,
@@ -39,21 +35,18 @@ public class Event<T> {
     private final T payload;
     private final String sequenceNumber;
     private final Instant arrivalTimestamp;
-    private final String streamName;
     private final Duration durationBehind;
 
 
-    protected Event(final String streamName,
-                  final String key,
-                  final T payload,
-                  final String sequenceNumber,
-                  final Instant approximateArrivalTimestamp,
-                  final Duration durationBehind) {
+    protected Event(final String key,
+                    final T payload,
+                    final String sequenceNumber,
+                    final Instant approximateArrivalTimestamp,
+                    final Duration durationBehind) {
         this.key = key;
         this.payload = payload;
         this.sequenceNumber = sequenceNumber;
         this.arrivalTimestamp = approximateArrivalTimestamp;
-        this.streamName = streamName;
         this.durationBehind = durationBehind;
     }
 
@@ -63,10 +56,6 @@ public class Event<T> {
 
     public T payload() {
         return payload;
-    }
-
-    public String streamName() {
-        return streamName;
     }
 
     public String sequenceNumber() {
@@ -94,7 +83,6 @@ public class Event<T> {
                 ", payload=" + payload +
                 ", sequenceNumber='" + sequenceNumber + '\'' +
                 ", arrivalTimestamp=" + arrivalTimestamp +
-                ", streamName='" + streamName + '\'' +
                 ", durationBehind=" + durationBehind +
                 '}';
     }

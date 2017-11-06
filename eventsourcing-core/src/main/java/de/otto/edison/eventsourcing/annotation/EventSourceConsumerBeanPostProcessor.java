@@ -22,9 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class EventSourceConsumerAnnotationBeanPostProcessor implements BeanPostProcessor, Ordered, ApplicationContextAware {
+public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, Ordered, ApplicationContextAware {
 
-    private static final Logger LOG = getLogger(EventSourceConsumerAnnotationBeanPostProcessor.class);
+    private static final Logger LOG = getLogger(EventSourceConsumerBeanPostProcessor.class);
 
     private final Set<Class<?>> nonAnnotatedClasses =
             Collections.newSetFromMap(new ConcurrentHashMap<Class<?>, Boolean>(64));

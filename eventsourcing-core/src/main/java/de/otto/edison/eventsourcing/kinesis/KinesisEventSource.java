@@ -82,7 +82,6 @@ public class KinesisEventSource<T> implements EventSource<T> {
     public StreamPosition consumeAll(final StreamPosition startFrom,
                                      final Predicate<Event<T>> stopCondition,
                                      final EventConsumer<T> consumer) {
-        consumer.init(streamName);
         try {
             Map<String, String> result = kinesisUtils.retrieveAllOpenShards(streamName)
                     .stream()
@@ -94,10 +93,8 @@ public class KinesisEventSource<T> implements EventSource<T> {
                     .collect(toMap(
                             ShardPosition::getShardId,
                             ShardPosition::getSequenceNumber));
-            consumer.completed(streamName);
             return StreamPosition.of(result);
         } catch (final RuntimeException e) {
-            consumer.aborted(streamName);
             throw e;
         }
     }
@@ -138,7 +135,7 @@ public class KinesisEventSource<T> implements EventSource<T> {
             } else {
                 Duration durationBehind = ofMillis(recordsResponse.millisBehindLatest());
                 for (final Record record : recordsResponse.records()) {
-                    Event<T> event = createEvent(streamName, durationBehind, record);
+                    Event<T> event = createEvent(durationBehind, record);
                     consumer.accept(event);
                     stopRetrieval = stopCondition.test(event);
                     lastSequenceNumber = event.sequenceNumber();
@@ -160,8 +157,8 @@ public class KinesisEventSource<T> implements EventSource<T> {
     }
 
     @NotNull
-    private Event<T> createEvent(String streamName, Duration durationBehind, Record record) {
-        return kinesisEvent(streamName, durationBehind, record, byteBuffer -> {
+    private Event<T> createEvent(Duration durationBehind, Record record) {
+        return kinesisEvent(durationBehind, record, byteBuffer -> {
             try {
                 final String json = UTF_8.decode(record.data()).toString();
                 return objectMapper.readValue(json, payloadType);

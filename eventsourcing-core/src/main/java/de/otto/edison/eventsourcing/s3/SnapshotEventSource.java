@@ -63,7 +63,6 @@ public class SnapshotEventSource<T> implements EventSource<T> {
                                      final EventConsumer<T> consumer) {
         // TODO: startFrom is ignored. the source should ignore / drop all events until startFrom is reached.
 
-        consumer.init(name);
         Optional<File> latestSnapshot = Optional.empty();
         try {
             latestSnapshot = downloadLatestSnapshot();
@@ -73,12 +72,10 @@ public class SnapshotEventSource<T> implements EventSource<T> {
             LOG.info("Read Snapshot into Memory");
 
             deleteSnapshotFile(latestSnapshot);
-            consumer.completed(name);
             return readPosition;
         } catch (final IOException | S3Exception e) {
             LOG.warn("Unable to load snapshot: {}", e.getMessage());
             deleteSnapshotFile(latestSnapshot);
-            consumer.aborted(name);
             //throw new EventSourceException("Error consuming Events from snapshot EventSource: " + e.getMessage(), e);
             return StreamPosition.of();
         }
