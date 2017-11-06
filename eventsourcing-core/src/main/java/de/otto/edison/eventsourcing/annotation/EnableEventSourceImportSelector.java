@@ -22,7 +22,7 @@ public class EnableEventSourceImportSelector implements ImportSelector {
 
     @Override
     public String[] selectImports(AnnotationMetadata metadata) {
-        return new String[] {
+        return new String[]{
                 EventSourceBeanRegistrar.class.getName()
         };
     }
@@ -53,14 +53,12 @@ public class EnableEventSourceImportSelector implements ImportSelector {
             there is an automagically added @EnableEventsources annotation, containing the @EnableEventSource
             annotations as value.
              */
-            final MultiValueMap<String, Object> eventSourcesAttr = metadata
-                    .getAllAnnotationAttributes(EnableEventSources.class.getName(), false);
+            final MultiValueMap<String, Object> eventSourcesAttr = metadata.getAllAnnotationAttributes(EnableEventSources.class.getName(), false);
             if (eventSourcesAttr != null) {
                 final Object value = eventSourcesAttr.getFirst("value");
                 registerMultipleEventSources(registry, (AnnotationAttributes[]) value);
             } else {
-                final MultiValueMap<String, Object> eventSourceAttr = metadata
-                        .getAllAnnotationAttributes(EnableEventSource.class.getName(), false);
+                final MultiValueMap<String, Object> eventSourceAttr = metadata.getAllAnnotationAttributes(EnableEventSource.class.getName(), false);
                 registerSingleEventSource(registry, eventSourceAttr);
             }
 
@@ -70,8 +68,7 @@ public class EnableEventSourceImportSelector implements ImportSelector {
                                                   final AnnotationAttributes[] annotationAttributesArr) {
             for (final AnnotationAttributes annotationAttributes : annotationAttributesArr) {
                 final String beanName = annotationAttributes.getString("name");
-                final String streamName = environment.resolvePlaceholders(
-                        annotationAttributes.getString("streamName"));
+                final String streamName = environment.resolvePlaceholders(annotationAttributes.getString("streamName"));
                 final Class<?> payloadType = annotationAttributes.getClass("payloadType");
                 if (!registry.containsBeanDefinition(beanName)) {
                     registerBeanDefinition(registry, beanName, streamName.isEmpty() ? beanName : streamName, payloadType);
@@ -88,7 +85,7 @@ public class EnableEventSourceImportSelector implements ImportSelector {
                 final Class<?> payloadType = asClass(eventSourceAttr.getFirst("payloadType"));
 
                 if (!registry.containsBeanDefinition(beanName)) {
-                    registerBeanDefinition(registry, beanName, streamName.isEmpty() ? beanName: streamName, payloadType);
+                    registerBeanDefinition(registry, beanName, streamName.isEmpty() ? beanName : streamName, payloadType);
                 }
             }
         }

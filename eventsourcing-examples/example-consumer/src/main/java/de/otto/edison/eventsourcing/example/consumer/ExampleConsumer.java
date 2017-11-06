@@ -31,8 +31,8 @@ public class ExampleConsumer {
             payloadType = BananaPayload.class
     )
     public void consumeBananas(final Event<BananaPayload> event) {
-        stateRepository.compute(event.key(), (s, bananaProduct) -> {
-            final BananaProduct.Builder builder = bananaProduct != null
+        stateRepository.compute(event.key(), (id, bananaProduct) -> {
+            final BananaProduct.Builder builder = (bananaProduct != null)
                     ? bananaProductBuilder(bananaProduct)
                     : bananaProductBuilder();
             return builder

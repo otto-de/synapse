@@ -27,8 +27,7 @@ public class KinesisEventSource<T> implements EventSource<T> {
     private static final Logger LOG = getLogger(KinesisEventSource.class);
 
     private KinesisClient kinesisClient;
-    private String streamName;
-    // TODO: inject objectmapper
+    private String streamName;// TODO: inject objectmapper
     private ObjectMapper objectMapper = new ObjectMapper();
     private Class<T> payloadType;
 

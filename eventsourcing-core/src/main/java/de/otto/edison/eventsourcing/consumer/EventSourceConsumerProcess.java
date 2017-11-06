@@ -6,6 +6,7 @@ import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,19 +32,22 @@ public class EventSourceConsumerProcess {
 
     public EventSourceConsumerProcess(final List<EventSource> eventSources,
                                       final List<EventConsumer> eventConsumers) {
-        eventConsumers.forEach(consumer -> {
-            eventSources
-                    .stream()
-                    .filter(es -> es.name().equals(consumer.streamName()))
-                    .findAny()
-                    .ifPresent(eventSource -> eventSourceWithConsumer.put(eventSource, consumer));
-        });
+        matchEventConsumersWithEventSourcesByStreamName(eventSources, eventConsumers);
         if (eventSourceWithConsumer.size() > 0) {
             final ThreadFactory threadFactory = new CustomizableThreadFactory(THREAD_NAME_PREFIX);
             executorService = newFixedThreadPool(eventSourceWithConsumer.size(), threadFactory);
         } else {
             executorService = null;
         }
+    }
+
+    private void matchEventConsumersWithEventSourcesByStreamName(List<EventSource> eventSources, List<EventConsumer> eventConsumers) {
+        eventConsumers.forEach(consumer ->
+                eventSources
+                .stream()
+                .filter(es -> es.name().equals(consumer.streamName()))
+                .findAny()
+                .ifPresent(eventSource -> eventSourceWithConsumer.put(eventSource, consumer)));
     }
 
     @PostConstruct
