@@ -17,10 +17,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
@@ -175,7 +172,6 @@ public class SnapshotService {
                                 final StateRepository<String> stateRepository) throws IOException {
         final JsonFactory jsonFactory = new JsonFactory();
         File dataFile = createSnapshotFile(streamName);
-        Set<String> cacheKeys = stateRepository.keySet();
 
         try (FileOutputStream fos = new FileOutputStream(dataFile);
              BufferedOutputStream bos = new BufferedOutputStream(fos);
@@ -189,11 +185,16 @@ public class SnapshotService {
             writeSequenceNumbers(currentStreamPosition, jGenerator);
             // write to data file
             jGenerator.writeArrayFieldStart(DATA_FIELD_NAME);
-            for (final String key : cacheKeys) {
-                jGenerator.writeStartObject();
-                jGenerator.writeStringField(key, stateRepository.get(key));
-                jGenerator.writeEndObject();
-            }
+            stateRepository.getKeySetIterable().forEach((key) -> {
+                try {
+                    jGenerator.writeStartObject();
+                    jGenerator.writeStringField(key, stateRepository.get(key).get());
+                    jGenerator.writeEndObject();
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            });
+
             jGenerator.writeEndArray();
             jGenerator.writeEndObject();
             jGenerator.flush();

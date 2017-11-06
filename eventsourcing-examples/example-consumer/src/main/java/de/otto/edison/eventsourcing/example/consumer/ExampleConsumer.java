@@ -32,8 +32,8 @@ public class ExampleConsumer {
     )
     public void consumeBananas(final Event<BananaPayload> event) {
         stateRepository.compute(event.key(), (id, bananaProduct) -> {
-            final BananaProduct.Builder builder = (bananaProduct != null)
-                    ? bananaProductBuilder(bananaProduct)
+            final BananaProduct.Builder builder = bananaProduct.isPresent()
+                    ? bananaProductBuilder(bananaProduct.get())
                     : bananaProductBuilder();
             return builder
                     .withId(event.key())
@@ -50,8 +50,8 @@ public class ExampleConsumer {
     )
     public void consumeProducts(final Event<ProductPayload> event) {
         stateRepository.compute(event.key(), (s, bananaProduct) -> {
-            final BananaProduct.Builder builder = bananaProduct != null
-                    ? bananaProductBuilder(bananaProduct)
+            final BananaProduct.Builder builder = bananaProduct.isPresent()
+                    ? bananaProductBuilder(bananaProduct.get())
                     : bananaProductBuilder();
             return builder
                     .withId(event.key())
