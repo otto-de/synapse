@@ -1,15 +1,9 @@
 package de.otto.edison.eventsourcing.consumer;
 
-import org.slf4j.Logger;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import static org.slf4j.LoggerFactory.getLogger;
-
 public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
-
-    private static final Logger LOG = getLogger(MethodInvokingEventConsumer.class);
 
     private final String streamName;
     private final Object instance;

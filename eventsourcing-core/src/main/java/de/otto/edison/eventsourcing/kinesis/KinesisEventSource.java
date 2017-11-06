@@ -94,9 +94,8 @@ public class KinesisEventSource<T> implements EventSource<T> {
                                          final Predicate<Event<T>> stopCondition,
                                          final String shardPosition,
                                          final EventConsumer<T> consumer) {
-        LOG.info(format(
-                "Reading from stream %s, shard %s with starting sequence number %s",
-                streamName, shardId, shardPosition));
+        LOG.info("Reading from stream {}, shard {} with starting sequence number {}",
+                streamName, shardId, shardPosition);
 
         GetShardIteratorResponse shardIterator;
         try {
@@ -163,11 +162,10 @@ public class KinesisEventSource<T> implements EventSource<T> {
                     lastSequenceNumber = event.sequenceNumber();
                 }
                 final String durationString = format("%s days %s hrs %s min %s sec", durationBehind.toDays(), durationBehind.toHours() % 24, durationBehind.toMinutes() % 60, durationBehind.getSeconds() % 60);
-                LOG.info(format(
-                        "Consumed %d records from kinesis %s; behind latest: %s",
+                LOG.info("Consumed {} records from kinesis {}; behind latest: {}",
                         recordsResponse.records().size(),
                         streamName,
-                        durationString));
+                        durationString);
 
             }
         } while (!stopRetrieval);

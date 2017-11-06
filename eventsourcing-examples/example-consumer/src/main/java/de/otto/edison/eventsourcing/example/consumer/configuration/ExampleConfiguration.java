@@ -1,7 +1,6 @@
 package de.otto.edison.eventsourcing.example.consumer.configuration;
 
 import de.otto.edison.eventsourcing.annotation.EnableEventSource;
-import de.otto.edison.eventsourcing.example.consumer.ExampleConsumer;
 import de.otto.edison.eventsourcing.example.consumer.payload.BananaPayload;
 import de.otto.edison.eventsourcing.example.consumer.payload.ProductPayload;
 import de.otto.edison.eventsourcing.example.consumer.state.BananaProduct;
@@ -45,8 +44,4 @@ public class ExampleConfiguration {
         return new DefaultStateRepository<>();
     }
 
-    @Bean
-    public ExampleConsumer exampleConsumer(final StateRepository<BananaProduct> stateRepository) {
-        return new ExampleConsumer(stateRepository);
-    }
 }

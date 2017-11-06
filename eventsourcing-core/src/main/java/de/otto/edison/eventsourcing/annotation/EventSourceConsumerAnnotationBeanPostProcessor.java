@@ -45,40 +45,42 @@ public class EventSourceConsumerAnnotationBeanPostProcessor implements BeanPostP
     }
 
     @Override
-    public Object postProcessBeforeInitialization(final Object bean, final String beanName) throws BeansException {
+    public Object postProcessBeforeInitialization(final Object bean, final String beanName) {
         return bean;
     }
 
     @Override
-    public Object postProcessAfterInitialization(final Object bean, final String beanName) throws BeansException {
+    public Object postProcessAfterInitialization(final Object bean, final String beanName) {
         if (!this.nonAnnotatedClasses.contains(bean.getClass())) {
-            final Class<?> targetClass = AopUtils.getTargetClass(bean);
-            final Map<Method, Set<EventSourceConsumer>> annotatedMethods = MethodIntrospector.selectMethods(targetClass,
-                    (MethodIntrospector.MetadataLookup<Set<EventSourceConsumer>>) method -> {
-                        Set<EventSourceConsumer> listenerMethods = findListenerAnnotations(method);
-                        return (!listenerMethods.isEmpty() ? listenerMethods : null);
-                    });
+            Class<?> targetClass = AopUtils.getTargetClass(bean);
+            Map<Method, Set<EventSourceConsumer>> annotatedMethods = findMethodsAnnotatedWithEventSourceConsumer(targetClass);
             if (annotatedMethods.isEmpty()) {
                 this.nonAnnotatedClasses.add(bean.getClass());
-                if (LOG.isTraceEnabled()) {
-                    LOG.trace("No @EventSourceConsumer annotations found on bean type: " + bean.getClass());
-                }
-            }
-            else {
-                // Non-empty set of methods
-                for (Map.Entry<Method, Set<EventSourceConsumer>> entry : annotatedMethods.entrySet()) {
-                    final Method method = entry.getKey();
-                    for (EventSourceConsumer consumer : entry.getValue()) {
-                        registerEventConsumer(consumer, method, bean, beanName);
-                    }
-                }
-                if (LOG.isInfoEnabled()) {
-                    LOG.info(annotatedMethods.size() + " @EventSourceConsumer methods processed on bean '"
-                            + beanName + "': " + annotatedMethods);
-                }
+                LOG.trace("No @EventSourceConsumer annotations found on bean type: {}", bean.getClass());
+            } else {
+                registerEventConsumers(bean, beanName, annotatedMethods);
             }
         }
         return bean;
+    }
+
+    private Map<Method, Set<EventSourceConsumer>> findMethodsAnnotatedWithEventSourceConsumer(Class<?> targetClass) {
+        return MethodIntrospector.selectMethods(targetClass,
+                (MethodIntrospector.MetadataLookup<Set<EventSourceConsumer>>) method -> {
+                    Set<EventSourceConsumer> listenerMethods = findListenerAnnotations(method);
+                    return (!listenerMethods.isEmpty() ? listenerMethods : null);
+                });
+    }
+
+    private void registerEventConsumers(Object bean, String beanName, Map<Method, Set<EventSourceConsumer>> annotatedMethods) {
+        // Non-empty set of methods
+        for (Map.Entry<Method, Set<EventSourceConsumer>> entry : annotatedMethods.entrySet()) {
+            final Method method = entry.getKey();
+            for (EventSourceConsumer consumer : entry.getValue()) {
+                registerEventConsumer(consumer, method, bean);
+            }
+        }
+        LOG.info("{} @EventSourceConsumer methods processed on bean {} : {}'", annotatedMethods.size(), beanName, annotatedMethods);
     }
 
     /*
@@ -95,8 +97,7 @@ public class EventSourceConsumerAnnotationBeanPostProcessor implements BeanPostP
 
     private void registerEventConsumer(final EventSourceConsumer annotation,
                                        final Method annotatedMethod,
-                                       final Object bean,
-                                       final String beanName) {
+                                       final Object bean) {
         final String streamName = applicationContext.getEnvironment().resolvePlaceholders(annotation.streamName());
         final MethodInvokingEventConsumer eventConsumer = new MethodInvokingEventConsumer(streamName, bean, annotatedMethod);
         final ConfigurableListableBeanFactory beanFactory = applicationContext.getBeanFactory();
