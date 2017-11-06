@@ -70,7 +70,7 @@ public class CompactingKinesisEventSource<T> implements EventSource<T> {
 
         final KinesisEventSource<T> kinesisEventSource = new KinesisEventSource<>(kinesisClient, name, payloadType);
 
-        final StreamPosition streamPosition = snapshotEventSource.consumeAll(consumer);
-        return kinesisEventSource.consumeAll(streamPosition, consumer);
+        final StreamPosition streamPosition = snapshotEventSource.consumeAll(stopCondition, consumer);
+        return kinesisEventSource.consumeAll(streamPosition, stopCondition, consumer);
     }
 }

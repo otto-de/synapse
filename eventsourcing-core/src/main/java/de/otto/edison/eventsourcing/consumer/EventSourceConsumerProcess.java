@@ -68,10 +68,9 @@ public class EventSourceConsumerProcess {
     public void shutdown() {
         LOG.info("Shutting down...");
         this.stopThread.set(true);
-
         if (executorService != null) {
             try {
-                // TODO: configure timeout for shutting down event consumers
+                executorService.shutdown();
                 executorService.awaitTermination(2, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
