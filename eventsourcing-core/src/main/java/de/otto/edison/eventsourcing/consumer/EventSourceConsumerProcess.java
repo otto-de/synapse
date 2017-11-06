@@ -70,8 +70,8 @@ public class EventSourceConsumerProcess {
         this.stopThread.set(true);
         if (executorService != null) {
             try {
-                executorService.shutdown();
-                executorService.awaitTermination(2, TimeUnit.SECONDS);
+                executorService.shutdownNow();
+                executorService.awaitTermination(2, TimeUnit.MINUTES);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

@@ -6,8 +6,8 @@ import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.slf4j.Logger;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
-import software.amazon.awssdk.services.kinesis.model.*;
+import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
+import software.amazon.awssdk.services.kinesis.model.Record;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -26,17 +26,19 @@ public class KinesisEventSource<T> implements EventSource<T> {
 
     private static final Logger LOG = getLogger(KinesisEventSource.class);
 
-    private KinesisClient kinesisClient;
-    private String streamName;// TODO: inject objectmapper
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private KinesisUtils kinesisUtils;
+    private String streamName;
+    private ObjectMapper objectMapper;
     private Class<T> payloadType;
 
-    public KinesisEventSource(final KinesisClient kinesisClient,
+    public KinesisEventSource(final KinesisUtils kinesisUtils,
                               final String streamName,
-                              final Class<T> payloadType) {
-        this.kinesisClient = kinesisClient;
+                              final Class<T> payloadType,
+                              final ObjectMapper objectMapper) {
+        this.kinesisUtils = kinesisUtils;
         this.streamName = streamName;
         this.payloadType = payloadType;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -71,7 +73,7 @@ public class KinesisEventSource<T> implements EventSource<T> {
                                      final EventConsumer<T> consumer) {
         consumer.init(streamName);
         try {
-            Map<String, String> result = KinesisUtils.retrieveAllOpenShards(kinesisClient, streamName)
+            Map<String, String> result = kinesisUtils.retrieveAllOpenShards(streamName)
                     .stream()
                     .parallel()
                     .map(shard -> {
@@ -90,20 +92,12 @@ public class KinesisEventSource<T> implements EventSource<T> {
     }
 
     private ShardPosition consumeShard(final String shardId,
-                                         final Predicate<Event<T>> stopCondition,
-                                         final String shardPosition,
-                                         final EventConsumer<T> consumer) {
-        LOG.info("Reading from stream {}, shard {} with starting sequence number {}",
-                streamName, shardId, shardPosition);
+                                       final Predicate<Event<T>> stopCondition,
+                                       final String shardPosition,
+                                       final EventConsumer<T> consumer) {
+        LOG.info("Reading from stream {}, shard {} with starting sequence number {}", streamName, shardId, shardPosition);
 
-        GetShardIteratorResponse shardIterator;
-        try {
-            shardIterator = kinesisClient.getShardIterator(buildIteratorShardRequest(streamName, shardId, shardPosition));
-        } catch (final InvalidArgumentException e) {
-            LOG.error(format("invalidShardSequenceNumber in Snapshot %s/%s - reading from HORIZON", streamName, shardId));
-            shardIterator = kinesisClient.getShardIterator(buildIteratorShardRequest(streamName, shardId, "0"));
-        }
-
+        String shardIterator = kinesisUtils.getShardIterator(streamName, shardId, shardPosition);
         String lastSequenceNumber = retrieveDataFromSingleShard(streamName, shardIterator, stopCondition, consumer);
 
         String sequenceNumber = lastSequenceNumber != null
@@ -113,53 +107,45 @@ public class KinesisEventSource<T> implements EventSource<T> {
         return new ShardPosition(shardId, sequenceNumber);
     }
 
-    private GetShardIteratorRequest buildIteratorShardRequest(String streamName, String shardId, String shardPosition) {
-        GetShardIteratorRequest.Builder shardRequestBuilder = GetShardIteratorRequest
-                .builder()
-                .shardId(shardId)
-                .streamName(streamName);
-
-        if (shardPosition == null || shardPosition.equals("0")) {
-            shardRequestBuilder.shardIteratorType(ShardIteratorType.TRIM_HORIZON);
-        } else {
-            shardRequestBuilder.shardIteratorType(ShardIteratorType.AFTER_SEQUENCE_NUMBER);
-            shardRequestBuilder.startingSequenceNumber(shardPosition);
-        }
-
-        return shardRequestBuilder.build();
-    }
 
     private String retrieveDataFromSingleShard(String streamName,
-                                               GetShardIteratorResponse initialShardIterator,
+                                               String initialShardIterator,
                                                Predicate<Event<T>> stopCondition,
                                                EventConsumer<T> consumer) {
-        String shardIterator = initialShardIterator.shardIterator();
+        String shardIterator = initialShardIterator;
         String lastSequenceNumber = null;
-        boolean stopRetrieval;
+        boolean stopRetrieval = false;
         do {
-            GetRecordsResponse recordsResponse = kinesisClient.getRecords(GetRecordsRequest.builder()
-                    .shardIterator(shardIterator)
-                    .build());
+            GetRecordsResponse recordsResponse = kinesisUtils.getRecords(shardIterator);
 
-            stopRetrieval = isEmptyStream(recordsResponse);
+            if (isEmptyStream(recordsResponse)) {
+                stopRetrieval = waitABit();
+            }
 
             if (!stopRetrieval) {
                 shardIterator = recordsResponse.nextShardIterator();
                 final Duration durationBehind = ofMillis(recordsResponse.millisBehindLatest());
-                for (final Record record : recordsResponse.records()) {
-                    final Event<T> event = kinesisEvent(streamName, durationBehind, record, byteBuffer -> {
-                        try {
-                            final String json = UTF_8.decode(record.data()).toString();
-                            return objectMapper.readValue(json, payloadType);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+                if (!recordsResponse.records().isEmpty()) {
+                    for (final Record record : recordsResponse.records()) {
+                        final Event<T> event = kinesisEvent(streamName, durationBehind, record, byteBuffer -> {
+                            try {
+                                final String json = UTF_8.decode(record.data()).toString();
+                                return objectMapper.readValue(json, payloadType);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
 
-                    stopRetrieval = stopCondition.test(event);
-                    consumer.accept(event);
-                    lastSequenceNumber = event.sequenceNumber();
+                        stopRetrieval = stopCondition.test(event);
+                        LOG.info("StopRetrieval: {}", stopRetrieval);
+                        consumer.accept(event);
+                        lastSequenceNumber = event.sequenceNumber();
+                    }
+                } else {
+                    stopRetrieval = stopCondition.test(null);
+                    LOG.info("StopRetrieval: {}", stopRetrieval);
                 }
+
                 final String durationString = format("%s days %s hrs %s min %s sec", durationBehind.toDays(), durationBehind.toHours() % 24, durationBehind.toMinutes() % 60, durationBehind.getSeconds() % 60);
                 LOG.info("Consumed {} records from kinesis {}; behind latest: {}",
                         recordsResponse.records().size(),
@@ -168,8 +154,18 @@ public class KinesisEventSource<T> implements EventSource<T> {
 
             }
         } while (!stopRetrieval);
-
+        LOG.info("Terminating event source for stream {}", streamName);
         return lastSequenceNumber;
+    }
+
+    private boolean waitABit() {
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            LOG.info("Thread got interrupted");
+            return true;
+        }
+        return false;
     }
 
     private boolean isEmptyStream(GetRecordsResponse recordsResponse) {
