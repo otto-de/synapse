@@ -5,6 +5,7 @@ import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 import software.amazon.awssdk.services.kinesis.model.Record;
@@ -100,7 +101,7 @@ public class KinesisEventSource<T> implements EventSource<T> {
         String shardIterator = kinesisUtils.getShardIterator(streamName, shardId, shardPosition);
         String lastSequenceNumber = retrieveDataFromSingleShard(streamName, shardIterator, stopCondition, consumer);
 
-        String sequenceNumber = lastSequenceNumber != null
+        String sequenceNumber = (lastSequenceNumber != null)
                 ? lastSequenceNumber
                 : Objects.toString(shardPosition, "0");
 
@@ -117,49 +118,52 @@ public class KinesisEventSource<T> implements EventSource<T> {
         boolean stopRetrieval = false;
         do {
             GetRecordsResponse recordsResponse = kinesisUtils.getRecords(shardIterator);
+            shardIterator = recordsResponse.nextShardIterator();
 
             if (isEmptyStream(recordsResponse)) {
-                stopRetrieval = waitABit();
-            }
-
-            if (!stopRetrieval) {
-                shardIterator = recordsResponse.nextShardIterator();
-                final Duration durationBehind = ofMillis(recordsResponse.millisBehindLatest());
-                if (!recordsResponse.records().isEmpty()) {
-                    for (final Record record : recordsResponse.records()) {
-                        final Event<T> event = kinesisEvent(streamName, durationBehind, record, byteBuffer -> {
-                            try {
-                                final String json = UTF_8.decode(record.data()).toString();
-                                return objectMapper.readValue(json, payloadType);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-
-                        stopRetrieval = stopCondition.test(event);
-                        LOG.info("StopRetrieval: {}", stopRetrieval);
-                        consumer.accept(event);
-                        lastSequenceNumber = event.sequenceNumber();
-                    }
-                } else {
-                    stopRetrieval = stopCondition.test(null);
-                    LOG.info("StopRetrieval: {}", stopRetrieval);
+                stopRetrieval = stopCondition.test(null);
+                if (!stopRetrieval) {
+                    waitABit();
+                }
+            } else {
+                Duration durationBehind = ofMillis(recordsResponse.millisBehindLatest());
+                for (final Record record : recordsResponse.records()) {
+                    Event<T> event = createEvent(streamName, durationBehind, record);
+                    consumer.accept(event);
+                    stopRetrieval = stopCondition.test(event);
+                    lastSequenceNumber = event.sequenceNumber();
                 }
 
-                final String durationString = format("%s days %s hrs %s min %s sec", durationBehind.toDays(), durationBehind.toHours() % 24, durationBehind.toMinutes() % 60, durationBehind.getSeconds() % 60);
-                LOG.info("Consumed {} records from kinesis {}; behind latest: {}",
-                        recordsResponse.records().size(),
-                        streamName,
-                        durationString);
-
+                logInfo(streamName, recordsResponse, durationBehind);
             }
         } while (!stopRetrieval);
         LOG.info("Terminating event source for stream {}", streamName);
         return lastSequenceNumber;
     }
 
+    private void logInfo(String streamName, GetRecordsResponse recordsResponse, Duration durationBehind) {
+        final String durationString = format("%s days %s hrs %s min %s sec", durationBehind.toDays(), durationBehind.toHours() % 24, durationBehind.toMinutes() % 60, durationBehind.getSeconds() % 60);
+        LOG.info("Consumed {} records from kinesis {}; behind latest: {}",
+                recordsResponse.records().size(),
+                streamName,
+                durationString);
+    }
+
+    @NotNull
+    private Event<T> createEvent(String streamName, Duration durationBehind, Record record) {
+        return kinesisEvent(streamName, durationBehind, record, byteBuffer -> {
+            try {
+                final String json = UTF_8.decode(record.data()).toString();
+                return objectMapper.readValue(json, payloadType);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
     private boolean waitABit() {
         try {
+            LOG.info("Waiting for new data..");
             Thread.sleep(5000);
         } catch (InterruptedException e) {
             LOG.info("Thread got interrupted");
@@ -169,7 +173,7 @@ public class KinesisEventSource<T> implements EventSource<T> {
     }
 
     private boolean isEmptyStream(GetRecordsResponse recordsResponse) {
-        return recordsResponse.records().isEmpty() && recordsResponse.millisBehindLatest() <= 0.0d;
+        return recordsResponse.records().isEmpty();
     }
 
 }
