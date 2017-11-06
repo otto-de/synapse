@@ -18,14 +18,12 @@ import static java.lang.String.format;
 /**
  * Utilities to create and delete Amazon Kinesis streams.
  */
-@Component
 public class KinesisUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisUtils.class);
 
     private KinesisClient kinesisClient;
 
-    @Autowired
     public KinesisUtils(KinesisClient kinesisClient) {
         this.kinesisClient = kinesisClient;
     }

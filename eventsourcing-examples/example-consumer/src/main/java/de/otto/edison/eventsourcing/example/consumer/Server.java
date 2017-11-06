@@ -1,6 +1,6 @@
 package de.otto.edison.eventsourcing.example.consumer;
 
-import de.otto.edison.eventsourcing.EventSourcingProperties;
+import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

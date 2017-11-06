@@ -1,6 +1,7 @@
 package de.otto.edison.eventsourcing.configuration;
 
 import de.otto.edison.aws.configuration.AwsProperties;
+import de.otto.edison.eventsourcing.kinesis.KinesisUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -32,6 +33,11 @@ public class KinesisConfiguration {
                 .credentialsProvider(credentialsProvider)
                 .region(Region.of(awsProperties.getRegion()))
                 .build();
+    }
+
+    @Bean
+    public KinesisUtils kinesisUtils(final KinesisClient kinesisClient) {
+        return new KinesisUtils(kinesisClient);
     }
 
 }

@@ -1,7 +1,9 @@
 package de.otto.edison.eventsourcing.annotation;
 
+import de.otto.edison.eventsourcing.CompactingKinesisEventSource;
 import de.otto.edison.eventsourcing.configuration.EventSourcingConfiguration;
 import de.otto.edison.eventsourcing.consumer.EventSource;
+import de.otto.edison.eventsourcing.kinesis.KinesisEventSource;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.boot.test.util.EnvironmentTestUtils;
@@ -9,6 +11,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.boot.test.util.EnvironmentTestUtils.addEnvironment;
 
 public class EnableEventSourceImportSelectorTest {
 
@@ -44,10 +47,32 @@ public class EnableEventSourceImportSelectorTest {
     }
 
     @Test
+    public void shouldRegisterCompactingKinesisEventSource() {
+        context.register(SingleEventSourceTestConfig.class);
+        context.register(EventSourcingConfiguration.class);
+        context.refresh();
+        addEnvironment(this.context,
+                "edison.eventsourcing.snapshot.enabled=true"
+        );
+        context.getType("testEventSource").isAssignableFrom(CompactingKinesisEventSource.class);
+    }
+
+    @Test
+    public void shouldRegisterDisableSnapshots() {
+        context.register(SingleEventSourceTestConfig.class);
+        context.register(EventSourcingConfiguration.class);
+        context.refresh();
+        addEnvironment(this.context,
+                "edison.eventsourcing.snapshot.enabled=false"
+        );
+        context.getType("testEventSource").isAssignableFrom(KinesisEventSource.class);
+    }
+
+    @Test
     public void shouldRegisterMultipleEventSources() {
         context.register(MultiEventSourceTestConfig.class);
         context.register(EventSourcingConfiguration.class);
-        EnvironmentTestUtils.addEnvironment(this.context,
+        addEnvironment(this.context,
                 "test.stream-name=second-stream"
         );
         context.refresh();

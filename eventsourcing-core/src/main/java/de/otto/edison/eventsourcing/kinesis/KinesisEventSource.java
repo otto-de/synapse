@@ -7,6 +7,7 @@ import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
@@ -27,10 +28,19 @@ public class KinesisEventSource<T> implements EventSource<T> {
 
     private static final Logger LOG = getLogger(KinesisEventSource.class);
 
-    private KinesisUtils kinesisUtils;
     private String streamName;
-    private ObjectMapper objectMapper;
     private Class<T> payloadType;
+    @Autowired
+    private KinesisUtils kinesisUtils;
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    // required by EnableEventSourceImportSelector
+    public KinesisEventSource(final String streamName,
+                              final Class<T> payloadType) {
+        this.streamName = streamName;
+        this.payloadType = payloadType;
+    }
 
     public KinesisEventSource(final KinesisUtils kinesisUtils,
                               final String streamName,

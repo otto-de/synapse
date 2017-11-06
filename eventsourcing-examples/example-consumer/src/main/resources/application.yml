@@ -4,7 +4,11 @@ aws:
 
 edison:
   eventsourcing:
-    snapshot-bucket-template: snapshot-{stream-name}
+    snapshot:
+      enabled: true
+      bucket-template: snapshot-{stream-name}
+    event-source-consumer-process:
+      enabled: true
 
 exampleservice:
   product-stream-name: edison-example-products

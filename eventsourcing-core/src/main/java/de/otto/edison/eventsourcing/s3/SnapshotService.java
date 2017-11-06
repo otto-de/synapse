@@ -3,7 +3,7 @@ package de.otto.edison.eventsourcing.s3;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.aws.s3.S3Service;
-import de.otto.edison.eventsourcing.EventSourcingProperties;
+import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
 import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
@@ -59,7 +59,7 @@ public class SnapshotService {
                            final EventSourcingProperties properties,
                            final ObjectMapper objectMapper) {
         this.s3Service = s3Service;
-        snapshotBucketTemplate = properties.getSnapshotBucketTemplate();
+        snapshotBucketTemplate = properties.getSnapshot().getBucketTemplate();
         this.objectMapper = objectMapper;
     }
 

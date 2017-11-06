@@ -1,6 +1,7 @@
 package de.otto.edison.eventsourcing.annotation;
 
 import de.otto.edison.eventsourcing.CompactingKinesisEventSource;
+import de.otto.edison.eventsourcing.kinesis.KinesisEventSource;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.EnvironmentAware;
@@ -102,16 +103,29 @@ public class EnableEventSourceImportSelector implements ImportSelector {
                                             final String beanName,
                                             final String streamName,
                                             final Class<?> payloadType) {
-            registry.registerBeanDefinition(
-                    beanName,
-                    genericBeanDefinition(CompactingKinesisEventSource.class)
-                            .addConstructorArgValue(streamName)
-                            .addConstructorArgValue(payloadType)
-                            .setDependencyCheck(DEPENDENCY_CHECK_ALL)
-                            .setAutowireMode(AUTOWIRE_BY_NAME)
-                            .getBeanDefinition()
-            );
-            LOG.info("Registered CompactingKinesisEventSource with beanName {} for streamName {}", beanName, streamName);
+            if (environment.getProperty("edison.eventsourcing.snapshot.enabled", "true").equals("true")) {
+                registry.registerBeanDefinition(
+                        beanName,
+                        genericBeanDefinition(CompactingKinesisEventSource.class)
+                                .addConstructorArgValue(streamName)
+                                .addConstructorArgValue(payloadType)
+                                .setDependencyCheck(DEPENDENCY_CHECK_ALL)
+                                .setAutowireMode(AUTOWIRE_BY_NAME)
+                                .getBeanDefinition()
+                );
+                LOG.info("Registered CompactingKinesisEventSource with beanName {} for streamName {}", beanName, streamName);
+            } else {
+                registry.registerBeanDefinition(
+                        beanName,
+                        genericBeanDefinition(KinesisEventSource.class)
+                                .addConstructorArgValue(streamName)
+                                .addConstructorArgValue(payloadType)
+                                .setDependencyCheck(DEPENDENCY_CHECK_ALL)
+                                .setAutowireMode(AUTOWIRE_BY_NAME)
+                                .getBeanDefinition()
+                );
+                LOG.info("Registered KinesisEventSource with beanName {} for streamName {}", beanName, streamName);
+            }
         }
 
     }

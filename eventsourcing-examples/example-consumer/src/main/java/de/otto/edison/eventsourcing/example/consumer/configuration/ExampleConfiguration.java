@@ -12,17 +12,18 @@ import org.springframework.context.annotation.Configuration;
 
     /*
      * TODO: 1.
-     * TODO: Move KinesisConfiguration to edison-aws
+     * TODO: KinesisUtils + KinesisConfiguration gehören eher nach edison-aws. Statt sehr spezieller
+     * TODO: Methoden, würde man sich vermutlich eher eine high-level Client-Lib wünschen, mit der man
+     * TODO: (ähnlich einer EventSource) events aus Kinesis konsumieren kann, ohne sich um shards etc.
+     * TODO: kümmern zu müssen.
      *
      * TODO: 2.
-     * TODO: Wenn man den example consumer startet, sieht man jede Menge "KinesisEventSource" message="Consumed 0 records from kinesis"
-     * TODO: Log messages. Warum 0 records??
-     *
-     * TODO: 3.
-     * TODO: Shutdown funktioniert noch nicht. EventSourceConsumerProcess reagiert nicht auf Shutdown Signal.
+     * TODO: Die KinesisEventSource / das Example braucht eine Ewigkeit, um alle Events aus Kinesis zu
+     * TODO: konsumieren. Zwischendurch wird vielfach gewartet, während nichts kommt, obwohl das Lag
+     * TODO: noch mehrere Stunden beträgt.
      *
      * TODO: 4.
-     * TODO: EventSourceConsumerProcess testen.
+     * TODO: Testabdeckung erhöhen + JavaDocs + Examples
      *
      */
 
