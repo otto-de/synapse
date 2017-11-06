@@ -1,6 +1,8 @@
 package de.otto.edison.eventsourcing.annotation;
 
 import de.otto.edison.eventsourcing.CompactingKinesisEventSource;
+import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
+import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.kinesis.KinesisEventSource;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -17,6 +19,15 @@ import static org.springframework.beans.factory.support.AbstractBeanDefinition.A
 import static org.springframework.beans.factory.support.AbstractBeanDefinition.DEPENDENCY_CHECK_ALL;
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.genericBeanDefinition;
 
+/**
+ * ImportSelector used to register {@link EventSource} beans for every {@link EnableEventSource} annotated
+ * event source.
+ * <p>
+ *     If {@link EventSourcingProperties#getSnapshot() snapshots} are enabled, a {@link CompactingKinesisEventSource}
+ *     is registered - which is the default behaviour. If disabled, {@link KinesisEventSource} w/o support for
+ *     S3 snapshots is used.
+ * </p>
+ */
 public class EnableEventSourceImportSelector implements ImportSelector {
 
     private static final Logger LOG = getLogger(EnableEventSourceImportSelector.class);
@@ -38,7 +49,7 @@ public class EnableEventSourceImportSelector implements ImportSelector {
         /**
          * Set the {@code Environment} that this component runs in.
          *
-         * @param environment
+         * @param environment the current Spring environment
          */
         @Override
         public void setEnvironment(final Environment environment) {

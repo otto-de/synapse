@@ -1,9 +1,11 @@
 package de.otto.edison.eventsourcing.state;
 
+import javax.annotation.concurrent.ThreadSafe;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
+@ThreadSafe
 public interface StateRepository<V> {
 
     void put(String key, V value);

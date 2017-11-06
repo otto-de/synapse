@@ -1,12 +1,16 @@
 package de.otto.edison.eventsourcing.state;
 
+import javax.annotation.concurrent.ThreadSafe;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Threadsafe default implementation of {@link StateRepository<V>}.
+ * Threadsafe default implementation of {@link StateRepository StateRepository&lt;V&gt;} based on a {@link ConcurrentHashMap}.
+ *
+ * @param <V> the value-type of entries contained int the StateRepository
  */
+@ThreadSafe
 public class DefaultStateRepository<V> implements StateRepository<V> {
 
     private final Map<String, V> map = new ConcurrentHashMap<>();

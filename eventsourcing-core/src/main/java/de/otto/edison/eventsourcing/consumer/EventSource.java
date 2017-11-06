@@ -11,8 +11,8 @@ import java.util.function.Predicate;
  *     Event sources can be configured using {@link de.otto.edison.eventsourcing.annotation.EnableEventSource}:
  * </p>
  * <pre><code>
- *    {@code @Configuration}
- *    {@code @EnableEventSource}(name="foo", streamName="foo-event-stream", payloadType="MyPayload.class")
+ *    {@literal @}Configuration
+ *    {@literal @}EnableEventSource}(name="foo", streamName="foo-event-stream", payloadType="MyPayload.class")
  *     public class MyConfiguration {
  *     ...
  *     }
