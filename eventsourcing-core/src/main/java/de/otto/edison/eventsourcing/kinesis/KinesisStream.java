@@ -7,7 +7,8 @@ import software.amazon.awssdk.services.kinesis.model.Shard;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+
+import static com.google.common.collect.ImmutableList.toImmutableList;
 
 public class KinesisStream {
 
@@ -20,7 +21,7 @@ public class KinesisStream {
     }
 
     public List<KinesisShard> retrieveAllOpenShards() {
-        List<KinesisShard> shardList = new ArrayList<>();
+        List<Shard> shardList = new ArrayList<>();
 
         DescribeStreamRequest describeStreamRequest;
         String exclusiveStartShardId = null;
@@ -34,18 +35,19 @@ public class KinesisStream {
                     .build();
 
             DescribeStreamResponse describeStreamResult = kinesisClient.describeStream(describeStreamRequest);
-            shardList.addAll(describeStreamResult.streamDescription().shards().stream().filter(this::isShardOpen)
-                    .map(shard -> new KinesisShard(shard.shardId()))
-                    .collect(Collectors.toList()));
+            shardList.addAll(describeStreamResult.streamDescription().shards());
 
             if (describeStreamResult.streamDescription().hasMoreShards() && !shardList.isEmpty()) {
-                exclusiveStartShardId = shardList.get(shardList.size() - 1).getShardId();
+                exclusiveStartShardId = shardList.get(shardList.size() - 1).shardId();
             } else {
                 exclusiveStartShardId = null;
             }
 
         } while (exclusiveStartShardId != null);
-        return shardList;
+        return shardList.stream()
+                .filter(this::isShardOpen)
+                .map(shard -> new KinesisShard(shard.shardId()))
+                .collect(toImmutableList());
     }
 
     private boolean isShardOpen(Shard shard) {
