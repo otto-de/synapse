@@ -7,7 +7,6 @@ import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -81,7 +80,6 @@ public class KinesisEventSourceTest {
     }
 
     @Test
-    @Ignore("flaky :(")
     public void shouldStopConsumptionFromKinesis() throws Exception {
         withShards("shard1", "shard2");
         withInitialShardIterator("shard1", "shard1-iterator0");
@@ -93,10 +91,11 @@ public class KinesisEventSourceTest {
 
         //when
         List<String> eventData = Collections.synchronizedList(new ArrayList<>());
-        AtomicBoolean stop = new AtomicBoolean(false);
+        AtomicBoolean endOfShard1 = new AtomicBoolean(false);
+        AtomicBoolean endOfShard2 = new AtomicBoolean(false);
 
         StreamPosition streamPosition = eventSource.consumeAll(StreamPosition.of(),
-                (stringEvent -> stop.get()),
+                (stringEvent -> endOfShard1.get() && endOfShard2.get()),
                 new EventConsumer<TestData>() {
                     @Override
                     public String streamName() {
@@ -106,13 +105,13 @@ public class KinesisEventSourceTest {
                     @Override
                     public void accept(Event<TestData> event) {
                         eventData.add(event.payload().data);
-                        if (event.sequenceNumber().equals("sequence-shard1-testdata1.2") || event.sequenceNumber().equals("sequence-shard2-testdata1.2")) {
-                            stop.set(true);
+                        if (event.sequenceNumber().equals("sequence-shard1-testdata1.2")) {
+                            endOfShard1.set(true);
+                        } else if (event.sequenceNumber().equals("sequence-shard2-testdata1.2")) {
+                            endOfShard2.set(true);
                         }
                     }
                 });
-
-
         //then
         assertThat(streamPosition.positionOf("shard1"), is("sequence-shard1-testdata1.2"));
         assertThat(streamPosition.positionOf("shard2"), is("sequence-shard2-testdata1.2"));
