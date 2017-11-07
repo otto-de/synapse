@@ -6,10 +6,12 @@ import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.kinesis.KinesisEventSource;
+import de.otto.edison.eventsourcing.kinesis.KinesisStream;
 import de.otto.edison.eventsourcing.kinesis.KinesisUtils;
 import de.otto.edison.eventsourcing.s3.SnapshotEventSource;
 import de.otto.edison.eventsourcing.s3.SnapshotService;
 import org.springframework.beans.factory.annotation.Autowired;
+import software.amazon.awssdk.services.kinesis.KinesisClient;
 
 import java.util.function.Predicate;
 
@@ -21,6 +23,8 @@ public class CompactingKinesisEventSource<T> implements EventSource<T> {
     private KinesisUtils kinesisUtils;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private KinesisClient kinesisClient;
 
     private final String name;
     private final Class<T> payloadType;
@@ -69,7 +73,8 @@ public class CompactingKinesisEventSource<T> implements EventSource<T> {
     public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<T>> stopCondition, EventConsumer<T> consumer) {
         final SnapshotEventSource<T> snapshotEventSource = new SnapshotEventSource<>(name, snapshotService, payloadType);
 
-        final KinesisEventSource<T> kinesisEventSource = new KinesisEventSource<>(kinesisUtils, name, payloadType, objectMapper);
+        KinesisStream kinesisStream = new KinesisStream(kinesisClient, name);
+        final KinesisEventSource<T> kinesisEventSource = new KinesisEventSource<>(kinesisUtils, name, payloadType, objectMapper, kinesisStream);
 
         final StreamPosition streamPosition = snapshotEventSource.consumeAll(stopCondition, consumer);
         return kinesisEventSource.consumeAll(streamPosition, stopCondition, consumer);

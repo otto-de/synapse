@@ -8,6 +8,7 @@ import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
@@ -29,27 +30,37 @@ public class KinesisEventSource<T> implements EventSource<T> {
     private static final Logger LOG = getLogger(KinesisEventSource.class);
 
     private String streamName;
+    private KinesisStream kinesisStream;
+
     private Class<T> payloadType;
+
     @Autowired
     private KinesisUtils kinesisUtils;
+
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private KinesisClient kinesisClient;
 
     // required by EnableEventSourceImportSelector
     public KinesisEventSource(final String streamName,
                               final Class<T> payloadType) {
         this.streamName = streamName;
         this.payloadType = payloadType;
+        this.kinesisStream = new KinesisStream(kinesisClient, streamName);
     }
 
     public KinesisEventSource(final KinesisUtils kinesisUtils,
                               final String streamName,
                               final Class<T> payloadType,
-                              final ObjectMapper objectMapper) {
+                              final ObjectMapper objectMapper,
+                              final KinesisStream kinesisStream) {
         this.kinesisUtils = kinesisUtils;
         this.streamName = streamName;
         this.payloadType = payloadType;
         this.objectMapper = objectMapper;
+        this.kinesisStream = kinesisStream;
     }
 
     /**
@@ -83,12 +94,12 @@ public class KinesisEventSource<T> implements EventSource<T> {
                                      final Predicate<Event<T>> stopCondition,
                                      final EventConsumer<T> consumer) {
         try {
-            Map<String, String> result = kinesisUtils.retrieveAllOpenShards(streamName)
+            Map<String, String> result = kinesisStream.retrieveAllOpenShards()
                     .stream()
                     .parallel()
                     .map(shard -> {
-                        final String startPosition = startFrom.positionOf(shard.shardId());
-                        return consumeShard(shard.shardId(), stopCondition, startPosition, consumer);
+                        final String startPosition = startFrom.positionOf(shard.getShardId());
+                        return consumeShard(shard.getShardId(), stopCondition, startPosition, consumer);
                     })
                     .collect(toMap(
                             ShardPosition::getShardId,

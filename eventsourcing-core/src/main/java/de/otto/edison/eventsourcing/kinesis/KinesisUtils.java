@@ -2,22 +2,11 @@ package de.otto.edison.eventsourcing.kinesis;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import software.amazon.awssdk.AmazonServiceException;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import static java.lang.String.format;
 
-/**
- * Utilities to create and delete Amazon Kinesis streams.
- */
 public class KinesisUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisUtils.class);
@@ -28,56 +17,10 @@ public class KinesisUtils {
         this.kinesisClient = kinesisClient;
     }
 
-    public Map<String, String> getStartHashKeysForShards(String streamName) {
-        DescribeStreamRequest describeStreamRequest = DescribeStreamRequest.builder()
-                .streamName(streamName)
-                .build();
-        try {
-            return kinesisClient.describeStream(describeStreamRequest).streamDescription()
-                    .shards()
-                    .stream()
-                    .filter(this::isShardOpen)
-                    .collect(Collectors.toMap(Shard::shardId, shard -> shard.hashKeyRange().startingHashKey()));
-        } catch (AmazonServiceException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public GetRecordsResponse getRecords(String shardIterator) {
         return kinesisClient.getRecords(GetRecordsRequest.builder()
                 .shardIterator(shardIterator)
                 .build());
-    }
-
-    public List<Shard> retrieveAllOpenShards(String streamName) {
-        List<Shard> shardList = new ArrayList<>();
-
-        DescribeStreamRequest describeStreamRequest;
-        String exclusiveStartShardId = null;
-
-        do {
-            describeStreamRequest = DescribeStreamRequest
-                    .builder()
-                    .streamName(streamName)
-                    .exclusiveStartShardId(exclusiveStartShardId)
-                    .limit(10)
-                    .build();
-
-            DescribeStreamResponse describeStreamResult = kinesisClient.describeStream(describeStreamRequest);
-            shardList.addAll(describeStreamResult.streamDescription().shards().stream().filter(this::isShardOpen).collect(Collectors.toList()));
-
-            if (describeStreamResult.streamDescription().hasMoreShards() && !shardList.isEmpty()) {
-                exclusiveStartShardId = shardList.get(shardList.size() - 1).shardId();
-            } else {
-                exclusiveStartShardId = null;
-            }
-
-        } while (exclusiveStartShardId != null);
-        return shardList;
-    }
-
-    private boolean isShardOpen(Shard shard) {
-        return shard.sequenceNumberRange().endingSequenceNumber() == null;
     }
 
     public String getShardIterator(String streamName, String shardId, String shardPosition) {

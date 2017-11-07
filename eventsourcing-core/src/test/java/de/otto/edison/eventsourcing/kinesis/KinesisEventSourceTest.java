@@ -13,7 +13,6 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 import software.amazon.awssdk.services.kinesis.model.Record;
-import software.amazon.awssdk.services.kinesis.model.Shard;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -36,6 +35,9 @@ public class KinesisEventSourceTest {
     @Mock
     private KinesisUtils kinesisUtils;
 
+    @Mock
+    private KinesisStream kinesisStream;
+
     private ObjectMapper objectMapper = new ObjectMapper();
     private KinesisEventSource<TestData> eventSource;
 
@@ -44,7 +46,7 @@ public class KinesisEventSourceTest {
         MockitoAnnotations.initMocks(this);
         Mockito.reset(kinesisUtils);
 
-        eventSource = new KinesisEventSource<>(kinesisUtils, STREAM_NAME, TestData.class, objectMapper);
+        eventSource = new KinesisEventSource<>(kinesisUtils, STREAM_NAME, TestData.class, objectMapper, kinesisStream);
     }
 
     @Test
@@ -123,8 +125,10 @@ public class KinesisEventSourceTest {
     }
 
     private void withShards(String... shards) {
-        List<Shard> shardList = Arrays.stream(shards).map(shard -> Shard.builder().shardId(shard).build()).collect(Collectors.toList());
-        when(kinesisUtils.retrieveAllOpenShards(STREAM_NAME)).thenReturn(shardList);
+        List<KinesisShard> shardList = Arrays.stream(shards)
+                .map(KinesisShard::new)
+                .collect(Collectors.toList());
+        when(kinesisStream.retrieveAllOpenShards()).thenReturn(shardList);
     }
 
     private Record createRecord(String data) {
