@@ -122,17 +122,13 @@ public class KinesisEventSource<T> implements EventSource<T> {
                                                EventConsumer<T> consumer) {
         String shardIterator = initialShardIterator;
         String lastSequenceNumber = null;
-        boolean stopRetrieval = false;
+        boolean stopRetrieval;
         do {
             GetRecordsResponse recordsResponse = kinesisUtils.getRecords(shardIterator);
             shardIterator = recordsResponse.nextShardIterator();
 
-            if (isEmptyStream(recordsResponse)) {
-                stopRetrieval = stopCondition.test(null);
-                if (!stopRetrieval) {
-                    waitABit();
-                }
-            } else {
+            stopRetrieval = stopCondition.test(null);
+            if (!isEmptyStream(recordsResponse)) {
                 Duration durationBehind = ofMillis(recordsResponse.millisBehindLatest());
                 for (final Record record : recordsResponse.records()) {
                     Event<T> event = createEvent(durationBehind, record);
@@ -142,6 +138,9 @@ public class KinesisEventSource<T> implements EventSource<T> {
                 }
 
                 logInfo(streamName, recordsResponse, durationBehind);
+            }
+            if (!stopRetrieval) {
+                stopRetrieval = waitABit();
             }
         } while (!stopRetrieval);
         LOG.info("Terminating event source for stream {}", streamName);
@@ -170,10 +169,9 @@ public class KinesisEventSource<T> implements EventSource<T> {
 
     private boolean waitABit() {
         try {
-            LOG.info("Waiting for new data..");
-            Thread.sleep(5000);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
-            LOG.info("Thread got interrupted");
+            LOG.warn("Thread got interrupted");
             return true;
         }
         return false;
