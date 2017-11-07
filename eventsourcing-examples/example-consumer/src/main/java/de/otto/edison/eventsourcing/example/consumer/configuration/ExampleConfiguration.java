@@ -21,6 +21,8 @@ import org.springframework.context.annotation.Configuration;
      * TODO: Die KinesisEventSource / das Example braucht eine Ewigkeit, um alle Events aus Kinesis zu
      * TODO: konsumieren. Zwischendurch wird vielfach gewartet, während nichts kommt, obwohl das Lag
      * TODO: noch mehrere Stunden beträgt.
+     * TODO: http://docs.aws.amazon.com/de_de/streams/latest/dev/developing-consumers-with-sdk.html#kinesis-using-sdk-java-get-data-shard-iterators
+     * TODO: Warten scheint nötig zu sein s.o.
      *
      * TODO: 4.
      * TODO: Testabdeckung erhöhen + JavaDocs + Examples
