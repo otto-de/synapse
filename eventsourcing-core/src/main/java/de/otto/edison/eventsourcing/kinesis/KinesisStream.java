@@ -29,7 +29,7 @@ public class KinesisStream {
 
         return shardList.stream()
                 .filter(this::isShardOpen)
-                .map(shard -> new KinesisShard(shard.shardId()))
+                .map(shard -> new KinesisShard(shard.shardId(), this, kinesisClient))
                 .collect(toImmutableList());
     }
 
@@ -72,5 +72,9 @@ public class KinesisStream {
             LOG.warn("Shard with id {} is closed. Cannot retrieve data.", shard.shardId());
             return false;
         }
+    }
+
+    public String getStreamName() {
+        return streamName;
     }
 }
