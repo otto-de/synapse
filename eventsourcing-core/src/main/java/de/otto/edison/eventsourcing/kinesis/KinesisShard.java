@@ -56,11 +56,16 @@ public class KinesisShard {
         return shardRequestBuilder.build();
     }
 
-    public String consumeRecordsAndReturnLastSeqNumber(String startFromSeqNumber,
+    public ShardPosition consumeRecordsAndReturnLastSeqNumber(String startFromSeqNumber,
                                                        BiFunction<Long, Record, Boolean> stopCondition,
                                                        BiConsumer<Long, Record> consumer) {
+        LOG.info("Reading from stream {}, shard {} with starting sequence number {}",
+                kinesisStream.getStreamName(),
+                shardId,
+                startFromSeqNumber);
+
         KinesisShardIterator shardIterator = retrieveIterator(startFromSeqNumber);
-        String lastSequenceNumber = null;
+        String lastSequenceNumber = startFromSeqNumber;
         boolean stopRetrieval;
         do {
             GetRecordsResponse recordsResponse = shardIterator.next();
@@ -81,7 +86,7 @@ public class KinesisShard {
             }
         } while (!stopRetrieval);
         LOG.info("Terminating event source for stream {}", kinesisStream.getStreamName());
-        return lastSequenceNumber;
+        return new ShardPosition(shardId, lastSequenceNumber);
     }
 
     private void logInfo(String streamName, GetRecordsResponse recordsResponse, Duration durationBehind) {

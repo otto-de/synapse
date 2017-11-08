@@ -13,7 +13,6 @@ import software.amazon.awssdk.services.kinesis.model.Record;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -87,10 +86,10 @@ public class KinesisEventSource<T> implements EventSource<T> {
             Map<String, String> result = kinesisStream.retrieveAllOpenShards()
                     .stream()
                     .parallel()
-                    .map(shard -> {
-                        final String startPosition = startFrom.positionOf(shard.getShardId());
-                        return consumeShard(shard, stopCondition, startPosition, consumer);
-                    })
+                    .map(shard -> shard.consumeRecordsAndReturnLastSeqNumber(
+                            startFrom.positionOf(shard.getShardId()),
+                            new RecordStopCondition(stopCondition),
+                            new RecordConsumer(consumer)))
                     .collect(toMap(
                             ShardPosition::getShardId,
                             ShardPosition::getSequenceNumber));
@@ -98,24 +97,6 @@ public class KinesisEventSource<T> implements EventSource<T> {
         } catch (final RuntimeException e) {
             throw e;
         }
-    }
-
-    private ShardPosition consumeShard(final KinesisShard shard,
-                                       final Predicate<Event<T>> stopCondition,
-                                       final String sequenceNumber,
-                                       final EventConsumer<T> consumer) {
-        LOG.info("Reading from stream {}, shard {} with starting sequence number {}", name(), shard, sequenceNumber);
-
-        String lastSequenceNumber = shard.consumeRecordsAndReturnLastSeqNumber(
-                sequenceNumber,
-                new RecordStopCondition(stopCondition),
-                new RecordConsumer(consumer));
-
-        String nextSequenceNumber = (lastSequenceNumber != null)
-                ? lastSequenceNumber
-                : Objects.toString(sequenceNumber, "0");
-
-        return new ShardPosition(shard.getShardId(), nextSequenceNumber);
     }
 
     private Event<T> createEvent(Duration durationBehind, Record record) {
