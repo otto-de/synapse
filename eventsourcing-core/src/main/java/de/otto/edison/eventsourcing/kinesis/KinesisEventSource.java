@@ -180,6 +180,7 @@ public class KinesisEventSource<T> implements EventSource<T> {
 
     private boolean waitABit() {
         try {
+            /* See DECISIONS.md - Question #1 */
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             LOG.warn("Thread got interrupted");
