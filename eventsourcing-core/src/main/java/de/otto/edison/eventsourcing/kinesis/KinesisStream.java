@@ -1,5 +1,7 @@
 package de.otto.edison.eventsourcing.kinesis;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.DescribeStreamRequest;
 import software.amazon.awssdk.services.kinesis.model.DescribeStreamResponse;
@@ -11,6 +13,8 @@ import java.util.List;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
 public class KinesisStream {
+
+    private static final Logger LOG = LoggerFactory.getLogger(KinesisStream.class);
 
     private final KinesisClient kinesisClient;
     private final String streamName;
@@ -62,6 +66,11 @@ public class KinesisStream {
     }
 
     private boolean isShardOpen(Shard shard) {
-        return shard.sequenceNumberRange().endingSequenceNumber() == null;
+        if (shard.sequenceNumberRange().endingSequenceNumber() == null) {
+            return true;
+        } else {
+            LOG.warn("Shard with id {} is closed. Cannot retrieve data.", shard.shardId());
+            return false;
+        }
     }
 }
