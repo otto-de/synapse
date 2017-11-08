@@ -21,33 +21,44 @@ public class KinesisStream {
     }
 
     public List<KinesisShard> retrieveAllOpenShards() {
-        List<Shard> shardList = new ArrayList<>();
+        List<Shard> shardList = retrieveAllShards();
 
-        DescribeStreamRequest describeStreamRequest;
-        String exclusiveStartShardId = null;
-
-        do {
-            describeStreamRequest = DescribeStreamRequest
-                    .builder()
-                    .streamName(streamName)
-                    .exclusiveStartShardId(exclusiveStartShardId)
-                    .limit(10)
-                    .build();
-
-            DescribeStreamResponse describeStreamResult = kinesisClient.describeStream(describeStreamRequest);
-            shardList.addAll(describeStreamResult.streamDescription().shards());
-
-            if (describeStreamResult.streamDescription().hasMoreShards() && !shardList.isEmpty()) {
-                exclusiveStartShardId = shardList.get(shardList.size() - 1).shardId();
-            } else {
-                exclusiveStartShardId = null;
-            }
-
-        } while (exclusiveStartShardId != null);
         return shardList.stream()
                 .filter(this::isShardOpen)
                 .map(shard -> new KinesisShard(shard.shardId()))
                 .collect(toImmutableList());
+    }
+
+    private List<Shard> retrieveAllShards() {
+        List<Shard> shardList = new ArrayList<>();
+
+        boolean fetchMore = true;
+        while (fetchMore) {
+            fetchMore = retrieveAndAppendNextBatchOfShards(shardList);
+        }
+        return shardList;
+    }
+
+    private boolean retrieveAndAppendNextBatchOfShards(List<Shard> shardList) {
+        DescribeStreamRequest describeStreamRequest = DescribeStreamRequest
+                .builder()
+                .streamName(streamName)
+                .exclusiveStartShardId(getLastSeenShardId(shardList))
+                .limit(10)
+                .build();
+
+        DescribeStreamResponse describeStreamResult = kinesisClient.describeStream(describeStreamRequest);
+        shardList.addAll(describeStreamResult.streamDescription().shards());
+
+        return describeStreamResult.streamDescription().hasMoreShards();
+    }
+
+    private String getLastSeenShardId(List<Shard> shardList) {
+        if (!shardList.isEmpty()) {
+            return shardList.get(shardList.size() - 1).shardId();
+        } else {
+            return null;
+        }
     }
 
     private boolean isShardOpen(Shard shard) {
