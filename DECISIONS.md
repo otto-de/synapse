@@ -1,6 +1,6 @@
 # Decisions & Open Questions
 
-#### 1. Why does consuming all events takes so long?
+#### 1. Why does consuming all events take so long?
 
 Retrieving records from Kinesis works by fetching a set of
 records for a specific range of sequence numbers. Those 
