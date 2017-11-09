@@ -5,7 +5,6 @@ import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
-import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.Record;
@@ -21,11 +20,8 @@ import static de.otto.edison.eventsourcing.kinesis.KinesisEvent.kinesisEvent;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
 import static java.util.stream.Collectors.toMap;
-import static org.slf4j.LoggerFactory.getLogger;
 
 public class KinesisEventSource<T> implements EventSource<T> {
-
-    private static final Logger LOG = getLogger(KinesisEventSource.class);
 
     private KinesisStream kinesisStream;
 
