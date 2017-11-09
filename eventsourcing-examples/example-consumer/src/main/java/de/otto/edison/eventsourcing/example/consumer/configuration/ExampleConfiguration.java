@@ -10,26 +10,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-    /*
-     * TODO: 1.
-     * TODO: KinesisUtils + KinesisConfiguration gehören eher nach edison-aws. Statt sehr spezieller
-     * TODO: Methoden, würde man sich vermutlich eher eine high-level Client-Lib wünschen, mit der man
-     * TODO: (ähnlich einer EventSource) events aus Kinesis konsumieren kann, ohne sich um shards etc.
-     * TODO: kümmern zu müssen.
-     *
-     * TODO: 2.
-     * TODO: Die KinesisEventSource / das Example braucht eine Ewigkeit, um alle Events aus Kinesis zu
-     * TODO: konsumieren. Zwischendurch wird vielfach gewartet, während nichts kommt, obwohl das Lag
-     * TODO: noch mehrere Stunden beträgt.
-     * TODO: http://docs.aws.amazon.com/de_de/streams/latest/dev/developing-consumers-with-sdk.html#kinesis-using-sdk-java-get-data-shard-iterators
-     * TODO: Warten scheint nötig zu sein s.o.
-     *
-     * TODO: 4.
-     * TODO: Testabdeckung erhöhen + JavaDocs + Examples
-     *
-     */
-
-
 @Configuration
 @EnableConfigurationProperties({MyServiceProperties.class})
 @EnableEventSource(
