@@ -44,4 +44,9 @@ public class DefaultStateRepository<V> implements StateRepository<V> {
     public String getStats() {
         return "";
     }
+
+    @Override
+    public String toString() {
+        return map.toString();
+    }
 }

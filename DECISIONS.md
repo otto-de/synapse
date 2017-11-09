@@ -14,3 +14,5 @@ to wait at least 1 second before sending another request
 to not exceed this rate limit.
 
 See [AWS Documentation](http://docs.aws.amazon.com/de_de/streams/latest/dev/developing-consumers-with-sdk.html#kinesis-using-sdk-java-get-data-shard-iterators) 
+
+#### 2. Why do we need @EnableEventSource and @EventSourceConsumer?
