@@ -1,7 +1,6 @@
 package de.otto.edison.eventsourcing.s3;
 
 import de.otto.edison.eventsourcing.consumer.Event;
-import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.slf4j.Logger;
@@ -10,6 +9,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static java.lang.String.format;
@@ -32,35 +32,14 @@ public class SnapshotEventSource<T> implements EventSource<T> {
         this.payloadType = payloadType;
     }
 
-    /**
-     * Returns the name of the EventSource.
-     * <p>
-     * For streaming event-sources, this is the name of the event stream.
-     * </p>
-     *
-     * @return name
-     */
     public String name() {
         return name;
     }
 
-    /**
-     * Consumes all events from the EventSource, beginning with {@link StreamPosition startFrom}, until
-     * the {@link Predicate stopCondition} is met.
-     * <p>
-     * The {@link EventConsumer consumer} will be called zero or more times, depending on
-     * the number of events retrieved from the EventSource.
-     * </p>
-     *
-     * @param startFrom     the read position returned from earlier executions
-     * @param stopCondition the predicate used as a stop condition
-     * @param consumer      consumer used to process events
-     * @return the new read position
-     */
     @Override
     public StreamPosition consumeAll(final StreamPosition startFrom,
                                      final Predicate<Event<T>> stopCondition,
-                                     final EventConsumer<T> consumer) {
+                                     final Consumer<Event<T>> consumer) {
         // TODO: startFrom is ignored. the source should ignore / drop all events until startFrom is reached.
 
         Optional<File> latestSnapshot = Optional.empty();

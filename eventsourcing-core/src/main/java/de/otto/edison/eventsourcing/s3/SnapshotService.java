@@ -93,7 +93,7 @@ public class SnapshotService {
     public <T> StreamPosition consumeSnapshot(final Optional<File> latestSnapshot,
                                           final String streamName,
                                           final Predicate<Event<T>> stopCondition,
-                                          final EventConsumer<T> consumer,
+                                          final Consumer<Event<T>> consumer,
                                           final Class<T> payloadType) throws IOException {
         if (latestSnapshot.isPresent()) {
             return processSnapshotFile(latestSnapshot.get(), streamName, stopCondition, consumer, payloadType);

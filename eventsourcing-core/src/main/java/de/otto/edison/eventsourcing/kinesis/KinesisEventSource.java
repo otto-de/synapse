@@ -2,7 +2,6 @@ package de.otto.edison.eventsourcing.kinesis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.Event;
-import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +13,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static de.otto.edison.eventsourcing.kinesis.KinesisEvent.kinesisEvent;
@@ -48,51 +48,26 @@ public class KinesisEventSource<T> implements EventSource<T> {
         this.kinesisStream = kinesisStream;
     }
 
-    /**
-     * Returns the name of the EventSource.
-     * <p>
-     * For streaming event-sources, this is the name of the event stream.
-     * </p>
-     *
-     * @return name
-     */
     @Override
     public String name() {
         return kinesisStream.getStreamName();
     }
 
-    /**
-     * Consumes all events from the EventSource, beginning with {@link StreamPosition startFrom}, until
-     * the {@link Predicate stopCondition} is met.
-     * <p>
-     * The {@link EventConsumer consumer} will be called zero or more times, depending on
-     * the number of events retrieved from the EventSource.
-     * </p>
-     *
-     * @param startFrom     the read position returned from earlier executions
-     * @param stopCondition the predicate used as a stop condition
-     * @param consumer      consumer used to process events
-     * @return the new read position
-     */
     @Override
     public StreamPosition consumeAll(final StreamPosition startFrom,
                                      final Predicate<Event<T>> stopCondition,
-                                     final EventConsumer<T> consumer) {
-        try {
-            Map<String, String> result = kinesisStream.retrieveAllOpenShards()
-                    .stream()
-                    .parallel()
-                    .map(shard -> shard.consumeRecordsAndReturnLastSeqNumber(
-                            startFrom.positionOf(shard.getShardId()),
-                            new RecordStopCondition(stopCondition),
-                            new RecordConsumer(consumer)))
-                    .collect(toMap(
-                            ShardPosition::getShardId,
-                            ShardPosition::getSequenceNumber));
-            return StreamPosition.of(result);
-        } catch (final RuntimeException e) {
-            throw e;
-        }
+                                     final Consumer<Event<T>> consumer) {
+        Map<String, String> result = kinesisStream.retrieveAllOpenShards()
+                .stream()
+                .parallel()
+                .map(shard -> shard.consumeRecordsAndReturnLastSeqNumber(
+                        startFrom.positionOf(shard.getShardId()),
+                        new RecordStopCondition(stopCondition),
+                        new RecordConsumer(consumer)))
+                .collect(toMap(
+                        ShardPosition::getShardId,
+                        ShardPosition::getSequenceNumber));
+        return StreamPosition.of(result);
     }
 
     private Event<T> createEvent(Duration durationBehind, Record record) {
@@ -123,9 +98,9 @@ public class KinesisEventSource<T> implements EventSource<T> {
     }
 
     private class RecordConsumer implements BiConsumer<Long, Record> {
-        private final EventConsumer<T> consumer;
+        private final Consumer<Event<T>> consumer;
 
-        RecordConsumer(EventConsumer<T> consumer) {
+        RecordConsumer(Consumer<Event<T>> consumer) {
             this.consumer = consumer;
         }
 

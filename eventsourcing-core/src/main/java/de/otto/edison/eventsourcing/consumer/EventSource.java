@@ -1,11 +1,12 @@
 package de.otto.edison.eventsourcing.consumer;
 
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
  * An event source of {@link Event events} with a payload type {@code T}.
  * <p>
- *     Event sources can be consumed by {@link EventConsumer event consumers}.
+ *     Event sources can be consumed by {@link Consumer consumers}.
  * </p>
  * <p>
  *     Event sources can be configured using {@link de.otto.edison.eventsourcing.annotation.EnableEventSource}:
@@ -35,14 +36,14 @@ public interface EventSource<T> {
     /**
      * Consumes all events from the EventSource, until the (current) end of the stream is reached.
      * <p>
-     *     The {@link EventConsumer consumer} will be called zero or more times, depending on
+     *     The {@link Consumer consumer} will be called zero or more times, depending on
      *     the number of events retrieved from the EventSource.
      * </p>
      *
      * @param consumer consumer used to process the events
      * @return the new read position
      */
-    default StreamPosition consumeAll(EventConsumer<T> consumer) {
+    default StreamPosition consumeAll(Consumer<Event<T>> consumer) {
         return consumeAll(StreamPosition.of(), event -> false, consumer);
     }
 
@@ -50,7 +51,7 @@ public interface EventSource<T> {
      * Consumes all events from the EventSource, beginning with {@link StreamPosition startFrom}, until
      * the (current) end of the stream is reached.
      * <p>
-     *     The {@link EventConsumer consumer} will be called zero or more times, depending on
+     *     The {@link Consumer consumer} will be called zero or more times, depending on
      *     the number of events retrieved from the EventSource.
      * </p>
      *
@@ -59,14 +60,14 @@ public interface EventSource<T> {
      * @return the new read position
      */
     default StreamPosition consumeAll(StreamPosition startFrom,
-                                      EventConsumer<T> consumer) {
+                                      Consumer<Event<T>> consumer) {
         return consumeAll(startFrom, event -> false, consumer);
     }
 
     /**
      * Consumes all events from the EventSource until the {@link Predicate stopCondition} is met.
      * <p>
-     *     The {@link EventConsumer consumer} will be called zero or more times, depending on
+     *     The {@link Consumer consumer} will be called zero or more times, depending on
      *     the number of events retrieved from the EventSource.
      * </p>
      *
@@ -74,7 +75,7 @@ public interface EventSource<T> {
      * @param consumer consumer used to process events
      * @return the new read position
      */
-    default StreamPosition consumeAll(Predicate<Event<T>> stopCondition, EventConsumer<T> consumer) {
+    default StreamPosition consumeAll(Predicate<Event<T>> stopCondition, Consumer<Event<T>> consumer) {
         return consumeAll(StreamPosition.of(), stopCondition, consumer);
     }
 
@@ -82,7 +83,7 @@ public interface EventSource<T> {
      * Consumes all events from the EventSource, beginning with {@link StreamPosition startFrom}, until
      * the {@link Predicate stopCondition} is met.
      * <p>
-     *     The {@link EventConsumer consumer} will be called zero or more times, depending on
+     *     The {@link Consumer consumer} will be called zero or more times, depending on
      *     the number of events retrieved from the EventSource.
      * </p>
      *
@@ -93,5 +94,5 @@ public interface EventSource<T> {
      */
     StreamPosition consumeAll(StreamPosition startFrom,
                               Predicate<Event<T>> stopCondition,
-                              EventConsumer<T> consumer);
+                              Consumer<Event<T>> consumer);
 }

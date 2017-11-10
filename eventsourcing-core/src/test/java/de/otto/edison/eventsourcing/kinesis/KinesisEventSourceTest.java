@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import de.otto.edison.eventsourcing.consumer.Event;
-import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,19 +20,16 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import static com.google.common.collect.ImmutableList.of;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KinesisEventSourceTest {
-
-    private static final String STREAM_NAME = "test";
 
     @Mock
     private KinesisStream kinesisStream;
@@ -42,7 +38,7 @@ public class KinesisEventSourceTest {
     private KinesisClient kinesisClient;
 
     @Mock
-    private EventConsumer<TestData> consumer;
+    private Consumer<Event<TestData>> consumer;
 
     private ObjectMapper objectMapper = new ObjectMapper();
     private KinesisEventSource<TestData> eventSource;

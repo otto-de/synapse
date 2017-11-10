@@ -70,6 +70,11 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V> {
     }
 
     @Override
+    public void clear() {
+        store.clear();
+    }
+
+    @Override
     public Iterable<String> getKeySetIterable() {
         return store.keySet();
     }
@@ -106,12 +111,12 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V> {
             this.clazz = clazz;
         }
 
-        public Builder withStore(ChronicleMap<String, String> val) {
+        public Builder<V> withStore(ChronicleMap<String, String> val) {
             store = val;
             return this;
         }
 
-        public Builder withObjectMapper(ObjectMapper val) {
+        public Builder<V> withObjectMapper(ObjectMapper val) {
             objectMapper = val;
             return this;
         }

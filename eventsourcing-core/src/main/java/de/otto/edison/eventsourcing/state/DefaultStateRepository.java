@@ -31,6 +31,11 @@ public class DefaultStateRepository<V> implements StateRepository<V> {
     }
 
     @Override
+    public void clear() {
+        map.clear();
+    }
+
+    @Override
     public Iterable<String> getKeySetIterable() {
         return map.keySet();
     }

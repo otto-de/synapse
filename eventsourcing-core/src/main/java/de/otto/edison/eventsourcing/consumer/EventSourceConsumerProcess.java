@@ -57,7 +57,7 @@ public class EventSourceConsumerProcess {
         eventSourceWithConsumer.forEach((eventSource, eventConsumer) -> executorService.submit(() -> {
             try {
                 LOG.info("Starting {}...", eventConsumer.streamName());
-                eventSource.consumeAll(ignore -> stopThread.get(), eventConsumer);
+                eventSource.consumeAll(ignore -> stopThread.get(), eventConsumer.consumerFunction());
             } catch (Exception e) {
                 LOG.error("Starting failed: " + e.getMessage(), e);
             }

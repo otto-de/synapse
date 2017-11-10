@@ -11,7 +11,7 @@ import static org.mockito.Mockito.mock;
 
 public class MethodInvokingEventConsumerTest {
 
-    boolean eventReceived;
+    private boolean eventReceived;
 
     public void validMethod(final Event<String> event) {
         eventReceived = true;
@@ -41,7 +41,7 @@ public class MethodInvokingEventConsumerTest {
         final Method method = MethodInvokingEventConsumerTest.class.getMethod("validMethod", Event.class);
         final Method method1 = AopUtils.selectInvocableMethod(method, MethodInvokingEventConsumerTest.class);
         final MethodInvokingEventConsumer eventConsumer = new MethodInvokingEventConsumer("stream-name", this, method1);
-        eventConsumer.accept(mock(Event.class));
+        eventConsumer.consumerFunction().accept(mock(Event.class));
         assertThat(eventReceived).isTrue();
     }
 
@@ -50,7 +50,7 @@ public class MethodInvokingEventConsumerTest {
     public void shouldBuildEventConsumerAndIgnoreReturnValue() throws NoSuchMethodException {
         final Method method = MethodInvokingEventConsumerTest.class.getMethod("validMethodWithReturnValue", Event.class);
         final MethodInvokingEventConsumer eventConsumer = new MethodInvokingEventConsumer("stream-name", this, method);
-        eventConsumer.accept(mock(Event.class));
+        eventConsumer.consumerFunction().accept(mock(Event.class));
         assertThat(eventReceived).isTrue();
     }
 

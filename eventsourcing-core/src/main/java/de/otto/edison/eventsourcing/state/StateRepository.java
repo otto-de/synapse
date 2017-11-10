@@ -12,6 +12,8 @@ public interface StateRepository<V> {
 
     void remove(String key);
 
+    void clear();
+
     Optional<V> get(String key);
 
     Iterable<String> getKeySetIterable();

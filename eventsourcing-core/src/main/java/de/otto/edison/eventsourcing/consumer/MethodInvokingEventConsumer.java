@@ -2,6 +2,7 @@ package de.otto.edison.eventsourcing.consumer;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.function.Consumer;
 
 public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
 
@@ -42,7 +43,11 @@ public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
     }
 
     @Override
-    public void accept(final Event<T> event) {
+    public Consumer<Event<T>> consumerFunction() {
+        return this::accept;
+    }
+
+    private void accept(final Event<T> event) {
         try {
             method.invoke(instance, event);
         } catch (IllegalAccessException | InvocationTargetException e) {
