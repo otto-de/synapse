@@ -8,16 +8,6 @@ import java.util.function.Predicate;
  * <p>
  *     Event sources can be consumed by {@link Consumer consumers}.
  * </p>
- * <p>
- *     Event sources can be configured using {@link de.otto.edison.eventsourcing.annotation.EnableEventSource}:
- * </p>
- * <pre><code>
- *    {@literal @}Configuration
- *    {@literal @}EnableEventSource}(name="foo", streamName="foo-event-stream", payloadType="MyPayload.class")
- *     public class MyConfiguration {
- *     ...
- *     }
- * </code></pre>
  *
  * @param <T> the type of the event payloads
  */
