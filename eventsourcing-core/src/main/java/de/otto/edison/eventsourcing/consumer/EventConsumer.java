@@ -42,6 +42,8 @@ public interface EventConsumer<T> {
 
     /**
      * Consumer to consume a single event.
+     *
+     * @return consumer function that is called for each event
      */
     Consumer<Event<T>> consumerFunction();
 
