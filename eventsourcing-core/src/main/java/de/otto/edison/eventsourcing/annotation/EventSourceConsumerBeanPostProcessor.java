@@ -1,6 +1,10 @@
 package de.otto.edison.eventsourcing.annotation;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.CaseFormat;
+import de.otto.edison.eventsourcing.CompactingKinesisEventSource;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
+import de.otto.edison.eventsourcing.s3.SnapshotService;
 import org.slf4j.Logger;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
@@ -12,6 +16,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.MethodIntrospector;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationUtils;
+import software.amazon.awssdk.services.kinesis.KinesisClient;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -78,10 +83,15 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
             final Method method = entry.getKey();
             for (EventSourceConsumer consumer : entry.getValue()) {
                 registerEventConsumer(consumer, method, bean);
+                String resolvedStreamName = applicationContext.getEnvironment().resolvePlaceholders(consumer.streamName());
+                if (!eventSourceExists(resolvedStreamName)) {
+                    registerEventSource(resolvedStreamName, consumer.payloadType());
+                }
             }
         }
         LOG.info("{} @EventSourceConsumer methods processed on bean {} : {}'", annotatedMethods.size(), beanName, annotatedMethods);
     }
+
 
     /*
      * AnnotationUtils.getRepeatableAnnotations does not look at interfaces
@@ -95,6 +105,14 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
         return listeners;
     }
 
+    private boolean eventSourceExists(String streamName) {
+        return applicationContext.containsBean(streamNameToEventSourceName(streamName));
+    }
+
+    private String streamNameToEventSourceName(String streamName) {
+        return CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, streamName) + "EventSource";
+    }
+
     private void registerEventConsumer(final EventSourceConsumer annotation,
                                        final Method annotatedMethod,
                                        final Object bean) {
@@ -104,6 +122,14 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
         if (!beanFactory.containsBean(annotation.name())) {
             this.applicationContext.getBeanFactory().registerSingleton(annotation.name(), eventConsumer);
         }
+    }
+
+    private <T> void registerEventSource(String streamName, Class<T> payloadType) {
+        SnapshotService snapshotService = applicationContext.getBean(SnapshotService.class);
+        ObjectMapper objectMapper = applicationContext.getBean(ObjectMapper.class);
+        KinesisClient kinesisClient = applicationContext.getBean(KinesisClient.class);
+        CompactingKinesisEventSource<T> eventSource = new CompactingKinesisEventSource<>(streamName, payloadType, snapshotService, objectMapper, kinesisClient);
+        applicationContext.getBeanFactory().registerSingleton(streamNameToEventSourceName(streamName), eventSource);
     }
 
 }

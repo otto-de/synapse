@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.annotation;
 
+import de.otto.edison.eventsourcing.CompactingKinesisEventSource;
 import de.otto.edison.eventsourcing.configuration.EventSourcingConfiguration;
 import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
@@ -27,13 +28,22 @@ public class EventSourceConsumerBeanPostProcessorTest {
                 name = "firstConsumer",
                 streamName = "some-stream",
                 payloadType = String.class)
-        public void first(Event<String> event) {}
+        public void first(Event<String> event) {
+        }
 
         @EventSourceConsumer(
                 name = "secondConsumer",
                 streamName = "some-stream",
                 payloadType = String.class)
-        public void second(Event<String> event) {}
+        public void second(Event<String> event) {
+        }
+
+        @EventSourceConsumer(
+                name = "thirdConsumer",
+                streamName = "other-stream",
+                payloadType = String.class)
+        public void third(Event<String> event) {
+        }
     }
 
     @Configuration
@@ -53,5 +63,13 @@ public class EventSourceConsumerBeanPostProcessorTest {
         assertThat(context.getType("firstConsumer")).isEqualTo(MethodInvokingEventConsumer.class);
         assertThat(context.containsBean("secondConsumer")).isTrue();
         assertThat(context.getType("secondConsumer")).isEqualTo(MethodInvokingEventConsumer.class);
+
+        assertThat(context.containsBean("someStreamEventSource")).isTrue();
+        assertThat(context.getType("someStreamEventSource")).isEqualTo(CompactingKinesisEventSource.class);
+
+        assertThat(context.containsBean("otherStreamEventSource")).isTrue();
+        assertThat(context.getType("otherStreamEventSource")).isEqualTo(CompactingKinesisEventSource.class);
     }
+
+
 }

@@ -35,7 +35,6 @@ public class EventSourcingConfiguration {
     private List<EventSource> eventSources;
 
     @Bean
-    @ConditionalOnBean({EventSource.class, EventConsumer.class})
     public EventSourceConsumerProcess eventSourceConsumerProcess() {
         return new EventSourceConsumerProcess(
                 eventSources != null ? eventSources : emptyList(),

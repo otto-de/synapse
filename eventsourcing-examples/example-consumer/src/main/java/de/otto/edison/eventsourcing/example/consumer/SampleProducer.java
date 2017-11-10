@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import de.otto.edison.eventsourcing.example.consumer.configuration.MyServiceProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
@@ -32,7 +31,6 @@ public class SampleProducer {
         produceProductsSampleData();
     }
 
-    @Async
     protected void produceBananaSampleData() {
         PutRecordsRequest putRecordBatchRequest = PutRecordsRequest
                 .builder()
@@ -50,7 +48,6 @@ public class SampleProducer {
         kinesisClient.putRecords(putRecordBatchRequest);
     }
 
-    @Async
     protected void produceProductsSampleData() {
         PutRecordsRequest putRecordBatchRequest = PutRecordsRequest
                 .builder()

@@ -2,6 +2,9 @@ aws:
   profile: edison-aws-test
   region: eu-central-1
 
+management:
+    context-path: /internal
+
 edison:
   eventsourcing:
     snapshot:
@@ -16,3 +19,6 @@ exampleservice:
 
 logging:
     config: classpath:logback-console.xml
+
+server:
+  port: 5555
