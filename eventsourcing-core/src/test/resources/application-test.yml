@@ -1,0 +1,14 @@
+edison:
+  s3-properties:
+    enabled: false
+    bucketname: test
+  ldap:
+    enabled: false
+
+service:
+  encryption:
+    password: test
+    salt: test
+aws:
+  profile: ft3-nonlive
+
