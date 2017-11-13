@@ -22,7 +22,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-
 public class SnapshotReadServiceTest {
 
     private SnapshotReadService testee;
@@ -30,7 +29,7 @@ public class SnapshotReadServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        EventSourcingProperties eventSourcingProperties = createEventSourcingProperties();
+        EventSourcingProperties eventSourcingProperties = SnapshotServiceTestUtils.createEventSourcingProperties();
         s3Service = mock(S3Service.class);
         testee = new SnapshotReadService(s3Service, eventSourcingProperties, new ObjectMapper());
     }
@@ -84,11 +83,4 @@ public class SnapshotReadServiceTest {
         assertThat(s3Object.isPresent(), is(false));
     }
 
-    private EventSourcingProperties createEventSourcingProperties() {
-        EventSourcingProperties eventSourcingProperties = new EventSourcingProperties();
-        EventSourcingProperties.Snapshot snapshot = new EventSourcingProperties.Snapshot();
-        snapshot.setBucketTemplate("test<stream-name>");
-        eventSourcingProperties.setSnapshot(snapshot);
-        return eventSourcingProperties;
-    }
 }

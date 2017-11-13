@@ -1,0 +1,106 @@
+package de.otto.edison.eventsourcing.s3;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
+import de.otto.edison.aws.s3.S3Service;
+import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
+import de.otto.edison.eventsourcing.consumer.StreamPosition;
+import de.otto.edison.eventsourcing.state.DefaultStateRepository;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.core.StringStartsWith.startsWith;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+
+public class SnapshotWriteServiceTest {
+
+    private static final String STREAM_NAME = "teststream";
+    private SnapshotWriteService testee;
+    private S3Service s3Service;
+
+    @Before
+    public void setUp() throws Exception {
+        EventSourcingProperties eventSourcingProperties = SnapshotServiceTestUtils.createEventSourcingProperties();
+        s3Service = mock(S3Service.class);
+        testee = new SnapshotWriteService(s3Service, eventSourcingProperties);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        deleteSnapshotFilesFromTemp();
+    }
+
+    @Test
+    public void shouldUploadSnapshotFile() throws Exception {
+        DefaultStateRepository<String> stateRepository = new DefaultStateRepository<>();
+        stateRepository.put("testKey", "testValue1");
+
+        //when
+        String fileName = testee.takeSnapshot(STREAM_NAME, StreamPosition.of(), stateRepository);
+
+        //then
+        ArgumentCaptor<File> fileArgumentCaptor = ArgumentCaptor.forClass(File.class);
+        Mockito.verify(s3Service).upload(eq("test-" + STREAM_NAME), fileArgumentCaptor.capture());
+
+        File actualFile = fileArgumentCaptor.getValue();
+        assertThat(actualFile.getName(), containsString(fileName));
+        assertThat(fileName, startsWith("compaction-" + STREAM_NAME + "-snapshot-"));
+
+        assertFalse(actualFile.exists());
+    }
+
+    @Test
+    public void shouldCreateCorrectSnapshotFile() throws Exception {
+        DefaultStateRepository<String> stateRepository = new DefaultStateRepository<>();
+        stateRepository.put("testKey", "testValue1");
+        stateRepository.put("testKey2", "testValue2");
+
+        //when
+        StreamPosition streamPosition = StreamPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
+        File snapshot = testee.createSnapshot(STREAM_NAME, streamPosition, stateRepository);
+
+        //then
+        Map<String, String> data = new HashMap<>();
+
+        SnapshotReadService snapshotReadService = new SnapshotReadService(s3Service, SnapshotServiceTestUtils.createEventSourcingProperties(), new ObjectMapper());
+
+        StreamPosition actualStreamPosition = snapshotReadService.processSnapshotFile(snapshot,
+                "test",
+                (event) -> false,
+                (event) -> data.put(event.key(), event.payload()),
+                String.class);
+
+        assertThat(actualStreamPosition, is(streamPosition));
+        assertThat(data.get("testKey"), is("testValue1"));
+        assertThat(data.get("testKey2"), is("testValue2"));
+        assertThat(data.size(), is(2));
+    }
+
+    private void deleteSnapshotFilesFromTemp() throws IOException {
+        Files.list(Paths.get(System.getProperty("java.io.tmpdir")))
+                .filter(p -> p.toString().startsWith("/tmp/compaction-teststream-snapshot-"))
+                .forEach(path -> {
+                    try {
+                        Files.deleteIfExists(path);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+}

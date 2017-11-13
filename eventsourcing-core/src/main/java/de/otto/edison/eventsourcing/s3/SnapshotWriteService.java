@@ -55,7 +55,7 @@ public class SnapshotWriteService {
         return fileName;
     }
 
-    private File createSnapshot(final String streamName,
+    File createSnapshot(final String streamName,
                                 final StreamPosition currentStreamPosition,
                                 final StateRepository<String> stateRepository) throws IOException {
         File dataFile = createSnapshotFile(streamName);
