@@ -10,13 +10,15 @@ import de.otto.edison.eventsourcing.s3.SnapshotEventSource;
 import de.otto.edison.eventsourcing.s3.SnapshotService;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 
+import java.io.IOException;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class CompactingKinesisEventSource<T> implements EventSource<T> {
 
     private SnapshotService snapshotService;
-    private ObjectMapper objectMapper;
+    private Function<String, T> deserializer;
     private KinesisClient kinesisClient;
 
     private final String streamName;
@@ -30,7 +32,25 @@ public class CompactingKinesisEventSource<T> implements EventSource<T> {
         this.streamName = streamName;
         this.payloadType = payloadType;
         this.snapshotService = snapshotService;
-        this.objectMapper = objectMapper;
+        this.deserializer = (in) -> {
+            try {
+                return objectMapper.readValue(in, payloadType);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        };
+        this.kinesisClient = kinesisClient;
+    }
+
+    public CompactingKinesisEventSource(String streamName,
+                                        Class<T> payloadType,
+                                        SnapshotService snapshotService,
+                                        Function<String, T> deserializer,
+                                        KinesisClient kinesisClient) {
+        this.streamName = streamName;
+        this.payloadType = payloadType;
+        this.snapshotService = snapshotService;
+        this.deserializer = deserializer;
         this.kinesisClient = kinesisClient;
     }
 
@@ -44,7 +64,7 @@ public class CompactingKinesisEventSource<T> implements EventSource<T> {
         final SnapshotEventSource<T> snapshotEventSource = new SnapshotEventSource<>(streamName, snapshotService, payloadType);
 
         KinesisStream kinesisStream = new KinesisStream(kinesisClient, streamName);
-        final KinesisEventSource<T> kinesisEventSource = new KinesisEventSource<>(payloadType, objectMapper, kinesisStream);
+        final KinesisEventSource<T> kinesisEventSource = new KinesisEventSource<>(deserializer, kinesisStream);
 
         final StreamPosition streamPosition = snapshotEventSource.consumeAll(stopCondition, consumer);
         return kinesisEventSource.consumeAll(streamPosition, stopCondition, consumer);

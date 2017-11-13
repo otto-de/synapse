@@ -37,31 +37,16 @@ public class KinesisEventSourceTest {
     @Mock
     private KinesisClient kinesisClient;
 
-    @Mock
-    private Consumer<Event<TestData>> consumer;
-
     private ObjectMapper objectMapper = new ObjectMapper();
-    private KinesisEventSource<TestData> eventSource;
 
     @Before
     public void setUp() throws Exception {
-        eventSource = new KinesisEventSource<>(TestData.class, objectMapper, kinesisStream);
-
         KinesisShard shard1 = new KinesisShard("shard1", kinesisStream, kinesisClient);
         when(kinesisStream.retrieveAllOpenShards()).thenReturn(of(shard1));
         when(kinesisClient.getShardIterator(any())).thenReturn(GetShardIteratorResponse.builder()
                 .shardIterator("someIterator")
                 .build());
 
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    public void shouldConsumeAllEventsFromKinesis() throws Exception {
-        // given
-        TestData testData1 = new TestData("blue");
-        TestData testData2 = new TestData("green");
-        StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
         GetRecordsResponse response1 = GetRecordsResponse.builder()
                 .records(createRecord("blue"))
                 .millisBehindLatest(1234L)
@@ -74,6 +59,18 @@ public class KinesisEventSourceTest {
                 .build();
         when(kinesisClient.getRecords(any())).thenReturn(response1, response2);
 
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void shouldConsumeAllEventsFromKinesisWithObjectMapper() throws Exception {
+        // given
+        StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
+
+        Consumer<Event<TestData>> consumer = mock(Consumer.class);
+
+        KinesisEventSource<TestData> eventSource = new KinesisEventSource<>(TestData.class, objectMapper, kinesisStream);
+
         // when
         eventSource.consumeAll(initialPositions, this::stopIfGreen, consumer);
 
@@ -81,8 +78,32 @@ public class KinesisEventSourceTest {
         ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
         verify(consumer, times(2)).accept(captor.capture());
         List<Event> events = captor.getAllValues();
-        assertThat(events.get(0).payload(), is(testData1));
-        assertThat(events.get(1).payload(), is(testData2));
+
+        assertThat(events.get(0).payload(), is(new TestData("blue")));
+        assertThat(events.get(1).payload(), is(new TestData("green")));
+    }
+
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void shouldConsumeAllEventsAndDeserializeToString() throws Exception {
+        // given
+        StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
+
+        Consumer<Event<String>> consumer = mock(Consumer.class);
+
+        KinesisEventSource<String> eventSource = new KinesisEventSource<>(in -> in, kinesisStream);
+
+        // when
+        eventSource.consumeAll(initialPositions, this::stopIfGreenForString, consumer);
+
+        // then
+        ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        verify(consumer, times(2)).accept(captor.capture());
+
+        List<Event> events = captor.getAllValues();
+        assertThat(events.get(0).payload(), is(objectMapper.writeValueAsString(new TestData("blue"))));
+        assertThat(events.get(1).payload(), is(objectMapper.writeValueAsString(new TestData("green"))));
     }
 
     private boolean stopIfGreen(Event<TestData> event) {
@@ -92,8 +113,15 @@ public class KinesisEventSourceTest {
         return "green".equals(event.payload().data);
     }
 
+    private boolean stopIfGreenForString(Event<String> event) {
+        if (event == null) {
+            return false;
+        }
+        return event.payload().contains("green");
+    }
+
     private Record createRecord(String data) {
-        String json = "{\"data\": \"" + data + "\"}";
+        String json = "{\"data\":\"" + data + "\"}";
         return Record.builder()
                 .data(ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8)))
                 .sequenceNumber("sequence-" + data)
