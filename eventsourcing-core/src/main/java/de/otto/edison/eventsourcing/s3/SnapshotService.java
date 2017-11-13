@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
 import de.otto.edison.eventsourcing.consumer.Event;
-import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.state.StateRepository;
 import org.slf4j.Logger;
@@ -17,7 +16,9 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
@@ -208,7 +209,7 @@ public class SnapshotService {
                                      final Consumer<Event<T>> callback,
                                      final Class<T> payloadType) throws IOException {
         // Would be better to store event meta data together with key+value:
-        final Instant now = Instant.now();
+        final Instant arrivalTimestamp = Instant.EPOCH;
         boolean abort = false;
         while (!abort && parser.nextToken() != JsonToken.END_ARRAY) {
             JsonToken currentToken = parser.currentToken();
@@ -217,7 +218,7 @@ public class SnapshotService {
                         parser.getValueAsString(),
                         objectMapper.convertValue(parser.nextTextValue(), payloadType),
                         sequenceNumber,
-                        now);
+                        arrivalTimestamp);
                 callback.accept(event);
                 abort = stopCondition.test(event);
             }
