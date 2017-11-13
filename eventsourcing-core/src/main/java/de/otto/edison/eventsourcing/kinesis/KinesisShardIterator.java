@@ -6,7 +6,7 @@ import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 
 public class KinesisShardIterator {
 
-    public static final int FETCH_RECORDS_LIMIT = 1000;
+    static final int FETCH_RECORDS_LIMIT = 10000;
 
     private final KinesisClient kinesisClient;
     private String id;

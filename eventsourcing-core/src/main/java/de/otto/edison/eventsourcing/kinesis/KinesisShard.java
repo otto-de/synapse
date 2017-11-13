@@ -100,7 +100,7 @@ public class KinesisShard {
     private boolean waitABit() {
         try {
             /* See DECISIONS.md - Question #1 */
-            Thread.sleep(1000);
+            Thread.sleep(100);
         } catch (InterruptedException e) {
             LOG.warn("Thread got interrupted");
             return true;

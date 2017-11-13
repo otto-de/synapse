@@ -20,12 +20,12 @@ public class SnapshotEventSource<T> implements EventSource<T> {
 
     private static final Logger LOG = getLogger(SnapshotEventSource.class);
 
-    private final SnapshotService snapshotService;
+    private final SnapshotReadService snapshotService;
     private final String name;
     private final Class<T> payloadType;
 
     public SnapshotEventSource(final String name,
-                               final SnapshotService snapshotService,
+                               final SnapshotReadService snapshotService,
                                final Class<T> payloadType) {
         this.name = name;
         this.snapshotService = snapshotService;

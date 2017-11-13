@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.annotation;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.CompactingKinesisEventSource;
 import de.otto.edison.eventsourcing.configuration.EventSourcingConfiguration;
 import de.otto.edison.eventsourcing.consumer.Event;
@@ -56,6 +57,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test
     public void shouldRegisterEventConsumers() {
+        context.register(ObjectMapper.class);
         context.register(TestConfiguration.class);
         context.register(EventSourcingConfiguration.class);
         context.refresh();

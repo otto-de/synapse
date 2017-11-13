@@ -25,8 +25,8 @@ import static org.junit.Assert.assertThat;
 @ActiveProfiles("test")
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.edison.eventsourcing"})
-@SpringBootTest(classes = SnapshotServiceIntegrationTest.class)
-public class SnapshotServiceIntegrationTest {
+@SpringBootTest(classes = SnapshotReadServiceIntegrationTest.class)
+public class SnapshotReadServiceIntegrationTest {
 
     private static final String S3_UTILS_TEST_BUCKET = "de-otto-promo-compaction-test-snapshots";
 
@@ -34,7 +34,7 @@ public class SnapshotServiceIntegrationTest {
     private S3Service s3Service;
 
     @Autowired
-    private SnapshotService snapshotService;
+    private SnapshotReadService snapshotService;
 
     @Before
     public void setUp() throws Exception {

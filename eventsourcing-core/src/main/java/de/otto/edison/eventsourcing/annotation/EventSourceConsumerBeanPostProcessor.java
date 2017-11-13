@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.CaseFormat;
 import de.otto.edison.eventsourcing.CompactingKinesisEventSource;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
-import de.otto.edison.eventsourcing.s3.SnapshotService;
+import de.otto.edison.eventsourcing.s3.SnapshotReadService;
 import org.slf4j.Logger;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
@@ -125,7 +125,7 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
     }
 
     private <T> void registerEventSource(String streamName, Class<T> payloadType) {
-        SnapshotService snapshotService = applicationContext.getBean(SnapshotService.class);
+        SnapshotReadService snapshotService = applicationContext.getBean(SnapshotReadService.class);
         ObjectMapper objectMapper = applicationContext.getBean(ObjectMapper.class);
         KinesisClient kinesisClient = applicationContext.getBean(KinesisClient.class);
         CompactingKinesisEventSource<T> eventSource = new CompactingKinesisEventSource<>(streamName, payloadType, snapshotService, objectMapper, kinesisClient);

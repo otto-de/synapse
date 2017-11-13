@@ -23,16 +23,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-public class SnapshotServiceTest {
+public class SnapshotReadServiceTest {
 
-    private SnapshotService testee;
+    private SnapshotReadService testee;
     private S3Service s3Service;
 
     @Before
     public void setUp() throws Exception {
         EventSourcingProperties eventSourcingProperties = createEventSourcingProperties();
         s3Service = mock(S3Service.class);
-        testee = new SnapshotService(s3Service, eventSourcingProperties, new ObjectMapper());
+        testee = new SnapshotReadService(s3Service, eventSourcingProperties, new ObjectMapper());
     }
 
     @Test

@@ -7,7 +7,7 @@ import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.kinesis.KinesisEventSource;
 import de.otto.edison.eventsourcing.kinesis.KinesisStream;
 import de.otto.edison.eventsourcing.s3.SnapshotEventSource;
-import de.otto.edison.eventsourcing.s3.SnapshotService;
+import de.otto.edison.eventsourcing.s3.SnapshotReadService;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 
 import java.io.IOException;
@@ -17,7 +17,7 @@ import java.util.function.Predicate;
 
 public class CompactingKinesisEventSource<T> implements EventSource<T> {
 
-    private SnapshotService snapshotService;
+    private SnapshotReadService snapshotService;
     private Function<String, T> deserializer;
     private KinesisClient kinesisClient;
 
@@ -26,7 +26,7 @@ public class CompactingKinesisEventSource<T> implements EventSource<T> {
 
     public CompactingKinesisEventSource(String streamName,
                                         Class<T> payloadType,
-                                        SnapshotService snapshotService,
+                                        SnapshotReadService snapshotService,
                                         ObjectMapper objectMapper,
                                         KinesisClient kinesisClient) {
         this.streamName = streamName;
@@ -44,7 +44,7 @@ public class CompactingKinesisEventSource<T> implements EventSource<T> {
 
     public CompactingKinesisEventSource(String streamName,
                                         Class<T> payloadType,
-                                        SnapshotService snapshotService,
+                                        SnapshotReadService snapshotService,
                                         Function<String, T> deserializer,
                                         KinesisClient kinesisClient) {
         this.streamName = streamName;
