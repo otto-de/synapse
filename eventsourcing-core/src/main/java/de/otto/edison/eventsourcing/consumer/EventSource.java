@@ -30,6 +30,9 @@ public interface EventSource<T> {
      *     the number of events retrieved from the EventSource.
      * </p>
      *
+     * {@link Consumer consumer} has to be thread safe as it may be called from multiple threads
+     * (e.g. for kinesis streams there is one thread per shard)
+     *
      * @param consumer consumer used to process the events
      * @return the new read position
      */
@@ -44,6 +47,9 @@ public interface EventSource<T> {
      *     The {@link Consumer consumer} will be called zero or more times, depending on
      *     the number of events retrieved from the EventSource.
      * </p>
+     *
+     * {@link Consumer consumer} has to be thread safe as it may be called from multiple threads
+     * (e.g. for kinesis streams there is one thread per shard)
      *
      * @param startFrom the read position returned from earlier executions
      * @param consumer consumer used to process the events
@@ -61,6 +67,9 @@ public interface EventSource<T> {
      *     the number of events retrieved from the EventSource.
      * </p>
      *
+     * {@link Consumer consumer} has to be thread safe as it may be called from multiple threads
+     * (e.g. for kinesis streams there is one thread per shard)
+     *
      * @param stopCondition the predicate used as a stop condition
      * @param consumer consumer used to process events
      * @return the new read position
@@ -76,6 +85,9 @@ public interface EventSource<T> {
      *     The {@link Consumer consumer} will be called zero or more times, depending on
      *     the number of events retrieved from the EventSource.
      * </p>
+     *
+     * {@link Consumer consumer} has to be thread safe as it may be called from multiple threads
+     * (e.g. for kinesis streams there is one thread per shard)
      *
      * @param startFrom the read position returned from earlier executions
      * @param stopCondition the predicate used as a stop condition

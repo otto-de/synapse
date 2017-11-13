@@ -6,7 +6,6 @@ import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,7 +22,7 @@ public class EventSourceConsumerProcess {
     // Siehe https://programtalk.com/java/executorservice-not-shutting-down/
 
     private static final Logger LOG = getLogger(EventSourceConsumerProcess.class);
-    public static final String THREAD_NAME_PREFIX = "edison-eventsourcing-consumer-";
+    private static final String THREAD_NAME_PREFIX = "edison-eventsourcing-consumer-";
 
     private final AtomicBoolean stopThread = new AtomicBoolean(false);
 

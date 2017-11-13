@@ -71,7 +71,6 @@ public class Event<T> {
      *
      * @return Duration
      */
-    @Nonnull
     public Optional<Duration> durationBehind() {
         return Optional.ofNullable(durationBehind);
     }

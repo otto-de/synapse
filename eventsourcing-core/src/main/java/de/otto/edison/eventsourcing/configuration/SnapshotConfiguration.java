@@ -29,12 +29,6 @@ public class SnapshotConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
     public SnapshotService snapshotService(final S3Service s3Service,
                                            final ObjectMapper objectMapper,
                                            final EventSourcingProperties eventSourcingProperties) {
