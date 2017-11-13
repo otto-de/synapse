@@ -19,3 +19,12 @@ See [AWS Documentation](http://docs.aws.amazon.com/de_de/streams/latest/dev/deve
 
 Good question. We removed @EnableEventSource. The EventSource is now created 
 in EventSourceConsumerBeanPostProcessor.
+
+#### 3. Why do I get the error: "Cannot register consumers for same streamName ... but with different payloadType"?
+
+This error appears when the a developer registers multiple 
+`@EventSourceConsumer` beans for the same stream name but with
+different payload types. When an `@EventSourceConsumer` is registered, 
+a `CompactingKinesisEventSource` instance is created with `payloadType` as a
+parameter. If there are multiple consumers, the `CompactingKinesisEventSource`
+is reused, but this does not work with different payload types. 

@@ -19,10 +19,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 
 import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -78,20 +75,30 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
     }
 
     private void registerEventConsumers(Object bean, String beanName, Map<Method, Set<EventSourceConsumer>> annotatedMethods) {
-        // Non-empty set of methods
+        Map<String, Class> payloadTypesForName = new HashMap<>();
+
         for (Map.Entry<Method, Set<EventSourceConsumer>> entry : annotatedMethods.entrySet()) {
             final Method method = entry.getKey();
             for (EventSourceConsumer consumer : entry.getValue()) {
                 registerEventConsumer(consumer, method, bean);
                 String resolvedStreamName = applicationContext.getEnvironment().resolvePlaceholders(consumer.streamName());
+
+                assertThatEventConsumersForSameStreamNameHaveSamePayloadType(payloadTypesForName, consumer, resolvedStreamName);
+
                 if (!eventSourceExists(resolvedStreamName)) {
                     registerEventSource(resolvedStreamName, consumer.payloadType());
+                    payloadTypesForName.put(resolvedStreamName, consumer.payloadType());
                 }
             }
         }
         LOG.info("{} @EventSourceConsumer methods processed on bean {} : {}'", annotatedMethods.size(), beanName, annotatedMethods);
     }
 
+    private void assertThatEventConsumersForSameStreamNameHaveSamePayloadType(Map<String, Class> payloadTypesForName, EventSourceConsumer consumer, String resolvedStreamName) {
+        if (payloadTypesForName.containsKey(resolvedStreamName) && payloadTypesForName.get(resolvedStreamName) != consumer.payloadType()) {
+            throw new IllegalStateException(String.format("Cannot register consumers for same streamName \"%s\" but with different payloadType", resolvedStreamName));
+        }
+    }
 
     /*
      * AnnotationUtils.getRepeatableAnnotations does not look at interfaces

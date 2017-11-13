@@ -7,11 +7,13 @@ import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
 import org.junit.After;
 import org.junit.Test;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.Assert.fail;
 
 public class EventSourceConsumerBeanPostProcessorTest {
 
@@ -47,6 +49,23 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
+
+    static class FailingTestConsumer {
+        @EventSourceConsumer(
+                name = "firstConsumer",
+                streamName = "some-stream",
+                payloadType = String.class)
+        public void first(Event<String> event) {
+        }
+
+        @EventSourceConsumer(
+                name = "secondConsumer",
+                streamName = "some-stream",
+                payloadType = Integer.class)
+        public void second(Event<Integer> event) {
+        }
+    }
+
     @Configuration
     static class TestConfiguration {
         @Bean
@@ -71,6 +90,21 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
         assertThat(context.containsBean("otherStreamEventSource")).isTrue();
         assertThat(context.getType("otherStreamEventSource")).isEqualTo(CompactingKinesisEventSource.class);
+    }
+
+
+    @Test()
+    public void shouldFailRegisteringEventConsumersWithSameNameAndDifferentType() {
+        try {
+            context.register(ObjectMapper.class);
+            context.register(FailingTestConsumer.class);
+            context.register(EventSourcingConfiguration.class);
+            context.refresh();
+            fail();
+        } catch (BeanCreationException e) {
+            assertThat(e.getBeanName()).isEqualTo("eventSourceConsumerBeanPostProcessorTest.FailingTestConsumer");
+            assertThat(e.getCause().toString()).isEqualTo("java.lang.IllegalStateException: Cannot register consumers for same streamName \"some-stream\" but with different payloadType");
+        }
     }
 
 
