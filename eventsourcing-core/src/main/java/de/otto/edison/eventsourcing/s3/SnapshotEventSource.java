@@ -8,9 +8,12 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static java.nio.file.Files.delete;
@@ -19,6 +22,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class SnapshotEventSource<T> implements EventSource<T> {
 
     private static final Logger LOG = getLogger(SnapshotEventSource.class);
+    private static final int ONE_MB = 1024 * 1024;
 
     private final SnapshotReadService snapshotService;
     private final String name;
@@ -46,17 +50,14 @@ public class SnapshotEventSource<T> implements EventSource<T> {
         try {
             latestSnapshot = downloadLatestSnapshot();
             LOG.info("Downloaded Snapshot");
-
             final StreamPosition readPosition = snapshotService.consumeSnapshot(latestSnapshot, name, stopCondition, consumer, payloadType);
             LOG.info("Read Snapshot into Memory");
-
-            deleteSnapshotFile(latestSnapshot);
             return readPosition;
         } catch (final IOException | S3Exception e) {
             LOG.warn("Unable to load snapshot: {}", e.getMessage());
-            deleteSnapshotFile(latestSnapshot);
-            //throw new EventSourceException("Error consuming Events from snapshot EventSource: " + e.getMessage(), e);
             return StreamPosition.of();
+        } finally {
+            deleteSnapshotFile(latestSnapshot);
         }
     }
 
@@ -93,6 +94,14 @@ public class SnapshotEventSource<T> implements EventSource<T> {
             float usableSpace = (float) file.getUsableSpace() / 1024 / 1024 / 1024;
             float freeSpace = (float) file.getFreeSpace() / 1024 / 1024 / 1024;
             LOG.info(format("Available DiskSpace: usable %.3f GB / free %.3f GB", usableSpace, freeSpace));
+
+            String tempDirContent = Files.list(Paths.get(System.getProperty("java.io.tmpdir")))
+                    .filter(path -> path.toFile().isFile())
+                    .filter(path -> path.toFile().length() > ONE_MB)
+                    .map(path -> String.format("%s %dmb", path.toString(), path.toFile().length() / ONE_MB))
+                    .collect(Collectors.joining("\n"));
+            LOG.info("files in /tmp > 1mb: \n {}", tempDirContent);
+
         } catch (IOException e) {
             LOG.info("Error calculating disk usage: " + e.getMessage());
         } finally {

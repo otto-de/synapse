@@ -51,7 +51,10 @@ public class SnapshotWriteService {
         LOG.info("Finished creating snapshot file: {}", snapshotFile.getAbsolutePath());
         uploadSnapshot(createBucketName(streamName, this.snapshotBucketTemplate), snapshotFile);
         LOG.info("Finished uploaded snapshot file to s3");
-        snapshotFile.delete();
+        boolean success = snapshotFile.delete();
+        if (!success) {
+            LOG.error("failed to delete snapshot {}", snapshotFile.getName());
+        }
         return fileName;
     }
 
