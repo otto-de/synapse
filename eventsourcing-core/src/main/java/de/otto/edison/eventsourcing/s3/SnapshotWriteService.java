@@ -46,24 +46,24 @@ public class SnapshotWriteService {
     public String takeSnapshot(final String streamName,
                                final StreamPosition position,
                                final StateRepository<String> stateRepository) throws IOException {
-        final File snapshotFile = createSnapshot(streamName, position, stateRepository);
-        final String fileName = snapshotFile.getName();
-        LOG.info("Finished creating snapshot file: {}", snapshotFile.getAbsolutePath());
-        uploadSnapshot(createBucketName(streamName, this.snapshotBucketTemplate), snapshotFile);
-        LOG.info("Finished uploaded snapshot file to s3");
-        boolean success = snapshotFile.delete();
-        if (!success) {
-            LOG.error("failed to delete snapshot {}", snapshotFile.getName());
+        File snapshotFile = null;
+        try {
+            snapshotFile = createSnapshot(streamName, position, stateRepository);
+            LOG.info("Finished creating snapshot file: {}", snapshotFile.getAbsolutePath());
+            uploadSnapshot(createBucketName(streamName, this.snapshotBucketTemplate), snapshotFile);
+            LOG.info("Finished uploaded snapshot file to s3");
+        } finally {
+            deleteFile(snapshotFile);
         }
-        return fileName;
+        return snapshotFile.getName();
     }
 
     File createSnapshot(final String streamName,
-                                final StreamPosition currentStreamPosition,
-                                final StateRepository<String> stateRepository) throws IOException {
-        File dataFile = createSnapshotFile(streamName);
+                        final StreamPosition currentStreamPosition,
+                        final StateRepository<String> stateRepository) throws IOException {
+        File snapshotFile = createSnapshotFile(streamName);
 
-        try (FileOutputStream fos = new FileOutputStream(dataFile);
+        try (FileOutputStream fos = new FileOutputStream(snapshotFile);
              BufferedOutputStream bos = new BufferedOutputStream(fos);
              ZipOutputStream zipOutputStream = new ZipOutputStream(bos)
         ) {
@@ -89,8 +89,20 @@ public class SnapshotWriteService {
             jGenerator.writeEndObject();
             jGenerator.flush();
             zipOutputStream.closeEntry();
+        } catch (Exception e) {
+            deleteFile(snapshotFile);
+            throw e;
         }
-        return dataFile;
+        return snapshotFile;
+    }
+
+    private void deleteFile(File file) {
+        if (file != null) {
+            boolean success = file.delete();
+            if (!success) {
+                LOG.error("failed to delete snapshot {}", file.getName());
+            }
+        }
     }
 
     private static File createSnapshotFile(String streamName) throws IOException {

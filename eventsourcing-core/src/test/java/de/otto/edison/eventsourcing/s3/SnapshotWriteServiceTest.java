@@ -15,17 +15,23 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class SnapshotWriteServiceTest {
 
@@ -91,9 +97,48 @@ public class SnapshotWriteServiceTest {
         assertThat(data.size(), is(2));
     }
 
+    @Test
+    public void shouldDeleteSnapshotEvenIfUploadFails() throws Exception {
+        // given
+        doThrow(new RuntimeException("forced test exception")).when(s3Service).upload(any(), any());
+        DefaultStateRepository<String> stateRepository = new DefaultStateRepository<>();
+        stateRepository.put("testKey", "testValue1");
+        stateRepository.put("testKey2", "testValue2");
+
+        StreamPosition streamPosition = StreamPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
+
+        // when
+        try {
+            testee.takeSnapshot(STREAM_NAME, streamPosition, stateRepository);
+        } catch (RuntimeException e) {
+            // ignore exception
+        }
+
+        // then
+        assertThat(getSnapshotFilePaths().size(), is(0));
+    }
+
+    @Test
+    public void shouldDeleteSnapshotWhenCreatingSnapshotFails() throws Exception {
+        // given
+        DefaultStateRepository<String> stateRepository = mock(DefaultStateRepository.class);
+        when(stateRepository.get(any())).thenThrow(new RuntimeException("forced test exception"));
+
+        StreamPosition streamPosition = StreamPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
+
+        // when
+        try {
+            testee.takeSnapshot(STREAM_NAME, streamPosition, stateRepository);
+        } catch (RuntimeException e) {
+            // ignore exception
+        }
+
+        // then
+        assertThat(getSnapshotFilePaths().size(), is(0));
+    }
+
     private void deleteSnapshotFilesFromTemp() throws IOException {
-        Files.list(Paths.get(System.getProperty("java.io.tmpdir")))
-                .filter(p -> p.toString().startsWith("/tmp/compaction-teststream-snapshot-"))
+        getSnapshotFilePaths()
                 .forEach(path -> {
                     try {
                         Files.deleteIfExists(path);
@@ -101,6 +146,12 @@ public class SnapshotWriteServiceTest {
                         throw new RuntimeException(e);
                     }
                 });
+    }
+
+    private List<Path> getSnapshotFilePaths() throws IOException {
+        return Files.list(Paths.get(System.getProperty("java.io.tmpdir")))
+                .filter(p -> p.toString().startsWith("/tmp/compaction-teststream-snapshot-"))
+                .collect(Collectors.toList());
     }
 
 }
