@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.s3.local;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -7,6 +8,8 @@ public class BucketItem {
 
     private final String name;
     private final byte[] data;
+
+    private final Instant lastModified;
 
     public String getName() {
         return name;
@@ -16,9 +19,14 @@ public class BucketItem {
         return data;
     }
 
+    public Instant getLastModified() {
+        return lastModified;
+    }
+
     private BucketItem(Builder builder) {
         name = builder.name;
         data = builder.data;
+        lastModified = builder.lastModified;
     }
 
     public static Builder bucketItemBuilder() {
@@ -43,12 +51,14 @@ public class BucketItem {
         Builder builder = new Builder();
         builder.name = copy.getName();
         builder.data = copy.getData();
+        builder.lastModified = copy.lastModified;
         return builder;
     }
 
     public static final class Builder {
         private String name;
         private byte[] data;
+        private Instant lastModified;
 
         private Builder() {
         }
@@ -61,6 +71,15 @@ public class BucketItem {
         public Builder withData(byte[] val) {
             data = val;
             return this;
+        }
+
+        public Builder withLastModified(Instant val) {
+            lastModified = val;
+            return this;
+        }
+
+        public Builder withLastModifiedNow() {
+            return withLastModified(Instant.now());
         }
 
         public BucketItem build() {

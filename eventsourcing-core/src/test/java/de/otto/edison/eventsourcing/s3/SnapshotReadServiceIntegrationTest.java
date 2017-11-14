@@ -38,6 +38,7 @@ public class SnapshotReadServiceIntegrationTest {
 
     @Before
     public void setUp() throws Exception {
+        s3Service.createBucket(S3_UTILS_TEST_BUCKET);
         s3Service.deleteAllObjectsInBucket(S3_UTILS_TEST_BUCKET);
     }
 
