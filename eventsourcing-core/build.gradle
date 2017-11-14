@@ -52,6 +52,18 @@ artifacts {
     archives sourcesJar
 }
 
+task startLocalStack(type:Exec) {
+    commandLine "/usr/bin/docker", "run", "--name", "localstack_for_testing", "-d", "-p", "4567-4583:4567-4583", "-p", "8080:8080", "localstack/localstack:latest"
+}
+task stopLocalStack(type: Exec) {
+    commandLine 'docker', 'rm', '-f', 'localstack_for_testing'
+}
+
+test.dependsOn(startLocalStack)
+test.finalizedBy(stopLocalStack)
+
+
+
 uploadArchives {
     repositories {
         mavenDeployer {
