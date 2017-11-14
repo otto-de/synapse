@@ -5,6 +5,8 @@ import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.kinesis.testsupport.TestStreamSource;
+import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,8 +50,13 @@ public class KinesisEventSourceIntegrationTest {
 
     @PostConstruct
     public void setup() {
+        KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, STREAM_NAME, EXPECTED_NUMBER_OF_SHARDS);
         KinesisStream kinesisStream = new KinesisStream(kinesisClient, STREAM_NAME);
         this.eventSource = new KinesisEventSource<>(Function.identity(), kinesisStream);
+    }
+
+    @After
+    public void tearDown() throws Exception {
     }
 
     @Test

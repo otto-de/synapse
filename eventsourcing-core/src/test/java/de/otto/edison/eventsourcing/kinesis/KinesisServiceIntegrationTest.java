@@ -50,6 +50,7 @@ public class KinesisServiceIntegrationTest {
 
     @Before
     public void setUp() throws Exception {
+        KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, STREAM_NAME, EXPECTED_NUMBER_OF_SHARDS);
         kinesisStream = new KinesisStream(kinesisClient, STREAM_NAME);
     }
 
