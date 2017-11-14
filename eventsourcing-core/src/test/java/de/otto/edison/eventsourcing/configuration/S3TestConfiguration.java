@@ -9,8 +9,8 @@ import software.amazon.awssdk.services.s3.S3Client;
 @Configuration
 public class S3TestConfiguration {
 
-//    @Bean
-//    public S3Client fakeS3Client() {
-//        return new LocalS3Client();
-//    }
+    @Bean
+    public S3Client fakeS3Client() {
+        return new LocalS3Client();
+    }
 }
