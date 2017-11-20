@@ -118,6 +118,7 @@ public class SnapshotWriteServiceTest {
         assertThat(getSnapshotFilePaths().size(), is(0));
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void shouldDeleteSnapshotWhenCreatingSnapshotFails() throws Exception {
         // given

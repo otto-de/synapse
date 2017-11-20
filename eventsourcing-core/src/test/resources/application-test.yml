@@ -5,6 +5,9 @@ edison:
   ldap:
     enabled: false
 
+  eventsourcing:
+    snapshot:
+      bucket-template: de-otto-{stream-name}-snapshots
 service:
   encryption:
     password: test

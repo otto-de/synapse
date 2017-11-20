@@ -48,10 +48,11 @@ public class SnapshotWriteService {
                                final StateRepository<String> stateRepository) throws IOException {
         File snapshotFile = null;
         try {
+            LOG.info("Start creating new snapshot");
             snapshotFile = createSnapshot(streamName, position, stateRepository);
             LOG.info("Finished creating snapshot file: {}", snapshotFile.getAbsolutePath());
             uploadSnapshot(createBucketName(streamName, this.snapshotBucketTemplate), snapshotFile);
-            LOG.info("Finished uploaded snapshot file to s3");
+            LOG.info("Finished uploading snapshot file to s3");
         } finally {
             deleteFile(snapshotFile);
         }

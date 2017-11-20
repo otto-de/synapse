@@ -3,7 +3,7 @@ package de.otto.edison.eventsourcing.s3.local;
 import org.junit.Before;
 import org.junit.Test;
 import software.amazon.awssdk.services.s3.model.*;
-import software.amazon.awssdk.sync.RequestBody;
+import software.amazon.awssdk.core.sync.RequestBody;
 
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;

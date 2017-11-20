@@ -12,7 +12,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
 
 public class EventSourceConsumerBeanPostProcessorTest {
@@ -93,7 +93,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
     }
 
 
-    @Test()
+    @Test
     public void shouldFailRegisteringEventConsumersWithSameNameAndDifferentType() {
         try {
             context.register(ObjectMapper.class);

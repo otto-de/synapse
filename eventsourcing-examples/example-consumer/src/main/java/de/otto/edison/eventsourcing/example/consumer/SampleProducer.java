@@ -1,6 +1,5 @@
 package de.otto.edison.eventsourcing.example.consumer;
 
-import com.google.common.collect.ImmutableList;
 import de.otto.edison.eventsourcing.example.consumer.configuration.MyServiceProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -13,6 +12,7 @@ import software.amazon.awssdk.services.kinesis.model.PutRecordsRequestEntry;
 import javax.annotation.PostConstruct;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 @Component
 @EnableConfigurationProperties(MyServiceProperties.class)
@@ -35,8 +35,7 @@ public class SampleProducer {
         PutRecordsRequest putRecordBatchRequest = PutRecordsRequest
                 .builder()
                 .streamName(properties.getBananaStreamName())
-                .records(ImmutableList.of(
-                        createBananaRequest("1"),
+                .records(Arrays.asList(createBananaRequest("1"),
                         createBananaRequest("2"),
                         createBananaRequest("3"),
                         createBananaRequest("4"),
@@ -52,7 +51,7 @@ public class SampleProducer {
         PutRecordsRequest putRecordBatchRequest = PutRecordsRequest
                 .builder()
                 .streamName(properties.getProductStreamName())
-                .records(ImmutableList.of(
+                .records(Arrays.asList(
                         createProductRequest("1"),
                         createProductRequest("2"),
                         createProductRequest("3"),

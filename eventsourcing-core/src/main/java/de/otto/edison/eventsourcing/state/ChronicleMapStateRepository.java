@@ -37,10 +37,10 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V> {
     public void put(String key, V value) {
         try {
             String json = objectMapper.writeValueAsString(value);
-            bytesUsed.addAndGet(json.length()*2);
+            bytesUsed.addAndGet(json.length() * 2);
             String oldJson = store.put(key, json);
             if (oldJson != null) {
-                bytesUsed.addAndGet(-oldJson.length()*2);
+                bytesUsed.addAndGet(-oldJson.length() * 2);
             }
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -64,7 +64,7 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V> {
     public void remove(String key) {
         String oldJson = store.get(key);
         if (oldJson != null) {
-            bytesUsed.addAndGet(-oldJson.length()*2);
+            bytesUsed.addAndGet(-oldJson.length() * 2);
         }
         store.remove(key);
     }
@@ -88,12 +88,11 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V> {
     @Override
     public String getStats() {
         float gbUsed = bytesUsed.floatValue() / 1024 / 1024 / 1024;
-        float gbTotal = (float)store.offHeapMemoryUsed() / 1024 / 1024 / 1024;
-        int percentUsed = (int)(gbUsed / gbTotal * 100);
+        float gbTotal = (float) store.offHeapMemoryUsed() / 1024 / 1024 / 1024;
+        int percentUsed = (int) (gbUsed / gbTotal * 100);
         long avgEntrySize = store.size() == 0 ? 0 : bytesUsed.get() / store.size();
         return String.format("Cache for %s contains %s entries and has ~%.3fGB/%.3fGB (%s%%) mem used. (Avg. Entry %s bytes)", clazz.getSimpleName(), store.size(), gbUsed, gbTotal, percentUsed, avgEntrySize);
     }
-
 
 
     public static final class Builder<V> {
@@ -124,10 +123,10 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V> {
         public ChronicleMapStateRepository<V> build() {
             if (store == null) {
                 store = ChronicleMapBuilder.of(String.class, String.class)
-                    .averageKeySize(DEFAULT_KEY_SIZE_BYTES)
-                    .averageValueSize(DEFAULT_VALUE_SIZE_BYTES)
-                    .entries(DEFAULT_ENTRY_COUNT)
-                    .create();
+                        .averageKeySize(DEFAULT_KEY_SIZE_BYTES)
+                        .averageValueSize(DEFAULT_VALUE_SIZE_BYTES)
+                        .entries(DEFAULT_ENTRY_COUNT)
+                        .create();
             }
             return new ChronicleMapStateRepository<>(this);
         }

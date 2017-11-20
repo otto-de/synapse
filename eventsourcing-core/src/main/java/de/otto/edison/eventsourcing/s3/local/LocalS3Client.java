@@ -1,12 +1,19 @@
 package de.otto.edison.eventsourcing.s3.local;
 
-import software.amazon.awssdk.SdkBaseException;
-import software.amazon.awssdk.SdkClientException;
+import software.amazon.awssdk.core.SdkBaseException;
+import software.amazon.awssdk.core.SdkClientException;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.core.sync.ResponseInputStream;
+import software.amazon.awssdk.http.AbortableInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
-import software.amazon.awssdk.sync.RequestBody;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashMap;
@@ -20,7 +27,7 @@ public class LocalS3Client implements S3Client {
 
     private static final Instant BUCKET_DEFAULT_CREATION_DATE = Instant.parse("2017-01-01T10:00:00.00Z");
 
-    private Map<String, Map<String,BucketItem>> bucketsWithContents;
+    private Map<String, Map<String, BucketItem>> bucketsWithContents;
 
     public LocalS3Client() {
         this.bucketsWithContents = new HashMap<>();
@@ -54,10 +61,10 @@ public class LocalS3Client implements S3Client {
         try {
             bucketsWithContents.get(putObjectRequest.bucket()).put(putObjectRequest.key(),
                     bucketItemBuilder()
-                    .withName(putObjectRequest.key())
-                    .withData(toByteArray(requestBody.asStream()))
-                    .withLastModifiedNow()
-                    .build());
+                            .withName(putObjectRequest.key())
+                            .withData(toByteArray(requestBody.asStream()))
+                            .withLastModifiedNow()
+                            .build());
             return PutObjectResponse.builder().build();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -83,6 +90,38 @@ public class LocalS3Client implements S3Client {
                                 .name(name)
                                 .build())
                         .collect(Collectors.toList())).build();
+    }
+
+    @Override
+    public GetObjectResponse getObject(GetObjectRequest getObjectRequest, Path filePath) throws NoSuchKeyException, SdkBaseException, SdkClientException, S3Exception {
+        Map<String, BucketItem> bucketItemMap = bucketsWithContents.get(getObjectRequest.bucket());
+        BucketItem bucketItem = bucketItemMap.get(getObjectRequest.key());
+
+        try {
+            Files.write(filePath, bucketItem.getData());
+        } catch (IOException e) {
+            throw new SdkClientException(e);
+        }
+
+        return GetObjectResponse.builder().build();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public ResponseInputStream<GetObjectResponse> getObject(GetObjectRequest getObjectRequest) throws NoSuchKeyException, SdkBaseException, SdkClientException, S3Exception {
+        Map<String, BucketItem> bucketItemMap = bucketsWithContents.get(getObjectRequest.bucket());
+        BucketItem bucketItem = bucketItemMap.get(getObjectRequest.key());
+
+        AbortableInputStream in = new AbortableInputStream(new ByteArrayInputStream(bucketItem.getData()), () -> {});
+        try {
+            Constructor<ResponseInputStream> responseInputStreamConstructor = ResponseInputStream.class.getDeclaredConstructor(Object.class, AbortableInputStream.class);
+            responseInputStreamConstructor.setAccessible(true);
+
+            return (ResponseInputStream<GetObjectResponse>) responseInputStreamConstructor.newInstance(GetObjectResponse.builder().build(), in);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
+            throw new SdkClientException(e);
+        }
+
     }
 
     @Override

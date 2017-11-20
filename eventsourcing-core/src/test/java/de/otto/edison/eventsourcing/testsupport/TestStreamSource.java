@@ -1,11 +1,11 @@
-package de.otto.edison.eventsourcing.kinesis.testsupport;
+package de.otto.edison.eventsourcing.testsupport;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.AmazonServiceException;
+import software.amazon.awssdk.core.AmazonServiceException;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
