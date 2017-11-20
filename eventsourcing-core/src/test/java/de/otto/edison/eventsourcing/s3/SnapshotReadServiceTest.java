@@ -1,6 +1,7 @@
 package de.otto.edison.eventsourcing.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
@@ -9,6 +10,7 @@ import org.junit.Test;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,12 +37,12 @@ public class SnapshotReadServiceTest {
     }
 
     @Test
-    public void shouldProcessSnapshotFile() throws Exception {
+    public void shouldConsumeSnapshotFile() throws Exception {
         //given
         File file = new File(getClass().getClassLoader().getResource("compaction-integrationtest-snapshot-2017-09-29T09-02Z-3053797267191232636.json.zip").getFile());
         Map<String, String> allData = new HashMap<>();
         //when
-        final StreamPosition shardPositions = testee.processSnapshotFile(
+        final StreamPosition shardPositions = testee.consumeSnapshot(
                 file,
                 "test",
                 (x) -> false,
@@ -83,4 +85,48 @@ public class SnapshotReadServiceTest {
         assertThat(s3Object.isPresent(), is(false));
     }
 
+    @Test
+    public void shouldGetLatestSnapshotFileFromS3Bucket() throws Exception {
+        //given
+        final S3Object obj1 = mock(S3Object.class);
+        when(obj1.key()).thenReturn("compaction-test-snapshot-1.json.zip");
+
+        when(s3Service.listAll("test-test")).thenReturn(ImmutableList.of(obj1));
+        when(s3Service.download("test-test", "compaction-test-snapshot-1.json.zip", Paths.get("/tmp/compaction-test-snapshot-1.json.zip"))).thenReturn(true);
+
+        //when
+        Optional<File> file = testee.getLatestSnapshotFromBucket("test");
+
+        //then
+        assertThat(file.get(), is(Paths.get("/tmp/compaction-test-snapshot-1.json.zip").toFile()));
+    }
+
+    @Test
+    public void shouldReturnEmptyWhenThereIsNoSnapshotFileInS3Bucket() throws Exception {
+        //given
+        when(s3Service.listAll("test-test")).thenReturn(ImmutableList.of());
+
+        //when
+        Optional<File> file = testee.getLatestSnapshotFromBucket("test");
+
+        //then
+        assertThat(file.isPresent(), is(false));
+    }
+
+
+    @Test
+    public void shouldReturnEmptyWhenDownloadOfSnapshotFileFails() throws Exception {
+        //given
+        final S3Object obj1 = mock(S3Object.class);
+        when(obj1.key()).thenReturn("compaction-test-snapshot-1.json.zip");
+
+        when(s3Service.listAll("test-test")).thenReturn(ImmutableList.of(obj1));
+        when(s3Service.download("test-test", "compaction-test-snapshot-1.json.zip", Paths.get("/tmp/compaction-test-snapshot-1.json.zip"))).thenReturn(false);
+
+        //when
+        Optional<File> file = testee.getLatestSnapshotFromBucket("test");
+
+        //then
+        assertThat(file.isPresent(), is(false));
+    }
 }

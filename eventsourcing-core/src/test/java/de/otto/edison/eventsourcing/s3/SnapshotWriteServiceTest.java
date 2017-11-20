@@ -29,9 +29,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class SnapshotWriteServiceTest {
 
@@ -85,7 +83,7 @@ public class SnapshotWriteServiceTest {
 
         SnapshotReadService snapshotReadService = new SnapshotReadService(s3Service, SnapshotServiceTestUtils.createEventSourcingProperties(), new ObjectMapper());
 
-        StreamPosition actualStreamPosition = snapshotReadService.processSnapshotFile(snapshot,
+        StreamPosition actualStreamPosition = snapshotReadService.consumeSnapshot(snapshot,
                 "test",
                 (event) -> false,
                 (event) -> data.put(event.key(), event.payload()),

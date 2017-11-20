@@ -50,13 +50,16 @@ public class SnapshotEventSource<T> implements EventSource<T> {
         try {
             latestSnapshot = downloadLatestSnapshot();
             LOG.info("Downloaded Snapshot");
-            final StreamPosition readPosition = snapshotService.consumeSnapshot(latestSnapshot, name, stopCondition, consumer, payloadType);
-            LOG.info("Read Snapshot into Memory");
-            return readPosition;
+            if (latestSnapshot.isPresent()) {
+                return snapshotService.consumeSnapshot(latestSnapshot.get(), name, stopCondition, consumer, payloadType);
+            } else {
+                return StreamPosition.of();
+            }
         } catch (final IOException | S3Exception e) {
             LOG.warn("Unable to load snapshot: {}", e.getMessage());
             return StreamPosition.of();
         } finally {
+            LOG.info("Finished reading snapshot into Memory");
             deleteSnapshotFile(latestSnapshot);
         }
     }

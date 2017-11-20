@@ -51,15 +51,43 @@ public class SnapshotReadService {
         this.objectMapper = objectMapper;
     }
 
-    public <T> StreamPosition consumeSnapshot(final Optional<File> latestSnapshot,
+    public <T> StreamPosition consumeSnapshot(final File latestSnapshot,
                                               final String streamName,
                                               final Predicate<Event<T>> stopCondition,
                                               final Consumer<Event<T>> consumer,
                                               final Class<T> payloadType) throws IOException {
-        if (latestSnapshot.isPresent()) {
-            return processSnapshotFile(latestSnapshot.get(), streamName, stopCondition, consumer, payloadType);
-        } else {
-            return StreamPosition.of();
+
+        try (
+                FileInputStream fileInputStream = new FileInputStream(latestSnapshot);
+                BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
+                ZipInputStream zipInputStream = new ZipInputStream(bufferedInputStream)
+        ) {
+            StreamPosition shardPositions = StreamPosition.of();
+            zipInputStream.getNextEntry();
+            JsonParser parser = jsonFactory.createParser(zipInputStream);
+            while (!parser.isClosed()) {
+                JsonToken currentToken = parser.nextToken();
+                if (currentToken == JsonToken.FIELD_NAME) {
+                    switch (parser.getValueAsString()) {
+                        case "startSequenceNumbers":
+                            shardPositions = processSequenceNumbers(parser);
+                            break;
+                        case "data":
+                            processSnapshotData(
+                                    parser,
+                                    shardPositions.positionOf(streamName),
+                                    stopCondition,
+                                    consumer,
+                                    payloadType);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            return shardPositions;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -92,45 +120,6 @@ public class SnapshotReadService {
                 .findFirst();
     }
 
-
-    <T> StreamPosition processSnapshotFile(final File snapshotFile,
-                                           final String streamName,
-                                           final Predicate<Event<T>> stopCondition,
-                                           final Consumer<Event<T>> callback,
-                                           final Class<T> payloadType) throws IOException {
-        try (
-                FileInputStream fileInputStream = new FileInputStream(snapshotFile);
-                BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
-                ZipInputStream zipInputStream = new ZipInputStream(bufferedInputStream)
-        ) {
-            StreamPosition shardPositions = StreamPosition.of();
-            zipInputStream.getNextEntry();
-            JsonParser parser = jsonFactory.createParser(zipInputStream);
-            while (!parser.isClosed()) {
-                JsonToken currentToken = parser.nextToken();
-                if (currentToken == JsonToken.FIELD_NAME) {
-                    switch (parser.getValueAsString()) {
-                        case "startSequenceNumbers":
-                            shardPositions = processSequenceNumbers(parser);
-                            break;
-                        case "data":
-                            processSnapshotData(
-                                    parser,
-                                    shardPositions.positionOf(streamName),
-                                    stopCondition,
-                                    callback,
-                                    payloadType);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-            return shardPositions;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     private <T> void processSnapshotData(final JsonParser parser,
                                          final String sequenceNumber,
