@@ -9,7 +9,7 @@ import static java.util.Collections.emptyMap;
 public class StreamPosition {
     private final Map<String, String> shardPositions;
 
-    private StreamPosition(final Map<String, String> shardPositions) {
+    protected StreamPosition(final Map<String, String> shardPositions) {
         this.shardPositions = shardPositions;
     }
 

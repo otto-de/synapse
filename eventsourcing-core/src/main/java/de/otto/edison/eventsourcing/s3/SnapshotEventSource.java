@@ -41,7 +41,7 @@ public class SnapshotEventSource<T> implements EventSource<T> {
     }
 
     @Override
-    public StreamPosition consumeAll(final StreamPosition startFrom,
+    public SnapshotStreamPosition consumeAll(final StreamPosition startFrom,
                                      final Predicate<Event<T>> stopCondition,
                                      final Consumer<Event<T>> consumer) {
         // TODO: startFrom is ignored. the source should ignore / drop all events until startFrom is reached.
@@ -51,13 +51,14 @@ public class SnapshotEventSource<T> implements EventSource<T> {
             latestSnapshot = downloadLatestSnapshot();
             LOG.info("Downloaded Snapshot");
             if (latestSnapshot.isPresent()) {
-                return snapshotService.consumeSnapshot(latestSnapshot.get(), name, stopCondition, consumer, payloadType);
+                StreamPosition streamPosition = snapshotService.consumeSnapshot(latestSnapshot.get(), name, stopCondition, consumer, payloadType);
+                return SnapshotStreamPosition.of(streamPosition, SnapshotFileTimestampParser.getSnapshotTimestamp(latestSnapshot.get().getName()));
             } else {
-                return StreamPosition.of();
+                return SnapshotStreamPosition.of();
             }
         } catch (final IOException | S3Exception e) {
             LOG.warn("Unable to load snapshot: {}", e.getMessage());
-            return StreamPosition.of();
+            return SnapshotStreamPosition.of();
         } finally {
             LOG.info("Finished reading snapshot into Memory");
             deleteSnapshotFile(latestSnapshot);
