@@ -61,7 +61,7 @@ public class SnapshotEventSource<T> implements EventSource<T> {
         }
     }
 
-    private Optional<File> downloadLatestSnapshot() throws IOException {
+    private Optional<File> downloadLatestSnapshot() {
         LOG.info("Start downloading snapshot from S3");
         infoDiskUsage();
 

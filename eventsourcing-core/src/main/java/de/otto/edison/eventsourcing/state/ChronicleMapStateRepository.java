@@ -84,7 +84,6 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V> {
         return store.longSize();
     }
 
-    // TODO: DetailStatusIndicator
     @Override
     public String getStats() {
         float gbUsed = bytesUsed.floatValue() / 1024 / 1024 / 1024;

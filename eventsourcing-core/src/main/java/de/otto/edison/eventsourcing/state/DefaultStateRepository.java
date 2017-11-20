@@ -47,7 +47,7 @@ public class DefaultStateRepository<V> implements StateRepository<V> {
 
     @Override
     public String getStats() {
-        return "";
+        return String.format("Default cache contains %s entries.", map.size());
     }
 
     @Override
