@@ -1,3 +1,2 @@
 include "eventsourcing-core"
 include "eventsourcing-examples:example-consumer"
-include "eventsourcing-examples:example-producer"
