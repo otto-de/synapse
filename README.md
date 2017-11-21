@@ -1,2 +1,2 @@
 # edison-eventsourcing
-A library to implement event-sourcing microservices
+A library to implement event-sourcing microservices.
