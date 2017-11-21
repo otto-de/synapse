@@ -81,9 +81,9 @@ public class SnapshotWriteServiceTest {
         //then
         Map<String, String> data = new HashMap<>();
 
-        SnapshotReadService snapshotReadService = new SnapshotReadService(s3Service, SnapshotServiceTestUtils.createEventSourcingProperties(), new ObjectMapper());
+        SnapshotConsumerService snapshotConsumerService = new SnapshotConsumerService(new ObjectMapper());
 
-        StreamPosition actualStreamPosition = snapshotReadService.consumeSnapshot(snapshot,
+        StreamPosition actualStreamPosition = snapshotConsumerService.consumeSnapshot(snapshot,
                 "test",
                 (event) -> false,
                 (event) -> data.put(event.key(), event.payload()),

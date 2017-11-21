@@ -5,6 +5,7 @@ import de.otto.edison.eventsourcing.consumer.DefaultEventConsumer;
 import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
+import de.otto.edison.eventsourcing.s3.SnapshotConsumerService;
 import de.otto.edison.eventsourcing.s3.SnapshotReadService;
 import de.otto.edison.eventsourcing.s3.SnapshotWriteService;
 import de.otto.edison.eventsourcing.state.StateRepository;
@@ -25,13 +26,15 @@ public class CompactionService {
 
     private final SnapshotReadService snapshotReadService;
     private final SnapshotWriteService snapshotWriteService;
-    private KinesisClient kinesisClient;
-    private StateRepository<String> stateRepository;
+    private final SnapshotConsumerService snapshotConsumerService;
+    private final KinesisClient kinesisClient;
+    private final StateRepository<String> stateRepository;
 
     @Autowired
-    public CompactionService(SnapshotReadService snapshotReadService, SnapshotWriteService snapshotWriteService, KinesisClient kinesisClient, StateRepository<String> stateRepository) {
+    public CompactionService(SnapshotReadService snapshotReadService, SnapshotWriteService snapshotWriteService, SnapshotConsumerService snapshotConsumerService, KinesisClient kinesisClient, StateRepository<String> stateRepository) {
         this.snapshotReadService = snapshotReadService;
         this.snapshotWriteService = snapshotWriteService;
+        this.snapshotConsumerService = snapshotConsumerService;
         this.kinesisClient = kinesisClient;
         this.stateRepository = stateRepository;
     }
@@ -43,7 +46,7 @@ public class CompactionService {
 
         LOG.info("Start loading entries into inMemoryCache from snapshot");
         CompactingKinesisEventSource<String> compactingKinesisEventSource = new CompactingKinesisEventSource<>(streamName,
-                String.class, snapshotReadService, Function.identity(), kinesisClient);
+                String.class, snapshotReadService, snapshotConsumerService, Function.identity(), kinesisClient);
         try {
             EventConsumer<String> consumer = new DefaultEventConsumer<>(streamName, stateRepository);
             StreamPosition currentPosition = compactingKinesisEventSource.consumeAll(stopCondition(), consumer.consumerFunction());

@@ -21,16 +21,21 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import software.amazon.awssdk.core.sync.ResponseInputStream;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
-import software.amazon.awssdk.core.sync.ResponseInputStream;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
@@ -66,8 +71,9 @@ public class CompactionAcceptanceTest {
     private StateRepository<String> stateRepository;
 
     @Before
-    public void setup() {
+    public void setup() throws IOException {
         KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, INTEGRATION_TEST_STREAM, 2);
+        deleteSnapshotFilesFromTemp();
         s3Service.createBucket(INTEGRATION_TEST_BUCKET);
         s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
     }
@@ -142,6 +148,23 @@ public class CompactionAcceptanceTest {
         TestStreamSource streamSource = new TestStreamSource(kinesisClient, streamName, fileName);
         streamSource.writeToStream();
         return streamSource;
+    }
+
+    private void deleteSnapshotFilesFromTemp() throws IOException {
+        getSnapshotFilePaths()
+                .forEach(path -> {
+                    try {
+                        Files.deleteIfExists(path);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    private List<Path> getSnapshotFilePaths() throws IOException {
+        return Files.list(Paths.get(System.getProperty("java.io.tmpdir")))
+                .filter(p -> p.toFile().getName().startsWith("compaction-promo-compaction-test-snapshot-"))
+                .collect(Collectors.toList());
     }
 
 }

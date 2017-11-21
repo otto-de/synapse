@@ -40,6 +40,7 @@ public class LocalS3Client implements S3Client {
                 .stream()
                 .map(bucketItem -> S3Object.builder()
                         .key(bucketItem.getName())
+                        .size((long) bucketItem.getData().length)
                         .lastModified(bucketItem.getLastModified())
                         .build())
                 .collect(Collectors.toList());
