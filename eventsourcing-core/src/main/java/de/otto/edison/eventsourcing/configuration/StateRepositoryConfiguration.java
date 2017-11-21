@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class StateRepositoryConfiguration {
 
-    @Bean
+    @Bean(name = "StateRepository")
     @ConditionalOnMissingBean(StateRepository.class)
     public StateRepository<String> stateRepository() {
         return new DefaultStateRepository<>();
