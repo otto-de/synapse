@@ -12,6 +12,7 @@ import de.otto.edison.eventsourcing.state.StateRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 
@@ -20,6 +21,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 @Service
+@ConditionalOnProperty(name = "service.name", havingValue = "compaction")
 public class CompactionService {
 
     private static final Logger LOG = LoggerFactory.getLogger(CompactionService.class);
