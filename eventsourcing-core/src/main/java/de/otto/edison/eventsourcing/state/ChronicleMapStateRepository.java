@@ -97,9 +97,9 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V> {
     public static final class Builder<V> {
 
         private static final ObjectMapper DEFAULT_OBJECT_MAPPER = new ObjectMapper().registerModule(new JavaTimeModule());
-        private static int expectedKeySizeInBytes = 128;
-        private static double expectedValueSizeInBytes = 512;
-        private static long expectedNumberOfEntries = 1_000_00;
+        private static final int DEFAULT_KEY_SIZE_BYTES = 128;
+        private static final double DEFAULT_VALUE_SIZE_BYTES = 512;
+        private static final long DEFAULT_ENTRY_COUNT = 1_000_00;
 
         private final Class<V> clazz;
         private ObjectMapper objectMapper = DEFAULT_OBJECT_MAPPER;
@@ -119,27 +119,12 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V> {
             return this;
         }
 
-        public Builder<V> withExpectedNumberOfEntries(long expectedNumberOfEntries) {
-            Builder.expectedNumberOfEntries = expectedNumberOfEntries;
-            return this;
-        }
-
-        public Builder<V> withDefaultKeySize(int expectedKeySizeInBytes) {
-            Builder.expectedKeySizeInBytes = expectedKeySizeInBytes;
-            return this;
-        }
-
-        public Builder<V> withDefaultValueSize(double expectedValueSizeInBytes) {
-            Builder.expectedValueSizeInBytes = expectedValueSizeInBytes;
-            return this;
-        }
-
         public ChronicleMapStateRepository<V> build() {
             if (store == null) {
                 store = ChronicleMapBuilder.of(String.class, String.class)
-                        .averageKeySize(expectedKeySizeInBytes)
-                        .averageValueSize(expectedValueSizeInBytes)
-                        .entries(expectedNumberOfEntries)
+                        .averageKeySize(DEFAULT_KEY_SIZE_BYTES)
+                        .averageValueSize(DEFAULT_VALUE_SIZE_BYTES)
+                        .entries(DEFAULT_ENTRY_COUNT)
                         .create();
             }
             return new ChronicleMapStateRepository<>(this);
