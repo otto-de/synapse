@@ -45,7 +45,7 @@ public class SnapshotReadService {
         LOG.info("Start downloading snapshot from S3");
         infoDiskUsage();
 
-        Optional<File> latestSnapshot = getLatestSnapshotFromBucket(snapshotEventSource.name());
+        Optional<File> latestSnapshot = getLatestSnapshotFromBucket(snapshotEventSource.getStreamName());
         if (latestSnapshot.isPresent()) {
             LOG.info("Finished downloading snapshot {}", latestSnapshot.get().getName());
             infoDiskUsage();

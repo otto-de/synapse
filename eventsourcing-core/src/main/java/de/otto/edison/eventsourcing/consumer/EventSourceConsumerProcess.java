@@ -44,7 +44,7 @@ public class EventSourceConsumerProcess {
         eventConsumers.forEach(consumer ->
                 eventSources
                         .stream()
-                        .filter(es -> es.name().equals(consumer.streamName()))
+                        .filter(es -> es.getStreamName().equals(consumer.streamName()))
                         .findAny()
                         .ifPresent(eventSource -> eventSourceWithConsumer.put(eventSource, consumer)));
     }
@@ -55,7 +55,7 @@ public class EventSourceConsumerProcess {
         LOG.info("Initializing EventSourceConsumerProcess...");
         eventSourceWithConsumer.forEach((eventSource, eventConsumer) -> executorService.submit(() -> {
             try {
-                LOG.info("Starting {}...", eventSource.name());
+                LOG.info("Starting {}...", eventSource.getStreamName());
                 eventSource.consumeAll(ignore -> stopThread.get(), eventConsumer.consumerFunction());
             } catch (Exception e) {
                 LOG.error("Starting failed: " + e.getMessage(), e);

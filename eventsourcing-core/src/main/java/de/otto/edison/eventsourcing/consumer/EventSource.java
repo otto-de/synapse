@@ -21,7 +21,7 @@ public interface EventSource<T> {
      *
      * @return name
      */
-    String name();
+    String getStreamName();
 
     /**
      * Consumes all events from the EventSource, until the (current) end of the stream is reached.

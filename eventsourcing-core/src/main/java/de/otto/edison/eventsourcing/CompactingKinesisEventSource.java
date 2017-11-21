@@ -62,7 +62,7 @@ public class CompactingKinesisEventSource<T> implements EventSource<T> {
     }
 
     @Override
-    public String name() {
+    public String getStreamName() {
         return streamName;
     }
 

@@ -43,7 +43,7 @@ public class KinesisEventSource<T> implements EventSource<T> {
     }
 
     @Override
-    public String name() {
+    public String getStreamName() {
         return kinesisStream.getStreamName();
     }
 

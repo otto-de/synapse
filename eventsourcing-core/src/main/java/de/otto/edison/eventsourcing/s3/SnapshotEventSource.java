@@ -19,22 +19,22 @@ public class SnapshotEventSource<T> implements EventSource<T> {
     private static final Logger LOG = getLogger(SnapshotEventSource.class);
 
     private final SnapshotReadService snapshotReadService;
-    private final String name;
+    private final String streamName;
     private final SnapshotConsumerService snapshotConsumerService;
     private final Class<T> payloadType;
 
-    public SnapshotEventSource(final String name,
+    public SnapshotEventSource(final String streamName,
                                final SnapshotReadService snapshotReadService,
                                final SnapshotConsumerService snapshotConsumerService,
                                final Class<T> payloadType) {
-        this.name = name;
+        this.streamName = streamName;
         this.snapshotReadService = snapshotReadService;
         this.snapshotConsumerService = snapshotConsumerService;
         this.payloadType = payloadType;
     }
 
-    public String name() {
-        return name;
+    public String getStreamName() {
+        return streamName;
     }
 
     @Override
@@ -57,17 +57,17 @@ public class SnapshotEventSource<T> implements EventSource<T> {
             Optional<File> latestSnapshot = snapshotReadService.downloadLatestSnapshot(this);
             LOG.info("Downloaded Snapshot");
             if (latestSnapshot.isPresent()) {
-                StreamPosition streamPosition = snapshotConsumerService.consumeSnapshot(latestSnapshot.get(), name, stopCondition, consumer, payloadType);
+                StreamPosition streamPosition = snapshotConsumerService.consumeSnapshot(latestSnapshot.get(), streamName, stopCondition, consumer, payloadType);
                 return SnapshotStreamPosition.of(streamPosition, SnapshotFileTimestampParser.getSnapshotTimestamp(latestSnapshot.get().getName()));
             } else {
                 return SnapshotStreamPosition.of();
             }
-        } catch (final IOException | S3Exception e) {
+        } catch (IOException | S3Exception e) {
             LOG.warn("Unable to load snapshot: {}", e.getMessage());
-            return SnapshotStreamPosition.of();
+            throw new RuntimeException(e);
         } finally {
             LOG.info("Finished reading snapshot into Memory");
-            snapshotReadService.deleteOlderSnapshots(name);
+            snapshotReadService.deleteOlderSnapshots(streamName);
         }
     }
 
