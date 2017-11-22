@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.s3;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import de.otto.edison.aws.s3.S3Service;
@@ -72,30 +73,33 @@ public class SnapshotWriteServiceTest {
     @Test
     public void shouldCreateCorrectSnapshotFile() throws Exception {
         DefaultStateRepository<String> stateRepository = new DefaultStateRepository<>();
-        stateRepository.put("testKey", "testValue1");
-        stateRepository.put("testKey2", "testValue2");
+        stateRepository.put("testKey", "{\"testValue1\": \"value1\"}");
+        stateRepository.put("testKey2", "{\"testValue2\": \"value2\"}");
+//        stateRepository.put("testKey2", "testValue2");
 
         //when
         StreamPosition streamPosition = StreamPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
         File snapshot = testee.createSnapshot(STREAM_NAME, streamPosition, stateRepository);
 
         //then
-        Map<String, String> data = new HashMap<>();
+        Map<String, Map> data = new HashMap<>();
 
         SnapshotConsumerService snapshotConsumerService = new SnapshotConsumerService(new ObjectMapper(), Encryptors.noOpText());
 
         StreamPosition actualStreamPosition = snapshotConsumerService.consumeSnapshot(snapshot,
                 "test",
                 (event) -> false,
-                (event) -> data.put(event.key(), event.payload()),
-                String.class);
+                (event) -> {
+                    System.out.println(event);
+                    data.put(event.key(), event.payload());
+                },
+                Map.class);
 
         assertThat(actualStreamPosition, is(streamPosition));
-        assertThat(data.get("testKey"), is("testValue1"));
-        assertThat(data.get("testKey2"), is("testValue2"));
+        assertThat(data.get("testKey"), is(ImmutableMap.of("testValue1", "value1")));
+        assertThat(data.get("testKey2"), is(ImmutableMap.of("testValue2", "value2")));
         assertThat(data.size(), is(2));
     }
-
     @Test
     public void shouldDeleteSnapshotEvenIfUploadFails() throws Exception {
         // given

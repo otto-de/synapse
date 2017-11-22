@@ -89,7 +89,7 @@ public class SnapshotConsumerService {
             if (currentToken == JsonToken.FIELD_NAME) {
                 final Event<T> event = event(
                         parser.getValueAsString(),
-                        objectMapper.convertValue(textEncryptor.decrypt(parser.nextTextValue()), payloadType),
+                        objectMapper.readValue(textEncryptor.decrypt(parser.nextTextValue()), payloadType),
                         sequenceNumber,
                         arrivalTimestamp);
                 callback.accept(event);

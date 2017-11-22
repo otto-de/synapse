@@ -17,6 +17,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.MethodIntrospector;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 
 import java.lang.reflect.Method;
@@ -137,7 +138,9 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
         SnapshotConsumerService snapshotConsumerService = applicationContext.getBean(SnapshotConsumerService.class);
         ObjectMapper objectMapper = applicationContext.getBean(ObjectMapper.class);
         KinesisClient kinesisClient = applicationContext.getBean(KinesisClient.class);
-        CompactingKinesisEventSource<T> eventSource = new CompactingKinesisEventSource<>(streamName, payloadType, snapshotService, snapshotConsumerService, objectMapper, kinesisClient);
+        TextEncryptor textEncryptor = applicationContext.getBean(TextEncryptor.class);
+
+        CompactingKinesisEventSource<T> eventSource = new CompactingKinesisEventSource<>(streamName, payloadType, snapshotService, snapshotConsumerService, objectMapper, kinesisClient, textEncryptor);
         applicationContext.getBeanFactory().registerSingleton(streamNameToEventSourceName(streamName), eventSource);
     }
 

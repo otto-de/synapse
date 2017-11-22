@@ -9,6 +9,7 @@ import de.otto.edison.eventsourcing.kinesis.KinesisStream;
 import de.otto.edison.eventsourcing.s3.SnapshotConsumerService;
 import de.otto.edison.eventsourcing.s3.SnapshotEventSource;
 import de.otto.edison.eventsourcing.s3.SnapshotReadService;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 
 import java.io.IOException;
@@ -32,14 +33,15 @@ public class CompactingKinesisEventSource<T> implements EventSource<T> {
                                         SnapshotReadService snapshotService,
                                         SnapshotConsumerService snapshotConsumerService,
                                         ObjectMapper objectMapper,
-                                        KinesisClient kinesisClient) {
+                                        KinesisClient kinesisClient,
+                                        TextEncryptor textEncryptor) {
         this.streamName = streamName;
         this.payloadType = payloadType;
         this.snapshotService = snapshotService;
         this.snapshotConsumerService = snapshotConsumerService;
         this.deserializer = in -> {
             try {
-                return objectMapper.readValue(in, payloadType);
+                return objectMapper.readValue(textEncryptor.decrypt(in), payloadType);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

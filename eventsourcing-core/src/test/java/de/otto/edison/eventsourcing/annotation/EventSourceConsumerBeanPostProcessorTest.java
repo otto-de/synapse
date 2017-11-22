@@ -11,6 +11,7 @@ import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.fail;
@@ -76,9 +77,11 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test
     public void shouldRegisterEventConsumers() {
+        context.register(TestTextEncryptor.class);
         context.register(ObjectMapper.class);
         context.register(TestConfiguration.class);
         context.register(EventSourcingConfiguration.class);
+
         context.refresh();
         assertThat(context.containsBean("firstConsumer")).isTrue();
         assertThat(context.getType("firstConsumer")).isEqualTo(MethodInvokingEventConsumer.class);
@@ -96,6 +99,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
     @Test
     public void shouldFailRegisteringEventConsumersWithSameNameAndDifferentType() {
         try {
+            context.register(TestTextEncryptor.class);
             context.register(ObjectMapper.class);
             context.register(FailingTestConsumer.class);
             context.register(EventSourcingConfiguration.class);
@@ -107,5 +111,19 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
+    public static class TestTextEncryptor implements TextEncryptor {
+        public TestTextEncryptor() {
+
+        }
+        @Override
+        public String encrypt(String text) {
+            return text;
+        }
+
+        @Override
+        public String decrypt(String encryptedText) {
+            return encryptedText;
+        }
+    }
 
 }
