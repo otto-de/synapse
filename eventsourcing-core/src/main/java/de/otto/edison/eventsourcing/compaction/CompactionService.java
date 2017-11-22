@@ -21,7 +21,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 @Service
-@ConditionalOnProperty(name = "service.name", havingValue = "compaction")
+@ConditionalOnProperty(name = "edison.eventsourcing.compaction.enabled", havingValue = "true")
 public class CompactionService {
 
     private static final Logger LOG = LoggerFactory.getLogger(CompactionService.class);
@@ -33,7 +33,13 @@ public class CompactionService {
     private final StateRepository<String> stateRepository;
 
     @Autowired
-    public CompactionService(SnapshotReadService snapshotReadService, SnapshotWriteService snapshotWriteService, SnapshotConsumerService snapshotConsumerService, KinesisClient kinesisClient, StateRepository<String> stateRepository) {
+    public CompactionService(
+            SnapshotReadService snapshotReadService,
+            SnapshotWriteService snapshotWriteService,
+            SnapshotConsumerService snapshotConsumerService,
+            KinesisClient kinesisClient,
+            StateRepository<String> stateRepository)
+    {
         this.snapshotReadService = snapshotReadService;
         this.snapshotWriteService = snapshotWriteService;
         this.snapshotConsumerService = snapshotConsumerService;

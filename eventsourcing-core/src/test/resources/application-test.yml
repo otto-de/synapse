@@ -4,14 +4,17 @@ edison:
     bucketname: test
   ldap:
     enabled: false
-
   eventsourcing:
     snapshot:
       bucket-template: de-otto-{stream-name}-snapshots
+    compaction:
+      enabled: true
+
 service:
   encryption:
     password: test
     salt: test
+
 aws:
   profile: ft3-nonlive
 

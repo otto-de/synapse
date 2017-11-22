@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class EventSourcingProperties {
     private Snapshot snapshot = new Snapshot();
     private ConsumerProcess consumerProcess = new ConsumerProcess();
+    private Compaction compaction = new Compaction();
 
     public Snapshot getSnapshot() {
         return snapshot;
@@ -21,6 +22,14 @@ public class EventSourcingProperties {
 
     public void setConsumerProcess(ConsumerProcess consumerProcess) {
         this.consumerProcess = consumerProcess;
+    }
+
+    public Compaction getCompaction() {
+        return compaction;
+    }
+
+    public void setCompaction(Compaction compaction) {
+        this.compaction = compaction;
     }
 
     public static class Snapshot {
@@ -46,6 +55,18 @@ public class EventSourcingProperties {
 
     public static class ConsumerProcess {
         private boolean enabled = true;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+    }
+
+    public static class Compaction {
+        private boolean enabled = false;
 
         public boolean isEnabled() {
             return enabled;
