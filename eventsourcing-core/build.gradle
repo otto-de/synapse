@@ -8,6 +8,8 @@ dependencies {
 
     implementation "org.springframework:spring-context:${springVersion}"
 
+    implementation 'org.springframework.security:spring-security-core:4.2.3.RELEASE'
+
 
 
     implementation("net.openhft:chronicle-map:3.14.1") {
@@ -115,6 +117,14 @@ uploadArchives {
                     developer {
                         id 'ftorkler'
                         name 'Florian Torkler'
+                    }
+                    developer {
+                        id 'miregel'
+                        name 'Micha Regel'
+                    }
+                    developer {
+                        id 'hstruebe'
+                        name 'Henning Strueber'
                     }
                 }
             }

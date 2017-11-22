@@ -13,6 +13,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 @Configuration
 @EnableConfigurationProperties(EventSourcingProperties.class)
@@ -45,7 +46,7 @@ public class SnapshotConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public SnapshotConsumerService snapshotConsumerService(final ObjectMapper objectMapper) {
-        return new SnapshotConsumerService(objectMapper);
+    public SnapshotConsumerService snapshotConsumerService(final ObjectMapper objectMapper, TextEncryptor textEncryptor) {
+        return new SnapshotConsumerService(objectMapper, textEncryptor);
     }
 }

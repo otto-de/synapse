@@ -7,6 +7,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -23,11 +26,14 @@ import static de.otto.edison.eventsourcing.consumer.Event.event;
 public class SnapshotConsumerService {
 
     private final ObjectMapper objectMapper;
-    private JsonFactory jsonFactory = new JsonFactory();
+    private final TextEncryptor textEncryptor;
+    private final JsonFactory jsonFactory = new JsonFactory();
+
 
     @Autowired
-    public SnapshotConsumerService(ObjectMapper objectMapper) {
+    public SnapshotConsumerService(ObjectMapper objectMapper, TextEncryptor textEncryptor) {
         this.objectMapper = objectMapper;
+        this.textEncryptor = textEncryptor;
     }
 
     public <T> StreamPosition consumeSnapshot(final File latestSnapshot,
@@ -83,7 +89,7 @@ public class SnapshotConsumerService {
             if (currentToken == JsonToken.FIELD_NAME) {
                 final Event<T> event = event(
                         parser.getValueAsString(),
-                        objectMapper.convertValue(parser.nextTextValue(), payloadType),
+                        objectMapper.convertValue(textEncryptor.decrypt(parser.nextTextValue()), payloadType),
                         sequenceNumber,
                         arrivalTimestamp);
                 callback.accept(event);
