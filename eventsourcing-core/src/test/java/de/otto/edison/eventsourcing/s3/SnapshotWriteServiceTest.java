@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.springframework.security.crypto.encrypt.Encryptors;
 
 import java.io.File;
 import java.io.IOException;
@@ -81,7 +82,7 @@ public class SnapshotWriteServiceTest {
         //then
         Map<String, String> data = new HashMap<>();
 
-        SnapshotConsumerService snapshotConsumerService = new SnapshotConsumerService(new ObjectMapper());
+        SnapshotConsumerService snapshotConsumerService = new SnapshotConsumerService(new ObjectMapper(), Encryptors.noOpText());
 
         StreamPosition actualStreamPosition = snapshotConsumerService.consumeSnapshot(snapshot,
                 "test",
