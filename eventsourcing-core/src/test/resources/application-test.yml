@@ -6,7 +6,7 @@ edison:
     enabled: false
   eventsourcing:
     snapshot:
-      bucket-template: de-otto-{stream-name}-snapshots
+      bucket-name: de-otto-promo-compaction-test-snapshots
     compaction:
       enabled: true
 

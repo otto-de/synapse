@@ -34,14 +34,14 @@ public class EventSourcingProperties {
 
     public static class Snapshot {
         private boolean enabled = true;
-        private String bucketTemplate;
+        private String bucketName;
 
-        public String getBucketTemplate() {
-            return bucketTemplate;
+        public String getBucketName() {
+            return bucketName;
         }
 
-        public void setBucketTemplate(String bucketTemplate) {
-            this.bucketTemplate = bucketTemplate;
+        public void setBucketName(String bucketName) {
+            this.bucketName = bucketName;
         }
 
         public boolean isEnabled() {

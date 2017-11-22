@@ -9,7 +9,7 @@ edison:
   eventsourcing:
     snapshot:
       enabled: true
-      bucket-template: snapshot-{stream-name}
+      bucket-name: edison-example-snapshot-bucket
     event-source-consumer-process:
       enabled: true
 

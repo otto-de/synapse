@@ -64,17 +64,17 @@ public class SnapshotReadServiceTest {
     @Test
     public void shouldGetLatestSnapshotFileFromS3Bucket() throws Exception {
         //given
-        final S3Object obj1 = mock(S3Object.class);
-        when(obj1.key()).thenReturn("compaction-test-snapshot-1.json.zip");
+        final S3Object s3Object = mock(S3Object.class);
+        when(s3Object.key()).thenReturn("compaction-teststream-snapshot-1.json.zip");
 
-        when(s3Service.listAll("test-test")).thenReturn(ImmutableList.of(obj1));
-        when(s3Service.download("test-test", "compaction-test-snapshot-1.json.zip", Paths.get("/tmp/compaction-test-snapshot-1.json.zip"))).thenReturn(true);
+        when(s3Service.listAll("test-teststream")).thenReturn(ImmutableList.of(s3Object));
+        when(s3Service.download("test-teststream", "compaction-teststream-snapshot-1.json.zip", Paths.get("/tmp/compaction-teststream-snapshot-1.json.zip"))).thenReturn(true);
 
         //when
-        Optional<File> file = testee.getLatestSnapshotFromBucket("test");
+        Optional<File> file = testee.getLatestSnapshotFromBucket("teststream");
 
         //then
-        assertThat(file.get(), is(Paths.get("/tmp/compaction-test-snapshot-1.json.zip").toFile()));
+        assertThat(file.get(), is(Paths.get("/tmp/compaction-teststream-snapshot-1.json.zip").toFile()));
     }
 
     @Test

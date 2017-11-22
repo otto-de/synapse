@@ -32,14 +32,14 @@ public class SnapshotWriteService {
     private static final String SHARD_FIELD_NAME = "shard";
     private static final String SEQUENCE_NUMBER_FIELD_NAME = "sequenceNumber";
     private final S3Service s3Service;
-    private final String snapshotBucketTemplate;
+    private final String snapshotBucketName;
 
     private JsonFactory jsonFactory = new JsonFactory();
 
     public SnapshotWriteService(final S3Service s3Service,
                                 final EventSourcingProperties properties) {
         this.s3Service = s3Service;
-        snapshotBucketTemplate = properties.getSnapshot().getBucketTemplate();
+        snapshotBucketName = properties.getSnapshot().getBucketName();
     }
 
 
@@ -51,7 +51,7 @@ public class SnapshotWriteService {
             LOG.info("Start creating new snapshot");
             snapshotFile = createSnapshot(streamName, position, stateRepository);
             LOG.info("Finished creating snapshot file: {}", snapshotFile.getAbsolutePath());
-            uploadSnapshot(createBucketName(streamName, this.snapshotBucketTemplate), snapshotFile);
+            uploadSnapshot(this.snapshotBucketName, snapshotFile);
             LOG.info("Finished uploading snapshot file to s3");
         } finally {
             deleteFile(snapshotFile);

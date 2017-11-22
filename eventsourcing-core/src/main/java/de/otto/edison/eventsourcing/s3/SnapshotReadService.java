@@ -31,13 +31,13 @@ public class SnapshotReadService {
     private static final long MAX_SNAPSHOT_FILE_AGE = 1000 * 60 * 60 * 24 * 3; //3 days //TODO make configurable
 
     private S3Service s3Service;
-    private String snapshotBucketTemplate;
+    private String snapshotBucketName;
 
 
     public SnapshotReadService(final S3Service s3Service,
                                final EventSourcingProperties properties) {
         this.s3Service = s3Service;
-        snapshotBucketTemplate = properties.getSnapshot().getBucketTemplate();
+        snapshotBucketName = properties.getSnapshot().getBucketName();
     }
 
 
@@ -56,8 +56,7 @@ public class SnapshotReadService {
     }
 
     Optional<File> getLatestSnapshotFromBucket(final String streamName) {
-        String snapshotBucket = createBucketName(streamName, snapshotBucketTemplate);
-        Optional<S3Object> s3Object = getLatestZip(snapshotBucket, streamName);
+        Optional<S3Object> s3Object = getLatestZip(snapshotBucketName, streamName);
         if (s3Object.isPresent()) {
             String latestSnapshotKey = s3Object.get().key();
             Path snapshotFile = Paths.get(getTempDir() + "/" + latestSnapshotKey);
@@ -75,7 +74,7 @@ public class SnapshotReadService {
 
 
             LOG.info("Downloading snapshot file to {}", snapshotFile.getFileName().toAbsolutePath().toString());
-            if (s3Service.download(snapshotBucket, latestSnapshotKey, snapshotFile)) {
+            if (s3Service.download(snapshotBucketName, latestSnapshotKey, snapshotFile)) {
                 return Optional.of(snapshotFile.toFile());
             }
             return Optional.empty();
