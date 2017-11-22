@@ -95,7 +95,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
         assertThat(context.getType("otherStreamEventSource")).isEqualTo(CompactingKinesisEventSource.class);
     }
 
-
     @Test
     public void shouldFailRegisteringEventConsumersWithSameNameAndDifferentType() {
         try {
