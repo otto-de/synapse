@@ -7,22 +7,17 @@ import java.util.function.Consumer;
 public class DefaultEventConsumer<T> implements EventConsumer<T> {
 
     private final String streamName;
+    private final String keyPattern;
     private final StateRepository<T> stateRepository;
 
     public DefaultEventConsumer(final String streamName,
+                                final String keyPattern,
                                 final StateRepository<T> stateRepository) {
         this.streamName = streamName;
         this.stateRepository = stateRepository;
+        this.keyPattern = keyPattern;
     }
 
-    /**
-     * Returns the name of the EventSource.
-     * <p>
-     * For streaming event-sources, this is the name of the event stream.
-     * </p>
-     *
-     * @return name
-     */
     @Override
     public String streamName() {
         return streamName;
@@ -31,6 +26,11 @@ public class DefaultEventConsumer<T> implements EventConsumer<T> {
     @Override
     public Consumer<Event<T>> consumerFunction() {
         return this::accept;
+    }
+
+    @Override
+    public String getKeyPattern() {
+        return keyPattern;
     }
 
 

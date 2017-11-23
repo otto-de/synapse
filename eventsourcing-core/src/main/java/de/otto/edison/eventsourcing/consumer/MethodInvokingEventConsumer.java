@@ -2,21 +2,22 @@ package de.otto.edison.eventsourcing.consumer;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
 
     private final String streamName;
+    private final String keyPattern;
     private final Object instance;
     private final Method method;
 
-    public MethodInvokingEventConsumer(final String streamName, final Object instance, final Method method) {
-        if (instance == null) {
-            throw new NullPointerException("Unable to build MethodInvokingEventConsumer: instance parameter is null");
-        }
-        if (method == null) {
-            throw new NullPointerException("Unable to build MethodInvokingEventConsumer: method parameter is null");
-        }
+    public MethodInvokingEventConsumer(final String streamName, final String keyPattern, final Object instance, final Method method) {
+        Objects.requireNonNull(streamName, "stream name must not be null");
+        Objects.requireNonNull(keyPattern, "key pattern must not be null");
+        Objects.requireNonNull(instance, "Unable to build MethodInvokingEventConsumer: instance parameter is null");
+        Objects.requireNonNull(method, "Unable to build MethodInvokingEventConsumer: method parameter is null");
+
         if (method.getParameterCount() != 1) {
             throw new IllegalArgumentException("Unable to build MethodInvokingEventConsumer: illegal number of arguments ");
         }
@@ -24,22 +25,21 @@ public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
         if (!paramType.equals(Event.class)) {
             throw new IllegalArgumentException("Unable to build MethodInvokingEventConsumer: expected parameter type is Event, not " + paramType.getName());
         }
+
         this.streamName = streamName;
+        this.keyPattern = keyPattern;
         this.method = method;
         this.instance = instance;
     }
 
-    /**
-     * Returns the name of the EventSource.
-     * <p>
-     * For streaming event-sources, this is the name of the event stream.
-     * </p>
-     *
-     * @return name
-     */
     @Override
     public String streamName() {
         return streamName;
+    }
+
+    @Override
+    public String getKeyPattern() {
+        return keyPattern;
     }
 
     @Override

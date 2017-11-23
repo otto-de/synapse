@@ -27,6 +27,12 @@ public @interface EventSourceConsumer {
     String streamName() default "";
 
     /**
+     * The regex pattern to filter events by their key that the consumer should receive.
+     * @return key pattern; defaults to <code>.*</code>
+     */
+    String keyPattern() default ".*";
+
+    /**
      * The type of the {@link Event#payload} produced by the {@link EventSource}
      *
      * @return payload type

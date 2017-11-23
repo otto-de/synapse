@@ -47,4 +47,9 @@ public interface EventConsumer<T> {
      */
     Consumer<Event<T>> consumerFunction();
 
+    /**
+     * The regex pattern to filter events by their key that the consumer should receive.
+     * @return key pattern
+     */
+    String getKeyPattern();
 }
