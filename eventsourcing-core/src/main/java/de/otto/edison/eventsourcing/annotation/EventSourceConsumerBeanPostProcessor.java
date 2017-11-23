@@ -85,8 +85,6 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
                 registerEventConsumer(consumer, method, bean);
                 String resolvedStreamName = applicationContext.getEnvironment().resolvePlaceholders(consumer.streamName());
 
-                assertThatEventConsumersForSameStreamNameHaveSamePayloadType(payloadTypesForName, consumer, resolvedStreamName);
-
                 if (!eventSourceExists(resolvedStreamName)) {
                     registerEventSource(resolvedStreamName, consumer.payloadType());
                     payloadTypesForName.put(resolvedStreamName, consumer.payloadType());
@@ -94,12 +92,6 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
             }
         }
         LOG.info("{} @EventSourceConsumer methods processed on bean {} : {}'", annotatedMethods.size(), beanName, annotatedMethods);
-    }
-
-    private void assertThatEventConsumersForSameStreamNameHaveSamePayloadType(Map<String, Class> payloadTypesForName, EventSourceConsumer consumer, String resolvedStreamName) {
-        if (payloadTypesForName.containsKey(resolvedStreamName) && payloadTypesForName.get(resolvedStreamName) != consumer.payloadType()) {
-            throw new IllegalStateException(String.format("Cannot register consumers for same streamName \"%s\" but with different payloadType", resolvedStreamName));
-        }
     }
 
     /*
