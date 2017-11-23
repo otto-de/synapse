@@ -78,11 +78,10 @@ public class CompactingKinesisEventSource<T> implements EventSource<T> {
     @Override
     public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<T>> stopCondition, Consumer<Event<T>> consumer) {
         final SnapshotEventSource<T> snapshotEventSource = new SnapshotEventSource<>(streamName, snapshotService, snapshotConsumerService, payloadType);
+        final StreamPosition streamPosition = snapshotEventSource.consumeAll(stopCondition, consumer);
 
         KinesisStream kinesisStream = new KinesisStream(kinesisClient, streamName, objectMapper, textEncryptor);
         final KinesisEventSource<T> kinesisEventSource = new KinesisEventSource<>(deserializer, kinesisStream);
-
-        final StreamPosition streamPosition = snapshotEventSource.consumeAll(stopCondition, consumer);
         return kinesisEventSource.consumeAll(streamPosition, stopCondition, consumer);
     }
 }

@@ -21,7 +21,10 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -77,8 +80,6 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
     }
 
     private void registerEventConsumers(Object bean, String beanName, Map<Method, Set<EventSourceConsumer>> annotatedMethods) {
-        Map<String, Class> payloadTypesForName = new HashMap<>();
-
         for (Map.Entry<Method, Set<EventSourceConsumer>> entry : annotatedMethods.entrySet()) {
             final Method method = entry.getKey();
             for (EventSourceConsumer consumer : entry.getValue()) {
@@ -87,7 +88,6 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
 
                 if (!eventSourceExists(resolvedStreamName)) {
                     registerEventSource(resolvedStreamName, consumer.payloadType());
-                    payloadTypesForName.put(resolvedStreamName, consumer.payloadType());
                 }
             }
         }
