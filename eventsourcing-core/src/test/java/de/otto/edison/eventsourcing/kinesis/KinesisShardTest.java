@@ -1,10 +1,12 @@
 package de.otto.edison.eventsourcing.kinesis;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
@@ -25,11 +27,14 @@ public class KinesisShardTest {
     @Mock
     private BiConsumer<Long, Record> consumer;
 
+    @Mock
+    private TextEncryptor textEncryptor;
+
     private KinesisShard kinesisShard;
 
     @Before
     public void setUp() throws Exception {
-        KinesisStream kinesisStream = new KinesisStream(kinesisClient, "someStream");
+        KinesisStream kinesisStream = new KinesisStream(kinesisClient, "someStream", new ObjectMapper(), textEncryptor);
         kinesisShard = new KinesisShard("someShard", kinesisStream, kinesisClient);
 
         GetShardIteratorResponse fakeResponse = GetShardIteratorResponse.builder()

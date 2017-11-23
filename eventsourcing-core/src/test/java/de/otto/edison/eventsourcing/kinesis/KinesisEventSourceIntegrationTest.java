@@ -1,6 +1,7 @@
 package de.otto.edison.eventsourcing.kinesis;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
@@ -45,12 +47,19 @@ public class KinesisEventSourceIntegrationTest {
 
     @Autowired
     private KinesisClient kinesisClient;
+
     private EventSource<String> eventSource;
+
+    @Autowired
+    private TextEncryptor textEncryptor;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @PostConstruct
     public void setup() {
         KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, STREAM_NAME, EXPECTED_NUMBER_OF_SHARDS);
-        KinesisStream kinesisStream = new KinesisStream(kinesisClient, STREAM_NAME);
+        KinesisStream kinesisStream = new KinesisStream(kinesisClient, STREAM_NAME, objectMapper, textEncryptor);
         this.eventSource = new KinesisEventSource<>(Function.identity(), kinesisStream);
     }
 
