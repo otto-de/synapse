@@ -1,8 +1,8 @@
 package de.otto.edison.eventsourcing.annotation;
 
 import com.google.common.base.CaseFormat;
-import de.otto.edison.eventsourcing.CompactingKinesisEventSource;
 import de.otto.edison.eventsourcing.EventSourceFactory;
+import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
 import org.slf4j.Logger;
 import org.springframework.aop.support.AopUtils;
@@ -83,7 +83,7 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
                 String resolvedStreamName = applicationContext.getEnvironment().resolvePlaceholders(consumer.streamName());
 
                 if (!eventSourceExists(resolvedStreamName)) {
-                    registerEventSource(resolvedStreamName, consumer.payloadType());
+                    registerEventSource(resolvedStreamName, consumer.payloadType(), consumer.eventSourceType());
                 }
             }
         }
@@ -121,9 +121,9 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
         }
     }
 
-    private <T> void registerEventSource(String streamName, Class<T> payloadType) {
+    private <T> void registerEventSource(String streamName, Class<T> payloadType, Class<? extends EventSource> eventSourceType) {
         EventSourceFactory eventSourceFactory = applicationContext.getBean(EventSourceFactory.class);
-        CompactingKinesisEventSource<T> eventSource = eventSourceFactory.createCompactingKinesisEventSource(streamName, payloadType);
+        EventSource<T> eventSource = eventSourceFactory.createEventSource(eventSourceType, streamName, payloadType);
         applicationContext.getBeanFactory().registerSingleton(streamNameToEventSourceName(streamName), eventSource);
     }
 
