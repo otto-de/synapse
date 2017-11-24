@@ -4,9 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.function.*;
@@ -19,26 +21,24 @@ import static java.util.stream.Collectors.toMap;
 public class KinesisEventSource<T> implements EventSource<T> {
 
     private KinesisStream kinesisStream;
-
     private Function<String, T> deserializer;
 
     public KinesisEventSource(final Class<T> payloadType,
                               final ObjectMapper objectMapper,
-                              final KinesisStream kinesisStream) {
-        this.deserializer = (in) -> {
+                              final KinesisStream kinesisStream,
+                              final TextEncryptor textEncryptor)
+    {
+        this.deserializer = in -> {
             try {
-                return objectMapper.readValue(in, payloadType);
+                if (payloadType == String.class) {
+                    return (T)textEncryptor.decrypt(in);
+                } else {
+                    return objectMapper.readValue(textEncryptor.decrypt(in), payloadType);
+                }
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new UncheckedIOException(e);
             }
         };
-
-        this.kinesisStream = kinesisStream;
-    }
-
-    public KinesisEventSource(final Function<String, T> deserializer,
-                              final KinesisStream kinesisStream) {
-        this.deserializer = deserializer;
         this.kinesisStream = kinesisStream;
     }
 

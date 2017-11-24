@@ -11,6 +11,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.security.crypto.encrypt.Encryptors;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 import software.amazon.awssdk.services.kinesis.model.GetShardIteratorResponse;
@@ -69,7 +70,7 @@ public class KinesisEventSourceTest {
 
         Consumer<Event<TestData>> consumer = mock(Consumer.class);
 
-        KinesisEventSource<TestData> eventSource = new KinesisEventSource<>(TestData.class, objectMapper, kinesisStream);
+        KinesisEventSource<TestData> eventSource = new KinesisEventSource<>(TestData.class, objectMapper, kinesisStream, Encryptors.noOpText());
 
         // when
         eventSource.consumeAll(initialPositions, this::stopIfGreen, consumer);
@@ -92,7 +93,7 @@ public class KinesisEventSourceTest {
 
         Consumer<Event<String>> consumer = mock(Consumer.class);
 
-        KinesisEventSource<String> eventSource = new KinesisEventSource<>(in -> in, kinesisStream);
+        KinesisEventSource<String> eventSource = new KinesisEventSource<>(String.class, objectMapper, kinesisStream, Encryptors.noOpText());
 
         // when
         eventSource.consumeAll(initialPositions, this::stopIfGreenForString, consumer);

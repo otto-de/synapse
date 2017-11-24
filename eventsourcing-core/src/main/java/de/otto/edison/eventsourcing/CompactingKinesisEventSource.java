@@ -1,73 +1,33 @@
 package de.otto.edison.eventsourcing;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.kinesis.KinesisEventSource;
-import de.otto.edison.eventsourcing.kinesis.KinesisStream;
-import de.otto.edison.eventsourcing.s3.SnapshotConsumerService;
 import de.otto.edison.eventsourcing.s3.SnapshotEventSource;
-import de.otto.edison.eventsourcing.s3.SnapshotReadService;
-import org.springframework.security.crypto.encrypt.Encryptors;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class CompactingKinesisEventSource<T> implements EventSource<T> {
 
-    private final TextEncryptor textEncryptor;
-    private final ObjectMapper objectMapper;
-    private SnapshotReadService snapshotService;
-    private SnapshotConsumerService snapshotConsumerService;
-    private Function<String, T> deserializer;
-    private KinesisClient kinesisClient;
-
+    private final SnapshotEventSource snapshotEventSource;
+    private final KinesisEventSource kinesisEventSource;
     private final String streamName;
-    private final Class<T> payloadType;
 
-    public CompactingKinesisEventSource(String streamName,
-                                        Class<T> payloadType,
-                                        SnapshotReadService snapshotService,
-                                        SnapshotConsumerService snapshotConsumerService,
-                                        ObjectMapper objectMapper,
-                                        KinesisClient kinesisClient,
-                                        TextEncryptor textEncryptor) {
-        this.streamName = streamName;
-        this.payloadType = payloadType;
-        this.snapshotService = snapshotService;
-        this.snapshotConsumerService = snapshotConsumerService;
-        this.textEncryptor = textEncryptor;
-        this.objectMapper = objectMapper;
-        this.deserializer = in -> {
-            try {
-                return objectMapper.readValue(textEncryptor.decrypt(in), payloadType);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        };
-        this.kinesisClient = kinesisClient;
-    }
-
-    public CompactingKinesisEventSource(String streamName,
-                                        Class<T> payloadType,
-                                        SnapshotReadService snapshotService,
-                                        SnapshotConsumerService snapshotConsumerService,
-                                        Function<String, T> deserializer,
-                                        KinesisClient kinesisClient) {
-        this.streamName = streamName;
-        this.payloadType = payloadType;
-        this.snapshotService = snapshotService;
-        this.snapshotConsumerService = snapshotConsumerService;
-        this.deserializer = deserializer;
-        this.kinesisClient = kinesisClient;
-        this.textEncryptor = Encryptors.noOpText();
-        this.objectMapper = new ObjectMapper();
+    public CompactingKinesisEventSource(SnapshotEventSource snapshotEventSource,
+                                        KinesisEventSource kinesisEventSource) {
+        Objects.requireNonNull(snapshotEventSource, "snapshot event source must not be null");
+        Objects.requireNonNull(kinesisEventSource, "kinesis event source must not be null");
+        if (!snapshotEventSource.getStreamName().equals(kinesisEventSource.getStreamName())) {
+            throw new IllegalArgumentException(String.format(
+                    "given event sources must have same stream name, but was: '%s' and '%s'",
+                    snapshotEventSource.getStreamName(), kinesisEventSource.getStreamName()));
+        }
+        this.snapshotEventSource = snapshotEventSource;
+        this.kinesisEventSource = kinesisEventSource;
+        this.streamName = kinesisEventSource.getStreamName();
     }
 
     @Override
@@ -77,11 +37,7 @@ public class CompactingKinesisEventSource<T> implements EventSource<T> {
 
     @Override
     public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<T>> stopCondition, Consumer<Event<T>> consumer) {
-        final SnapshotEventSource<T> snapshotEventSource = new SnapshotEventSource<>(streamName, snapshotService, snapshotConsumerService, payloadType);
         final StreamPosition streamPosition = snapshotEventSource.consumeAll(stopCondition, consumer);
-
-        KinesisStream kinesisStream = new KinesisStream(kinesisClient, streamName, objectMapper, textEncryptor);
-        final KinesisEventSource<T> kinesisEventSource = new KinesisEventSource<>(deserializer, kinesisStream);
         return kinesisEventSource.consumeAll(streamPosition, stopCondition, consumer);
     }
 }

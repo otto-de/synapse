@@ -1,11 +1,9 @@
 package de.otto.edison.eventsourcing.annotation;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.CaseFormat;
 import de.otto.edison.eventsourcing.CompactingKinesisEventSource;
+import de.otto.edison.eventsourcing.EventSourceFactory;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
-import de.otto.edison.eventsourcing.s3.SnapshotConsumerService;
-import de.otto.edison.eventsourcing.s3.SnapshotReadService;
 import org.slf4j.Logger;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
@@ -17,8 +15,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.MethodIntrospector;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -126,13 +122,8 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
     }
 
     private <T> void registerEventSource(String streamName, Class<T> payloadType) {
-        SnapshotReadService snapshotService = applicationContext.getBean(SnapshotReadService.class);
-        SnapshotConsumerService snapshotConsumerService = applicationContext.getBean(SnapshotConsumerService.class);
-        ObjectMapper objectMapper = applicationContext.getBean(ObjectMapper.class);
-        KinesisClient kinesisClient = applicationContext.getBean(KinesisClient.class);
-        TextEncryptor textEncryptor = applicationContext.getBean(TextEncryptor.class);
-
-        CompactingKinesisEventSource<T> eventSource = new CompactingKinesisEventSource<>(streamName, payloadType, snapshotService, snapshotConsumerService, objectMapper, kinesisClient, textEncryptor);
+        EventSourceFactory eventSourceFactory = applicationContext.getBean(EventSourceFactory.class);
+        CompactingKinesisEventSource<T> eventSource = eventSourceFactory.createCompactingKinesisEventSource(streamName, payloadType);
         applicationContext.getBeanFactory().registerSingleton(streamNameToEventSourceName(streamName), eventSource);
     }
 
