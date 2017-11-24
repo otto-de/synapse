@@ -12,7 +12,7 @@ subprojects {
     apply plugin: 'idea'
     apply plugin: 'eclipse'
 
-    version = '0.1.1'
+    version = '0.1.2-SNAPSHOT'
     group = 'de.otto.edison'
 
     repositories {
