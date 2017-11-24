@@ -1,6 +1,5 @@
 package de.otto.edison.eventsourcing.s3;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import de.otto.edison.aws.s3.S3Service;

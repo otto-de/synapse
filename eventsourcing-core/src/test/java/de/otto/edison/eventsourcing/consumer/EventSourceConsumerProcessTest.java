@@ -10,7 +10,8 @@ import java.util.function.Predicate;
 
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 public class EventSourceConsumerProcessTest {
 

@@ -1,6 +1,5 @@
 package de.otto.edison.eventsourcing.consumer;
 
-import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;

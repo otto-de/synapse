@@ -17,7 +17,8 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
 import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
-import static de.otto.edison.eventsourcing.s3.SnapshotUtils.*;
+import static de.otto.edison.eventsourcing.s3.SnapshotUtils.COMPACTION_FILE_EXTENSION;
+import static de.otto.edison.eventsourcing.s3.SnapshotUtils.getSnapshotFileNamePrefix;
 import static java.lang.String.format;
 import static java.nio.file.Files.delete;
 import static java.util.Comparator.comparing;

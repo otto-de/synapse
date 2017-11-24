@@ -6,7 +6,6 @@ import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.security.crypto.encrypt.Encryptors;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 import java.io.File;
 import java.util.HashMap;

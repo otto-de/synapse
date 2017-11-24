@@ -1,6 +1,5 @@
 package de.otto.edison.eventsourcing.kinesis;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
@@ -16,7 +15,6 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
-import java.nio.ByteBuffer;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;

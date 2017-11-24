@@ -16,7 +16,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static de.otto.edison.eventsourcing.s3.SnapshotUtils.*;
+import static de.otto.edison.eventsourcing.s3.SnapshotUtils.COMPACTION_FILE_EXTENSION;
+import static de.otto.edison.eventsourcing.s3.SnapshotUtils.getSnapshotFileNamePrefix;
 import static java.time.format.DateTimeFormatter.ofPattern;
 import static org.slf4j.LoggerFactory.getLogger;
 

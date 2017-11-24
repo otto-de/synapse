@@ -15,7 +15,6 @@ import software.amazon.awssdk.services.kinesis.model.Shard;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
