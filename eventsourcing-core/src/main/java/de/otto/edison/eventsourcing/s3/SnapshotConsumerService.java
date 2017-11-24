@@ -74,6 +74,7 @@ public class SnapshotConsumerService {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private <T> void processSnapshotData(final JsonParser parser,
                                          final String sequenceNumber,
                                          final Predicate<Event<T>> stopCondition,
@@ -85,9 +86,16 @@ public class SnapshotConsumerService {
         while (!abort && parser.nextToken() != JsonToken.END_ARRAY) {
             JsonToken currentToken = parser.currentToken();
             if (currentToken == JsonToken.FIELD_NAME) {
+                String key = parser.getValueAsString();
+                T readValue;
+                if (payloadType == String.class) {
+                    readValue = (T) textEncryptor.decrypt(parser.nextTextValue());
+                } else {
+                    readValue = objectMapper.readValue(textEncryptor.decrypt(parser.nextTextValue()), payloadType);
+                }
                 final Event<T> event = event(
-                        parser.getValueAsString(),
-                        objectMapper.readValue(textEncryptor.decrypt(parser.nextTextValue()), payloadType),
+                        key,
+                        readValue,
                         sequenceNumber,
                         arrivalTimestamp);
                 callback.accept(event);
