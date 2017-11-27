@@ -3,8 +3,11 @@ package de.otto.edison.eventsourcing.annotation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.CompactingKinesisEventSource;
 import de.otto.edison.eventsourcing.configuration.EventSourcingConfiguration;
+import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
 import de.otto.edison.eventsourcing.consumer.Event;
+import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
+import de.otto.edison.eventsourcing.s3.SnapshotEventSource;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -36,8 +39,16 @@ public class EventSourceConsumerBeanPostProcessorTest {
     @Configuration
     static class TestConfigurationDifferentPayload {
         @Bean
-        public TestConsumerWithSameStreamName test() {
-            return new TestConsumerWithSameStreamName();
+        public TestConsumerWithSameStreamNameAndDifferentPayload test() {
+            return new TestConsumerWithSameStreamNameAndDifferentPayload();
+        }
+    }
+
+    @Configuration
+    static class TestConfigurationCustomEventSource {
+        @Bean
+        public TestConsumerWithSnapshotEventSource test() {
+            return new TestConsumerWithSnapshotEventSource();
         }
     }
 
@@ -80,6 +91,18 @@ public class EventSourceConsumerBeanPostProcessorTest {
         assertThat(context.getBeanNamesForType(CompactingKinesisEventSource.class).length).isEqualTo(1);
     }
 
+    @Test
+    public void shouldRegisterEventConsumerWithCustomEventSource() {
+        context.register(TestTextEncryptor.class);
+        context.register(ObjectMapper.class);
+        context.register(TestConfigurationCustomEventSource.class);
+        context.register(EventSourcingConfiguration.class);
+        context.refresh();
+
+        assertThat(context.containsBean("someStreamEventSource")).isTrue();
+        assertThat(context.getType("someStreamEventSource")).isEqualTo(SnapshotEventSource.class);
+    }
+
     static class TestTextEncryptor implements TextEncryptor {
         public TestTextEncryptor() {
 
@@ -119,7 +142,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
-    static class TestConsumerWithSameStreamName {
+    static class TestConsumerWithSameStreamNameAndDifferentPayload {
         @EventSourceConsumer(
                 name = "firstConsumer",
                 streamName = "some-stream",
@@ -136,6 +159,16 @@ public class EventSourceConsumerBeanPostProcessorTest {
         public void second(Event<String> event) {
         }
 
+    }
+
+    static class TestConsumerWithSnapshotEventSource {
+        @EventSourceConsumer(
+                name = "firstConsumer",
+                streamName = "some-stream",
+                payloadType = String.class,
+                eventSourceType = SnapshotEventSource.class)
+        public void first(Event<String> event) {
+        }
     }
 
 }
