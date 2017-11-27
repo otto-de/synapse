@@ -6,6 +6,7 @@ import de.otto.edison.eventsourcing.configuration.EventSourcingConfiguration;
 import de.otto.edison.eventsourcing.configuration.SnapshotConfiguration;
 import de.otto.edison.eventsourcing.s3.SnapshotReadService;
 import org.awaitility.Awaitility;
+import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,48 +48,46 @@ import static org.mockito.Mockito.when;
 public class EventConsumerIntegrationTest {
 
     static List<String> allReceivedEventKeys = new ArrayList<>();
-    static List<String> oddReceivedEventKeys = new ArrayList<>();
-    static List<String> evenReceivedEventKeys = new ArrayList<>();
+    static List<String> receivedAppleEventKeys = new ArrayList<>();
+    static List<String> receivedBananaEventKeys = new ArrayList<>();
 
     @Test
     public void shouldCallCorrectConsumerDependingOnEventKey() throws Exception {
 
         Awaitility.await()
                 .atMost(5, TimeUnit.SECONDS)
-                .until(() -> allReceivedEventKeys.size(), is(5000));
+                .until(() -> allReceivedEventKeys.size(), is(4));
 
-        Assert.assertTrue(evenReceivedEventKeys.stream().map(Integer::parseInt).allMatch(key -> key % 2 == 0));
-        Assert.assertTrue(oddReceivedEventKeys.stream().map(Integer::parseInt).allMatch(key -> key % 2 == 1));
+        Assert.assertThat(receivedBananaEventKeys, Matchers.contains("banana-1", "banana-2"));
+        Assert.assertThat(receivedAppleEventKeys, Matchers.contains("apple-1", "apple-2"));
     }
-
-
 
     static class TestConfiguration {
 
         @EventSourceConsumer(
-                name = "evenConsumer",
+                name = "bananaConsumer",
                 streamName = "test-stream",
-                keyPattern = "^\\d*[02468]$",
+                keyPattern = "^banana.*",
                 payloadType = Map.class)
         public void consumeEventsWithEvenKey(Event<Map> event) {
-            evenReceivedEventKeys.add(event.key());
+            receivedBananaEventKeys.add(event.key());
             allReceivedEventKeys.add(event.key());
         }
 
         @EventSourceConsumer(
-                name = "oddConsumer",
+                name = "appleConsumer",
                 streamName = "test-stream",
-                keyPattern = "^\\d*[13579]$",
+                keyPattern = "^apple.*",
                 payloadType = Map.class)
         public void consumeEventsWithOddKey(Event<Map> event) {
-            oddReceivedEventKeys.add(event.key());
+            receivedAppleEventKeys.add(event.key());
             allReceivedEventKeys.add(event.key());
         }
 
         @Bean
         @Primary
         public SnapshotReadService snapshotReadService() {
-            File file = new File(getClass().getClassLoader().getResource("compaction-integrationtest-snapshot-2017-09-29T09-02Z-3053797267191232636.json.zip").getFile());
+            File file = new File(getClass().getClassLoader().getResource("apple-banana-snapshot-2017-11-27T09-02Z-3053797267191232636.json.zip").getFile());
 
             SnapshotReadService snapshotReadServiceMock = Mockito.mock(SnapshotReadService.class);
             when(snapshotReadServiceMock.downloadLatestSnapshot(any())).thenReturn(Optional.of(file));
