@@ -43,8 +43,8 @@ public class DelegateEventConsumerTest {
         // when
         Event<Object> someEventForA = new Event<>("apple.123", new Object(), "0", Instant.now(), Duration.ZERO);
         Event<Object> someEventForB = new Event<>("banana.456", new Object(), "0", Instant.now(), Duration.ZERO);
-       delegateConsumer.consumerFunction().accept(someEventForA);
-       delegateConsumer.consumerFunction().accept(someEventForB);
+        delegateConsumer.consumerFunction().accept(someEventForA);
+        delegateConsumer.consumerFunction().accept(someEventForB);
 
         // then
         verify(eventConsumerA).accept(someEventForA);

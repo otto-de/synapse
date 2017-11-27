@@ -10,6 +10,7 @@ import de.otto.edison.eventsourcing.s3.SnapshotReadService;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
@@ -50,14 +51,16 @@ public class EventSourcingConfiguration {
             SnapshotConsumerService snapshotConsumerService,
             ObjectMapper objectMapper,
             KinesisClient kinesisClient,
-            TextEncryptor textEncryptor)
+            TextEncryptor textEncryptor,
+            ApplicationEventPublisher applicationEventPublisher)
     {
         return new EventSourceFactory(
                 snapshotReadService,
                 snapshotConsumerService,
                 objectMapper,
                 kinesisClient,
-                textEncryptor);
+                textEncryptor,
+                applicationEventPublisher);
     }
 }
 

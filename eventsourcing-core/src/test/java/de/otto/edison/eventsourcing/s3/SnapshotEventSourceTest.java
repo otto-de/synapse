@@ -1,9 +1,13 @@
 package de.otto.edison.eventsourcing.s3;
 
+import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
+import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.File;
@@ -72,4 +76,30 @@ public class SnapshotEventSourceTest {
         verify(snapshotReadService).deleteOlderSnapshots("streamName");
     }
 
+    @Test
+    public void shouldPublishStartAndFinishEvents() throws Exception {
+        // given
+        when(snapshotReadService.downloadLatestSnapshot(any())).thenReturn(Optional.empty());
+
+        ApplicationEventPublisher applicationEventPublisher = Mockito.mock(ApplicationEventPublisher.class);
+        snapshotEventSource.setEventPublisher(applicationEventPublisher);
+
+        // when
+        snapshotEventSource.consumeAll((event) -> {});
+
+        // then
+        EventSourceNotification expectedStartEvent = EventSourceNotification.builder()
+                .withEventSource(snapshotEventSource)
+                .withStatus(EventSourceNotification.Status.STARTED)
+                .withStreamPosition(StreamPosition.of())
+                .build();
+        verify(applicationEventPublisher).publishEvent(expectedStartEvent);
+
+        EventSourceNotification expectedFinishedEvent = EventSourceNotification.builder()
+                .withEventSource(snapshotEventSource)
+                .withStatus(EventSourceNotification.Status.FINISHED)
+                .withStreamPosition(SnapshotStreamPosition.of())
+                .build();
+        verify(applicationEventPublisher).publishEvent(expectedFinishedEvent);
+    }
 }

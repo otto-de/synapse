@@ -7,6 +7,7 @@ import de.otto.edison.eventsourcing.kinesis.KinesisStream;
 import de.otto.edison.eventsourcing.s3.SnapshotConsumerService;
 import de.otto.edison.eventsourcing.s3.SnapshotEventSource;
 import de.otto.edison.eventsourcing.s3.SnapshotReadService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
@@ -23,17 +24,21 @@ public class EventSourceFactory {
     private final KinesisClient kinesisClient;
     private final TextEncryptor textEncryptor;
 
+    private final ApplicationEventPublisher applicationEventPublisher;
+
     public EventSourceFactory(
             SnapshotReadService snapshotReadService,
             SnapshotConsumerService snapshotConsumerService,
             ObjectMapper objectMapper,
             KinesisClient kinesisClient,
-            TextEncryptor textEncryptor) {
+            TextEncryptor textEncryptor,
+            ApplicationEventPublisher applicationEventPublisher) {
         this.snapshotReadService = snapshotReadService;
         this.snapshotConsumerService = snapshotConsumerService;
         this.objectMapper = objectMapper;
         this.kinesisClient = kinesisClient;
         this.textEncryptor = textEncryptor;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     public <T> EventSource<T> createEventSource(Class<? extends EventSource> eventSourceClazz, String streamName, Class<T> payloadClazz) {
@@ -57,7 +62,9 @@ public class EventSourceFactory {
     }
 
     public <T> SnapshotEventSource<T> createSnapshotEventSource(String streamName, Class<T> payloadClazz) {
-        return new SnapshotEventSource<>(streamName, snapshotReadService, snapshotConsumerService, payloadClazz);
+        SnapshotEventSource<T> snapshotEventSource = new SnapshotEventSource<>(streamName, snapshotReadService, snapshotConsumerService, payloadClazz);
+        snapshotEventSource.setEventPublisher(applicationEventPublisher);
+        return snapshotEventSource;
     }
 
     public <T> CompactingKinesisEventSource<T> createCompactingKinesisEventSource(String streamName, Class<T> payloadClazz) {
