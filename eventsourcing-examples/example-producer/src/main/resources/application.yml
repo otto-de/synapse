@@ -1,0 +1,20 @@
+aws:
+  profile: edison-aws-test
+  region: eu-central-1
+
+management:
+    context-path: /internal
+
+service:
+  encryption:
+    password: example
+    salt: example
+
+exampleservice:
+  product-stream-name: edison-example-products
+
+logging:
+    config: classpath:logback-console.xml
+
+server:
+  port: 5555
