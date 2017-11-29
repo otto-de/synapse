@@ -37,7 +37,7 @@ class DelegateEventConsumer implements EventConsumer<String> {
         }
 
         keyPatterns.forEach(keyPattern -> {
-            List<EventConsumer> consumerForKeyPattern = consumerMapping.getConsumerForKeyPattern(keyPattern);
+            List<EventConsumer> consumerForKeyPattern = consumerMapping.getConsumersForKeyPattern(keyPattern);
             if (consumerForKeyPattern == null || consumerForKeyPattern.isEmpty()) {
                 throw new IllegalArgumentException(String.format("No consumer for key pattern %s registered!", keyPattern));
             }
@@ -48,7 +48,7 @@ class DelegateEventConsumer implements EventConsumer<String> {
         consumerMapping.getKeyPatterns()
                 .forEach(keyPattern -> mapPatternToEventSource.putAll(
                         Pattern.compile(keyPattern),
-                        consumerMapping.getConsumerForKeyPattern(keyPattern)));
+                        consumerMapping.getConsumersForKeyPattern(keyPattern)));
     }
 
     private void assertSameStreamNameForAllConsumers() {

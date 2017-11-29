@@ -34,7 +34,7 @@ public class EventSourceMapping {
 
     public static class ConsumerMapping {
         private final Multimap<String, EventConsumer> mapKeyToConsumer = LinkedHashMultimap.create();
-        private final Map<EventConsumer, Class<?>> mapKeyToPayload = new ConcurrentHashMap<>();
+        private final Map<EventConsumer, Class<?>> mapConsumerToPayload = new ConcurrentHashMap<>();
         private final String streamName;
 
         public ConsumerMapping(String streamName) {
@@ -49,12 +49,12 @@ public class EventSourceMapping {
             return ImmutableSet.copyOf(mapKeyToConsumer.keySet());
         }
 
-        public List<EventConsumer> getConsumerForKeyPattern(String keyPattern) {
+        public List<EventConsumer> getConsumersForKeyPattern(String keyPattern) {
             return ImmutableList.copyOf(mapKeyToConsumer.get(keyPattern));
         }
 
         public Optional<Class<?>> getPayloadForEventConsumer(EventConsumer eventConsumer) {
-            return Optional.ofNullable(mapKeyToPayload.get(eventConsumer));
+            return Optional.ofNullable(mapConsumerToPayload.get(eventConsumer));
         }
 
         public void addConsumerAndPayloadForKeyPattern(String keyPattern, EventConsumer eventConsumer, Class<?> payload) {
@@ -62,7 +62,7 @@ public class EventSourceMapping {
                 throw new IllegalArgumentException("event source and event consumer must have same stream name");
             }
             mapKeyToConsumer.put(keyPattern, eventConsumer);
-            mapKeyToPayload.put(eventConsumer, payload);
+            mapConsumerToPayload.put(eventConsumer, payload);
         }
     }
 
