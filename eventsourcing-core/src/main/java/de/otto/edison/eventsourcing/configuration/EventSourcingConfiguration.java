@@ -40,6 +40,11 @@ public class EventSourcingConfiguration {
     }
 
     @Bean
+    public EventSourceMapping eventSourceMapping() {
+        return new EventSourceMapping();
+    }
+
+    @Bean
     public EventSourceFactory eventSourceFactory(
             SnapshotReadService snapshotReadService,
             SnapshotConsumerService snapshotConsumerService,

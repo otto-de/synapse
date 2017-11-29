@@ -134,12 +134,7 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
 
     private void registerMapping(final EventSourceConsumer annotation, EventSource<String> eventSource, EventConsumer eventConsumer) {
         String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, EventSourceMapping.class.getSimpleName());
-        boolean contains = applicationContext.containsBean(name);
-        EventSourceMapping eventSourceMapping = contains ? applicationContext.getBean(name, EventSourceMapping.class) : null;
-        if (eventSourceMapping == null) {
-            eventSourceMapping = new EventSourceMapping();
-            applicationContext.getBeanFactory().registerSingleton(name, eventSourceMapping);
-        }
+        EventSourceMapping eventSourceMapping = applicationContext.getBean(name, EventSourceMapping.class);
         EventSourceMapping.ConsumerMapping consumerMapping = eventSourceMapping.getConsumerMapping(eventSource);
         consumerMapping.addConsumerAndPayloadForKeyPattern(annotation.keyPattern(), eventConsumer, annotation.payloadType());
     }
