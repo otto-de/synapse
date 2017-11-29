@@ -6,15 +6,18 @@ import de.otto.edison.eventsourcing.configuration.EventSourcingConfiguration;
 import de.otto.edison.eventsourcing.configuration.SnapshotConfiguration;
 import de.otto.edison.eventsourcing.s3.SnapshotReadService;
 import org.awaitility.Awaitility;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
@@ -27,7 +30,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -38,6 +43,7 @@ import static org.mockito.Mockito.when;
         "de.otto.edison.eventsourcing.encryption",
 })
 @SpringBootTest(classes = {
+        EventConsumerIntegrationTest.class,
         EventConsumerIntegrationTest.TestConfiguration.class,
         EventSourcingBootstrapConfiguration.class,
         EventSourcingConfiguration.class,
@@ -45,9 +51,11 @@ import static org.mockito.Mockito.when;
 })
 public class EventConsumerIntegrationTest {
 
-    static List<String> allReceivedEventKeys = new ArrayList<>();
-    static List<Apple> receivedAppleEventPayloads = new ArrayList<>();
-    static List<Banana> receivedBananaEventPayloads = new ArrayList<>();
+    private static List<String> allReceivedEventKeys = new ArrayList<>();
+    private static List<Apple> receivedAppleEventPayloads = new ArrayList<>();
+    private static List<Banana> receivedBananaEventPayloads = new ArrayList<>();
+    private static List<EventSourceNotification> events = new ArrayList<>();
+
 
     @Test
     public void shouldCallCorrectConsumerDependingOnEventKey() throws Exception {
@@ -56,12 +64,15 @@ public class EventConsumerIntegrationTest {
                 .atMost(5, TimeUnit.SECONDS)
                 .until(() -> allReceivedEventKeys.size(), is(4));
 
-        Assert.assertThat(receivedBananaEventPayloads.size(), is(2));
-        Assert.assertThat(receivedBananaEventPayloads.get(0).bananaId, is("1"));
-        Assert.assertThat(receivedBananaEventPayloads.get(1).bananaId, is("2"));
-        Assert.assertThat(receivedAppleEventPayloads.size(), is(2));
-        Assert.assertThat(receivedAppleEventPayloads.get(0).appleId, is("1"));
-        Assert.assertThat(receivedAppleEventPayloads.get(1).appleId, is("2"));
+        assertThat(receivedBananaEventPayloads.size(), is(2));
+        assertThat(receivedBananaEventPayloads.get(0).bananaId, is("1"));
+        assertThat(receivedBananaEventPayloads.get(1).bananaId, is("2"));
+        assertThat(receivedAppleEventPayloads.size(), is(2));
+        assertThat(receivedAppleEventPayloads.get(0).appleId, is("1"));
+        assertThat(receivedAppleEventPayloads.get(1).appleId, is("2"));
+        assertThat(events, hasSize(2));
+        assertThat(events.get(0).getStatus(), is(EventSourceNotification.Status.STARTED));
+        assertThat(events.get(1).getStatus(), is(EventSourceNotification.Status.FINISHED));
     }
 
     private static class Apple {
@@ -74,7 +85,12 @@ public class EventConsumerIntegrationTest {
         public String name;
     }
 
-    static class TestConfiguration {
+    @Component
+    public static class TestConfiguration {
+
+        @Autowired
+        ApplicationEventPublisher eventPublisher;
+
 
         @EventSourceConsumer(
                 name = "bananaConsumer",
@@ -94,6 +110,12 @@ public class EventConsumerIntegrationTest {
         public void consumeEventsWithOddKey(Event<Apple> event) {
             receivedAppleEventPayloads.add(event.payload());
             allReceivedEventKeys.add(event.key());
+
+        }
+
+        @EventListener
+        public void listenForFinishedEvent(EventSourceNotification eventSourceNotification) {
+            events.add(eventSourceNotification);
         }
 
         @Bean
@@ -114,6 +136,7 @@ public class EventConsumerIntegrationTest {
                 public void close() {
                     // do nothing
                 }
+
                 @Override
                 public DescribeStreamResponse describeStream(DescribeStreamRequest describeStreamRequest) {
                     throw new UnsupportedOperationException("test kinesis client that throws exception on purpose");

@@ -46,8 +46,7 @@ public class EventSourcingConfiguration {
             ObjectMapper objectMapper,
             KinesisClient kinesisClient,
             TextEncryptor textEncryptor,
-            ApplicationEventPublisher applicationEventPublisher)
-    {
+            ApplicationEventPublisher applicationEventPublisher) {
         return new EventSourceFactory(
                 snapshotReadService,
                 snapshotConsumerService,

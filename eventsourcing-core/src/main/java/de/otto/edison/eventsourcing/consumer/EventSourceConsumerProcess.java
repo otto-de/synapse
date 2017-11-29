@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.otto.edison.eventsourcing.annotation.EventSourceMapping;
 import org.slf4j.Logger;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import javax.annotation.PostConstruct;
@@ -48,22 +50,27 @@ public class EventSourceConsumerProcess {
         }
     }
 
-    @PostConstruct
+
+    @EventListener
+    public void handleContextRefresh(ContextRefreshedEvent event) {
+        init();
+    }
+
     @SuppressWarnings("unchecked")
     public void init() {
         LOG.info("Initializing EventSourceConsumerProcess...");
         eventSourceMapping.getEventSources()
                 .forEach(eventSource -> executorService.submit(() -> {
-                    try {
-                        LOG.info("Starting {}...", eventSource.getStreamName());
-                        EventSourceMapping.ConsumerMapping consumerMapping = eventSourceMapping.getConsumerMapping(eventSource);
-                        DelegateEventConsumer delegateEventConsumer = new DelegateEventConsumer(consumerMapping, objectMapper);
-                        eventSource.consumeAll(ignore -> stopThread.get(), delegateEventConsumer.consumerFunction());
-                    } catch (Exception e) {
-                        LOG.error("Starting failed: " + e.getMessage(), e);
-                    }
-                }
-        ));
+                            try {
+                                LOG.info("Starting {}...", eventSource.getStreamName());
+                                EventSourceMapping.ConsumerMapping consumerMapping = eventSourceMapping.getConsumerMapping(eventSource);
+                                DelegateEventConsumer delegateEventConsumer = new DelegateEventConsumer(consumerMapping, objectMapper);
+                                eventSource.consumeAll(ignore -> stopThread.get(), delegateEventConsumer.consumerFunction());
+                            } catch (Exception e) {
+                                LOG.error("Starting failed: " + e.getMessage(), e);
+                            }
+                        }
+                ));
     }
 
     @PreDestroy
