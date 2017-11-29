@@ -46,7 +46,7 @@ import static org.junit.Assert.assertThat;
 @ActiveProfiles("test")
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.edison.eventsourcing"})
-@SpringBootTest(classes = SnapshotReadServiceIntegrationTest.class)
+@SpringBootTest(classes = CompactionAcceptanceTest.class)
 public class CompactionAcceptanceTest {
 
     private static final String INTEGRATION_TEST_STREAM = "promo-compaction-test";

@@ -85,12 +85,7 @@ public class EventConsumerIntegrationTest {
         public String name;
     }
 
-    @Component
-    public static class TestConfiguration {
-
-        @Autowired
-        ApplicationEventPublisher eventPublisher;
-
+    static class TestConfiguration {
 
         @EventSourceConsumer(
                 name = "bananaConsumer",
