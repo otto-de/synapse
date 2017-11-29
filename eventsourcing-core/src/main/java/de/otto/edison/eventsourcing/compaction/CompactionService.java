@@ -48,7 +48,7 @@ public class CompactionService {
         CompactingKinesisEventSource<String> compactingKinesisEventSource = eventSourceFactory.createCompactingKinesisEventSource(streamName, String.class);
 
         try {
-            EventConsumer<String> consumer = new DefaultEventConsumer<>(streamName, ".*", stateRepository);
+            EventConsumer<String> consumer = new DefaultEventConsumer<>(streamName, stateRepository);
             StreamPosition currentPosition = compactingKinesisEventSource.consumeAll(stopCondition(), consumer.consumerFunction());
 
             LOG.info("Finished updating snapshot data. StateRepository now holds {} entries.", stateRepository.size());

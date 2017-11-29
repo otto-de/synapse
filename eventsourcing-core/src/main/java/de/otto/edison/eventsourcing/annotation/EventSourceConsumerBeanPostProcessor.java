@@ -2,13 +2,13 @@ package de.otto.edison.eventsourcing.annotation;
 
 import com.google.common.base.CaseFormat;
 import de.otto.edison.eventsourcing.EventSourceFactory;
+import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
 import org.slf4j.Logger;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -78,13 +78,11 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
     private void registerEventConsumers(Object bean, String beanName, Map<Method, Set<EventSourceConsumer>> annotatedMethods) {
         for (Map.Entry<Method, Set<EventSourceConsumer>> entry : annotatedMethods.entrySet()) {
             final Method method = entry.getKey();
-            for (EventSourceConsumer consumer : entry.getValue()) {
-                registerEventConsumer(consumer, method, bean);
-                String resolvedStreamName = applicationContext.getEnvironment().resolvePlaceholders(consumer.streamName());
+            for (EventSourceConsumer consumerAnnotation : entry.getValue()) {
+                EventConsumer<?> eventConsumer = registerEventConsumer(consumerAnnotation, method, bean);
+                EventSource<String> eventSource = registerEventSource(consumerAnnotation);
 
-                if (!eventSourceExists(resolvedStreamName)) {
-                    registerEventSource(resolvedStreamName, consumer.payloadType(), consumer.eventSourceType());
-                }
+                registerMapping(consumerAnnotation, eventSource, eventConsumer);
             }
         }
         LOG.info("{} @EventSourceConsumer methods processed on bean {} : {}'", annotatedMethods.size(), beanName, annotatedMethods);
@@ -110,21 +108,40 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
         return CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, streamName) + "EventSource";
     }
 
-    private void registerEventConsumer(final EventSourceConsumer annotation,
-                                       final Method annotatedMethod,
-                                       final Object bean) {
+    private MethodInvokingEventConsumer registerEventConsumer(final EventSourceConsumer annotation,
+                                                              final Method annotatedMethod,
+                                                              final Object bean) {
         final String streamName = applicationContext.getEnvironment().resolvePlaceholders(annotation.streamName());
-        final MethodInvokingEventConsumer eventConsumer = new MethodInvokingEventConsumer(streamName, annotation.keyPattern(), bean, annotatedMethod);
-        final ConfigurableListableBeanFactory beanFactory = applicationContext.getBeanFactory();
-        if (!beanFactory.containsBean(annotation.name())) {
-            this.applicationContext.getBeanFactory().registerSingleton(annotation.name(), eventConsumer);
-        }
+        final MethodInvokingEventConsumer eventConsumer = new MethodInvokingEventConsumer(streamName, bean, annotatedMethod);
+        applicationContext.getBeanFactory().registerSingleton(annotation.name(), eventConsumer);
+        return eventConsumer;
     }
 
-    private <T> void registerEventSource(String streamName, Class<T> payloadType, Class<? extends EventSource> eventSourceType) {
+    @SuppressWarnings("unchecked")
+    private EventSource<String> registerEventSource(final EventSourceConsumer annotation) {
+        Class<? extends EventSource> eventSourceType = annotation.eventSourceType();
+
+        String resolvedStreamName = applicationContext.getEnvironment().resolvePlaceholders(annotation.streamName());
+        if (eventSourceExists(resolvedStreamName)) {
+            return applicationContext.getBean(streamNameToEventSourceName(resolvedStreamName), EventSource.class);
+        }
+
         EventSourceFactory eventSourceFactory = applicationContext.getBean(EventSourceFactory.class);
-        EventSource<T> eventSource = eventSourceFactory.createEventSource(eventSourceType, streamName, payloadType);
-        applicationContext.getBeanFactory().registerSingleton(streamNameToEventSourceName(streamName), eventSource);
+        EventSource<String> eventSource = eventSourceFactory.createEventSource(eventSourceType, resolvedStreamName, String.class);
+        applicationContext.getBeanFactory().registerSingleton(streamNameToEventSourceName(resolvedStreamName), eventSource);
+        return eventSource;
+    }
+
+    private void registerMapping(final EventSourceConsumer annotation, EventSource<String> eventSource, EventConsumer eventConsumer) {
+        String name = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, EventSourceMapping.class.getSimpleName());
+        boolean contains = applicationContext.containsBean(name);
+        EventSourceMapping eventSourceMapping = contains ? applicationContext.getBean(name, EventSourceMapping.class) : null;
+        if (eventSourceMapping == null) {
+            eventSourceMapping = new EventSourceMapping();
+            applicationContext.getBeanFactory().registerSingleton(name, eventSourceMapping);
+        }
+        EventSourceMapping.ConsumerMapping consumerMapping = eventSourceMapping.getConsumerMapping(eventSource);
+        consumerMapping.addConsumerAndPayloadForKeyPattern(annotation.keyPattern(), eventConsumer, annotation.payloadType());
     }
 
 }

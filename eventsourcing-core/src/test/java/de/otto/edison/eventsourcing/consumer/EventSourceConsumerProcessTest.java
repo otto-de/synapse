@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.consumer;
 
+import de.otto.edison.eventsourcing.annotation.EventSourceMapping;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -8,7 +9,6 @@ import java.util.Collections;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -19,13 +19,15 @@ public class EventSourceConsumerProcessTest {
 
     @Test
     public void shouldInvokeTwoConsumersForSameEventSource() throws Exception {
-        EventSource<MyPayload> eventSource = spy(new TestEventSource());
+        EventSource<String> eventSource = spy(new TestEventSource());
         TestEventConsumer eventConsumerA = spy(new TestEventConsumer());
         TestEventConsumer eventConsumerB = spy(new TestEventConsumer());
 
-        EventSourceConsumerProcess process = new EventSourceConsumerProcess(
-                asList(eventSource),
-                asList(eventConsumerA, eventConsumerB));
+        EventSourceMapping eventSourceMapping = new EventSourceMapping();
+        eventSourceMapping.getConsumerMapping(eventSource).addConsumerAndPayloadForKeyPattern(".*", eventConsumerA, MyPayload.class);
+        eventSourceMapping.getConsumerMapping(eventSource).addConsumerAndPayloadForKeyPattern(".*", eventConsumerB, MyPayload.class);
+
+        EventSourceConsumerProcess process = new EventSourceConsumerProcess(eventSourceMapping);
 
         process.init();
         Thread.sleep(100L);
@@ -35,11 +37,11 @@ public class EventSourceConsumerProcessTest {
         verify(eventConsumerB).accept(any());
     }
 
-    class MyPayload {
+    static class MyPayload {
         // dummy class for tests
     }
 
-    class TestEventSource implements EventSource<MyPayload> {
+    class TestEventSource implements EventSource<String> {
 
         @Override
         public String getStreamName() {
@@ -47,8 +49,8 @@ public class EventSourceConsumerProcessTest {
         }
 
         @Override
-        public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<MyPayload>> stopCondition, Consumer<Event<MyPayload>> consumer) {
-            consumer.accept(new Event<>("someKey", new MyPayload(), "0", Instant.now(), Duration.ZERO));
+        public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<String>> stopCondition, Consumer<Event<String>> consumer) {
+            consumer.accept(new Event<>("someKey", "{}", "0", Instant.now(), Duration.ZERO));
             return new StreamPosition(Collections.emptyMap());
         }
     }

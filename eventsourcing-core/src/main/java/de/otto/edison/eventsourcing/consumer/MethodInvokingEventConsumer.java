@@ -8,13 +8,11 @@ import java.util.function.Consumer;
 public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
 
     private final String streamName;
-    private final String keyPattern;
     private final Object instance;
     private final Method method;
 
-    public MethodInvokingEventConsumer(final String streamName, final String keyPattern, final Object instance, final Method method) {
+    public MethodInvokingEventConsumer(final String streamName, final Object instance, final Method method) {
         Objects.requireNonNull(streamName, "stream name must not be null");
-        Objects.requireNonNull(keyPattern, "key pattern must not be null");
         Objects.requireNonNull(instance, "Unable to build MethodInvokingEventConsumer: instance parameter is null");
         Objects.requireNonNull(method, "Unable to build MethodInvokingEventConsumer: method parameter is null");
 
@@ -27,7 +25,6 @@ public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
         }
 
         this.streamName = streamName;
-        this.keyPattern = keyPattern;
         this.method = method;
         this.instance = instance;
     }
@@ -35,11 +32,6 @@ public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
     @Override
     public String streamName() {
         return streamName;
-    }
-
-    @Override
-    public String getKeyPattern() {
-        return keyPattern;
     }
 
     @Override

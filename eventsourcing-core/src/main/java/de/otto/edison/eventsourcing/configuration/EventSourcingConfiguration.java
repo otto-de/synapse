@@ -2,8 +2,7 @@ package de.otto.edison.eventsourcing.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.EventSourceFactory;
-import de.otto.edison.eventsourcing.consumer.EventConsumer;
-import de.otto.edison.eventsourcing.consumer.EventSource;
+import de.otto.edison.eventsourcing.annotation.EventSourceMapping;
 import de.otto.edison.eventsourcing.consumer.EventSourceConsumerProcess;
 import de.otto.edison.eventsourcing.s3.SnapshotConsumerService;
 import de.otto.edison.eventsourcing.s3.SnapshotReadService;
@@ -15,11 +14,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
-
-import java.util.List;
-import java.util.Optional;
-
-import static java.util.Collections.emptyList;
 
 @Configuration
 @ImportAutoConfiguration({
@@ -37,11 +31,11 @@ public class EventSourcingConfiguration {
             havingValue = "true",
             matchIfMissing = true)
     public EventSourceConsumerProcess eventSourceConsumerProcess(
-            Optional<List<EventConsumer>> eventConsumers,
-            Optional<List<EventSource>> eventSources) {
+            EventSourceMapping mapping,
+            ObjectMapper objectMapper) {
         return new EventSourceConsumerProcess(
-                eventSources.orElse(emptyList()),
-                eventConsumers.orElse(emptyList())
+                mapping,
+                objectMapper
         );
     }
 

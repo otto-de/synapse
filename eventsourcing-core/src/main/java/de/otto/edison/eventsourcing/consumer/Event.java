@@ -2,6 +2,7 @@ package de.otto.edison.eventsourcing.consumer;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 
 public class Event<T> {
@@ -72,6 +73,23 @@ public class Event<T> {
      */
     public Optional<Duration> durationBehind() {
         return Optional.ofNullable(durationBehind);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Event<?> event = (Event<?>) o;
+        return Objects.equals(key, event.key) &&
+                Objects.equals(payload, event.payload) &&
+                Objects.equals(sequenceNumber, event.sequenceNumber) &&
+                Objects.equals(arrivalTimestamp, event.arrivalTimestamp) &&
+                Objects.equals(durationBehind, event.durationBehind);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(key, payload, sequenceNumber, arrivalTimestamp, durationBehind);
     }
 
     @Override

@@ -42,7 +42,7 @@ public class MethodInvokingEventConsumerTest {
     public void shouldBuildEventConsumerForValidMethod() throws NoSuchMethodException {
         final Method method = MethodInvokingEventConsumerTest.class.getMethod("validMethod", Event.class);
         final Method method1 = AopUtils.selectInvocableMethod(method, MethodInvokingEventConsumerTest.class);
-        final MethodInvokingEventConsumer eventConsumer = new MethodInvokingEventConsumer("stream-name", KEY_PATTERN, this, method1);
+        final MethodInvokingEventConsumer eventConsumer = new MethodInvokingEventConsumer("stream-name", this, method1);
         eventConsumer.consumerFunction().accept(mock(Event.class));
         assertThat(eventReceived).isTrue();
     }
@@ -51,7 +51,7 @@ public class MethodInvokingEventConsumerTest {
     @SuppressWarnings("unchecked")
     public void shouldBuildEventConsumerAndIgnoreReturnValue() throws NoSuchMethodException {
         final Method method = MethodInvokingEventConsumerTest.class.getMethod("validMethodWithReturnValue", Event.class);
-        final MethodInvokingEventConsumer eventConsumer = new MethodInvokingEventConsumer("stream-name", KEY_PATTERN, this, method);
+        final MethodInvokingEventConsumer eventConsumer = new MethodInvokingEventConsumer("stream-name", this, method);
         eventConsumer.consumerFunction().accept(mock(Event.class));
         assertThat(eventReceived).isTrue();
     }
@@ -60,20 +60,20 @@ public class MethodInvokingEventConsumerTest {
     @SuppressWarnings("unchecked")
     public void shouldFailBuildingEventConsumerWithTooManyArgs() throws NoSuchMethodException {
         final Method method = MethodInvokingEventConsumerTest.class.getMethod("methodWithTooManyParameters", Event.class, String.class);
-        new MethodInvokingEventConsumer("stream-name", KEY_PATTERN, this, method);
+        new MethodInvokingEventConsumer("stream-name", this, method);
     }
 
     @Test(expected = IllegalArgumentException.class)
     @SuppressWarnings("unchecked")
     public void shouldFailBuildingEventConsumerWithMissingEventArgs() throws NoSuchMethodException {
         final Method method = MethodInvokingEventConsumerTest.class.getMethod("methodWithMissingEventParam", String.class);
-        new MethodInvokingEventConsumer("stream-name", KEY_PATTERN, this, method);
+        new MethodInvokingEventConsumer("stream-name", this, method);
     }
 
     @Test(expected = NullPointerException.class)
     @SuppressWarnings("unchecked")
     public void shouldFailBuildingEventConsumerWithMissingMethod() throws NoSuchMethodException {
-        new MethodInvokingEventConsumer("stream-name", KEY_PATTERN, this,null);
+        new MethodInvokingEventConsumer("stream-name", this,null);
     }
 
 }

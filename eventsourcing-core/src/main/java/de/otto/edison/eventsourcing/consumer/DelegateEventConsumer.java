@@ -1,46 +1,58 @@
 package de.otto.edison.eventsourcing.consumer;
 
 
-import com.google.common.collect.ImmutableList;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.LinkedListMultimap;
+import de.otto.edison.eventsourcing.annotation.EventSourceMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
-class DelegateEventConsumer<T> implements EventConsumer<T> {
+class DelegateEventConsumer implements EventConsumer<String> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DelegateEventConsumer.class);
 
-    private final ImmutableList<EventConsumer> eventConsumers;
-    private final Map<EventConsumer, Pattern> eventConsumerMatcherMap = new ConcurrentHashMap<>();
+    private final EventSourceMapping.ConsumerMapping consumerMapping;
+    private final ObjectMapper objectMapper;
+    private final LinkedListMultimap<Pattern, EventConsumer> mapPatternToEventSource = LinkedListMultimap.create();
 
-    private String streamName = null;
-
-    DelegateEventConsumer(Collection<EventConsumer> eventConsumers) {
-        if (eventConsumers.isEmpty()) {
-            throw new IllegalArgumentException("list of event consumers must not be empty");
-        }
-        this.eventConsumers = ImmutableList.copyOf(eventConsumers);
-        this.streamName = this.eventConsumers.get(0).streamName();
+    DelegateEventConsumer(EventSourceMapping.ConsumerMapping consumerMapping, ObjectMapper objectMapper) {
+        this.consumerMapping = consumerMapping;
+        this.objectMapper = objectMapper;
         assertSameStreamNameForAllConsumers();
+        assertConsumersAreRegistered();
         registerPatternMatcher();
     }
 
-    @Override
-    public String getKeyPattern() {
-        return ".*";
+    private void assertConsumersAreRegistered() {
+        Set<String> keyPatterns = consumerMapping.getKeyPatterns();
+
+        if (keyPatterns.isEmpty()) {
+            throw new IllegalArgumentException("No consumers registered.");
+        }
+
+        keyPatterns.forEach(keyPattern -> {
+            List<EventConsumer> consumerForKeyPattern = consumerMapping.getConsumerForKeyPattern(keyPattern);
+            if (consumerForKeyPattern == null || consumerForKeyPattern.isEmpty()) {
+                throw new IllegalArgumentException(String.format("No consumer for key pattern %s registered!", keyPattern));
+            }
+        });
     }
 
     private void registerPatternMatcher() {
-        eventConsumers.forEach(eventConsumer -> eventConsumerMatcherMap.put(eventConsumer, Pattern.compile(eventConsumer.getKeyPattern())));
+        consumerMapping.getKeyPatterns()
+                .forEach(keyPattern -> mapPatternToEventSource.putAll(
+                        Pattern.compile(keyPattern),
+                        consumerMapping.getConsumerForKeyPattern(keyPattern)));
     }
 
     private void assertSameStreamNameForAllConsumers() {
-        long count = eventConsumers.stream()
+        long count = mapPatternToEventSource.values().stream()
                 .map(EventConsumer::streamName)
                 .distinct()
                 .count();
@@ -51,29 +63,43 @@ class DelegateEventConsumer<T> implements EventConsumer<T> {
 
     @Override
     public String streamName() {
-        return streamName;
+        return consumerMapping.getStreamName();
     }
 
     @Override
-    public Consumer<Event<T>> consumerFunction() {
+    public Consumer<Event<String>> consumerFunction() {
         return this::accept;
     }
 
     @SuppressWarnings("unchecked")
-    private void accept(Event<T> event) {
-        eventConsumers.stream()
-                .filter(eventConsumer -> matchesEventKey(eventConsumer, event))
-                .forEach(eventConsumer -> {
-                    try {
-                        eventConsumer.consumerFunction().accept(event);
-                    } catch (Exception e) {
-                        LOG.error("error in consuming event");
+    private void accept(Event<String> event) {
+        mapPatternToEventSource.keySet().stream()
+                .filter(keyPattern -> matchesEventKey(event, keyPattern))
+                .forEach(keyPattern -> {
+                    List<EventConsumer> eventConsumers = mapPatternToEventSource.get(keyPattern);
+                    for (EventConsumer eventConsumer : eventConsumers) {
+                        try {
+                            Class<?> payload = consumerMapping.getPayloadForEventConsumer(eventConsumer).get();
+                            Event<?> parsedEvent = parseEvent(event, payload);
+                            eventConsumer.consumerFunction().accept(parsedEvent);
+                        } catch (Exception e) {
+                            LOG.error("", e);
+                        }
                     }
                 });
     }
 
-    private boolean matchesEventKey(EventConsumer eventConsumer, Event<T> event) {
-        return eventConsumerMatcherMap.get(eventConsumer).matcher(event.key()).matches();
+    private Event<?> parseEvent(Event<String> event, Class<?> payloadType) {
+        try {
+            Object parsedPayload = objectMapper.readValue(event.payload(), payloadType);
+            return new Event<>(event.key(), parsedPayload, event.sequenceNumber(), event.arrivalTimestamp(), event.durationBehind().orElse(null));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean matchesEventKey(Event<String> event, Pattern keyPattern) {
+        return keyPattern.matcher(event.key()).matches();
     }
 
 }

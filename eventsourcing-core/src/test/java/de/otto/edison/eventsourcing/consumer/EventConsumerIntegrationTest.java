@@ -7,7 +7,6 @@ import de.otto.edison.eventsourcing.configuration.SnapshotConfiguration;
 import de.otto.edison.eventsourcing.s3.SnapshotReadService;
 import org.awaitility.Awaitility;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -50,7 +49,6 @@ public class EventConsumerIntegrationTest {
     static List<Apple> receivedAppleEventPayloads = new ArrayList<>();
     static List<Banana> receivedBananaEventPayloads = new ArrayList<>();
 
-    @Ignore // make this test work
     @Test
     public void shouldCallCorrectConsumerDependingOnEventKey() throws Exception {
 
@@ -59,21 +57,21 @@ public class EventConsumerIntegrationTest {
                 .until(() -> allReceivedEventKeys.size(), is(4));
 
         Assert.assertThat(receivedBananaEventPayloads.size(), is(2));
-        Assert.assertThat(receivedBananaEventPayloads.get(0).bananaId, is("banana-1"));
-        Assert.assertThat(receivedBananaEventPayloads.get(0).bananaId, is("banana-2"));
+        Assert.assertThat(receivedBananaEventPayloads.get(0).bananaId, is("1"));
+        Assert.assertThat(receivedBananaEventPayloads.get(1).bananaId, is("2"));
         Assert.assertThat(receivedAppleEventPayloads.size(), is(2));
-        Assert.assertThat(receivedAppleEventPayloads.get(0).appleId, is("apple-1"));
-        Assert.assertThat(receivedAppleEventPayloads.get(0).appleId, is("apple-2"));
+        Assert.assertThat(receivedAppleEventPayloads.get(0).appleId, is("1"));
+        Assert.assertThat(receivedAppleEventPayloads.get(1).appleId, is("2"));
     }
 
     private static class Apple {
-        String appleId;
-        String name;
+        public String appleId;
+        public String name;
     }
 
     private static class Banana {
-        String bananaId;
-        String name;
+        public String bananaId;
+        public String name;
     }
 
     static class TestConfiguration {

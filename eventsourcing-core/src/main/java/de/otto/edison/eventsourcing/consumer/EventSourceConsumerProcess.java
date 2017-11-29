@@ -1,14 +1,14 @@
 package de.otto.edison.eventsourcing.consumer;
 
 
-import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Multimap;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import de.otto.edison.eventsourcing.annotation.EventSourceMapping;
 import org.slf4j.Logger;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -27,37 +27,37 @@ public class EventSourceConsumerProcess {
     private final AtomicBoolean stopThread = new AtomicBoolean(false);
 
     private final ExecutorService executorService;
-    private final Multimap<EventSource, EventConsumer> eventSourceWithConsumer = LinkedHashMultimap.create();
+    private final EventSourceMapping eventSourceMapping;
+    private final ObjectMapper objectMapper;
 
-    public EventSourceConsumerProcess(final List<EventSource> eventSources,
-                                      final List<EventConsumer> eventConsumers) {
-        matchEventConsumersWithEventSourcesByStreamName(eventSources, eventConsumers);
-        if (eventSourceWithConsumer.size() > 0) {
+    public EventSourceConsumerProcess(final EventSourceMapping eventSourceMapping) {
+        this(eventSourceMapping, new ObjectMapper().registerModule(new JavaTimeModule()));
+    }
+
+    public EventSourceConsumerProcess(final EventSourceMapping eventSourceMapping,
+                                      final ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+        this.eventSourceMapping = eventSourceMapping;
+
+        int eventSourceCount = eventSourceMapping.getEventSources().size();
+        if (eventSourceCount > 0) {
             final ThreadFactory threadFactory = new CustomizableThreadFactory(THREAD_NAME_PREFIX);
-            executorService = newFixedThreadPool(eventSourceWithConsumer.size(), threadFactory);
+            executorService = newFixedThreadPool(eventSourceCount, threadFactory);
         } else {
             executorService = null;
         }
-    }
-
-    private void matchEventConsumersWithEventSourcesByStreamName(List<EventSource> eventSources, List<EventConsumer> eventConsumers) {
-        eventConsumers.forEach(consumer ->
-                eventSources
-                        .stream()
-                        .filter(es -> es.getStreamName().equals(consumer.streamName()))
-                        .findAny()
-                        .ifPresent(eventSource -> eventSourceWithConsumer.put(eventSource, consumer)));
     }
 
     @PostConstruct
     @SuppressWarnings("unchecked")
     public void init() {
         LOG.info("Initializing EventSourceConsumerProcess...");
-        eventSourceWithConsumer.keySet()
+        eventSourceMapping.getEventSources()
                 .forEach(eventSource -> executorService.submit(() -> {
                     try {
                         LOG.info("Starting {}...", eventSource.getStreamName());
-                        DelegateEventConsumer delegateEventConsumer = new DelegateEventConsumer(eventSourceWithConsumer.get(eventSource));
+                        EventSourceMapping.ConsumerMapping consumerMapping = eventSourceMapping.getConsumerMapping(eventSource);
+                        DelegateEventConsumer delegateEventConsumer = new DelegateEventConsumer(consumerMapping, objectMapper);
                         eventSource.consumeAll(ignore -> stopThread.get(), delegateEventConsumer.consumerFunction());
                     } catch (Exception e) {
                         LOG.error("Starting failed: " + e.getMessage(), e);
