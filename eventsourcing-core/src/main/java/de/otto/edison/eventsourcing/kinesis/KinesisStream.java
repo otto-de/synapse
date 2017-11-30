@@ -3,10 +3,7 @@ package de.otto.edison.eventsourcing.kinesis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
-import software.amazon.awssdk.services.kinesis.model.DescribeStreamRequest;
-import software.amazon.awssdk.services.kinesis.model.DescribeStreamResponse;
-import software.amazon.awssdk.services.kinesis.model.PutRecordRequest;
-import software.amazon.awssdk.services.kinesis.model.Shard;
+import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -20,10 +17,12 @@ public class KinesisStream {
 
     private final KinesisClient kinesisClient;
     private final String streamName;
+    private final RetryPutRecordsKinesisClient retryPutRecordsKinesisClient;
 
     public KinesisStream(KinesisClient kinesisClient, String streamName) {
         this.kinesisClient = kinesisClient;
         this.streamName = streamName;
+        retryPutRecordsKinesisClient = new RetryPutRecordsKinesisClient(kinesisClient);
     }
 
     public List<KinesisShard> retrieveAllOpenShards() {
@@ -81,11 +80,16 @@ public class KinesisStream {
     }
 
     public void send(String key, ByteBuffer byteBuffer) {
-        PutRecordRequest putRecordRequest = PutRecordRequest.builder()
-                .streamName(streamName)
+        PutRecordsRequestEntry putRecordsRequestEntry = PutRecordsRequestEntry.builder()
                 .partitionKey(key)
                 .data(byteBuffer)
                 .build();
-        kinesisClient.putRecord(putRecordRequest);
+
+        PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder()
+                .streamName(streamName)
+                .records(putRecordsRequestEntry)
+                .build();
+
+        retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
     }
 }

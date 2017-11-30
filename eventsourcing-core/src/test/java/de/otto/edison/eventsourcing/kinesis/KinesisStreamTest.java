@@ -122,19 +122,28 @@ public class KinesisStreamTest {
 
     @Test
     public void shouldSendEvent() throws Exception {
+        // given
+        PutRecordsResponse putRecordsResponse = PutRecordsResponse.builder()
+                .failedRecordCount(0)
+                .build();
+        when(kinesisClient.putRecords(any())).thenReturn(putRecordsResponse);
+
         ByteBuffer data = ByteBuffer.wrap("test".getBytes(StandardCharsets.UTF_8));
 
         // when
         kinesisStream.send("someKey", data);
 
         // then
-        ArgumentCaptor<PutRecordRequest> captor = ArgumentCaptor.forClass(PutRecordRequest.class);
-        verify(kinesisClient).putRecord(captor.capture());
-        PutRecordRequest putRecordRequest = captor.getValue();
+        ArgumentCaptor<PutRecordsRequest> captor = ArgumentCaptor.forClass(PutRecordsRequest.class);
+        verify(kinesisClient).putRecords(captor.capture());
+        PutRecordsRequest putRecordsRequest = captor.getValue();
 
-        assertThat(putRecordRequest.partitionKey(), is("someKey"));
-        assertThat(putRecordRequest.streamName(), is("streamName"));
-        assertThat(putRecordRequest.data(), is(data));
+        assertThat(putRecordsRequest.streamName(), is("streamName"));
+
+        List<PutRecordsRequestEntry> records = putRecordsRequest.records();
+        assertThat(records, hasSize(1));
+        assertThat(records.get(0).partitionKey(), is("someKey"));
+        assertThat(records.get(0).data(), is(data));
     }
 
     private Shard someShard(String shardId, boolean open) {
