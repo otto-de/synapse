@@ -6,6 +6,8 @@ import com.google.common.base.Charsets;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 public class KinesisEventSender {
 
@@ -20,16 +22,21 @@ public class KinesisEventSender {
     }
 
     public <T> void sendEvent(String key, T payload) throws JsonProcessingException {
-        String jsonData = objectMapper.writeValueAsString(payload);
-        ByteBuffer byteBuffer = convertToEncryptedByteBuffer(jsonData);
-        kinesisStream.send(key, byteBuffer);
+        kinesisStream.send(key, convertToEncryptedByteBuffer(payload));
     }
 
-    private ByteBuffer convertToEncryptedByteBuffer(String data) {
+    public <T> void sendEvents(Map<String, T> events) throws JsonProcessingException {
+        Map<String, ByteBuffer> resultMap = new HashMap<>(events.size());
+        for (Map.Entry<String, T> event : events.entrySet()) {
+            resultMap.put(event.getKey(), convertToEncryptedByteBuffer(event.getValue()));
+        }
+
+        kinesisStream.sendMultiple(resultMap);
+    }
+
+    private <T> ByteBuffer convertToEncryptedByteBuffer(T payload) throws JsonProcessingException {
         return ByteBuffer.wrap(textEncryptor
-                .encrypt(data)
+                .encrypt(objectMapper.writeValueAsString(payload))
                 .getBytes(Charsets.UTF_8));
     }
-
-
 }

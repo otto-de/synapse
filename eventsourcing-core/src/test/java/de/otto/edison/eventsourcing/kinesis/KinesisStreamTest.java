@@ -1,6 +1,7 @@
 package de.otto.edison.eventsourcing.kinesis;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -144,6 +145,35 @@ public class KinesisStreamTest {
         assertThat(records, hasSize(1));
         assertThat(records.get(0).partitionKey(), is("someKey"));
         assertThat(records.get(0).data(), is(data));
+    }
+
+    @Test
+    public void shouldSendMultipleEvents() throws Exception {
+        // given
+        PutRecordsResponse putRecordsResponse = PutRecordsResponse.builder()
+                .failedRecordCount(0)
+                .build();
+        when(kinesisClient.putRecords(any())).thenReturn(putRecordsResponse);
+
+        ByteBuffer data1 = ByteBuffer.wrap("test".getBytes(StandardCharsets.UTF_8));
+        ByteBuffer data2 = ByteBuffer.wrap("test".getBytes(StandardCharsets.UTF_8));
+
+        // when
+        kinesisStream.sendMultiple(ImmutableMap.of("event1", data1, "event2", data2));
+
+        // then
+        ArgumentCaptor<PutRecordsRequest> captor = ArgumentCaptor.forClass(PutRecordsRequest.class);
+        verify(kinesisClient).putRecords(captor.capture());
+        PutRecordsRequest putRecordsRequest = captor.getValue();
+
+        assertThat(putRecordsRequest.streamName(), is("streamName"));
+
+        List<PutRecordsRequestEntry> records = putRecordsRequest.records();
+        assertThat(records, hasSize(2));
+        assertThat(records.get(0).partitionKey(), is("event1"));
+        assertThat(records.get(0).data(), is(data1));
+        assertThat(records.get(1).partitionKey(), is("event2"));
+        assertThat(records.get(1).data(), is(data2));
     }
 
     private Shard someShard(String shardId, boolean open) {

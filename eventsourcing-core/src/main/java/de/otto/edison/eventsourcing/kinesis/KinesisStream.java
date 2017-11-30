@@ -8,6 +8,8 @@ import software.amazon.awssdk.services.kinesis.model.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 
@@ -80,10 +82,7 @@ public class KinesisStream {
     }
 
     public void send(String key, ByteBuffer byteBuffer) {
-        PutRecordsRequestEntry putRecordsRequestEntry = PutRecordsRequestEntry.builder()
-                .partitionKey(key)
-                .data(byteBuffer)
-                .build();
+        PutRecordsRequestEntry putRecordsRequestEntry = requestEntryFor(key, byteBuffer);
 
         PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder()
                 .streamName(streamName)
@@ -91,5 +90,25 @@ public class KinesisStream {
                 .build();
 
         retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
+    }
+
+    public void sendMultiple(Map<String, ByteBuffer> eventMap) {
+        ArrayList<PutRecordsRequestEntry> entries = eventMap.entrySet().stream()
+                .map(entry -> requestEntryFor(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder()
+                .streamName(streamName)
+                .records(entries)
+                .build();
+
+        retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
+    }
+
+    private PutRecordsRequestEntry requestEntryFor(String key, ByteBuffer byteBuffer) {
+        return PutRecordsRequestEntry.builder()
+                .partitionKey(key)
+                .data(byteBuffer)
+                .build();
     }
 }
