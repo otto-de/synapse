@@ -30,14 +30,12 @@ public class SnapshotEventSource<T> implements EventSource<T> {
     public SnapshotEventSource(final String streamName,
                                final SnapshotReadService snapshotReadService,
                                final SnapshotConsumerService snapshotConsumerService,
-                               final Class<T> payloadType) {
+                               final Class<T> payloadType,
+                               final ApplicationEventPublisher eventPublisher) {
         this.streamName = streamName;
         this.snapshotReadService = snapshotReadService;
         this.snapshotConsumerService = snapshotConsumerService;
         this.payloadType = payloadType;
-    }
-
-    public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
         this.eventPublisher = eventPublisher;
     }
 
@@ -74,13 +72,12 @@ public class SnapshotEventSource<T> implements EventSource<T> {
                 snapshotStreamPosition = SnapshotStreamPosition.of();
             }
         } catch (IOException | S3Exception e) {
-            LOG.warn("Unable to load snapshot: {}", e.getMessage());
+            publishEvent(SnapshotStreamPosition.of(), EventSourceNotification.Status.FAILED);
             throw new RuntimeException(e);
         } finally {
             LOG.info("Finished reading snapshot into Memory");
             snapshotReadService.deleteOlderSnapshots(streamName);
         }
-
         publishEvent(snapshotStreamPosition, EventSourceNotification.Status.FINISHED);
         return snapshotStreamPosition;
     }

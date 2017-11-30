@@ -62,9 +62,11 @@ public class EventSourceFactory {
     }
 
     public <T> SnapshotEventSource<T> createSnapshotEventSource(String streamName, Class<T> payloadClazz) {
-        SnapshotEventSource<T> snapshotEventSource = new SnapshotEventSource<>(streamName, snapshotReadService, snapshotConsumerService, payloadClazz);
-        snapshotEventSource.setEventPublisher(applicationEventPublisher);
-        return snapshotEventSource;
+        return new SnapshotEventSource<>(streamName,
+                snapshotReadService,
+                snapshotConsumerService,
+                payloadClazz,
+                applicationEventPublisher);
     }
 
     public <T> CompactingKinesisEventSource<T> createCompactingKinesisEventSource(String streamName, Class<T> payloadClazz) {

@@ -6,6 +6,7 @@ public class EventSourceNotification {
 
     public enum Status {
         STARTED,
+        FAILED,
         FINISHED
     }
 

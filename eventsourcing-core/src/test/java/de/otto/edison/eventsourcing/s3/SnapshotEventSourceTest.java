@@ -4,9 +4,9 @@ import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
@@ -14,10 +14,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@RunWith(MockitoJUnitRunner.class)
 public class SnapshotEventSourceTest {
 
     @Mock
@@ -26,11 +28,19 @@ public class SnapshotEventSourceTest {
     @Mock
     private SnapshotConsumerService snapshotConsumerService;
 
-    private SnapshotEventSource snapshotEventSource;
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
+
+    private SnapshotEventSource<String> snapshotEventSource;
+
+
     @Before
     public void init() {
-        MockitoAnnotations.initMocks(this);
-        snapshotEventSource = new SnapshotEventSource("streamName", snapshotReadService, snapshotConsumerService, String.class);
+        snapshotEventSource = new SnapshotEventSource<>("streamName",
+                snapshotReadService,
+                snapshotConsumerService,
+                String.class,
+                applicationEventPublisher);
     }
 
     @Test(expected = RuntimeException.class)
@@ -45,7 +55,7 @@ public class SnapshotEventSourceTest {
         // then expect exception
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void shouldThrowExceptionIfBucketNotExists() throws Exception {
         // given
         S3Exception bucketNotFoundException = new S3Exception("boom - simulate exception while loading from S3");
@@ -53,9 +63,21 @@ public class SnapshotEventSourceTest {
         when(snapshotReadService.downloadLatestSnapshot(any())).thenThrow(bucketNotFoundException);
 
         // when
-        snapshotEventSource.consumeAll((event) -> {});
+        try {
+            snapshotEventSource.consumeAll((event) -> {});
 
-        // then expect exception
+            fail("should throw RuntimeException");
+        } catch (RuntimeException ignored) {
+
+        }
+
+        // then
+        EventSourceNotification expectedStartEvent = EventSourceNotification.builder()
+                .withEventSource(snapshotEventSource)
+                .withStatus(EventSourceNotification.Status.FAILED)
+                .withStreamPosition(SnapshotStreamPosition.of())
+                .build();
+        verify(applicationEventPublisher).publishEvent(expectedStartEvent);
     }
 
     @Test
@@ -80,9 +102,6 @@ public class SnapshotEventSourceTest {
     public void shouldPublishStartAndFinishEvents() throws Exception {
         // given
         when(snapshotReadService.downloadLatestSnapshot(any())).thenReturn(Optional.empty());
-
-        ApplicationEventPublisher applicationEventPublisher = Mockito.mock(ApplicationEventPublisher.class);
-        snapshotEventSource.setEventPublisher(applicationEventPublisher);
 
         // when
         snapshotEventSource.consumeAll((event) -> {});
