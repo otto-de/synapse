@@ -57,7 +57,7 @@ public class EventSourceFactory {
     }
 
     public <T> KinesisEventSource<T> createKinesisEventSource(String streamName, Class<T> payloadClazz) {
-        KinesisStream kinesisStream = new KinesisStream(kinesisClient, streamName, objectMapper, textEncryptor);
+        KinesisStream kinesisStream = new KinesisStream(kinesisClient, streamName);
         return new KinesisEventSource<>(payloadClazz, objectMapper, kinesisStream, textEncryptor);
     }
 

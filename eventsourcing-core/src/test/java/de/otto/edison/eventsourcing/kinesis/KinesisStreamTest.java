@@ -1,8 +1,5 @@
 package de.otto.edison.eventsourcing.kinesis;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import com.google.common.collect.ImmutableList;
 import org.junit.Before;
 import org.junit.Test;
@@ -10,11 +7,11 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.security.crypto.encrypt.Encryptors;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
@@ -30,14 +27,12 @@ public class KinesisStreamTest {
     @Mock
     private KinesisClient kinesisClient;
 
-    private TextEncryptor textEncryptor = Encryptors.noOpText();
 
     private KinesisStream kinesisStream;
-    private ObjectMapper objectMapper = new ObjectMapper();
 
     @Before
     public void setUp() throws Exception {
-        kinesisStream = new KinesisStream(kinesisClient, "streamName", objectMapper, textEncryptor);
+        kinesisStream = new KinesisStream(kinesisClient, "streamName");
     }
 
     @Test
@@ -127,8 +122,10 @@ public class KinesisStreamTest {
 
     @Test
     public void shouldSendEvent() throws Exception {
+        ByteBuffer data = ByteBuffer.wrap("test".getBytes(StandardCharsets.UTF_8));
+
         // when
-        kinesisStream.sendEvent("someKey", new ExampleJsonObject("banana"));
+        kinesisStream.send("someKey", data);
 
         // then
         ArgumentCaptor<PutRecordRequest> captor = ArgumentCaptor.forClass(PutRecordRequest.class);
@@ -137,9 +134,7 @@ public class KinesisStreamTest {
 
         assertThat(putRecordRequest.partitionKey(), is("someKey"));
         assertThat(putRecordRequest.streamName(), is("streamName"));
-
-        ExampleJsonObject exampleJsonObject = objectMapper.readValue(new ByteBufferBackedInputStream(putRecordRequest.data()), ExampleJsonObject.class);
-        assertThat(exampleJsonObject.value, is("banana"));
+        assertThat(putRecordRequest.data(), is(data));
     }
 
     private Shard someShard(String shardId, boolean open) {
@@ -175,15 +170,4 @@ public class KinesisStreamTest {
     }
 
 
-    public static class ExampleJsonObject {
-        @JsonProperty
-        private String value;
-
-        public ExampleJsonObject() {
-        }
-
-        public ExampleJsonObject(String value) {
-            this.value = value;
-        }
-    }
 }
