@@ -13,6 +13,7 @@ import java.util.function.BiConsumer;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,7 +29,7 @@ public class KinesisShardTest {
     private KinesisShard kinesisShard;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         KinesisStream kinesisStream = new KinesisStream(kinesisClient, "someStream");
         kinesisShard = new KinesisShard("someShard", kinesisStream, kinesisClient);
 
@@ -40,7 +41,7 @@ public class KinesisShardTest {
     }
 
     @Test
-    public void shouldReturnTrimHorizonShardIteratorWhenStartPositionIsZero() throws Exception {
+    public void shouldReturnTrimHorizonShardIteratorWhenStartPositionIsZero() {
         // when
         KinesisShardIterator iterator = kinesisShard.retrieveIterator("0");
 
@@ -56,7 +57,7 @@ public class KinesisShardTest {
     }
 
     @Test
-    public void shouldReturnAfterSequenceNumberIterator() throws Exception {
+    public void shouldReturnAfterSequenceNumberIterator() {
         // when
         KinesisShardIterator iterator = kinesisShard.retrieveIterator("1");
 
@@ -74,7 +75,7 @@ public class KinesisShardTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void shouldConsumeSingleRecordSetForStopAlwaysCondition() throws Exception {
+    public void shouldConsumeSingleRecordSetForStopAlwaysCondition() {
         // given
         Record record1 = Record.builder()
                 .sequenceNumber("1")
@@ -93,6 +94,32 @@ public class KinesisShardTest {
         kinesisShard.consumeRecordsAndReturnLastSeqNumber("0", (x, y) -> true, consumer);
 
         // then
+        verify(consumer).accept(1234L, record1);
+        verify(consumer).accept(1234L, record2);
+    }
+
+    @Test
+    public void shouldCatchExceptionInConsumerAndCarryOn() {
+        // given
+        Record record1 = Record.builder()
+                .sequenceNumber("1")
+                .build();
+        Record record2 = Record.builder()
+                .sequenceNumber("2")
+                .build();
+        GetRecordsResponse response = GetRecordsResponse.builder()
+                .records(record1, record2)
+                .nextShardIterator("nextShardIterator")
+                .millisBehindLatest(1234L)
+                .build();
+        when(kinesisClient.getRecords(any())).thenReturn(response);
+
+        doThrow(new RuntimeException("forced exception for test")).when(consumer).accept(1234L, record1);
+
+        // when
+        kinesisShard.consumeRecordsAndReturnLastSeqNumber("0", (x, y) -> true, consumer);
+
+        //then
         verify(consumer).accept(1234L, record1);
         verify(consumer).accept(1234L, record2);
     }

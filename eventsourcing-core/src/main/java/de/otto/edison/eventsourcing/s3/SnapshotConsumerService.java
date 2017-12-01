@@ -38,7 +38,7 @@ public class SnapshotConsumerService {
                                               final String streamName,
                                               final Predicate<Event<T>> stopCondition,
                                               final Consumer<Event<T>> consumer,
-                                              final Class<T> payloadType) throws IOException {
+                                              final Class<T> payloadType) {
 
         try (
                 FileInputStream fileInputStream = new FileInputStream(latestSnapshot);

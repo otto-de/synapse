@@ -71,7 +71,7 @@ public class SnapshotEventSource<T> implements EventSource<T> {
             } else {
                 snapshotStreamPosition = SnapshotStreamPosition.of();
             }
-        } catch (IOException | S3Exception e) {
+        } catch (Exception e) {
             publishEvent(SnapshotStreamPosition.of(), EventSourceNotification.Status.FAILED);
             throw new RuntimeException(e);
         } finally {

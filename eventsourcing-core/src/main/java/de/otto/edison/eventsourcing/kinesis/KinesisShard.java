@@ -57,8 +57,8 @@ public class KinesisShard {
     }
 
     public ShardPosition consumeRecordsAndReturnLastSeqNumber(String startFromSeqNumber,
-                                                       BiFunction<Long, Record, Boolean> stopCondition,
-                                                       BiConsumer<Long, Record> consumer) {
+                                                              BiFunction<Long, Record, Boolean> stopCondition,
+                                                              BiConsumer<Long, Record> consumer) {
         LOG.info("Reading from stream {}, shard {} with starting sequence number {}",
                 kinesisStream.getStreamName(),
                 shardId,
@@ -74,7 +74,11 @@ public class KinesisShard {
             if (!isEmptyStream(recordsResponse)) {
                 Long millisBehindLatest = recordsResponse.millisBehindLatest();
                 for (final Record record : recordsResponse.records()) {
-                    consumer.accept(millisBehindLatest, record);
+                    try {
+                        consumer.accept(millisBehindLatest, record);
+                    } catch (Exception e) {
+                        LOG.error("consumer failed while processing {}", record, e);
+                    }
                     stopRetrieval = stopCondition.apply(millisBehindLatest, record);
                     lastSequenceNumber = record.sequenceNumber();
                 }
