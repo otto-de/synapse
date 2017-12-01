@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.kinesis;
 
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
@@ -16,6 +17,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 public class KinesisStream {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisStream.class);
+    static final int PUT_RECORDS_BATCH_SIZE = 500;
 
     private final KinesisClient kinesisClient;
     private final String streamName;
@@ -97,12 +99,17 @@ public class KinesisStream {
                 .map(entry -> requestEntryFor(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder()
-                .streamName(streamName)
-                .records(entries)
-                .build();
+        Lists.partition(entries, PUT_RECORDS_BATCH_SIZE)
+                .forEach(batch -> {
+                            PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder()
+                                    .streamName(streamName)
+                                    .records(batch)
+                                    .build();
 
-        retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
+                            retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
+                        }
+                );
+
     }
 
     private PutRecordsRequestEntry requestEntryFor(String key, ByteBuffer byteBuffer) {

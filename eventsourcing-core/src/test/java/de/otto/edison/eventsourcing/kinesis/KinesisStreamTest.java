@@ -13,12 +13,16 @@ import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.IntStream;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -174,6 +178,34 @@ public class KinesisStreamTest {
         assertThat(records.get(0).data(), is(data1));
         assertThat(records.get(1).partitionKey(), is("event2"));
         assertThat(records.get(1).data(), is(data2));
+    }
+
+    @Test
+    public void shouldBatchEventsWhenTooManyShouldBeSent() throws Exception {
+        // given
+        PutRecordsResponse putRecordsResponse = PutRecordsResponse.builder()
+                .failedRecordCount(0)
+                .build();
+        when(kinesisClient.putRecords(any())).thenReturn(putRecordsResponse);
+        
+        // when
+        kinesisStream.sendMultiple(mapWithNEntries(KinesisStream.PUT_RECORDS_BATCH_SIZE + 1));
+
+        // then
+        verify(kinesisClient, times(2)).putRecords(any());
+    }
+
+    private Map<String, ByteBuffer> mapWithNEntries(int n) {
+        return IntStream.range(0, n)
+                .mapToObj(KinesisStreamTest::mapIntToMapEntry)
+                .collect(HashMap::new,
+                        (map, entry) -> map.put(entry.getKey(), entry.getValue()),
+                        HashMap::putAll);
+    }
+
+    private static Map.Entry<String, ByteBuffer> mapIntToMapEntry(int i) {
+        ByteBuffer byteBuffer = ByteBuffer.wrap(Integer.toString(i).getBytes(StandardCharsets.UTF_8));
+        return new HashMap.SimpleEntry<>(Integer.toString(i), byteBuffer);
     }
 
     private Shard someShard(String shardId, boolean open) {
