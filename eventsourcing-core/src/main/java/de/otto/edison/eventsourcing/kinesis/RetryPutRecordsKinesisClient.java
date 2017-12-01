@@ -67,7 +67,7 @@ public class RetryPutRecordsKinesisClient {
 
     private void waitDependingOnRetryStep(int retryStep) {
         try {
-            Thread.sleep((int)Math.pow(2, retryStep) * 1000);
+            Thread.sleep((long)Math.pow(2, retryStep) * 1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
