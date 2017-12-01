@@ -6,7 +6,6 @@ import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.testsupport.TestStreamSource;
-import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,12 +58,8 @@ public class KinesisEventSourceIntegrationTest {
         this.eventSource = new KinesisEventSource<>(String.class, objectMapper, kinesisStream, Encryptors.noOpText());
     }
 
-    @After
-    public void tearDown() throws Exception {
-    }
-
     @Test
-    public void consumeDataFromKinesisStream() throws Exception {
+    public void consumeDataFromKinesisStream() {
         // when
         StreamPosition startFrom = writeToStream("users_small1.txt").getFirstReadPosition();
 

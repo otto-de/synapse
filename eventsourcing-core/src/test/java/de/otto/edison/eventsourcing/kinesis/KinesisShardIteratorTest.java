@@ -25,12 +25,12 @@ public class KinesisShardIteratorTest {
     private KinesisShardIterator kinesisShardIterator;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         kinesisShardIterator = new KinesisShardIterator(kinesisClient, "someId");
     }
 
     @Test
-    public void shouldFetchRecords() throws Exception {
+    public void shouldFetchRecords() {
         // given
         GetRecordsResponse response = GetRecordsResponse.builder()
                 .records(Record.builder()
@@ -53,7 +53,7 @@ public class KinesisShardIteratorTest {
     }
 
     @Test
-    public void shouldIterateToNextId() throws Exception {
+    public void shouldIterateToNextId() {
         // given
         GetRecordsResponse response = GetRecordsResponse.builder()
                 .records()
@@ -68,4 +68,5 @@ public class KinesisShardIteratorTest {
         // then
         assertThat(kinesisShardIterator.getId(), is("nextIteratorId"));
     }
+
 }

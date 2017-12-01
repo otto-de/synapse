@@ -7,10 +7,11 @@ dependencies {
     implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
 
     implementation "org.springframework:spring-context:${springVersion}"
-
     implementation 'org.springframework.security:spring-security-core:4.2.3.RELEASE'
+    implementation "org.springframework.retry:spring-retry:1.2.1.RELEASE"
 
-
+    implementation "org.springframework:spring-aop:${springVersion}"
+    implementation "org.aspectj:aspectjweaver:1.8.13"
 
     implementation("net.openhft:chronicle-map:3.14.1") {
         exclude group: "com.intellij", module: "annotations"
