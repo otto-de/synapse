@@ -21,6 +21,7 @@ import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -67,7 +68,7 @@ public class KinesisEventSourceIntegrationTest {
         List<Event<String>> events = synchronizedList(new ArrayList<Event<String>>());
         eventSource.consumeAll(
                 startFrom,
-                Objects::isNull,
+                stopCondition(),
                 events::add);
 
         assertThat(events, not(empty()));
@@ -84,7 +85,7 @@ public class KinesisEventSourceIntegrationTest {
         List<Event<String>> events = synchronizedList(new ArrayList<Event<String>>());
         StreamPosition nextStreamPosition = eventSource.consumeAll(
                 startFrom,
-                Objects::isNull,
+                stopCondition(),
                 events::add);
 
         assertThat(nextStreamPosition.shards(), hasSize(EXPECTED_NUMBER_OF_SHARDS));
@@ -102,7 +103,7 @@ public class KinesisEventSourceIntegrationTest {
         List<Event<String>> events = synchronizedList(new ArrayList<Event<String>>());
         StreamPosition next = eventSource.consumeAll(
                 startFrom,
-                Objects::isNull,
+                stopCondition(),
                 events::add);
 
         assertThat(events, empty());
@@ -119,4 +120,7 @@ public class KinesisEventSourceIntegrationTest {
         return IntStream.range(EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET + 1, EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET + EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET + 1).mapToObj(String::valueOf).collect(Collectors.toList());
     }
 
+    private Predicate<Event<String>> stopCondition() {
+        return e -> e.payload() == null;
+    }
 }

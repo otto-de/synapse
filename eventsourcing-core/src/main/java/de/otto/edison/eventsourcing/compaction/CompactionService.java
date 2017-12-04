@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
+import java.time.Duration;
 import java.util.function.Predicate;
 
 @Service
@@ -60,14 +60,13 @@ public class CompactionService {
     }
 
     private Predicate<Event<String>> stopCondition() {
-        final Instant now = Instant.now();
-        return event -> {
-            if (event != null) {
-                return event.arrivalTimestamp().isAfter(now);
-            } else {
-                return true;
-            }
-        };
+        return event -> event.durationBehind()
+                .map(CompactionService::isLessThan10Seconds)
+                .orElse(true);
+    }
+
+    private static Boolean isLessThan10Seconds(Duration d) {
+        return d.compareTo(Duration.ofSeconds(10)) < 0;
     }
 
 }

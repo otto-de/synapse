@@ -81,7 +81,7 @@ public class KinesisEventSource<T> implements EventSource<T> {
         @Override
         public Boolean apply(Long millis, Record record) {
             if (record == null) {
-                return stopCondition.test(null);
+                return stopCondition.test(Event.event(null, null, null, null, ofMillis(millis)));
             }
             return stopCondition.test(createEvent(ofMillis(millis), record));
         }
