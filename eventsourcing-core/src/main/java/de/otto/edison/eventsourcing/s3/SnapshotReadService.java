@@ -32,15 +32,17 @@ public class SnapshotReadService {
     private static final long MAX_SNAPSHOT_FILE_AGE = 1000 * 60 * 60 * 24 * 3; //3 days //TODO make configurable
 
     private S3Service s3Service;
+    private FileUtils fileUtils;
     private String snapshotBucketName;
 
 
     public SnapshotReadService(final S3Service s3Service,
+                               final FileUtils fileUtils,
                                final EventSourcingProperties properties) {
         this.s3Service = s3Service;
+        this.fileUtils = fileUtils;
         snapshotBucketName = properties.getSnapshot().getBucketName();
     }
-
 
     public Optional<File> downloadLatestSnapshot(SnapshotEventSource snapshotEventSource) {
         LOG.info("Start downloading snapshot from S3");
@@ -73,7 +75,7 @@ public class SnapshotReadService {
                 }
             }
 
-
+            fileUtils.removeTempFiles("*-snapshot-*.json.zip");
             LOG.info("Downloading snapshot file to {}", snapshotFile.getFileName().toAbsolutePath().toString());
             if (s3Service.download(snapshotBucketName, latestSnapshotKey, snapshotFile)) {
                 return Optional.of(snapshotFile.toFile());
@@ -83,7 +85,6 @@ public class SnapshotReadService {
             return Optional.empty();
         }
     }
-
 
     private Optional<File> findRecentLocalSnapshot(String streamName) {
         String snapshotFileNamePrefix = getSnapshotFileNamePrefix(streamName);
@@ -106,7 +107,6 @@ public class SnapshotReadService {
         return System.getProperty(JAVA_IO_TMPDIR.key());
     }
 
-    @SuppressWarnings("try")
     private boolean isValid(Path path) {
         try (ZipFile ignored = new ZipFile(path.toFile())) {
             return true;

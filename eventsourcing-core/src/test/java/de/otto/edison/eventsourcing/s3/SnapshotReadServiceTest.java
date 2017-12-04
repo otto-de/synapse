@@ -8,6 +8,7 @@ import org.junit.Test;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
@@ -18,18 +19,21 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class SnapshotReadServiceTest {
 
     private SnapshotReadService testee;
     private S3Service s3Service;
+    private FileUtils fileUtils;
 
     @Before
     public void setUp() throws Exception {
         EventSourcingProperties eventSourcingProperties = SnapshotServiceTestUtils.createEventSourcingProperties();
         s3Service = mock(S3Service.class);
-        testee = new SnapshotReadService(s3Service, eventSourcingProperties);
+        fileUtils = mock(FileUtils.class);
+        testee = new SnapshotReadService(s3Service, fileUtils, eventSourcingProperties);
     }
 
 
@@ -66,15 +70,19 @@ public class SnapshotReadServiceTest {
         //given
         final S3Object s3Object = mock(S3Object.class);
         when(s3Object.key()).thenReturn("compaction-teststream-snapshot-1.json.zip");
+        when(s3Object.size()).thenReturn(Long.MAX_VALUE);
 
         when(s3Service.listAll("test-teststream")).thenReturn(ImmutableList.of(s3Object));
-        when(s3Service.download("test-teststream", "compaction-teststream-snapshot-1.json.zip", Paths.get("/tmp/compaction-teststream-snapshot-1.json.zip"))).thenReturn(true);
+        Path destination = Paths.get("/tmp/compaction-teststream-snapshot-1.json.zip");
+        when(s3Service.download("test-teststream", "compaction-teststream-snapshot-1.json.zip", destination)).thenReturn(true);
 
         //when
         Optional<File> file = testee.getLatestSnapshotFromBucket("teststream");
 
         //then
-        assertThat(file.get(), is(Paths.get("/tmp/compaction-teststream-snapshot-1.json.zip").toFile()));
+        verify(s3Service).download("test-teststream", "compaction-teststream-snapshot-1.json.zip", destination);
+        verify(fileUtils).removeTempFiles("*-snapshot-*.json.zip");
+        assertThat(file.get(), is(destination.toFile()));
     }
 
     @Test
