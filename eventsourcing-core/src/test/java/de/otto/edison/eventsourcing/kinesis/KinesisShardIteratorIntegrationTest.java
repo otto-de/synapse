@@ -4,6 +4,7 @@ package de.otto.edison.eventsourcing.kinesis;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -19,8 +20,7 @@ import software.amazon.awssdk.services.kinesis.model.KinesisException;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
@@ -58,6 +58,7 @@ public class KinesisShardIteratorIntegrationTest {
         kinesisShardIterator.next();
 
         // then
+        verify(kinesisClient, times(2)).getRecords(any());
         assertThat(kinesisShardIterator.getId(), is("nextIteratorId"));
 
     }
