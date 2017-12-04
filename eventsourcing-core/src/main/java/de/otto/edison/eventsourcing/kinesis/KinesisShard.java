@@ -70,7 +70,7 @@ public class KinesisShard {
         do {
             GetRecordsResponse recordsResponse = shardIterator.next();
 
-            stopRetrieval = stopCondition.apply(null, null);
+            stopRetrieval = stopCondition.apply(recordsResponse.millisBehindLatest(), null);
             if (!isEmptyStream(recordsResponse)) {
                 Long millisBehindLatest = recordsResponse.millisBehindLatest();
                 for (final Record record : recordsResponse.records()) {

@@ -9,13 +9,12 @@ import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KinesisShardTest {
@@ -25,6 +24,9 @@ public class KinesisShardTest {
 
     @Mock
     private BiConsumer<Long, Record> consumer;
+
+    @Mock
+    BiFunction<Long, Record, Boolean> mockStopCondition;
 
     private KinesisShard kinesisShard;
 
@@ -96,6 +98,24 @@ public class KinesisShardTest {
         // then
         verify(consumer).accept(1234L, record1);
         verify(consumer).accept(1234L, record2);
+    }
+
+    @Test
+    public void shouldPassMillisBehindLatestToStopConditionWhenThereAreNoRecords() throws Exception {
+        // given
+        GetRecordsResponse response = GetRecordsResponse.builder()
+                .records()
+                .nextShardIterator("nextShardIterator")
+                .millisBehindLatest(1234L)
+                .build();
+        when(kinesisClient.getRecords(any())).thenReturn(response);
+        when(mockStopCondition.apply(any(), any())).thenReturn(true);
+
+        // when
+        kinesisShard.consumeRecordsAndReturnLastSeqNumber("0", mockStopCondition, consumer);
+
+        // then
+        verify(mockStopCondition).apply(1234L, null);
     }
 
     @Test
