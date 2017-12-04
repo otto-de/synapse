@@ -28,7 +28,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
-    @Configuration
     static class TestConfiguration {
         @Bean
         public TestConsumer test() {
@@ -36,7 +35,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
-    @Configuration
     static class TestConfigurationDifferentPayload {
         @Bean
         public TestConsumerWithSameStreamNameAndDifferentPayload test() {
@@ -44,7 +42,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
-    @Configuration
     static class TestConfigurationCustomEventSource {
         @Bean
         public TestConsumerWithSnapshotEventSource test() {
