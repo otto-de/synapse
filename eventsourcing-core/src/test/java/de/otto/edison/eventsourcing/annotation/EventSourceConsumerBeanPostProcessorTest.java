@@ -3,16 +3,13 @@ package de.otto.edison.eventsourcing.annotation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.CompactingKinesisEventSource;
 import de.otto.edison.eventsourcing.configuration.EventSourcingConfiguration;
-import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
 import de.otto.edison.eventsourcing.consumer.Event;
-import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
 import de.otto.edison.eventsourcing.s3.SnapshotEventSource;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 import static org.assertj.core.api.Assertions.assertThat;

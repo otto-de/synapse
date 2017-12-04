@@ -4,7 +4,6 @@ package de.otto.edison.eventsourcing.kinesis;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -52,7 +51,9 @@ public class KinesisShardIteratorIntegrationTest {
                 .nextShardIterator("nextIteratorId")
                 .build();
 
-        when(kinesisClient.getRecords(any())).thenThrow(new KinesisException("forced test exception")).thenReturn(response);
+        when(kinesisClient.getRecords(any()))
+                .thenThrow(new KinesisException("forced test exception"))
+                .thenReturn(response);
 
         // when
         kinesisShardIterator.next();

@@ -20,7 +20,6 @@ import software.amazon.awssdk.services.kinesis.KinesisClient;
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
