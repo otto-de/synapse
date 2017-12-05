@@ -6,6 +6,7 @@ import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.kinesis.KinesisEventSource;
 import de.otto.edison.eventsourcing.s3.SnapshotEventSource;
 
+import java.io.File;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -28,6 +29,10 @@ public class CompactingKinesisEventSource<T> implements EventSource<T> {
         this.snapshotEventSource = snapshotEventSource;
         this.kinesisEventSource = kinesisEventSource;
         this.streamName = kinesisEventSource.getStreamName();
+    }
+
+    public void setSnapshotFile(File file) {
+        snapshotEventSource.setSnapshotFile(file);
     }
 
     @Override
