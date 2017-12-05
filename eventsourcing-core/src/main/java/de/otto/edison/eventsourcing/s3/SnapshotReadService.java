@@ -37,7 +37,7 @@ public class SnapshotReadService {
                                final S3Service s3Service,
                                final TempFileService tempFileService) {
         this.s3Service = s3Service;
-        snapshotBucketName = properties.getSnapshot().getBucketName();
+        this.snapshotBucketName = properties.getSnapshot().getBucketName();
         this.tempFileService = tempFileService;
     }
 

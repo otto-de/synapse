@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.File;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -22,8 +23,9 @@ public class SnapshotEventSource<T> implements EventSource<T> {
     private final String streamName;
     private final SnapshotConsumerService snapshotConsumerService;
     private final Class<T> payloadType;
+    private final ApplicationEventPublisher eventPublisher;
 
-    private ApplicationEventPublisher eventPublisher;
+    private File forcedSnapshotFile = null;
 
     public SnapshotEventSource(final String streamName,
                                final SnapshotReadService snapshotReadService,
@@ -35,6 +37,14 @@ public class SnapshotEventSource<T> implements EventSource<T> {
         this.snapshotConsumerService = snapshotConsumerService;
         this.payloadType = payloadType;
         this.eventPublisher = eventPublisher;
+    }
+
+    public void setSnapshotFile(File file) {
+        Objects.requireNonNull(file, "file must not be null");
+        if (!file.exists() || !file.canRead()) {
+            throw new IllegalArgumentException("snapshot file does not exists or is not readable");
+        }
+        this.forcedSnapshotFile = file;
     }
 
     public String getStreamName() {
@@ -61,11 +71,10 @@ public class SnapshotEventSource<T> implements EventSource<T> {
         try {
             publishEvent(startFrom, EventSourceNotification.Status.STARTED);
 
-            Optional<File> latestSnapshot = snapshotReadService.retrieveLatestSnapshot(streamName);
-            LOG.info("Downloaded Snapshot");
-            if (latestSnapshot.isPresent()) {
-                StreamPosition streamPosition = snapshotConsumerService.consumeSnapshot(latestSnapshot.get(), streamName, stopCondition, consumer, payloadType);
-                snapshotStreamPosition = SnapshotStreamPosition.of(streamPosition, SnapshotFileTimestampParser.getSnapshotTimestamp(latestSnapshot.get().getName()));
+            Optional<File> snapshotFile = getSnapshotFileToConsume();
+            if (snapshotFile.isPresent()) {
+                StreamPosition streamPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), streamName, stopCondition, consumer, payloadType);
+                snapshotStreamPosition = SnapshotStreamPosition.of(streamPosition, SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName()));
             } else {
                 snapshotStreamPosition = SnapshotStreamPosition.of();
             }
@@ -74,11 +83,27 @@ public class SnapshotEventSource<T> implements EventSource<T> {
             throw new RuntimeException(e);
         } finally {
             LOG.info("Finished reading snapshot into Memory");
-            snapshotReadService.deleteOlderSnapshots(streamName);
+            cleanUpSnapshotFiles();
         }
         publishEvent(snapshotStreamPosition, EventSourceNotification.Status.FINISHED);
         return snapshotStreamPosition;
     }
+
+   private Optional<File> getSnapshotFileToConsume() {
+        if (this.forcedSnapshotFile == null) {
+            return snapshotReadService.retrieveLatestSnapshot(streamName);
+        } else {
+            LOG.info("Use local Snapshot file: {}", forcedSnapshotFile);
+            return Optional.of(forcedSnapshotFile);
+        }
+    }
+
+    private void cleanUpSnapshotFiles() {
+        if (this.forcedSnapshotFile == null) {
+            snapshotReadService.deleteOlderSnapshots(streamName);
+        }
+    }
+
 
     private void publishEvent(StreamPosition streamPosition, EventSourceNotification.Status status) {
         if (eventPublisher != null) {
