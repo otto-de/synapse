@@ -41,14 +41,14 @@ public class SnapshotReadService {
                                final EventSourcingProperties properties) {
         this.s3Service = s3Service;
         this.fileUtils = fileUtils;
-        snapshotBucketName = properties.getSnapshot().getBucketName();
+        this.snapshotBucketName = properties.getSnapshot().getBucketName();
     }
 
-    public Optional<File> downloadLatestSnapshot(SnapshotEventSource snapshotEventSource) {
+    public Optional<File> downloadLatestSnapshot(String streamName) {
         LOG.info("Start downloading snapshot from S3");
         infoDiskUsage();
 
-        Optional<File> latestSnapshot = getLatestSnapshotFromBucket(snapshotEventSource.getStreamName());
+        Optional<File> latestSnapshot = getLatestSnapshotFromBucket(streamName);
         if (latestSnapshot.isPresent()) {
             LOG.info("Finished downloading snapshot {}", latestSnapshot.get().getName());
             infoDiskUsage();

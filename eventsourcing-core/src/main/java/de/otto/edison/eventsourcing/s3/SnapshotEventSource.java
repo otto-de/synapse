@@ -63,7 +63,7 @@ public class SnapshotEventSource<T> implements EventSource<T> {
         try {
             publishEvent(startFrom, EventSourceNotification.Status.STARTED);
 
-            Optional<File> latestSnapshot = snapshotReadService.downloadLatestSnapshot(this);
+            Optional<File> latestSnapshot = snapshotReadService.downloadLatestSnapshot(streamName);
             LOG.info("Downloaded Snapshot");
             if (latestSnapshot.isPresent()) {
                 StreamPosition streamPosition = snapshotConsumerService.consumeSnapshot(latestSnapshot.get(), streamName, stopCondition, consumer, payloadType);
