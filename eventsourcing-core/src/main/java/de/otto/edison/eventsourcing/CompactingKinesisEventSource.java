@@ -37,7 +37,8 @@ public class CompactingKinesisEventSource<T> implements EventSource<T> {
 
     @Override
     public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<T>> stopCondition, Consumer<Event<T>> consumer) {
-        final StreamPosition streamPosition = snapshotEventSource.consumeAll(stopCondition, consumer);
+        Predicate<Event> neverStop = e -> false;
+        final StreamPosition streamPosition = snapshotEventSource.consumeAll(neverStop, consumer);
         return kinesisEventSource.consumeAll(streamPosition, stopCondition, consumer);
     }
 }
