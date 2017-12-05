@@ -53,13 +53,16 @@ public class KinesisShardIteratorIntegrationTest {
 
         when(kinesisClient.getRecords(any()))
                 .thenThrow(new KinesisException("forced test exception"))
+                .thenThrow(new KinesisException("forced test exception"))
+                .thenThrow(new KinesisException("forced test exception"))
+                .thenThrow(new KinesisException("forced test exception"))
                 .thenReturn(response);
 
         // when
         kinesisShardIterator.next();
 
         // then
-        verify(kinesisClient, times(2)).getRecords(any());
+        verify(kinesisClient, times(5)).getRecords(any());
         assertThat(kinesisShardIterator.getId(), is("nextIteratorId"));
 
     }

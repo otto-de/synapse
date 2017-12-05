@@ -29,6 +29,7 @@ public class KinesisShardIterator {
 
     @Retryable(
             value = KinesisException.class,
+            maxAttempts = 16,
             backoff = @Backoff(delay = 500, maxDelay = 60000, multiplier = 2.0))
     public GetRecordsResponse next() {
         try {
