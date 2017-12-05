@@ -89,22 +89,23 @@ public class KinesisShard {
                 stopRetrieval = waitABit();
             }
         } while (!stopRetrieval);
-        LOG.info("Terminating event source for stream {}", kinesisStream.getStreamName());
+        LOG.info("Terminating event source for stream '{}' shard '{}'", kinesisStream.getStreamName(), shardId);
         return new ShardPosition(shardId, lastSequenceNumber);
     }
 
     private void logInfo(String streamName, GetRecordsResponse recordsResponse, Duration durationBehind) {
         final String durationString = format("%s days %s hrs %s min %s sec", durationBehind.toDays(), durationBehind.toHours() % 24, durationBehind.toMinutes() % 60, durationBehind.getSeconds() % 60);
-        LOG.info("Consumed {} records from kinesis {}; behind latest: {}",
+        LOG.info("Consumed {} records from stream '{}' shard '{}'; behind latest: {}",
                 recordsResponse.records().size(),
                 streamName,
+                shardId,
                 durationString);
     }
 
     private boolean waitABit() {
         try {
             /* See DECISIONS.md - Question #1 */
-            Thread.sleep(100);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             LOG.warn("Thread got interrupted");
             return true;
