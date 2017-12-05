@@ -9,15 +9,12 @@ import org.awaitility.Awaitility;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
@@ -119,7 +116,7 @@ public class EventConsumerIntegrationTest {
             File file = new File(getClass().getClassLoader().getResource("apple-banana-snapshot-2017-11-27T09-02Z-3053797267191232636.json.zip").getFile());
 
             SnapshotReadService snapshotReadServiceMock = Mockito.mock(SnapshotReadService.class);
-            when(snapshotReadServiceMock.downloadLatestSnapshot(any())).thenReturn(Optional.of(file));
+            when(snapshotReadServiceMock.retrieveLatestSnapshot(any())).thenReturn(Optional.of(file));
             return snapshotReadServiceMock;
         }
 

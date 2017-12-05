@@ -46,7 +46,7 @@ public class SnapshotEventSourceTest {
     @Test(expected = RuntimeException.class)
     public void shouldThrowExceptionIfDownloadFails() throws Exception {
         // given
-        when(snapshotReadService.downloadLatestSnapshot(any())).thenReturn(Optional.of(new File("someFilePath")));
+        when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.of(new File("someFilePath")));
         when(snapshotConsumerService.consumeSnapshot(any(),any(),any(),any(),any())).thenThrow(new IOException("boom - simulate exception while loading from S3"));
 
         // when
@@ -60,7 +60,7 @@ public class SnapshotEventSourceTest {
         // given
         S3Exception bucketNotFoundException = new S3Exception("boom - simulate exception while loading from S3");
         bucketNotFoundException.setErrorCode("NoSuchBucket");
-        when(snapshotReadService.downloadLatestSnapshot(any())).thenThrow(bucketNotFoundException);
+        when(snapshotReadService.retrieveLatestSnapshot(any())).thenThrow(bucketNotFoundException);
 
         // when
         try {
@@ -85,7 +85,7 @@ public class SnapshotEventSourceTest {
         // given
         S3Exception bucketNotFoundException = new S3Exception("boom - simulate exception while loading from S3");
         bucketNotFoundException.setErrorCode("NoSuchBucket");
-        when(snapshotReadService.downloadLatestSnapshot(any())).thenThrow(bucketNotFoundException);
+        when(snapshotReadService.retrieveLatestSnapshot(any())).thenThrow(bucketNotFoundException);
 
         // when
         try {
@@ -101,7 +101,7 @@ public class SnapshotEventSourceTest {
     @Test
     public void shouldPublishStartAndFinishEvents() throws Exception {
         // given
-        when(snapshotReadService.downloadLatestSnapshot(any())).thenReturn(Optional.empty());
+        when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.empty());
 
         // when
         snapshotEventSource.consumeAll((event) -> {});

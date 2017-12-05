@@ -6,10 +6,8 @@ import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
-import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -63,7 +61,7 @@ public class SnapshotEventSource<T> implements EventSource<T> {
         try {
             publishEvent(startFrom, EventSourceNotification.Status.STARTED);
 
-            Optional<File> latestSnapshot = snapshotReadService.downloadLatestSnapshot(streamName);
+            Optional<File> latestSnapshot = snapshotReadService.retrieveLatestSnapshot(streamName);
             LOG.info("Downloaded Snapshot");
             if (latestSnapshot.isPresent()) {
                 StreamPosition streamPosition = snapshotConsumerService.consumeSnapshot(latestSnapshot.get(), streamName, stopCondition, consumer, payloadType);

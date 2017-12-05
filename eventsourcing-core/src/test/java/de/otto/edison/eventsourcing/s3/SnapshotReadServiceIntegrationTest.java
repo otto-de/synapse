@@ -58,7 +58,7 @@ public class SnapshotReadServiceIntegrationTest {
         s3Service.upload(S3_UTILS_TEST_BUCKET, latest);
 
         //when
-        Optional<S3Object> s3Object = snapshotService.getLatestZip(S3_UTILS_TEST_BUCKET, "test");
+        Optional<S3Object> s3Object = snapshotService.fetchSnapshotMetadataFromS3(S3_UTILS_TEST_BUCKET, "test");
 
         //then
         assertThat(s3Object.get().key(), is(latest.getName()));
@@ -67,7 +67,7 @@ public class SnapshotReadServiceIntegrationTest {
     @Test
     public void shouldReturnOptionalEmptyWhenNoFileInBucket() throws Exception {
         //when
-        Optional<S3Object> s3Object = snapshotService.getLatestZip(S3_UTILS_TEST_BUCKET, "DOES_NOT_EXIST");
+        Optional<S3Object> s3Object = snapshotService.fetchSnapshotMetadataFromS3(S3_UTILS_TEST_BUCKET, "DOES_NOT_EXIST");
 
         //then
         assertThat(s3Object.isPresent(), is(false));

@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.aws.configuration.AwsConfiguration;
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.edison.aws.s3.configuration.S3Configuration;
-import de.otto.edison.eventsourcing.s3.FileUtils;
 import de.otto.edison.eventsourcing.s3.SnapshotConsumerService;
 import de.otto.edison.eventsourcing.s3.SnapshotReadService;
 import de.otto.edison.eventsourcing.s3.SnapshotWriteService;
+import de.otto.edison.eventsourcing.s3.TempFileService;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -31,11 +31,18 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
 )
 public class SnapshotConfiguration {
 
+
+    @Bean
+    public TempFileService tempFileService() {
+        return new TempFileService();
+    }
+
     @Bean
     @ConditionalOnMissingBean
     public SnapshotReadService snapshotService(final S3Service s3Service,
-                                               final EventSourcingProperties eventSourcingProperties) {
-        return new SnapshotReadService(s3Service, new FileUtils(), eventSourcingProperties);
+                                               final EventSourcingProperties eventSourcingProperties,
+                                               final TempFileService tempFileService) {
+        return new SnapshotReadService(eventSourcingProperties, s3Service, tempFileService);
     }
 
     @Bean

@@ -18,22 +18,22 @@ import static java.util.Collections.emptyList;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class SnapshotReadServiceTest {
 
     private SnapshotReadService testee;
     private S3Service s3Service;
-    private FileUtils fileUtils;
+    private TempFileService tempFileService;
 
     @Before
     public void setUp() throws Exception {
         EventSourcingProperties eventSourcingProperties = SnapshotServiceTestUtils.createEventSourcingProperties();
         s3Service = mock(S3Service.class);
-        fileUtils = mock(FileUtils.class);
-        testee = new SnapshotReadService(s3Service, fileUtils, eventSourcingProperties);
+        tempFileService = mock(TempFileService.class);
+        when(tempFileService.getTempDir()).thenCallRealMethod();
+
+        testee = new SnapshotReadService(eventSourcingProperties, s3Service, tempFileService);
     }
 
 
@@ -49,7 +49,7 @@ public class SnapshotReadServiceTest {
         when(s3Service.listAll("testBucket")).thenReturn(asList(obj1, obj2));
 
         //when
-        Optional<S3Object> s3Object = testee.getLatestZip("testBucket", "test");
+        Optional<S3Object> s3Object = testee.fetchSnapshotMetadataFromS3("testBucket", "test");
 
         //then
         assertThat(s3Object.get().key(), is("compaction-test-snapshot-2.json.zip"));
@@ -59,7 +59,7 @@ public class SnapshotReadServiceTest {
     public void shouldReturnOptionalEmptyWhenNoFileInBucket() throws Exception {
         //when
         when(s3Service.listAll(anyString())).thenReturn(emptyList());
-        Optional<S3Object> s3Object = testee.getLatestZip("testBucket", "DOES_NOT_EXIST");
+        Optional<S3Object> s3Object = testee.fetchSnapshotMetadataFromS3("testBucket", "DOES_NOT_EXIST");
 
         //then
         assertThat(s3Object.isPresent(), is(false));
@@ -68,21 +68,18 @@ public class SnapshotReadServiceTest {
     @Test
     public void shouldGetLatestSnapshotFileFromS3Bucket() throws Exception {
         //given
+        when(tempFileService.getTempFile(any())).thenCallRealMethod();
         final S3Object s3Object = mock(S3Object.class);
         when(s3Object.key()).thenReturn("compaction-teststream-snapshot-1.json.zip");
-        when(s3Object.size()).thenReturn(Long.MAX_VALUE);
 
         when(s3Service.listAll("test-teststream")).thenReturn(ImmutableList.of(s3Object));
-        Path destination = Paths.get("/tmp/compaction-teststream-snapshot-1.json.zip");
-        when(s3Service.download("test-teststream", "compaction-teststream-snapshot-1.json.zip", destination)).thenReturn(true);
+        when(s3Service.download("test-teststream", "compaction-teststream-snapshot-1.json.zip", Paths.get("/tmp/compaction-teststream-snapshot-1.json.zip"))).thenReturn(true);
 
         //when
-        Optional<File> file = testee.getLatestSnapshotFromBucket("teststream");
+        Optional<File> file = testee.getLatestSnapshot("teststream");
 
         //then
-        verify(s3Service).download("test-teststream", "compaction-teststream-snapshot-1.json.zip", destination);
-        verify(fileUtils).removeTempFiles("*-snapshot-*.json.zip");
-        assertThat(file.get(), is(destination.toFile()));
+        assertThat(file.get(), is(Paths.get("/tmp/compaction-teststream-snapshot-1.json.zip").toFile()));
     }
 
     @Test
@@ -91,7 +88,7 @@ public class SnapshotReadServiceTest {
         when(s3Service.listAll("test-test")).thenReturn(ImmutableList.of());
 
         //when
-        Optional<File> file = testee.getLatestSnapshotFromBucket("test");
+        Optional<File> file = testee.getLatestSnapshot("test");
 
         //then
         assertThat(file.isPresent(), is(false));
@@ -108,9 +105,32 @@ public class SnapshotReadServiceTest {
         when(s3Service.download("test-test", "compaction-test-snapshot-1.json.zip", Paths.get("/tmp/compaction-test-snapshot-1.json.zip"))).thenReturn(false);
 
         //when
-        Optional<File> file = testee.getLatestSnapshotFromBucket("test");
+        Optional<File> file = testee.getLatestSnapshot("test");
 
         //then
         assertThat(file.isPresent(), is(false));
+    }
+
+    @Test
+    public void shouldUseLocalFileIfItsTheSameAsLatestFromBucket() {
+        // given
+        S3Object obj = S3Object.builder()
+                .key("compaction-testStream-snapshot-1.json.zip")
+                .size(55L)
+                .build();
+        when(s3Service.listAll("test-teststream")).thenReturn(ImmutableList.of(obj));
+        File mockFile = mock(File.class);
+        Path mockPath = mock(Path.class);
+        when(mockPath.toFile()).thenReturn(mockFile);
+        when(mockPath.toAbsolutePath()).thenReturn(Paths.get("/tmp/compaction-testStream-snapshot-1.json.zip"));
+        when(tempFileService.getTempFile("compaction-testStream-snapshot-1.json.zip")).thenReturn(mockPath);
+        when(tempFileService.existsAndHasSize(mockPath, 55L)).thenReturn(true);
+
+        // when
+        Optional<File> fileOptional = testee.retrieveLatestSnapshot("testStream");
+
+        // then
+        verify(s3Service, never()).download(any(), any(), any());
+        assertThat(fileOptional, is(Optional.of(mockFile)));
     }
 }

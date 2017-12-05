@@ -14,9 +14,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.zip.ZipFile;
 
-import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
 import static de.otto.edison.eventsourcing.s3.SnapshotUtils.COMPACTION_FILE_EXTENSION;
 import static de.otto.edison.eventsourcing.s3.SnapshotUtils.getSnapshotFileNamePrefix;
 import static java.lang.String.format;
@@ -29,26 +27,26 @@ public class SnapshotReadService {
 
     private static final Logger LOG = getLogger(SnapshotReadService.class);
     private static final int ONE_MB = 1024 * 1024;
-    private static final long MAX_SNAPSHOT_FILE_AGE = 1000 * 60 * 60 * 24 * 3; //3 days //TODO make configurable
 
-    private S3Service s3Service;
-    private FileUtils fileUtils;
-    private String snapshotBucketName;
+    private final S3Service s3Service;
+    private final String snapshotBucketName;
+    private final TempFileService tempFileService;
 
 
-    public SnapshotReadService(final S3Service s3Service,
-                               final FileUtils fileUtils,
-                               final EventSourcingProperties properties) {
+    public SnapshotReadService(final EventSourcingProperties properties,
+                               final S3Service s3Service,
+                               final TempFileService tempFileService) {
         this.s3Service = s3Service;
-        this.fileUtils = fileUtils;
-        this.snapshotBucketName = properties.getSnapshot().getBucketName();
+        snapshotBucketName = properties.getSnapshot().getBucketName();
+        this.tempFileService = tempFileService;
     }
 
-    public Optional<File> downloadLatestSnapshot(String streamName) {
+
+    public Optional<File> retrieveLatestSnapshot(String streamName) {
         LOG.info("Start downloading snapshot from S3");
         infoDiskUsage();
 
-        Optional<File> latestSnapshot = getLatestSnapshotFromBucket(streamName);
+        Optional<File> latestSnapshot = getLatestSnapshot(streamName);
         if (latestSnapshot.isPresent()) {
             LOG.info("Finished downloading snapshot {}", latestSnapshot.get().getName());
             infoDiskUsage();
@@ -58,24 +56,19 @@ public class SnapshotReadService {
         return latestSnapshot;
     }
 
-    Optional<File> getLatestSnapshotFromBucket(final String streamName) {
-        Optional<S3Object> s3Object = getLatestZip(snapshotBucketName, streamName);
+    Optional<File> getLatestSnapshot(final String streamName) {
+        Optional<S3Object> s3Object = fetchSnapshotMetadataFromS3(snapshotBucketName, streamName);
         if (s3Object.isPresent()) {
             String latestSnapshotKey = s3Object.get().key();
-            Path snapshotFile = Paths.get(getTempDir() + "/" + latestSnapshotKey);
+            Path snapshotFile = tempFileService.getTempFile(latestSnapshotKey);
 
-            if (snapshotFile.toFile().length() == s3Object.get().size()) {
+            if (tempFileService.existsAndHasSize(snapshotFile, s3Object.get().size())) {
                 LOG.info("Snapshot on disk is same as in S3, keep it and use it: {}", snapshotFile.toAbsolutePath().toString());
                 return Optional.of(snapshotFile.toFile());
-            } else {
-                Optional<File> recentSnapshot = findRecentLocalSnapshot(streamName);
-                if (recentSnapshot.isPresent()) {
-                    LOG.info("Snapshot on disk is not too old, keep it and use it: {}", recentSnapshot.get().toPath().toAbsolutePath().toString());
-                    return recentSnapshot;
-                }
             }
 
-            fileUtils.removeTempFiles("*-snapshot-*.json.zip");
+
+            tempFileService.removeTempFiles("*-snapshot-*.json.zip");
             LOG.info("Downloading snapshot file to {}", snapshotFile.getFileName().toAbsolutePath().toString());
             if (s3Service.download(snapshotBucketName, latestSnapshotKey, snapshotFile)) {
                 return Optional.of(snapshotFile.toFile());
@@ -86,37 +79,8 @@ public class SnapshotReadService {
         }
     }
 
-    private Optional<File> findRecentLocalSnapshot(String streamName) {
-        String snapshotFileNamePrefix = getSnapshotFileNamePrefix(streamName);
-        String snapshotFileSuffix = ".json.zip";
-        Optional<File> newestFile;
-        try {
-            newestFile = Files.find(Paths.get(getTempDir()), 1,
-                    (path, basicFileAttributes) -> (path.getFileName().toString().startsWith(snapshotFileNamePrefix) && path.getFileName().toString().endsWith(snapshotFileSuffix)))
-                    .filter(this::isValid)
-                    .max((path1, path2) -> (int) (path1.toFile().lastModified() - path2.toFile().lastModified()))
-                    .filter(path -> System.currentTimeMillis() - path.toFile().lastModified() < MAX_SNAPSHOT_FILE_AGE)
-                    .map(Path::toFile);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        return newestFile;
-    }
 
-    private String getTempDir() {
-        return System.getProperty(JAVA_IO_TMPDIR.key());
-    }
-
-    private boolean isValid(Path path) {
-        try (ZipFile ignored = new ZipFile(path.toFile())) {
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
-
-    Optional<S3Object> getLatestZip(String bucketName, String streamName) {
+    Optional<S3Object> fetchSnapshotMetadataFromS3(String bucketName, String streamName) {
         return s3Service.listAll(bucketName)
                 .stream()
                 .filter(o -> o.key().startsWith(getSnapshotFileNamePrefix(streamName)))
@@ -158,7 +122,7 @@ public class SnapshotReadService {
         String snapshotFileSuffix = ".json.zip";
         List<File> oldestFiles;
         try {
-            oldestFiles = Files.find(Paths.get(getTempDir()), 1,
+            oldestFiles = Files.find(Paths.get(tempFileService.getTempDir()), 1,
                     (path, basicFileAttributes) -> (path.getFileName().toString().startsWith(snapshotFileNamePrefix) && path.getFileName().toString().endsWith(snapshotFileSuffix)))
                     .sorted((path1, path2) -> (int) (path2.toFile().lastModified() - path1.toFile().lastModified()))
                     .map(Path::toFile)

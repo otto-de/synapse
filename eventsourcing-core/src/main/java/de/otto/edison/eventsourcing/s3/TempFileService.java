@@ -3,13 +3,28 @@ package de.otto.edison.eventsourcing.s3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 
-public class FileUtils {
+import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
 
-    private static final Logger LOG = LoggerFactory.getLogger(FileUtils.class);
+public class TempFileService {
+    private static final Logger LOG = LoggerFactory.getLogger(TempFileService.class);
+
+    public Path getTempFile(String filename) {
+        return Paths.get(getTempDir() + "/" + filename);
+    }
+
+    String getTempDir() {
+        return System.getProperty(JAVA_IO_TMPDIR.key());
+    }
+
+    public boolean existsAndHasSize(Path path, long size) {
+        File file = path.toFile();
+        return file.exists() && file.canRead() && file.length() == size;
+    }
 
     public void removeTempFiles(String filePattern) {
         String tmpDir = System.getProperty("java.io.tmpdir");
