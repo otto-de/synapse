@@ -15,6 +15,10 @@ public class KinesisShardIterator {
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShardIterator.class);
 
     static final int FETCH_RECORDS_LIMIT = 10000;
+    static final int RETRY_MAX_ATTEMPTS = 16;
+    static final int RETRY_BACK_OFF_POLICY_INITIAL_INTERVAL = 1000;
+    static final int RETRY_BACK_OFF_POLICY_MAX_INTERVAL = 60000;
+    static final double RETRY_BACK_OFF_POLICY_MULTIPLIER = 2.0;
 
     private final KinesisClient kinesisClient;
     private String id;
@@ -56,12 +60,12 @@ public class KinesisShardIterator {
 
     private RetryTemplate createRetryTemplate() {
         SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
-        retryPolicy.setMaxAttempts(16);
+        retryPolicy.setMaxAttempts(RETRY_MAX_ATTEMPTS);
 
         ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
-        backOffPolicy.setInitialInterval(1000);
-        backOffPolicy.setMaxInterval(60000);
-        backOffPolicy.setMultiplier(2.0);
+        backOffPolicy.setInitialInterval(RETRY_BACK_OFF_POLICY_INITIAL_INTERVAL);
+        backOffPolicy.setMaxInterval(RETRY_BACK_OFF_POLICY_MAX_INTERVAL);
+        backOffPolicy.setMultiplier(RETRY_BACK_OFF_POLICY_MULTIPLIER);
 
         RetryTemplate template = new RetryTemplate();
         template.setRetryPolicy(retryPolicy);
