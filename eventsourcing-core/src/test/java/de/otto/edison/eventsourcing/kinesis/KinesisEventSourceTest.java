@@ -21,14 +21,17 @@ import software.amazon.awssdk.services.kinesis.model.Record;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.google.common.collect.ImmutableList.of;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
@@ -136,6 +139,58 @@ public class KinesisEventSourceTest {
 
         // then
         verify(stringStopCondition).test(Event.event(null, null, null, null, Duration.ofMillis(555L)));
+    }
+
+    @Test
+    public void shouldFinishAllParallelThreadsWhenExceptionIsThrown() throws Exception {
+        // given
+        List<String> completedShards = Collections.synchronizedList(new ArrayList<>());
+
+        List<KinesisShard> shards = IntStream.range(0, 1000)
+                .mapToObj(i -> createShardMockWithSideEffect(i, () -> {
+                            completedShards.add(String.valueOf(i));
+                            if (i % 50 == 49) {
+                                throw new RuntimeException("boom");
+                            }
+                        }
+                ))
+                .collect(Collectors.toList());
+
+        Map<String, String> positions = shards.stream().collect(Collectors.toMap(KinesisShard::getShardId, s -> "1"));
+        StreamPosition initialPositions = StreamPosition.of(positions);
+
+        when(kinesisStream.retrieveAllOpenShards()).thenReturn(shards);
+
+        KinesisEventSource<TestData> eventSource = new KinesisEventSource<>(TestData.class, objectMapper, kinesisStream, Encryptors.noOpText());
+
+        // when
+        try {
+            eventSource.consumeAll(initialPositions, this::stopIfGreen, testDataConsumer);
+            fail("exception expected");
+        } catch (Exception e) {
+            assertThat(completedShards.size(), not(0));
+            completedShards.clear();
+        }
+        Thread.sleep(100);
+
+        //then
+        assertThat(completedShards.size(), is(0));
+    }
+
+    private KinesisShard createShardMockWithSideEffect(int i, Runnable sideEffect) {
+        KinesisShard shard = mock(KinesisShard.class);
+        when(shard.getShardId()).thenReturn(String.valueOf(i));
+        when(shard.consumeRecordsAndReturnLastSeqNumber(any(), any(), any())).thenAnswer(
+                x -> {
+                    sideEffect.run();
+                    return (ShardPosition
+                            .builder()
+                            .withShardId(String.valueOf(i))
+                            .withSequenceNumber(String.valueOf(i))
+                            .build());
+                }
+        );
+        return shard;
     }
 
     private boolean stopIfGreen(Event<TestData> event) {

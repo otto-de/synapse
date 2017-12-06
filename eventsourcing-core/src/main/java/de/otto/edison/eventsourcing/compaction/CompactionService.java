@@ -40,7 +40,6 @@ public class CompactionService {
 
     public String compact(final String streamName) {
         LOG.info("Start compacting stream {}", streamName);
-        LOG.info(stateRepository.getStats());
         stateRepository.clear();
 
         LOG.info("Start loading entries into inMemoryCache from snapshot");
