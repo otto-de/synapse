@@ -59,6 +59,15 @@ public class KinesisShard {
     public ShardPosition consumeRecordsAndReturnLastSeqNumber(String startFromSeqNumber,
                                                               BiFunction<Long, Record, Boolean> stopCondition,
                                                               BiConsumer<Long, Record> consumer) {
+        try {
+            return tryConsumeRecordsAndReturnLastSeqNumber(startFromSeqNumber, stopCondition, consumer);
+        } catch (Exception e) {
+            LOG.error("kinesis consumer died unexpectedly.", e);
+            throw e;
+        }
+    }
+
+    private ShardPosition tryConsumeRecordsAndReturnLastSeqNumber(String startFromSeqNumber, BiFunction<Long, Record, Boolean> stopCondition, BiConsumer<Long, Record> consumer) {
         LOG.info("Reading from stream {}, shard {} with starting sequence number {}",
                 kinesisStream.getStreamName(),
                 shardId,

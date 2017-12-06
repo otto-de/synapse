@@ -60,7 +60,7 @@ public class KinesisEventSourceTest {
 
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         KinesisShard shard1 = new KinesisShard("shard1", kinesisStream, kinesisClient);
         when(kinesisStream.retrieveAllOpenShards()).thenReturn(of(shard1));
         when(kinesisClient.getShardIterator(any())).thenReturn(GetShardIteratorResponse.builder()
@@ -87,7 +87,7 @@ public class KinesisEventSourceTest {
     }
 
     @Test
-    public void shouldConsumeAllEventsFromKinesisWithObjectMapper() throws Exception {
+    public void shouldConsumeAllEventsFromKinesisWithObjectMapper() {
         // given
         StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
 
@@ -125,7 +125,7 @@ public class KinesisEventSourceTest {
     }
 
     @Test
-    public void shouldAlwaysPassMillisBehindLatestToStopCondition() throws Exception {
+    public void shouldAlwaysPassMillisBehindLatestToStopCondition() {
         // given
         StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
         KinesisEventSource<String> eventSource = new KinesisEventSource<>(String.class, objectMapper, kinesisStream, Encryptors.noOpText());
