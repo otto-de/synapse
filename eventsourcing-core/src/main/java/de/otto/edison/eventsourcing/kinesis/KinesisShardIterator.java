@@ -3,12 +3,19 @@ package de.otto.edison.eventsourcing.kinesis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.retry.RetryCallback;
+import org.springframework.retry.RetryContext;
+import org.springframework.retry.RetryListener;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
+import org.springframework.retry.listener.RetryListenerSupport;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
+import software.amazon.awssdk.services.kinesis.model.KinesisException;
+import software.amazon.awssdk.services.kinesis.model.ProvisionedThroughputExceededException;
+
+import java.util.Collections;
 
 public class KinesisShardIterator {
 
@@ -36,14 +43,7 @@ public class KinesisShardIterator {
 
     public GetRecordsResponse next() {
         try {
-            return retryTemplate.execute((RetryCallback<GetRecordsResponse, Throwable>) context -> {
-                try {
-                    return tryNext();
-                } catch (Exception e) {
-                    LOG.info("failed to iterate on shard: {}", e.getMessage());
-                    throw e;
-                }
-            });
+            return retryTemplate.execute((RetryCallback<GetRecordsResponse, Throwable>) context -> tryNext());
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
@@ -59,8 +59,9 @@ public class KinesisShardIterator {
     }
 
     private RetryTemplate createRetryTemplate() {
-        SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
-        retryPolicy.setMaxAttempts(RETRY_MAX_ATTEMPTS);
+        SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy(
+                RETRY_MAX_ATTEMPTS,
+                Collections.singletonMap(KinesisException.class, true));
 
         ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
         backOffPolicy.setInitialInterval(RETRY_BACK_OFF_POLICY_INITIAL_INTERVAL);
@@ -68,10 +69,18 @@ public class KinesisShardIterator {
         backOffPolicy.setMultiplier(RETRY_BACK_OFF_POLICY_MULTIPLIER);
 
         RetryTemplate template = new RetryTemplate();
+        template.registerListener(new LogRetryListener());
         template.setRetryPolicy(retryPolicy);
         template.setBackOffPolicy(backOffPolicy);
 
         return template;
+    }
+
+    class LogRetryListener extends RetryListenerSupport {
+        @Override
+        public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable t) {
+            LOG.info("{}. fail to iterate on shard: {}", context.getRetryCount(), t.getMessage());
+        }
     }
 
 }
