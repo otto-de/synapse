@@ -33,7 +33,6 @@ public class EventSourcingProperties {
     }
 
     public static class Snapshot {
-        private boolean enabled = true;
         private String bucketName;
 
         public String getBucketName() {
@@ -42,14 +41,6 @@ public class EventSourcingProperties {
 
         public void setBucketName(String bucketName) {
             this.bucketName = bucketName;
-        }
-
-        public boolean isEnabled() {
-            return enabled;
-        }
-
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
         }
     }
 

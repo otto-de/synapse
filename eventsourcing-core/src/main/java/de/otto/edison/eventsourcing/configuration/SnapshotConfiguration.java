@@ -23,12 +23,6 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
         S3Configuration.class,
         EventSourcingBootstrapConfiguration.class
 })
-@ConditionalOnProperty(
-        prefix = "edison.eventsourcing",
-        name = "snapshot.enabled",
-        havingValue = "true",
-        matchIfMissing = true
-)
 public class SnapshotConfiguration {
 
 
