@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.google.common.collect.ImmutableList.of;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
@@ -156,18 +157,16 @@ public class KinesisEventSourceTest {
                 ))
                 .collect(Collectors.toList());
 
-        Map<String, String> positions = shards.stream().collect(Collectors.toMap(KinesisShard::getShardId, s -> "1"));
-        StreamPosition initialPositions = StreamPosition.of(positions);
-
         when(kinesisStream.retrieveAllOpenShards()).thenReturn(shards);
 
         KinesisEventSource<TestData> eventSource = new KinesisEventSource<>(TestData.class, objectMapper, kinesisStream, Encryptors.noOpText());
 
         // when
         try {
-            eventSource.consumeAll(initialPositions, this::stopIfGreen, testDataConsumer);
+            eventSource.consumeAll(StreamPosition.of(), this::stopIfGreen, testDataConsumer);
             fail("exception expected");
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            assertThat(e.getMessage(), containsString("boom"));
             assertThat(completedShards.size(), not(0));
             completedShards.clear();
         }

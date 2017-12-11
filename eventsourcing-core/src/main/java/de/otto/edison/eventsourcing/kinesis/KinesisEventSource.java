@@ -60,11 +60,10 @@ public class KinesisEventSource<T> implements EventSource<T> {
                                      final Predicate<Event<T>> stopCondition,
                                      final Consumer<Event<T>> consumer) {
 
-        ExecutorService executorService = Executors.newFixedThreadPool(Math.min(startFrom.shards().size(), 10));
+        List<KinesisShard> kinesisShards = kinesisStream.retrieveAllOpenShards();
+        ExecutorService executorService = Executors.newFixedThreadPool(Math.min(kinesisShards.size(), 10));
 
-        // don't chain futureShardPositions with CompletableFuture::join as lazy execution will prevent threads from
-        // running in parallel
-        List<CompletableFuture<ShardPosition>> futureShardPositions = kinesisStream.retrieveAllOpenShards()
+        List<CompletableFuture<ShardPosition>> futureShardPositions = kinesisShards
                 .stream()
                 .map(shard -> CompletableFuture.supplyAsync(
                         () -> shard.consumeRecordsAndReturnLastSeqNumber(
@@ -72,6 +71,8 @@ public class KinesisEventSource<T> implements EventSource<T> {
                                 new RecordStopCondition(stopCondition),
                                 new RecordConsumer(consumer)), executorService))
                 .collect(Collectors.toList());
+        // don't chain futureShardPositions with CompletableFuture::join as lazy execution will prevent threads from
+        // running in parallel
 
         try {
             Map<String, String> shardPositions = futureShardPositions.stream()
