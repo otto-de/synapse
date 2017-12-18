@@ -68,7 +68,7 @@ public class SnapshotReadServiceTest {
     @Test
     public void shouldGetLatestSnapshotFileFromS3Bucket() throws Exception {
         //given
-        when(tempFileService.getTempFile(any())).thenCallRealMethod();
+        when(tempFileService.getTempFile("compaction-teststream-snapshot-1.json.zip")).thenReturn(new File("/tmp/compaction-teststream-snapshot-1.json.zip").toPath());
         final S3Object s3Object = mock(S3Object.class);
         when(s3Object.key()).thenReturn("compaction-teststream-snapshot-1.json.zip");
 
