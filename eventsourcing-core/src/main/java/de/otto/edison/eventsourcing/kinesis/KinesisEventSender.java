@@ -21,20 +21,20 @@ public class KinesisEventSender {
         this.textEncryptor = textEncryptor;
     }
 
-    public <T> void sendEvent(String key, T payload) throws JsonProcessingException {
+    public void sendEvent(String key, Object payload) throws JsonProcessingException {
         kinesisStream.send(key, convertToEncryptedByteBuffer(payload));
     }
 
-    public <T> void sendEvents(Map<String, T> events) throws JsonProcessingException {
+    public void sendEvents(Map<String, Object> events) throws JsonProcessingException {
         Map<String, ByteBuffer> resultMap = new HashMap<>(events.size());
-        for (Map.Entry<String, T> event : events.entrySet()) {
+        for (Map.Entry<String, Object> event : events.entrySet()) {
             resultMap.put(event.getKey(), convertToEncryptedByteBuffer(event.getValue()));
         }
 
         kinesisStream.sendMultiple(resultMap);
     }
 
-    private <T> ByteBuffer convertToEncryptedByteBuffer(T payload) throws JsonProcessingException {
+    private ByteBuffer convertToEncryptedByteBuffer(Object payload) throws JsonProcessingException {
         return ByteBuffer.wrap(textEncryptor
                 .encrypt(objectMapper.writeValueAsString(payload))
                 .getBytes(Charsets.UTF_8));
