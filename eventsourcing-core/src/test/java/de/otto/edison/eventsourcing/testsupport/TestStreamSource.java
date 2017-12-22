@@ -5,7 +5,7 @@ import com.google.common.base.Charsets;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.core.AmazonServiceException;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
@@ -153,7 +153,7 @@ public class TestStreamSource {
                     .stream()
                     .filter(this::isShardOpen)
                     .collect(Collectors.toMap(Shard::shardId, shard -> shard.hashKeyRange().startingHashKey()));
-        } catch (AmazonServiceException e) {
+        } catch (SdkClientException e) {
             throw new RuntimeException(e);
         }
     }

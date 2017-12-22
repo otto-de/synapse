@@ -39,7 +39,7 @@ public class KinesisShardTest {
                 .shardIterator("someShardIterator")
                 .build();
 
-        when(kinesisClient.getShardIterator(any())).thenReturn(fakeResponse);
+        when(kinesisClient.getShardIterator(any(GetShardIteratorRequest.class))).thenReturn(fakeResponse);
     }
 
     @Test
@@ -90,7 +90,7 @@ public class KinesisShardTest {
                 .nextShardIterator("nextShardIterator")
                 .millisBehindLatest(1234L)
                 .build();
-        when(kinesisClient.getRecords(any())).thenReturn(response);
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
 
         // when
         kinesisShard.consumeRecordsAndReturnLastSeqNumber("0", (x, y) -> true, consumer);
@@ -108,7 +108,7 @@ public class KinesisShardTest {
                 .nextShardIterator("nextShardIterator")
                 .millisBehindLatest(1234L)
                 .build();
-        when(kinesisClient.getRecords(any())).thenReturn(response);
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
         when(mockStopCondition.apply(any(), any())).thenReturn(true);
 
         // when
@@ -132,7 +132,7 @@ public class KinesisShardTest {
                 .nextShardIterator("nextShardIterator")
                 .millisBehindLatest(1234L)
                 .build();
-        when(kinesisClient.getRecords(any())).thenReturn(response);
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
 
         doThrow(new RuntimeException("forced exception for test")).when(consumer).accept(1234L, record1);
 

@@ -30,8 +30,8 @@ public class KinesisTestConfiguration {
         if (testEnvironment.equals("local")) {
             return builder()
                     .endpointOverride(URI.create("http://localhost:4568"))
-                    .credentialsProvider(new StaticCredentialsProvider(
-                            new AwsCredentials("foobar", "foobar")))
+                    .credentialsProvider(StaticCredentialsProvider.create(
+                            AwsCredentials.create("foobar", "foobar")))
                     .build();
         } else {
             return builder()

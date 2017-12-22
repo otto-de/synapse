@@ -14,9 +14,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
-import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
-import software.amazon.awssdk.services.kinesis.model.GetShardIteratorResponse;
-import software.amazon.awssdk.services.kinesis.model.Record;
+import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -67,7 +65,7 @@ public class KinesisEventSourceTest {
     public void setUp() {
         KinesisShard shard1 = new KinesisShard("shard1", kinesisStream, kinesisClient);
         when(kinesisStream.retrieveAllOpenShards()).thenReturn(of(shard1));
-        when(kinesisClient.getShardIterator(any())).thenReturn(GetShardIteratorResponse.builder()
+        when(kinesisClient.getShardIterator(any(GetShardIteratorRequest.class))).thenReturn(GetShardIteratorResponse.builder()
                 .shardIterator("someIterator")
                 .build());
 
@@ -86,7 +84,7 @@ public class KinesisEventSourceTest {
                 .millisBehindLatest(2345L)
                 .nextShardIterator("yetAnotherIterator")
                 .build();
-        when(kinesisClient.getRecords(any())).thenReturn(response0, response1, response2);
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response0, response1, response2);
 
     }
 

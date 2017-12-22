@@ -59,7 +59,6 @@ public class SnapshotEventSourceTest {
     public void shouldThrowExceptionIfBucketNotExists() throws Exception {
         // given
         S3Exception bucketNotFoundException = new S3Exception("boom - simulate exception while loading from S3");
-        bucketNotFoundException.setErrorCode("NoSuchBucket");
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenThrow(bucketNotFoundException);
 
         // when
@@ -84,7 +83,6 @@ public class SnapshotEventSourceTest {
     public void shouldDeleteOlderSnapshotsInCaseOfAnException() throws Exception {
         // given
         S3Exception bucketNotFoundException = new S3Exception("boom - simulate exception while loading from S3");
-        bucketNotFoundException.setErrorCode("NoSuchBucket");
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenThrow(bucketNotFoundException);
 
         // when

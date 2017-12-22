@@ -38,7 +38,7 @@ public class KinesisShardIteratorTest {
                         .build())
                 .build();
 
-        when(kinesisClient.getRecords(any())).thenReturn(response);
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
 
         // when
         GetRecordsResponse fetchedResponse = kinesisShardIterator.next();
@@ -60,7 +60,7 @@ public class KinesisShardIteratorTest {
                 .nextShardIterator("nextIteratorId")
                 .build();
 
-        when(kinesisClient.getRecords(any())).thenReturn(response);
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
 
         // when
         kinesisShardIterator.next();

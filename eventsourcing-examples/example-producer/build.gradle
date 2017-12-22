@@ -16,9 +16,11 @@ repositories {
     mavenCentral()
 }
 
+ext['jackson.version'] = "2.9.3"
+
 dependencies {
     compile project(':eventsourcing-core:')
-    compile "de.otto.edison:edison-aws-s3:0.2.1"
+    compile "de.otto.edison:edison-aws-s3:0.2.3"
     compile "software.amazon.awssdk:kinesis:${awsSdkVersion}"
     compile 'org.springframework.security:spring-security-core:4.2.3.RELEASE'
     compile("org.springframework.boot:spring-boot-starter-web") {

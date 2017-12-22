@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.model.GetRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 import software.amazon.awssdk.services.kinesis.model.KinesisException;
 
@@ -36,7 +37,7 @@ public class KinesisShardIteratorIntegrationTest {
                 .nextShardIterator("nextIteratorId")
                 .build();
 
-        when(kinesisClient.getRecords(any()))
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class)))
                 .thenThrow(new KinesisException("forced test exception"))
                 .thenThrow(new KinesisException("forced test exception"))
                 .thenThrow(new KinesisException("forced test exception"))
@@ -47,7 +48,7 @@ public class KinesisShardIteratorIntegrationTest {
         kinesisShardIterator.next();
 
         // then
-        verify(kinesisClient, times(5)).getRecords(any());
+        verify(kinesisClient, times(5)).getRecords(any(GetRecordsRequest.class));
         assertThat(kinesisShardIterator.getId(), is("nextIteratorId"));
 
     }

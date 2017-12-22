@@ -131,7 +131,7 @@ public class KinesisStreamTest {
         PutRecordsResponse putRecordsResponse = PutRecordsResponse.builder()
                 .failedRecordCount(0)
                 .build();
-        when(kinesisClient.putRecords(any())).thenReturn(putRecordsResponse);
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(putRecordsResponse);
 
         ByteBuffer data = ByteBuffer.wrap("test".getBytes(StandardCharsets.UTF_8));
 
@@ -157,7 +157,7 @@ public class KinesisStreamTest {
         PutRecordsResponse putRecordsResponse = PutRecordsResponse.builder()
                 .failedRecordCount(0)
                 .build();
-        when(kinesisClient.putRecords(any())).thenReturn(putRecordsResponse);
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(putRecordsResponse);
 
         ByteBuffer data1 = ByteBuffer.wrap("test".getBytes(StandardCharsets.UTF_8));
         ByteBuffer data2 = ByteBuffer.wrap("test".getBytes(StandardCharsets.UTF_8));
@@ -186,13 +186,13 @@ public class KinesisStreamTest {
         PutRecordsResponse putRecordsResponse = PutRecordsResponse.builder()
                 .failedRecordCount(0)
                 .build();
-        when(kinesisClient.putRecords(any())).thenReturn(putRecordsResponse);
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(putRecordsResponse);
         
         // when
         kinesisStream.sendMultiple(mapWithNEntries(KinesisStream.PUT_RECORDS_BATCH_SIZE + 1));
 
         // then
-        verify(kinesisClient, times(2)).putRecords(any());
+        verify(kinesisClient, times(2)).putRecords(any(PutRecordsRequest.class));
     }
 
     private Map<String, ByteBuffer> mapWithNEntries(int n) {

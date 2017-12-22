@@ -1,7 +1,6 @@
 package de.otto.edison.eventsourcing.s3.local;
 
-import software.amazon.awssdk.core.SdkBaseException;
-import software.amazon.awssdk.core.SdkClientException;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.core.sync.ResponseInputStream;
 import software.amazon.awssdk.http.AbortableInputStream;
@@ -34,7 +33,7 @@ public class LocalS3Client implements S3Client {
     }
 
     @Override
-    public ListObjectsV2Response listObjectsV2(ListObjectsV2Request listObjectsV2Request) throws NoSuchBucketException, SdkBaseException, SdkClientException, S3Exception {
+    public ListObjectsV2Response listObjectsV2(ListObjectsV2Request listObjectsV2Request) throws S3Exception {
         Collection<S3Object> s3Objects = bucketsWithContents.get(listObjectsV2Request.bucket())
                 .values()
                 .stream()
@@ -52,13 +51,13 @@ public class LocalS3Client implements S3Client {
     }
 
     @Override
-    public CreateBucketResponse createBucket(CreateBucketRequest createBucketRequest) throws BucketAlreadyExistsException, BucketAlreadyOwnedByYouException, SdkBaseException, SdkClientException, S3Exception {
+    public CreateBucketResponse createBucket(CreateBucketRequest createBucketRequest) throws S3Exception {
         bucketsWithContents.put(createBucketRequest.bucket(), new HashMap<>());
         return CreateBucketResponse.builder().build();
     }
 
     @Override
-    public PutObjectResponse putObject(PutObjectRequest putObjectRequest, RequestBody requestBody) throws SdkBaseException, SdkClientException, S3Exception {
+    public PutObjectResponse putObject(PutObjectRequest putObjectRequest, RequestBody requestBody) throws S3Exception {
         try {
             bucketsWithContents.get(putObjectRequest.bucket()).put(putObjectRequest.key(),
                     bucketItemBuilder()
@@ -73,7 +72,7 @@ public class LocalS3Client implements S3Client {
     }
 
     @Override
-    public DeleteObjectsResponse deleteObjects(DeleteObjectsRequest deleteObjectsRequest) throws SdkBaseException, SdkClientException, S3Exception {
+    public DeleteObjectsResponse deleteObjects(DeleteObjectsRequest deleteObjectsRequest) throws S3Exception {
         Map<String, BucketItem> bucketItemMap = bucketsWithContents.get(deleteObjectsRequest.bucket());
         deleteObjectsRequest.delete().objects()
                 .stream()
@@ -83,7 +82,7 @@ public class LocalS3Client implements S3Client {
     }
 
     @Override
-    public ListBucketsResponse listBuckets(ListBucketsRequest listBucketsRequest) throws SdkBaseException, SdkClientException, S3Exception {
+    public ListBucketsResponse listBuckets(ListBucketsRequest listBucketsRequest) throws S3Exception {
         return ListBucketsResponse.builder()
                 .buckets(bucketsWithContents.keySet().stream()
                         .map(name -> Bucket.builder()
@@ -94,7 +93,7 @@ public class LocalS3Client implements S3Client {
     }
 
     @Override
-    public GetObjectResponse getObject(GetObjectRequest getObjectRequest, Path filePath) throws NoSuchKeyException, SdkBaseException, SdkClientException, S3Exception {
+    public GetObjectResponse getObject(GetObjectRequest getObjectRequest, Path filePath) throws S3Exception {
         Map<String, BucketItem> bucketItemMap = bucketsWithContents.get(getObjectRequest.bucket());
         BucketItem bucketItem = bucketItemMap.get(getObjectRequest.key());
 
@@ -109,7 +108,7 @@ public class LocalS3Client implements S3Client {
 
     @SuppressWarnings("unchecked")
     @Override
-    public ResponseInputStream<GetObjectResponse> getObject(GetObjectRequest getObjectRequest) throws NoSuchKeyException, SdkBaseException, SdkClientException, S3Exception {
+    public ResponseInputStream<GetObjectResponse> getObject(GetObjectRequest getObjectRequest) throws S3Exception {
         Map<String, BucketItem> bucketItemMap = bucketsWithContents.get(getObjectRequest.bucket());
         BucketItem bucketItem = bucketItemMap.get(getObjectRequest.key());
 

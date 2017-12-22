@@ -1,7 +1,7 @@
 apply plugin: 'java-library'
 
 dependencies {
-    implementation "de.otto.edison:edison-aws-s3:0.2.1"
+    implementation "de.otto.edison:edison-aws-s3:0.2.3"
 
     implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
     implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
@@ -12,6 +12,8 @@ dependencies {
 
     implementation "org.springframework:spring-aop:${springVersion}"
     implementation "org.aspectj:aspectjweaver:1.8.13"
+
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.3"
 
     implementation("net.openhft:chronicle-map:3.14.1") {
         exclude group: "com.intellij", module: "annotations"

@@ -31,7 +31,7 @@ public class RetryPutRecordsKinesisClientTest {
     @Test
     public void shouldNotRetryOnSuccess() throws Exception {
         // given
-        when(kinesisClient.putRecords(any()))
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class)))
                 .thenReturn(PutRecordsResponse.builder().failedRecordCount(0).build());
 
         // when
@@ -45,7 +45,7 @@ public class RetryPutRecordsKinesisClientTest {
     @Test
     public void shouldRetryOnFailure() throws Exception {
         // given
-        when(kinesisClient.putRecords(any()))
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class)))
                 .thenReturn(PutRecordsResponse.builder().failedRecordCount(1).records(emptyList()).build())
                 .thenReturn(PutRecordsResponse.builder().failedRecordCount(0).records(emptyList()).build());
 
@@ -60,7 +60,7 @@ public class RetryPutRecordsKinesisClientTest {
     @Test(expected = IllegalStateException.class)
     public void shouldRetryThreeTimeMaxOnFailure() throws Exception {
         // given
-        when(kinesisClient.putRecords(any()))
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class)))
                 .thenReturn(PutRecordsResponse.builder().failedRecordCount(1).records(emptyList()).build());
 
         // when
