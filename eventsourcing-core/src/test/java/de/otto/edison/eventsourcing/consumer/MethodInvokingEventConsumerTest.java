@@ -43,7 +43,7 @@ public class MethodInvokingEventConsumerTest {
         final Method method = MethodInvokingEventConsumerTest.class.getMethod("validMethod", Event.class);
         final Method method1 = AopUtils.selectInvocableMethod(method, MethodInvokingEventConsumerTest.class);
         final MethodInvokingEventConsumer eventConsumer = new MethodInvokingEventConsumer("stream-name", this, method1);
-        eventConsumer.consumerFunction().accept(mock(Event.class));
+        eventConsumer.accept(mock(Event.class));
         assertThat(eventReceived).isTrue();
     }
 
@@ -52,7 +52,7 @@ public class MethodInvokingEventConsumerTest {
     public void shouldBuildEventConsumerAndIgnoreReturnValue() throws NoSuchMethodException {
         final Method method = MethodInvokingEventConsumerTest.class.getMethod("validMethodWithReturnValue", Event.class);
         final MethodInvokingEventConsumer eventConsumer = new MethodInvokingEventConsumer("stream-name", this, method);
-        eventConsumer.consumerFunction().accept(mock(Event.class));
+        eventConsumer.accept(mock(Event.class));
         assertThat(eventReceived).isTrue();
     }
 

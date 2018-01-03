@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.s3;
 
+import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.junit.Before;
@@ -50,7 +51,7 @@ public class SnapshotEventSourceTest {
         when(snapshotConsumerService.consumeSnapshot(any(),any(),any(),any(),any())).thenThrow(new IOException("boom - simulate exception while loading from S3"));
 
         // when
-        snapshotEventSource.consumeAll((event) -> {});
+        snapshotEventSource.consumeAll(EventConsumer.of("test", (event) -> {}));
 
         // then expect exception
     }
@@ -63,7 +64,7 @@ public class SnapshotEventSourceTest {
 
         // when
         try {
-            snapshotEventSource.consumeAll((event) -> {});
+            snapshotEventSource.consumeAll(EventConsumer.of("test", (event) -> {}));
 
             fail("should throw RuntimeException");
         } catch (RuntimeException ignored) {
@@ -87,7 +88,7 @@ public class SnapshotEventSourceTest {
 
         // when
         try {
-            snapshotEventSource.consumeAll((event) -> {});
+            snapshotEventSource.consumeAll(EventConsumer.of("test", (event) -> {}));
         } catch (Exception e) {
             // ignore exception
         }
@@ -102,7 +103,7 @@ public class SnapshotEventSourceTest {
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.empty());
 
         // when
-        snapshotEventSource.consumeAll((event) -> {});
+        snapshotEventSource.consumeAll(EventConsumer.of("test", (event) -> {}));
 
         // then
         EventSourceNotification expectedStartEvent = EventSourceNotification.builder()

@@ -2,8 +2,6 @@ package de.otto.edison.eventsourcing.consumer;
 
 import de.otto.edison.eventsourcing.state.StateRepository;
 
-import java.util.function.Consumer;
-
 public class DefaultEventConsumer<T> implements EventConsumer<T> {
 
     private final String streamName;
@@ -21,11 +19,7 @@ public class DefaultEventConsumer<T> implements EventConsumer<T> {
     }
 
     @Override
-    public Consumer<Event<T>> consumerFunction() {
-        return this::accept;
-    }
-
-    private void accept(final Event<T> event) {
+    public void accept(final Event<T> event) {
         stateRepository.put(event.key(), event.payload());
     }
 

@@ -3,6 +3,7 @@ package de.otto.edison.eventsourcing.kinesis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.Event;
+import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.testsupport.TestStreamSource;
@@ -68,7 +69,7 @@ public class KinesisEventSourceIntegrationTest {
         eventSource.consumeAll(
                 startFrom,
                 stopCondition(),
-                events::add);
+                EventConsumer.of("test", events::add));
 
         assertThat(events, not(empty()));
         assertThat(events, hasSize(EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET));
@@ -85,7 +86,7 @@ public class KinesisEventSourceIntegrationTest {
         StreamPosition nextStreamPosition = eventSource.consumeAll(
                 startFrom,
                 stopCondition(),
-                events::add);
+                EventConsumer.of("test", events::add));
 
         assertThat(nextStreamPosition.shards(), hasSize(EXPECTED_NUMBER_OF_SHARDS));
         assertThat(events, hasSize(EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET));
@@ -103,7 +104,7 @@ public class KinesisEventSourceIntegrationTest {
         StreamPosition next = eventSource.consumeAll(
                 startFrom,
                 stopCondition(),
-                events::add);
+                EventConsumer.of("test", events::add));
 
         assertThat(events, empty());
         assertThat(next.shards(), hasSize(EXPECTED_NUMBER_OF_SHARDS));

@@ -1,16 +1,12 @@
 package de.otto.edison.eventsourcing.s3;
 
-import de.otto.edison.eventsourcing.consumer.Event;
-import de.otto.edison.eventsourcing.consumer.EventSource;
-import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
-import de.otto.edison.eventsourcing.consumer.StreamPosition;
+import de.otto.edison.eventsourcing.consumer.*;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.File;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -52,19 +48,19 @@ public class SnapshotEventSource<T> implements EventSource<T> {
     }
 
     @Override
-    public SnapshotStreamPosition consumeAll(Consumer<Event<T>> consumer) {
+    public SnapshotStreamPosition consumeAll(EventConsumer<T> consumer) {
         return consumeAll(StreamPosition.of(), event -> false, consumer);
     }
 
     @Override
-    public SnapshotStreamPosition consumeAll(StreamPosition startFrom, Consumer<Event<T>> consumer) {
+    public SnapshotStreamPosition consumeAll(StreamPosition startFrom, EventConsumer<T> consumer) {
         return consumeAll(StreamPosition.of(), consumer);
     }
 
     @Override
     public SnapshotStreamPosition consumeAll(final StreamPosition startFrom,
                                      final Predicate<Event<T>> stopCondition,
-                                     final Consumer<Event<T>> consumer) {
+                                     final EventConsumer<T> consumer) {
         // TODO: startFrom is ignored. the source should ignore / drop all events until startFrom is reached.
         SnapshotStreamPosition snapshotStreamPosition;
 

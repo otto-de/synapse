@@ -28,7 +28,21 @@ import java.util.function.Consumer;
  * @param <T> the type of the event's payload
  */
 @ThreadSafe
-public interface EventConsumer<T> {
+public interface EventConsumer<T> extends Consumer<Event<T>> {
+
+    static <T> EventConsumer<T> of(final String streamName, final Consumer<Event<T>> consumer) {
+        return new EventConsumer<T>() {
+            @Override
+            public String streamName() {
+                return streamName;
+            }
+
+            @Override
+            public void accept(Event<T> tEvent) {
+                consumer.accept(tEvent);
+            }
+        };
+    }
 
     /**
      * Returns the name of the consumed {@link EventSource}.
@@ -39,12 +53,5 @@ public interface EventConsumer<T> {
      * @return event stream
      */
     String streamName();
-
-    /**
-     * Consumer to consume a single event.
-     *
-     * @return consumer function that is called for each event
-     */
-    Consumer<Event<T>> consumerFunction();
 
 }

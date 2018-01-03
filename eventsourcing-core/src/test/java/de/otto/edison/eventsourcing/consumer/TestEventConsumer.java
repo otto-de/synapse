@@ -1,7 +1,5 @@
 package de.otto.edison.eventsourcing.consumer;
 
-import java.util.function.Consumer;
-
 class TestEventConsumer<T> implements EventConsumer<T> {
 
     private static final String TEST_STREAM_NAME = "test-stream";
@@ -19,10 +17,6 @@ class TestEventConsumer<T> implements EventConsumer<T> {
     }
 
     @Override
-    public Consumer<Event<T>> consumerFunction() {
-        return this::accept;
-    }
-
     public void accept(Event<T> myPayloadEvent) {
         // do nothing here for tests
     }

@@ -36,7 +36,7 @@ public interface EventSource<T> {
      * @param consumer consumer used to process the events
      * @return the new read position
      */
-    default StreamPosition consumeAll(Consumer<Event<T>> consumer) {
+    default StreamPosition consumeAll(EventConsumer<T> consumer) {
         return consumeAll(StreamPosition.of(), event -> false, consumer);
     }
 
@@ -56,7 +56,7 @@ public interface EventSource<T> {
      * @return the new read position
      */
     default StreamPosition consumeAll(StreamPosition startFrom,
-                                      Consumer<Event<T>> consumer) {
+                                      EventConsumer<T> consumer) {
         return consumeAll(startFrom, event -> false, consumer);
     }
 
@@ -74,7 +74,7 @@ public interface EventSource<T> {
      * @param consumer consumer used to process events
      * @return the new read position
      */
-    default StreamPosition consumeAll(Predicate<Event<T>> stopCondition, Consumer<Event<T>> consumer) {
+    default StreamPosition consumeAll(Predicate<Event<T>> stopCondition, EventConsumer<T> consumer) {
         return consumeAll(StreamPosition.of(), stopCondition, consumer);
     }
 
@@ -96,5 +96,5 @@ public interface EventSource<T> {
      */
     StreamPosition consumeAll(StreamPosition startFrom,
                               Predicate<Event<T>> stopCondition,
-                              Consumer<Event<T>> consumer);
+                              EventConsumer<T> consumer);
 }

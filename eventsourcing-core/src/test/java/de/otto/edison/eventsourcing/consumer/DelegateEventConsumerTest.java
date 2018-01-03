@@ -9,7 +9,10 @@ import java.time.Duration;
 import java.time.Instant;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class DelegateEventConsumerTest {
 
@@ -33,7 +36,7 @@ public class DelegateEventConsumerTest {
 
         // when
         Event<String> someEvent = new Event<>("someKey", "{}", "0", Instant.now(), Duration.ZERO);
-        delegateConsumer.consumerFunction().accept(someEvent);
+        delegateConsumer.accept(someEvent);
 
         // then
         verify(eventConsumerA).accept(any(Event.class));
@@ -62,8 +65,8 @@ public class DelegateEventConsumerTest {
         // when
         Event<String> someEventForA = new Event<>("apple.123", "{}", "0", Instant.now(), Duration.ZERO);
         Event<String> someEventForB = new Event<>("banana.456", "{}", "0", Instant.now(), Duration.ZERO);
-        delegateConsumer.consumerFunction().accept(someEventForA);
-        delegateConsumer.consumerFunction().accept(someEventForB);
+        delegateConsumer.accept(someEventForA);
+        delegateConsumer.accept(someEventForB);
 
         // then
         verify(eventConsumerApple).accept(new Event(someEventForA.key(), new Apple(), someEventForA.sequenceNumber(), someEventForA.arrivalTimestamp(), someEventForA.durationBehind().get()));

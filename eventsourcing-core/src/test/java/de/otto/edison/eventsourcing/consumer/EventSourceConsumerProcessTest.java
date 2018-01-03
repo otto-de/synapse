@@ -6,7 +6,6 @@ import org.junit.Test;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static org.mockito.Matchers.any;
@@ -32,7 +31,7 @@ public class EventSourceConsumerProcessTest {
         process.init();
         Thread.sleep(100L);
 
-        verify(eventSource).consumeAll(any(StreamPosition.class), any(Predicate.class), any(Consumer.class));
+        verify(eventSource).consumeAll(any(StreamPosition.class), any(Predicate.class), any(EventConsumer.class));
         verify(eventConsumerA).accept(any());
         verify(eventConsumerB).accept(any());
     }
@@ -49,7 +48,7 @@ public class EventSourceConsumerProcessTest {
         }
 
         @Override
-        public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<String>> stopCondition, Consumer<Event<String>> consumer) {
+        public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<String>> stopCondition, EventConsumer<String> consumer) {
             consumer.accept(new Event<>("someKey", "{}", "0", Instant.now(), Duration.ZERO));
             return new StreamPosition(Collections.emptyMap());
         }

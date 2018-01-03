@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 class DelegateEventConsumer implements EventConsumer<String> {
@@ -67,12 +66,8 @@ class DelegateEventConsumer implements EventConsumer<String> {
     }
 
     @Override
-    public Consumer<Event<String>> consumerFunction() {
-        return this::accept;
-    }
-
     @SuppressWarnings("unchecked")
-    private void accept(Event<String> event) {
+    public void accept(Event<String> event) {
         mapPatternToEventSource.keySet().stream()
                 .filter(keyPattern -> matchesEventKey(event, keyPattern))
                 .forEach(keyPattern -> {
@@ -81,7 +76,7 @@ class DelegateEventConsumer implements EventConsumer<String> {
                         try {
                             Class<?> payload = consumerMapping.getPayloadForEventConsumer(eventConsumer).get();
                             Event<?> parsedEvent = parseEvent(event, payload);
-                            eventConsumer.consumerFunction().accept(parsedEvent);
+                            eventConsumer.accept(parsedEvent);
                         } catch (Exception e) {
                             LOG.error("", e);
                         }
@@ -89,10 +84,10 @@ class DelegateEventConsumer implements EventConsumer<String> {
                 });
     }
 
-    private Event<?> parseEvent(Event<String> event, Class<?> payloadType) {
+    private <T> Event<T> parseEvent(Event<String> event, Class<T> payloadType) {
         try {
-            Object parsedPayload = objectMapper.readValue(event.payload(), payloadType);
-            return new Event<>(event.key(), parsedPayload, event.sequenceNumber(), event.arrivalTimestamp(), event.durationBehind().orElse(null));
+            T parsedPayload = objectMapper.readValue(event.payload(), payloadType);
+            return new Event<T>(event.key(), parsedPayload, event.sequenceNumber(), event.arrivalTimestamp(), event.durationBehind().orElse(null));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

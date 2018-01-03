@@ -2,6 +2,7 @@ package de.otto.edison.eventsourcing.kinesis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.Event;
+import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.slf4j.Logger;
@@ -58,7 +59,7 @@ public class KinesisEventSource<T> implements EventSource<T> {
     @Override
     public StreamPosition consumeAll(final StreamPosition startFrom,
                                      final Predicate<Event<T>> stopCondition,
-                                     final Consumer<Event<T>> consumer) {
+                                     final EventConsumer<T> consumer) {
 
         List<KinesisShard> kinesisShards = kinesisStream.retrieveAllOpenShards();
         ExecutorService executorService = Executors.newFixedThreadPool(Math.min(kinesisShards.size(), 10));

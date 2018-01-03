@@ -64,7 +64,7 @@ public class EventSourceConsumerProcess {
                                 LOG.info("Starting {}...", eventSource.getStreamName());
                                 EventSourceMapping.ConsumerMapping consumerMapping = eventSourceMapping.getConsumerMapping(eventSource);
                                 DelegateEventConsumer delegateEventConsumer = new DelegateEventConsumer(consumerMapping, objectMapper);
-                                eventSource.consumeAll(ignore -> stopThread.get(), delegateEventConsumer.consumerFunction());
+                                eventSource.consumeAll(ignore -> stopThread.get(), delegateEventConsumer);
                             } catch (Exception e) {
                                 LOG.error("Starting failed: " + e.getMessage(), e);
                             }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import de.otto.edison.eventsourcing.consumer.Event;
+import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,8 +20,10 @@ import software.amazon.awssdk.services.kinesis.model.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.*;
-import java.util.function.Consumer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -32,7 +35,10 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KinesisEventSourceTest {
@@ -44,13 +50,13 @@ public class KinesisEventSourceTest {
     private KinesisClient kinesisClient;
 
     @Mock
-    private Consumer<Event<TestData>> testDataConsumer;
+    private EventConsumer<TestData> testDataConsumer;
 
     @Captor
     private ArgumentCaptor<Event<TestData>> testDataCaptor;
 
     @Mock
-    private Consumer<Event<String>> stringConsumer;
+    private EventConsumer<String> stringConsumer;
 
     @Captor
     private ArgumentCaptor<Event<String>> stringCaptor;
