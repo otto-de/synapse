@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.s3;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
@@ -23,6 +24,8 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class SnapshotEventSourceTest {
 
+    private static final String STREAM_NAME = "test-stream";
+
     @Mock
     private SnapshotReadService snapshotReadService;
 
@@ -32,26 +35,27 @@ public class SnapshotEventSourceTest {
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
-    private SnapshotEventSource<String> snapshotEventSource;
+    private SnapshotEventSource snapshotEventSource;
 
 
     @Before
     public void init() {
-        snapshotEventSource = new SnapshotEventSource<>("streamName",
+        snapshotEventSource = new SnapshotEventSource(STREAM_NAME,
                 snapshotReadService,
                 snapshotConsumerService,
-                String.class,
-                applicationEventPublisher);
+                applicationEventPublisher,
+                new ObjectMapper());
+        snapshotEventSource.register(EventConsumer.of(STREAM_NAME, ".*", String.class, (event)->{}));
     }
 
     @Test(expected = RuntimeException.class)
     public void shouldThrowExceptionIfDownloadFails() throws Exception {
         // given
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.of(new File("someFilePath")));
-        when(snapshotConsumerService.consumeSnapshot(any(),any(),any(),any(),any())).thenThrow(new IOException("boom - simulate exception while loading from S3"));
+        when(snapshotConsumerService.consumeSnapshot(any(),any(),any(),any())).thenThrow(new IOException("boom - simulate exception while loading from S3"));
 
         // when
-        snapshotEventSource.consumeAll(EventConsumer.of("test", (event) -> {}));
+        snapshotEventSource.consumeAll();
 
         // then expect exception
     }
@@ -64,7 +68,7 @@ public class SnapshotEventSourceTest {
 
         // when
         try {
-            snapshotEventSource.consumeAll(EventConsumer.of("test", (event) -> {}));
+            snapshotEventSource.consumeAll();
 
             fail("should throw RuntimeException");
         } catch (RuntimeException ignored) {
@@ -88,13 +92,13 @@ public class SnapshotEventSourceTest {
 
         // when
         try {
-            snapshotEventSource.consumeAll(EventConsumer.of("test", (event) -> {}));
+            snapshotEventSource.consumeAll();
         } catch (Exception e) {
             // ignore exception
         }
 
         // then
-        verify(snapshotReadService).deleteOlderSnapshots("streamName");
+        verify(snapshotReadService).deleteOlderSnapshots(STREAM_NAME);
     }
 
     @Test
@@ -103,7 +107,7 @@ public class SnapshotEventSourceTest {
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.empty());
 
         // when
-        snapshotEventSource.consumeAll(EventConsumer.of("test", (event) -> {}));
+        snapshotEventSource.consumeAll();
 
         // then
         EventSourceNotification expectedStartEvent = EventSourceNotification.builder()

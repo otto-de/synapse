@@ -41,37 +41,39 @@ public class EventSourceFactory {
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
-    public <T> EventSource<T> createEventSource(Class<? extends EventSource> eventSourceClazz, String streamName, Class<T> payloadClazz) {
+    public EventSource createEventSource(final Class<? extends EventSource> eventSourceClazz,
+                                         final String streamName) {
         Objects.requireNonNull(eventSourceClazz, "event source class must not be null");
         Objects.requireNonNull(streamName, "stream name must not be null");
-        Objects.requireNonNull(payloadClazz, "payload class must not be null");
 
         if (eventSourceClazz.equals(SnapshotEventSource.class)) {
-            return createSnapshotEventSource(streamName, payloadClazz);
+            return createSnapshotEventSource(streamName);
         } else if (eventSourceClazz.equals(KinesisEventSource.class)) {
-            return createKinesisEventSource(streamName, payloadClazz);
+            return createKinesisEventSource(streamName);
         } else if (eventSourceClazz.equals(CompactingKinesisEventSource.class)) {
-            return createCompactingKinesisEventSource(streamName, payloadClazz);
+            return createCompactingKinesisEventSource(streamName);
         }
         throw new IllegalArgumentException("Unknown event source type to create instance.");
     }
 
-    public <T> KinesisEventSource<T> createKinesisEventSource(String streamName, Class<T> payloadClazz) {
+    public KinesisEventSource createKinesisEventSource(final String streamName) {
         KinesisStream kinesisStream = new KinesisStream(kinesisClient, streamName);
-        return new KinesisEventSource<>(payloadClazz, objectMapper, kinesisStream, textEncryptor);
+        return new KinesisEventSource(kinesisStream, textEncryptor, objectMapper);
     }
 
-    public <T> SnapshotEventSource<T> createSnapshotEventSource(String streamName, Class<T> payloadClazz) {
-        return new SnapshotEventSource<>(streamName,
+    public SnapshotEventSource createSnapshotEventSource(final String streamName) {
+        return new SnapshotEventSource(streamName,
                 snapshotReadService,
                 snapshotConsumerService,
-                payloadClazz,
-                applicationEventPublisher);
+                applicationEventPublisher,
+                objectMapper
+        );
     }
 
-    public <T> CompactingKinesisEventSource<T> createCompactingKinesisEventSource(String streamName, Class<T> payloadClazz) {
-        return new CompactingKinesisEventSource<>(
-                createSnapshotEventSource(streamName, payloadClazz),
-                createKinesisEventSource(streamName, payloadClazz));
+    public CompactingKinesisEventSource createCompactingKinesisEventSource(final String streamName) {
+        return new CompactingKinesisEventSource(
+                createSnapshotEventSource(streamName),
+                createKinesisEventSource(streamName)
+        );
     }
 }

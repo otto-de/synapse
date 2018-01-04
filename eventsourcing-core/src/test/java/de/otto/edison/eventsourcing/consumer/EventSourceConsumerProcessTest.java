@@ -1,13 +1,14 @@
 package de.otto.edison.eventsourcing.consumer;
 
-import de.otto.edison.eventsourcing.annotation.EventSourceMapping;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.function.Predicate;
 
+import static de.otto.edison.eventsourcing.consumer.TestEventConsumer.testEventConsumer;
+import static java.util.Collections.singletonList;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -18,20 +19,18 @@ public class EventSourceConsumerProcessTest {
 
     @Test
     public void shouldInvokeTwoConsumersForSameEventSource() throws Exception {
-        EventSource<String> eventSource = spy(new TestEventSource());
-        TestEventConsumer eventConsumerA = spy(new TestEventConsumer());
-        TestEventConsumer eventConsumerB = spy(new TestEventConsumer());
+        EventSource eventSource = spy(new TestEventSource());
+        TestEventConsumer eventConsumerA = spy(testEventConsumer(TEST_STREAM_NAME, MyPayload.class));
+        TestEventConsumer eventConsumerB = spy(testEventConsumer(TEST_STREAM_NAME, MyPayload.class));
+        eventSource.register(eventConsumerA);
+        eventSource.register(eventConsumerB);
 
-        EventSourceMapping eventSourceMapping = new EventSourceMapping();
-        eventSourceMapping.getConsumerMapping(eventSource).addConsumerAndPayloadForKeyPattern(".*", eventConsumerA, MyPayload.class);
-        eventSourceMapping.getConsumerMapping(eventSource).addConsumerAndPayloadForKeyPattern(".*", eventConsumerB, MyPayload.class);
-
-        EventSourceConsumerProcess process = new EventSourceConsumerProcess(eventSourceMapping);
+        EventSourceConsumerProcess process = new EventSourceConsumerProcess(singletonList(eventSource));
 
         process.init();
         Thread.sleep(100L);
 
-        verify(eventSource).consumeAll(any(StreamPosition.class), any(Predicate.class), any(EventConsumer.class));
+        verify(eventSource).consumeAll(any(StreamPosition.class), any(Predicate.class));
         verify(eventConsumerA).accept(any());
         verify(eventConsumerB).accept(any());
     }
@@ -40,7 +39,11 @@ public class EventSourceConsumerProcessTest {
         // dummy class for tests
     }
 
-    class TestEventSource implements EventSource<String> {
+    class TestEventSource extends AbstractEventSource {
+
+        public TestEventSource() {
+            super(new ObjectMapper());
+        }
 
         @Override
         public String getStreamName() {
@@ -48,9 +51,9 @@ public class EventSourceConsumerProcessTest {
         }
 
         @Override
-        public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<String>> stopCondition, EventConsumer<String> consumer) {
-            consumer.accept(new Event<>("someKey", "{}", "0", Instant.now(), Duration.ZERO));
-            return new StreamPosition(Collections.emptyMap());
+        public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<?>> stopCondition) {
+            registeredConsumers().encodeAndSend(new Event<>("someKey", "{}", "0", Instant.now(), Duration.ZERO));
+            return StreamPosition.of();
         }
     }
 

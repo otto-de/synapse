@@ -2,12 +2,15 @@ package de.otto.edison.eventsourcing.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import de.otto.edison.eventsourcing.consumer.EventConsumer;
+import de.otto.edison.eventsourcing.consumer.EventConsumers;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.security.crypto.encrypt.Encryptors;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,11 +19,12 @@ import static org.junit.Assert.assertThat;
 
 public class SnapshotConsumerServiceTest {
 
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private SnapshotConsumerService testee;
 
     @Before
     public void setUp() throws Exception {
-        testee = new SnapshotConsumerService(new ObjectMapper(), Encryptors.noOpText());
+        testee = new SnapshotConsumerService(Encryptors.noOpText());
     }
 
     @Test
@@ -29,15 +33,15 @@ public class SnapshotConsumerServiceTest {
         File file = new File(getClass().getClassLoader().getResource("compaction-integrationtest-snapshot-2017-09-29T09-02Z-3053797267191232636.json.zip").getFile());
         Map<String, Map> allData = new HashMap<>();
         //when
+        final EventConsumer<Map> eventConsumer = EventConsumer.of("test", ".*", Map.class, (event) -> {
+            System.out.println(event.payload());
+            allData.put(event.key(), event.payload());
+        });
         final StreamPosition shardPositions = testee.consumeSnapshot(
                 file,
                 "test",
-                (x) -> false,
-                (event) -> {
-                    System.out.println(event.payload());
-                    allData.put(event.key(), event.payload());
-                },
-                Map.class);
+                (event) -> false,
+                new EventConsumers(OBJECT_MAPPER, Collections.singletonList(eventConsumer)));
         //then
         assertThat(shardPositions.shards().size(), is(2));
         assertThat(shardPositions.positionOf("shardId-000000000000"), is("0"));

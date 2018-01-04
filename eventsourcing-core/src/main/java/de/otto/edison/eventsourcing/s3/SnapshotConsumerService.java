@@ -3,8 +3,8 @@ package de.otto.edison.eventsourcing.s3;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.Event;
+import de.otto.edison.eventsourcing.consumer.EventConsumers;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
@@ -14,7 +14,6 @@ import java.io.*;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.zip.ZipInputStream;
 
@@ -23,22 +22,19 @@ import static de.otto.edison.eventsourcing.consumer.Event.event;
 @Service
 public class SnapshotConsumerService {
 
-    private final ObjectMapper objectMapper;
     private final TextEncryptor textEncryptor;
     private final JsonFactory jsonFactory = new JsonFactory();
 
 
     @Autowired
-    public SnapshotConsumerService(ObjectMapper objectMapper, TextEncryptor textEncryptor) {
-        this.objectMapper = objectMapper;
+    public SnapshotConsumerService(TextEncryptor textEncryptor) {
         this.textEncryptor = textEncryptor;
     }
 
     public <T> StreamPosition consumeSnapshot(final File latestSnapshot,
                                               final String streamName,
-                                              final Predicate<Event<T>> stopCondition,
-                                              final Consumer<Event<T>> consumer,
-                                              final Class<T> payloadType) {
+                                              final Predicate<Event<?>> stopCondition,
+                                              final EventConsumers eventConsumers) {
 
         try (
                 FileInputStream fileInputStream = new FileInputStream(latestSnapshot);
@@ -60,8 +56,7 @@ public class SnapshotConsumerService {
                                     parser,
                                     shardPositions.positionOf(streamName),
                                     stopCondition,
-                                    consumer,
-                                    payloadType);
+                                    eventConsumers);
                             break;
                         default:
                             break;
@@ -77,28 +72,22 @@ public class SnapshotConsumerService {
     @SuppressWarnings("unchecked")
     private <T> void processSnapshotData(final JsonParser parser,
                                          final String sequenceNumber,
-                                         final Predicate<Event<T>> stopCondition,
-                                         final Consumer<Event<T>> callback,
-                                         final Class<T> payloadType) throws IOException {
+                                         final Predicate<Event<?>> stopCondition,
+                                         final EventConsumers eventConsumers) throws IOException {
         // Would be better to store event meta data together with key+value:
         final Instant arrivalTimestamp = Instant.EPOCH;
         boolean abort = false;
         while (!abort && parser.nextToken() != JsonToken.END_ARRAY) {
             JsonToken currentToken = parser.currentToken();
             if (currentToken == JsonToken.FIELD_NAME) {
-                String key = parser.getValueAsString();
-                T readValue;
-                if (payloadType == String.class) {
-                    readValue = (T) textEncryptor.decrypt(parser.nextTextValue());
-                } else {
-                    readValue = objectMapper.readValue(textEncryptor.decrypt(parser.nextTextValue()), payloadType);
-                }
-                final Event<T> event = event(
+                final String key = parser.getValueAsString();
+                final String decryptedPayload = textEncryptor.decrypt(parser.nextTextValue());
+                final Event<String> event = event(
                         key,
-                        readValue,
+                        decryptedPayload,
                         sequenceNumber,
                         arrivalTimestamp);
-                callback.accept(event);
+                eventConsumers.encodeAndSend(event);
                 abort = stopCondition.test(event);
             }
         }

@@ -1,9 +1,6 @@
 package de.otto.edison.eventsourcing;
 
-import de.otto.edison.eventsourcing.consumer.Event;
-import de.otto.edison.eventsourcing.consumer.EventConsumer;
-import de.otto.edison.eventsourcing.consumer.EventSource;
-import de.otto.edison.eventsourcing.consumer.StreamPosition;
+import de.otto.edison.eventsourcing.consumer.*;
 import de.otto.edison.eventsourcing.kinesis.KinesisEventSource;
 import de.otto.edison.eventsourcing.s3.SnapshotEventSource;
 
@@ -11,14 +8,14 @@ import java.io.File;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-public class CompactingKinesisEventSource<T> implements EventSource<T> {
+public class CompactingKinesisEventSource implements EventSource {
 
-    private final SnapshotEventSource<T> snapshotEventSource;
-    private final KinesisEventSource<T> kinesisEventSource;
+    private final SnapshotEventSource snapshotEventSource;
+    private final KinesisEventSource kinesisEventSource;
     private final String streamName;
 
-    public CompactingKinesisEventSource(SnapshotEventSource<T> snapshotEventSource,
-                                        KinesisEventSource<T> kinesisEventSource) {
+    public CompactingKinesisEventSource(SnapshotEventSource snapshotEventSource,
+                                        KinesisEventSource kinesisEventSource) {
         Objects.requireNonNull(snapshotEventSource, "snapshot event source must not be null");
         Objects.requireNonNull(kinesisEventSource, "kinesis event source must not be null");
         if (!snapshotEventSource.getStreamName().equals(kinesisEventSource.getStreamName())) {
@@ -35,15 +32,39 @@ public class CompactingKinesisEventSource<T> implements EventSource<T> {
         snapshotEventSource.setSnapshotFile(file);
     }
 
+    /**
+     * Registers a new EventConsumer at the EventSource.
+     * <p>
+     * {@link EventConsumer consumers} have to be thread safe as it may be called from multiple threads
+     * (e.g. for kinesis streams there is one thread per shard)
+     *
+     * @param eventConsumer
+     */
+    @Override
+    public void register(final EventConsumer<?> eventConsumer) {
+        snapshotEventSource.register(eventConsumer);
+        kinesisEventSource.register(eventConsumer);
+    }
+
+    /**
+     * Returns the list of registered EventConsumers.
+     *
+     * @return list of registered EventConsumers
+     */
+    @Override
+    public EventConsumers registeredConsumers() {
+        return snapshotEventSource.registeredConsumers();
+    }
+
     @Override
     public String getStreamName() {
         return streamName;
     }
 
     @Override
-    public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<T>> stopCondition, EventConsumer<T> consumer) {
-        Predicate<Event<T>> neverStop = e -> false;
-        final StreamPosition streamPosition = snapshotEventSource.consumeAll(neverStop, consumer);
-        return kinesisEventSource.consumeAll(streamPosition, stopCondition, consumer);
+    public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<?>> stopCondition) {
+        Predicate<Event<?>> neverStop = e -> false;
+        final StreamPosition streamPosition = snapshotEventSource.consumeAll(neverStop);
+        return kinesisEventSource.consumeAll(streamPosition, stopCondition);
     }
 }

@@ -4,6 +4,9 @@ import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
+
+import static java.util.regex.Pattern.compile;
 
 /**
  * A consumer for Events with payload-type &lt;T&gt;.
@@ -30,11 +33,27 @@ import java.util.function.Consumer;
 @ThreadSafe
 public interface EventConsumer<T> extends Consumer<Event<T>> {
 
-    static <T> EventConsumer<T> of(final String streamName, final Consumer<Event<T>> consumer) {
+    static <T> EventConsumer<T> of(final String streamName,
+                                   final String keyPattern,
+                                   final Class<T> payloadType,
+                                   final Consumer<Event<T>> consumer) {
         return new EventConsumer<T>() {
+
+            private Pattern pattern = compile(keyPattern);
+
             @Override
             public String streamName() {
                 return streamName;
+            }
+
+            @Override
+            public Class<T> payloadType() {
+                return payloadType;
+            }
+
+            @Override
+            public Pattern keyPattern() {
+                return pattern;
             }
 
             @Override
@@ -53,5 +72,19 @@ public interface EventConsumer<T> extends Consumer<Event<T>> {
      * @return event stream
      */
     String streamName();
+
+    /**
+     * Returns the expected payload type of {@link Event events} consumed by this EventConsumer.
+     *
+     * @return payload type
+     */
+    Class<T> payloadType();
+
+    /**
+     * Returns the pattern of {@link Event#key() event keys} accepted by this consumer.
+     *
+     * @return Pattern
+     */
+    Pattern keyPattern();
 
 }

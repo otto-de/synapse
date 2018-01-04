@@ -1,6 +1,10 @@
 package de.otto.edison.eventsourcing.s3;
 
-import de.otto.edison.eventsourcing.consumer.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.edison.eventsourcing.consumer.AbstractEventSource;
+import de.otto.edison.eventsourcing.consumer.Event;
+import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
+import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -11,14 +15,13 @@ import java.util.function.Predicate;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class SnapshotEventSource<T> implements EventSource<T> {
+public class SnapshotEventSource extends AbstractEventSource {
 
     private static final Logger LOG = getLogger(SnapshotEventSource.class);
 
     private final SnapshotReadService snapshotReadService;
     private final String streamName;
     private final SnapshotConsumerService snapshotConsumerService;
-    private final Class<T> payloadType;
     private final ApplicationEventPublisher eventPublisher;
 
     private File forcedSnapshotFile = null;
@@ -26,12 +29,12 @@ public class SnapshotEventSource<T> implements EventSource<T> {
     public SnapshotEventSource(final String streamName,
                                final SnapshotReadService snapshotReadService,
                                final SnapshotConsumerService snapshotConsumerService,
-                               final Class<T> payloadType,
-                               final ApplicationEventPublisher eventPublisher) {
+                               final ApplicationEventPublisher eventPublisher,
+                               final ObjectMapper objectMapper) {
+        super(objectMapper);
         this.streamName = streamName;
         this.snapshotReadService = snapshotReadService;
         this.snapshotConsumerService = snapshotConsumerService;
-        this.payloadType = payloadType;
         this.eventPublisher = eventPublisher;
     }
 
@@ -48,20 +51,18 @@ public class SnapshotEventSource<T> implements EventSource<T> {
     }
 
     @Override
-    public SnapshotStreamPosition consumeAll(EventConsumer<T> consumer) {
-        return consumeAll(StreamPosition.of(), event -> false, consumer);
+    public SnapshotStreamPosition consumeAll() {
+        return consumeAll(StreamPosition.of(), event -> false);
     }
 
     @Override
-    public SnapshotStreamPosition consumeAll(StreamPosition startFrom, EventConsumer<T> consumer) {
-        return consumeAll(StreamPosition.of(), consumer);
+    public SnapshotStreamPosition consumeAll(StreamPosition startFrom) {
+        return consumeAll(StreamPosition.of());
     }
 
     @Override
     public SnapshotStreamPosition consumeAll(final StreamPosition startFrom,
-                                     final Predicate<Event<T>> stopCondition,
-                                     final EventConsumer<T> consumer) {
-        // TODO: startFrom is ignored. the source should ignore / drop all events until startFrom is reached.
+                                     final Predicate<Event<?>> stopCondition) {
         SnapshotStreamPosition snapshotStreamPosition;
 
         try {
@@ -69,7 +70,7 @@ public class SnapshotEventSource<T> implements EventSource<T> {
 
             Optional<File> snapshotFile = getSnapshotFileToConsume();
             if (snapshotFile.isPresent()) {
-                StreamPosition streamPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), streamName, stopCondition, consumer, payloadType);
+                StreamPosition streamPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), streamName, stopCondition, registeredConsumers());
                 snapshotStreamPosition = SnapshotStreamPosition.of(streamPosition, SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName()));
             } else {
                 snapshotStreamPosition = SnapshotStreamPosition.of();

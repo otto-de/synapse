@@ -21,14 +21,15 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.google.common.collect.ImmutableList.of;
+import static java.util.Collections.synchronizedList;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -62,14 +63,23 @@ public class KinesisEventSourceTest {
     private ArgumentCaptor<Event<String>> stringCaptor;
 
     @Mock
-    private Predicate<Event<String>> stringStopCondition;
+    private Predicate<Event<?>> stringStopCondition;
 
     private ObjectMapper objectMapper = new ObjectMapper();
+
+    private int nextKey = 0;
 
 
     @Before
     public void setUp() {
         KinesisShard shard1 = new KinesisShard("shard1", kinesisStream, kinesisClient);
+        when(testDataConsumer.streamName()).thenReturn("test");
+        when(testDataConsumer.keyPattern()).thenReturn(Pattern.compile(".*"));
+        when(testDataConsumer.payloadType()).thenReturn(TestData.class);
+        when(stringConsumer.streamName()).thenReturn("test");
+        when(stringConsumer.keyPattern()).thenReturn(Pattern.compile(".*"));
+        when(stringConsumer.payloadType()).thenReturn(String.class);
+        when(kinesisStream.getStreamName()).thenReturn("test");
         when(kinesisStream.retrieveAllOpenShards()).thenReturn(of(shard1));
         when(kinesisClient.getShardIterator(any(GetShardIteratorRequest.class))).thenReturn(GetShardIteratorResponse.builder()
                 .shardIterator("someIterator")
@@ -99,10 +109,11 @@ public class KinesisEventSourceTest {
         // given
         StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
 
-        KinesisEventSource<TestData> eventSource = new KinesisEventSource<>(TestData.class, objectMapper, kinesisStream, Encryptors.noOpText());
+        KinesisEventSource eventSource = new KinesisEventSource(kinesisStream, Encryptors.noOpText(), objectMapper);
+        eventSource.register(testDataConsumer);
 
         // when
-        eventSource.consumeAll(initialPositions, this::stopIfGreen, testDataConsumer);
+        eventSource.consumeAll(initialPositions, this::stopIfGreenForString);
 
         // then
         verify(testDataConsumer, times(2)).accept(testDataCaptor.capture());
@@ -119,10 +130,11 @@ public class KinesisEventSourceTest {
         StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
 
 
-        KinesisEventSource<String> eventSource = new KinesisEventSource<>(String.class, objectMapper, kinesisStream, Encryptors.noOpText());
+        KinesisEventSource eventSource = new KinesisEventSource(kinesisStream, Encryptors.noOpText(), objectMapper);
+        eventSource.register(stringConsumer);
 
         // when
-        eventSource.consumeAll(initialPositions, this::stopIfGreenForString, stringConsumer);
+        eventSource.consumeAll(initialPositions, this::stopIfGreenForString);
 
         // then
         verify(stringConsumer, times(2)).accept(stringCaptor.capture());
@@ -136,11 +148,12 @@ public class KinesisEventSourceTest {
     public void shouldAlwaysPassMillisBehindLatestToStopCondition() {
         // given
         StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
-        KinesisEventSource<String> eventSource = new KinesisEventSource<>(String.class, objectMapper, kinesisStream, Encryptors.noOpText());
+        KinesisEventSource eventSource = new KinesisEventSource(kinesisStream, Encryptors.noOpText(), objectMapper);
+        eventSource.register(stringConsumer);
         when(stringStopCondition.test(any())).thenReturn(true);
 
         // when
-        eventSource.consumeAll(initialPositions, stringStopCondition, stringConsumer);
+        eventSource.consumeAll(initialPositions, stringStopCondition);
 
         // then
         verify(stringStopCondition).test(Event.event(null, null, null, null, Duration.ofMillis(555L)));
@@ -149,7 +162,7 @@ public class KinesisEventSourceTest {
     @Test
     public void shouldFinishAllParallelThreadsWhenExceptionIsThrown() throws Exception {
         // given
-        List<String> completedShards = Collections.synchronizedList(new ArrayList<>());
+        List<String> completedShards = synchronizedList(new ArrayList<>());
 
         List<KinesisShard> shards = IntStream.range(0, 1000)
                 .mapToObj(i -> createShardMockWithSideEffect(i, () -> {
@@ -163,11 +176,12 @@ public class KinesisEventSourceTest {
 
         when(kinesisStream.retrieveAllOpenShards()).thenReturn(shards);
 
-        KinesisEventSource<TestData> eventSource = new KinesisEventSource<>(TestData.class, objectMapper, kinesisStream, Encryptors.noOpText());
+        KinesisEventSource eventSource = new KinesisEventSource(kinesisStream, Encryptors.noOpText(), objectMapper);
+        eventSource.register(testDataConsumer);
 
         // when
         try {
-            eventSource.consumeAll(StreamPosition.of(), this::stopIfGreen, testDataConsumer);
+            eventSource.consumeAll(StreamPosition.of());
             fail("exception expected");
         } catch (RuntimeException e) {
             assertThat(e.getMessage(), containsString("boom"));
@@ -196,23 +210,17 @@ public class KinesisEventSourceTest {
         return shard;
     }
 
-    private boolean stopIfGreen(Event<TestData> event) {
+    private boolean stopIfGreenForString(Event<?> event) {
         if (event.payload() == null) {
             return false;
         }
-        return "green".equals(event.payload().data);
-    }
-
-    private boolean stopIfGreenForString(Event<String> event) {
-        if (event.payload() == null) {
-            return false;
-        }
-        return event.payload().contains("green");
+        return event.payload().toString().contains("green");
     }
 
     private Record createRecord(String data) {
         String json = "{\"data\":\"" + data + "\"}";
         return Record.builder()
+                .partitionKey(String.valueOf(nextKey++))
                 .data(ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8)))
                 .sequenceNumber("sequence-" + data)
                 .build();

@@ -4,7 +4,6 @@ import de.otto.edison.eventsourcing.CompactingKinesisEventSource;
 import de.otto.edison.eventsourcing.EventSourceFactory;
 import de.otto.edison.eventsourcing.consumer.DefaultEventConsumer;
 import de.otto.edison.eventsourcing.consumer.Event;
-import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.s3.SnapshotWriteService;
 import de.otto.edison.eventsourcing.state.StateRepository;
@@ -44,11 +43,13 @@ public class CompactionService {
 
         LOG.info("Start loading entries into inMemoryCache from snapshot");
 
-        CompactingKinesisEventSource<String> compactingKinesisEventSource = eventSourceFactory.createCompactingKinesisEventSource(streamName, String.class);
+        final CompactingKinesisEventSource compactingKinesisEventSource = eventSourceFactory.createCompactingKinesisEventSource(streamName);
+        compactingKinesisEventSource.register(
+                new DefaultEventConsumer<>(streamName, ".*", String.class, stateRepository)
+        );
 
         try {
-            EventConsumer<String> consumer = new DefaultEventConsumer<>(streamName, stateRepository);
-            StreamPosition currentPosition = compactingKinesisEventSource.consumeAll(stopCondition(), consumer);
+            final StreamPosition currentPosition = compactingKinesisEventSource.consumeAll(stopCondition());
 
             LOG.info("Finished updating snapshot data. StateRepository now holds {} entries.", stateRepository.size());
 
@@ -58,7 +59,7 @@ public class CompactionService {
         }
     }
 
-    private Predicate<Event<String>> stopCondition() {
+    private Predicate<Event<?>> stopCondition() {
         return event -> event.durationBehind()
                 .map(CompactionService::isLessThan10Seconds)
                 .orElse(true);

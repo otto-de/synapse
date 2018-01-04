@@ -1,17 +1,14 @@
 package de.otto.edison.eventsourcing.kinesis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.edison.eventsourcing.consumer.AbstractEventSource;
 import de.otto.edison.eventsourcing.consumer.Event;
-import de.otto.edison.eventsourcing.consumer.EventConsumer;
-import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -19,35 +16,28 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.*;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static de.otto.edison.eventsourcing.kinesis.KinesisEvent.kinesisEvent;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
 
-public class KinesisEventSource<T> implements EventSource<T> {
+public class KinesisEventSource extends AbstractEventSource {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisEventSource.class);
 
-    private KinesisStream kinesisStream;
-    private Function<String, T> deserializer;
+    private final KinesisStream kinesisStream;
+    private final Function<String, String> deserializer;
 
-    public KinesisEventSource(final Class<T> payloadType,
-                              final ObjectMapper objectMapper,
-                              final KinesisStream kinesisStream,
-                              final TextEncryptor textEncryptor) {
-        this.deserializer = in -> {
-            try {
-                if (payloadType == String.class) {
-                    return (T) textEncryptor.decrypt(in);
-                } else {
-                    return objectMapper.readValue(textEncryptor.decrypt(in), payloadType);
-                }
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        };
+    public KinesisEventSource(final KinesisStream kinesisStream,
+                              final TextEncryptor textEncryptor,
+                              final ObjectMapper objectMapper) {
+        super(objectMapper);
+        this.deserializer = textEncryptor::decrypt;
         this.kinesisStream = kinesisStream;
     }
 
@@ -58,8 +48,7 @@ public class KinesisEventSource<T> implements EventSource<T> {
 
     @Override
     public StreamPosition consumeAll(final StreamPosition startFrom,
-                                     final Predicate<Event<T>> stopCondition,
-                                     final EventConsumer<T> consumer) {
+                                     final Predicate<Event<?>> stopCondition) {
 
         List<KinesisShard> kinesisShards = kinesisStream.retrieveAllOpenShards();
         ExecutorService executorService = Executors.newFixedThreadPool(Math.min(kinesisShards.size(), 10));
@@ -69,8 +58,8 @@ public class KinesisEventSource<T> implements EventSource<T> {
                 .map(shard -> CompletableFuture.supplyAsync(
                         () -> shard.consumeRecordsAndReturnLastSeqNumber(
                                 startFrom.positionOf(shard.getShardId()),
-                                new RecordStopCondition(stopCondition),
-                                new RecordConsumer(consumer)), executorService))
+                                recordStopCondition(stopCondition),
+                                recordConsumer()), executorService))
                 .collect(Collectors.toList());
         // don't chain futureShardPositions with CompletableFuture::join as lazy execution will prevent threads from
         // running in parallel
@@ -101,39 +90,26 @@ public class KinesisEventSource<T> implements EventSource<T> {
         }
     }
 
-    private Event<T> createEvent(Duration durationBehind, Record record) {
+    private Event<String> createEvent(Duration durationBehind, Record record) {
         return kinesisEvent(durationBehind, record, byteBuffer -> {
             final String json = UTF_8.decode(record.data()).toString();
             return deserializer.apply(json);
         });
     }
 
-    private class RecordStopCondition implements BiFunction<Long, Record, Boolean> {
-        private final Predicate<Event<T>> stopCondition;
-
-        RecordStopCondition(Predicate<Event<T>> stopCondition) {
-            this.stopCondition = stopCondition;
-        }
-
-        @Override
-        public Boolean apply(Long millis, Record record) {
+    private BiFunction<Long, Record, Boolean> recordStopCondition(final Predicate<Event<?>> stopCondition) {
+        return (millis, record) -> {
             if (record == null) {
                 return stopCondition.test(Event.event(null, null, null, null, ofMillis(millis)));
             }
             return stopCondition.test(createEvent(ofMillis(millis), record));
-        }
+        };
     }
 
-    private class RecordConsumer implements BiConsumer<Long, Record> {
-        private final Consumer<Event<T>> consumer;
-
-        RecordConsumer(Consumer<Event<T>> consumer) {
-            this.consumer = consumer;
-        }
-
-        @Override
-        public void accept(Long millis, Record record) {
-            consumer.accept(createEvent(ofMillis(millis), record));
-        }
+    private BiConsumer<Long, Record> recordConsumer() {
+        return (millis, record) -> {
+            final Event<String> jsonEvent = createEvent(ofMillis(millis), record);
+            registeredConsumers().encodeAndSend(jsonEvent);
+        };
     }
 }

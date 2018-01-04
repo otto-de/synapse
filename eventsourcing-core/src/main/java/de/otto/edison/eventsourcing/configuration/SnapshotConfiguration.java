@@ -1,6 +1,5 @@
 package de.otto.edison.eventsourcing.configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.aws.configuration.AwsConfiguration;
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.edison.aws.s3.configuration.S3Configuration;
@@ -10,7 +9,6 @@ import de.otto.edison.eventsourcing.s3.SnapshotWriteService;
 import de.otto.edison.eventsourcing.s3.TempFileService;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -48,7 +46,7 @@ public class SnapshotConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public SnapshotConsumerService snapshotConsumerService(final ObjectMapper objectMapper, TextEncryptor textEncryptor) {
-        return new SnapshotConsumerService(objectMapper, textEncryptor);
+    public SnapshotConsumerService snapshotConsumerService(TextEncryptor textEncryptor) {
+        return new SnapshotConsumerService(textEncryptor);
     }
 }

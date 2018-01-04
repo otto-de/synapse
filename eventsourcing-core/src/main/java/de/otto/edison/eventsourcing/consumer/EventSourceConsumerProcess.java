@@ -1,15 +1,14 @@
 package de.otto.edison.eventsourcing.consumer;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import de.otto.edison.eventsourcing.annotation.EventSourceMapping;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import javax.annotation.PreDestroy;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -20,35 +19,21 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 public class EventSourceConsumerProcess {
 
-    // Siehe https://programtalk.com/java/executorservice-not-shutting-down/
-
     private static final Logger LOG = getLogger(EventSourceConsumerProcess.class);
     private static final String THREAD_NAME_PREFIX = "edison-eventsourcing-consumer-";
 
     private final AtomicBoolean stopThread = new AtomicBoolean(false);
 
-    private final ExecutorService executorService;
-    private final EventSourceMapping eventSourceMapping;
-    private final ObjectMapper objectMapper;
+    private ExecutorService executorService;
+    @Autowired(required = false)
+    private List<EventSource> eventSources;
 
-    public EventSourceConsumerProcess(final EventSourceMapping eventSourceMapping) {
-        this(eventSourceMapping, new ObjectMapper().registerModule(new JavaTimeModule()));
+    public EventSourceConsumerProcess() {
     }
 
-    public EventSourceConsumerProcess(final EventSourceMapping eventSourceMapping,
-                                      final ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-        this.eventSourceMapping = eventSourceMapping;
-
-        int eventSourceCount = eventSourceMapping.getEventSources().size();
-        if (eventSourceCount > 0) {
-            final ThreadFactory threadFactory = new CustomizableThreadFactory(THREAD_NAME_PREFIX);
-            executorService = newFixedThreadPool(eventSourceCount, threadFactory);
-        } else {
-            executorService = null;
-        }
+    EventSourceConsumerProcess(final List<EventSource> eventSources) {
+        this.eventSources = eventSources;
     }
-
 
     @EventListener
     public void handleContextRefresh(ContextRefreshedEvent event) {
@@ -58,18 +43,23 @@ public class EventSourceConsumerProcess {
     @SuppressWarnings("unchecked")
     public void init() {
         LOG.info("Initializing EventSourceConsumerProcess...");
-        eventSourceMapping.getEventSources()
-                .forEach(eventSource -> executorService.submit(() -> {
-                            try {
-                                LOG.info("Starting {}...", eventSource.getStreamName());
-                                EventSourceMapping.ConsumerMapping consumerMapping = eventSourceMapping.getConsumerMapping(eventSource);
-                                DelegateEventConsumer delegateEventConsumer = new DelegateEventConsumer(consumerMapping, objectMapper);
-                                eventSource.consumeAll(ignore -> stopThread.get(), delegateEventConsumer);
-                            } catch (Exception e) {
-                                LOG.error("Starting failed: " + e.getMessage(), e);
-                            }
-                        }
-                ));
+
+        int eventSourceCount = eventSources != null ? eventSources.size() : 0;
+        if (eventSourceCount > 0) {
+            final ThreadFactory threadFactory = new CustomizableThreadFactory(THREAD_NAME_PREFIX);
+            executorService = newFixedThreadPool(eventSourceCount, threadFactory);
+            eventSources.forEach(eventSource -> executorService.submit(() -> {
+                try {
+                    LOG.info("Starting {}...", eventSource.getStreamName());
+                    eventSource.consumeAll(ignore -> stopThread.get());
+                } catch (Exception e) {
+                    LOG.error("Starting failed: " + e.getMessage(), e);
+                }
+            }));
+        } else {
+            LOG.warn("Did not find any EventSource instances to execute");
+            executorService = null;
+        }
     }
 
     @PreDestroy

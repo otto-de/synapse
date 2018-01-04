@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
+import de.otto.edison.eventsourcing.consumer.EventConsumer;
+import de.otto.edison.eventsourcing.consumer.EventConsumers;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.state.DefaultStateRepository;
 import org.junit.After;
@@ -23,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
@@ -30,11 +33,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class SnapshotWriteServiceTest {
 
     private static final String STREAM_NAME = "teststream";
+    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private SnapshotWriteService testee;
     private S3Service s3Service;
 
@@ -83,16 +89,17 @@ public class SnapshotWriteServiceTest {
         //then
         Map<String, Map> data = new HashMap<>();
 
-        SnapshotConsumerService snapshotConsumerService = new SnapshotConsumerService(new ObjectMapper(), Encryptors.noOpText());
+        SnapshotConsumerService snapshotConsumerService = new SnapshotConsumerService(Encryptors.noOpText());
 
-        StreamPosition actualStreamPosition = snapshotConsumerService.consumeSnapshot(snapshot,
-                "test",
-                (event) -> false,
+        final EventConsumer<Map> eventConsumer = EventConsumer.of("test", ".*", Map.class,
                 (event) -> {
                     System.out.println(event);
                     data.put(event.key(), event.payload());
-                },
-                Map.class);
+                });
+        StreamPosition actualStreamPosition = snapshotConsumerService.consumeSnapshot(snapshot,
+                "test",
+                (event) -> false,
+                new EventConsumers(OBJECT_MAPPER, singletonList(eventConsumer)));
 
         assertThat(actualStreamPosition, is(streamPosition));
         assertThat(data.get("testKey"), is(ImmutableMap.of("testValue1", "value1")));

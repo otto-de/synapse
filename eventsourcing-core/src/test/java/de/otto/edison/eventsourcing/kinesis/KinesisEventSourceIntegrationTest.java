@@ -7,6 +7,7 @@ import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.testsupport.TestStreamSource;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,13 +51,20 @@ public class KinesisEventSourceIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private EventSource<String> eventSource;
+    private EventSource eventSource;
+    private List<Event<String>> events = synchronizedList(new ArrayList<Event<String>>());
+
+    @Before
+    public void before() {
+        events.clear();
+    }
 
     @PostConstruct
     public void setup() {
         KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, STREAM_NAME, EXPECTED_NUMBER_OF_SHARDS);
         KinesisStream kinesisStream = new KinesisStream(kinesisClient, STREAM_NAME);
-        this.eventSource = new KinesisEventSource<>(String.class, objectMapper, kinesisStream, Encryptors.noOpText());
+        this.eventSource = new KinesisEventSource(kinesisStream, Encryptors.noOpText(), objectMapper);
+        this.eventSource.register(EventConsumer.of(STREAM_NAME, ".*", String.class, events::add));
     }
 
     @Test
@@ -65,11 +73,10 @@ public class KinesisEventSourceIntegrationTest {
         StreamPosition startFrom = writeToStream("users_small1.txt").getFirstReadPosition();
 
         // then
-        List<Event<String>> events = synchronizedList(new ArrayList<Event<String>>());
         eventSource.consumeAll(
                 startFrom,
-                stopCondition(),
-                EventConsumer.of("test", events::add));
+                stopCondition()
+        );
 
         assertThat(events, not(empty()));
         assertThat(events, hasSize(EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET));
@@ -82,11 +89,9 @@ public class KinesisEventSourceIntegrationTest {
         StreamPosition startFrom = writeToStream("users_small2.txt").getFirstReadPosition();
 
         // then
-        List<Event<String>> events = synchronizedList(new ArrayList<Event<String>>());
         StreamPosition nextStreamPosition = eventSource.consumeAll(
                 startFrom,
-                stopCondition(),
-                EventConsumer.of("test", events::add));
+                stopCondition());
 
         assertThat(nextStreamPosition.shards(), hasSize(EXPECTED_NUMBER_OF_SHARDS));
         assertThat(events, hasSize(EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET));
@@ -100,11 +105,9 @@ public class KinesisEventSourceIntegrationTest {
         StreamPosition startFrom = writeToStream("users_small2.txt").getLastStreamPosition();
 
         // then
-        List<Event<String>> events = synchronizedList(new ArrayList<Event<String>>());
         StreamPosition next = eventSource.consumeAll(
                 startFrom,
-                stopCondition(),
-                EventConsumer.of("test", events::add));
+                stopCondition());
 
         assertThat(events, empty());
         assertThat(next.shards(), hasSize(EXPECTED_NUMBER_OF_SHARDS));
@@ -120,7 +123,7 @@ public class KinesisEventSourceIntegrationTest {
         return IntStream.range(EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET + 1, EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET + EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET + 1).mapToObj(String::valueOf).collect(Collectors.toList());
     }
 
-    private Predicate<Event<String>> stopCondition() {
+    private Predicate<Event<?>> stopCondition() {
         return e -> e.payload() == null;
     }
 }
