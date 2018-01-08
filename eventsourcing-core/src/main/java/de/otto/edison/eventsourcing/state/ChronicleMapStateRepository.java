@@ -71,6 +71,7 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V> {
 
     @Override
     public void clear() {
+        bytesUsed.set(0L);
         store.clear();
     }
 

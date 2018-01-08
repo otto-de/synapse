@@ -56,6 +56,8 @@ public class CompactionService {
             return snapshotWriteService.takeSnapshot(streamName, currentPosition, stateRepository);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            stateRepository.clear();
         }
     }
 
