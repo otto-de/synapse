@@ -1,6 +1,7 @@
 package de.otto.edison.eventsourcing.annotation;
 
-import de.otto.edison.eventsourcing.CompactingKinesisEventSource;
+import de.otto.edison.eventsourcing.CompactingKinesisEventSourceBuilder;
+import de.otto.edison.eventsourcing.EventSourceBuilder;
 import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 
@@ -41,8 +42,9 @@ public @interface EventSourceConsumer {
     Class<?> payloadType();
 
     /**
-     * The type of event source that should by instantiated and used for consumption.
-     * @return event source type; defaults to <code>CompactingKinesisEventSource.class</code>
+     * The type of builder used to create the EventSource.
+     * @return event source type; defaults to <code>CompactingKinesisEventSourceBuilder.class</code>
+     * @deprecated will be removed soon
      */
-    Class<? extends EventSource> eventSourceType() default CompactingKinesisEventSource.class;
+    Class<? extends EventSourceBuilder> builder() default CompactingKinesisEventSourceBuilder.class;
 }

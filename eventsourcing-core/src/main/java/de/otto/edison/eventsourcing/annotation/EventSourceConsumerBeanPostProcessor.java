@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.annotation;
 
 import com.google.common.base.CaseFormat;
-import de.otto.edison.eventsourcing.EventSourceFactory;
+import de.otto.edison.eventsourcing.EventSourceBuilder;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
@@ -120,16 +120,17 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
 
     @SuppressWarnings("unchecked")
     private EventSource registerEventSource(final EventSourceConsumer annotation) {
-        Class<? extends EventSource> eventSourceType = annotation.eventSourceType();
+        Class<? extends EventSourceBuilder> eventSourceBuilderType = annotation.builder();
 
-        String resolvedStreamName = applicationContext.getEnvironment().resolvePlaceholders(annotation.streamName());
+        final String resolvedStreamName = applicationContext.getEnvironment().resolvePlaceholders(annotation.streamName());
+        final String eventSourceName = streamNameToEventSourceName(resolvedStreamName);
         if (eventSourceExists(resolvedStreamName)) {
-            return applicationContext.getBean(streamNameToEventSourceName(resolvedStreamName), EventSource.class);
+            return applicationContext.getBean(eventSourceName, EventSource.class);
         }
 
-        EventSourceFactory eventSourceFactory = applicationContext.getBean(EventSourceFactory.class);
-        EventSource eventSource = eventSourceFactory.createEventSource(eventSourceType, resolvedStreamName);
-        applicationContext.getBeanFactory().registerSingleton(streamNameToEventSourceName(resolvedStreamName), eventSource);
+        final EventSourceBuilder eventSourceBuilder = applicationContext.getBean(eventSourceBuilderType);
+        EventSource eventSource = eventSourceBuilder.buildEventSource(resolvedStreamName);
+        applicationContext.getBeanFactory().registerSingleton(eventSourceName, eventSource);
         return eventSource;
     }
 

@@ -2,6 +2,7 @@ package de.otto.edison.eventsourcing.annotation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.CompactingKinesisEventSource;
+import de.otto.edison.eventsourcing.SnapshotEventSourceBuilder;
 import de.otto.edison.eventsourcing.configuration.EventSourcingConfiguration;
 import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
@@ -160,7 +161,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
                 name = "firstConsumer",
                 streamName = "some-stream",
                 payloadType = String.class,
-                eventSourceType = SnapshotEventSource.class)
+                builder = SnapshotEventSourceBuilder.class)
         public void first(Event<String> event) {
         }
     }

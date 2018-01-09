@@ -1,21 +1,18 @@
 package de.otto.edison.eventsourcing;
 
 import de.otto.edison.eventsourcing.consumer.*;
-import de.otto.edison.eventsourcing.kinesis.KinesisEventSource;
-import de.otto.edison.eventsourcing.s3.SnapshotEventSource;
 
-import java.io.File;
 import java.util.Objects;
 import java.util.function.Predicate;
 
 public class CompactingKinesisEventSource implements EventSource {
 
-    private final SnapshotEventSource snapshotEventSource;
-    private final KinesisEventSource kinesisEventSource;
+    private final EventSource snapshotEventSource;
+    private final EventSource kinesisEventSource;
     private final String streamName;
 
-    public CompactingKinesisEventSource(SnapshotEventSource snapshotEventSource,
-                                        KinesisEventSource kinesisEventSource) {
+    public CompactingKinesisEventSource(EventSource snapshotEventSource,
+                                        EventSource kinesisEventSource) {
         Objects.requireNonNull(snapshotEventSource, "snapshot event source must not be null");
         Objects.requireNonNull(kinesisEventSource, "kinesis event source must not be null");
         if (!snapshotEventSource.getStreamName().equals(kinesisEventSource.getStreamName())) {
@@ -26,10 +23,6 @@ public class CompactingKinesisEventSource implements EventSource {
         this.snapshotEventSource = snapshotEventSource;
         this.kinesisEventSource = kinesisEventSource;
         this.streamName = kinesisEventSource.getStreamName();
-    }
-
-    public void setSnapshotFile(File file) {
-        snapshotEventSource.setSnapshotFile(file);
     }
 
     /**

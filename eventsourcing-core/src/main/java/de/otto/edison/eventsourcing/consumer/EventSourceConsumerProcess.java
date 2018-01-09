@@ -40,7 +40,6 @@ public class EventSourceConsumerProcess {
         init();
     }
 
-    @SuppressWarnings("unchecked")
     public void init() {
         LOG.info("Initializing EventSourceConsumerProcess...");
 

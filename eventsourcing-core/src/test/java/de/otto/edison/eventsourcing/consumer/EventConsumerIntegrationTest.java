@@ -59,7 +59,7 @@ public class EventConsumerIntegrationTest {
 
         Awaitility.await()
                 .atMost(5, TimeUnit.SECONDS)
-                .until(() -> allReceivedEventKeys.size(), is(4));
+                .until(() -> events.size(), is(2));
 
         assertThat(receivedBananaEventPayloads.size(), is(2));
         assertThat(receivedBananaEventPayloads.get(0).bananaId, is("1"));
