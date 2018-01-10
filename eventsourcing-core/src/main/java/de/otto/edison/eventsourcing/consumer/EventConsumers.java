@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static java.util.Collections.synchronizedList;
+import static java.util.Collections.unmodifiableList;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -35,6 +36,10 @@ public class EventConsumers {
     public void add(final EventConsumer<?> eventConsumer) {
         this.eventConsumers.add(eventConsumer);
         assertSameStreamNameForAllConsumers();
+    }
+
+    public List<EventConsumer<?>> getAll() {
+        return unmodifiableList(eventConsumers);
     }
 
     @SuppressWarnings({"unchecked", "raw"})

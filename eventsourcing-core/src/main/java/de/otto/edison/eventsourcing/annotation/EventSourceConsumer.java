@@ -1,7 +1,5 @@
 package de.otto.edison.eventsourcing.annotation;
 
-import de.otto.edison.eventsourcing.CompactingKinesisEventSourceBuilder;
-import de.otto.edison.eventsourcing.EventSourceBuilder;
 import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 
@@ -13,13 +11,6 @@ import java.lang.annotation.*;
 public @interface EventSourceConsumer {
 
     /**
-     * The name of the registered EventConsumer bean.
-     *
-     * @return bean name
-     */
-    String name();
-
-    /**
      * The name of the consumed event stream.
      * <p>
      *     Resolving placeholders like "${my.stream.name}" is supported for this property.
@@ -29,7 +20,16 @@ public @interface EventSourceConsumer {
     String streamName() default "";
 
     /**
+     * In some situations there might be multiple EventSource beans for a single event stream. In this
+     * case, the eventSource attribute can be used to select one of the available beans.
+     *
+     * @return name of the EventSource bean to register the EventConsumer.
+     */
+    String eventSource() default "";
+
+    /**
      * The regex pattern to filter events by their key that the consumer should receive.
+     *
      * @return key pattern; defaults to <code>.*</code>
      */
     String keyPattern() default ".*";
@@ -41,10 +41,4 @@ public @interface EventSourceConsumer {
      */
     Class<?> payloadType();
 
-    /**
-     * The type of builder used to create the EventSource.
-     * @return event source type; defaults to <code>CompactingKinesisEventSourceBuilder.class</code>
-     * @deprecated will be removed soon
-     */
-    Class<? extends EventSourceBuilder> builder() default CompactingKinesisEventSourceBuilder.class;
 }

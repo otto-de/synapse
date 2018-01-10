@@ -7,13 +7,11 @@ import de.otto.edison.eventsourcing.s3.SnapshotEventSource;
 import de.otto.edison.eventsourcing.s3.SnapshotReadService;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
-@Component
 public class SnapshotEventSourceBuilder implements EventSourceBuilder {
 
     private static final Logger LOG = getLogger(SnapshotEventSourceBuilder.class);

@@ -5,12 +5,10 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.otto.edison.eventsourcing.CompactingKinesisEventSourceBuilder;
 import de.otto.edison.eventsourcing.KinesisEventSourceBuilder;
 import de.otto.edison.eventsourcing.SnapshotEventSourceBuilder;
-import de.otto.edison.eventsourcing.consumer.EventSourceConsumerProcess;
 import de.otto.edison.eventsourcing.s3.SnapshotConsumerService;
 import de.otto.edison.eventsourcing.s3.SnapshotReadService;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -31,16 +29,6 @@ public class EventSourcingConfiguration {
     @ConditionalOnMissingBean(ObjectMapper.class)
     public ObjectMapper objectMapper() {
         return new ObjectMapper().registerModule(new JavaTimeModule());
-    }
-
-    @Bean
-    @ConditionalOnProperty(
-            prefix = "edison.eventsourcing",
-            name = "consumer-process.enabled",
-            havingValue = "true",
-            matchIfMissing = true)
-    public EventSourceConsumerProcess eventSourceConsumerProcess() {
-        return new EventSourceConsumerProcess();
     }
 
     @Bean

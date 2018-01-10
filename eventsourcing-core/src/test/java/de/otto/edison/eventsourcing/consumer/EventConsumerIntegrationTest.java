@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.consumer;
 
+import de.otto.edison.eventsourcing.annotation.EnableEventSource;
 import de.otto.edison.eventsourcing.annotation.EventSourceConsumer;
 import de.otto.edison.eventsourcing.configuration.EventSourcingBootstrapConfiguration;
 import de.otto.edison.eventsourcing.configuration.EventSourcingConfiguration;
@@ -44,7 +45,8 @@ import static org.mockito.Mockito.when;
         EventConsumerIntegrationTest.TestConfiguration.class,
         EventSourcingBootstrapConfiguration.class,
         EventSourcingConfiguration.class,
-        SnapshotConfiguration.class
+        SnapshotConfiguration.class,
+        EventSourceConsumerProcess.class
 })
 public class EventConsumerIntegrationTest {
 
@@ -56,7 +58,6 @@ public class EventConsumerIntegrationTest {
 
     @Test
     public void shouldCallCorrectConsumerDependingOnEventKey() throws Exception {
-
         Awaitility.await()
                 .atMost(5, TimeUnit.SECONDS)
                 .until(() -> events.size(), is(2));
@@ -82,32 +83,37 @@ public class EventConsumerIntegrationTest {
         public String name;
     }
 
-    static class TestConfiguration {
+    static class TestConsumer {
+        @EventListener
+        public void listenForFinishedEvent(EventSourceNotification eventSourceNotification) {
+            events.add(eventSourceNotification);
+        }
 
         @EventSourceConsumer(
-                name = "bananaConsumer",
                 streamName = "test-stream",
                 keyPattern = "^banana.*",
                 payloadType = Banana.class)
-        public void consumeEventsWithEvenKey(Event<Banana> event) {
+        public void consumeBananaEvents(Event<Banana> event) {
             receivedBananaEventPayloads.add(event.payload());
             allReceivedEventKeys.add(event.key());
         }
 
         @EventSourceConsumer(
-                name = "appleConsumer",
                 streamName = "test-stream",
                 keyPattern = "^apple.*",
                 payloadType = Apple.class)
-        public void consumeEventsWithOddKey(Event<Apple> event) {
+        public void consumeAppleEvents(Event<Apple> event) {
             receivedAppleEventPayloads.add(event.payload());
             allReceivedEventKeys.add(event.key());
-
         }
+    }
 
-        @EventListener
-        public void listenForFinishedEvent(EventSourceNotification eventSourceNotification) {
-            events.add(eventSourceNotification);
+    @EnableEventSource(streamName = "test-stream")
+    static class TestConfiguration {
+
+        @Bean
+        public TestConsumer testConsumer() {
+            return new TestConsumer();
         }
 
         @Bean

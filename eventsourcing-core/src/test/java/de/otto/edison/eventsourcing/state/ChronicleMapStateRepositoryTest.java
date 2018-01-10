@@ -1,6 +1,5 @@
-package de.otto.edison.eventsourcing.s3;
+package de.otto.edison.eventsourcing.state;
 
-import de.otto.edison.eventsourcing.state.ChronicleMapStateRepository;
 import org.junit.Assert;
 import org.junit.Test;
 

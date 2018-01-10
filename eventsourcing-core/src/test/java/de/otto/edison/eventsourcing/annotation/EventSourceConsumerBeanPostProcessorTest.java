@@ -1,17 +1,19 @@
 package de.otto.edison.eventsourcing.annotation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.CompactingKinesisEventSource;
-import de.otto.edison.eventsourcing.SnapshotEventSourceBuilder;
+import de.otto.edison.eventsourcing.DelegateEventSource;
 import de.otto.edison.eventsourcing.configuration.EventSourcingConfiguration;
 import de.otto.edison.eventsourcing.consumer.Event;
+import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
-import de.otto.edison.eventsourcing.s3.SnapshotEventSource;
 import org.junit.After;
 import org.junit.Test;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,13 +28,125 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
-    static class TestConfiguration {
+    @Test
+    public void shouldRegisterMultipleEventConsumers() {
+        context.register(TestTextEncryptor.class);
+        context.register(ObjectMapper.class);
+        context.register(ThreeConsumersAtTwoEventSourcesConfiguration.class);
+        context.register(EventSourcingConfiguration.class);
+        context.refresh();
+
+        final DelegateEventSource someStreamEventSource = context.getBean("someStreamEventSource", DelegateEventSource.class);
+        final List<EventConsumer<?>> eventConsumers = someStreamEventSource.registeredConsumers().getAll();
+        assertThat(eventConsumers).hasSize(2);
+        assertThat(eventConsumers.get(0)).isInstanceOf(MethodInvokingEventConsumer.class);
+        assertThat(eventConsumers.get(1)).isInstanceOf(MethodInvokingEventConsumer.class);
+
+        final DelegateEventSource otherStreamEventSource = context.getBean("otherStreamTestSourceWithCustomName", DelegateEventSource.class);
+        final List<EventConsumer<?>> otherEventConsumers = otherStreamEventSource.registeredConsumers().getAll();
+        assertThat(otherEventConsumers).hasSize(1);
+        assertThat(otherEventConsumers.get(0)).isInstanceOf(MethodInvokingEventConsumer.class);
+    }
+
+    @Test(expected = BeanCreationException.class)
+    public void shouldFailToRegisterConsumerBecauseOfMissingEventSource() {
+        context.register(TestTextEncryptor.class);
+        context.register(ObjectMapper.class);
+        context.register(TestConfigurationWithMissingEventSource.class);
+        context.register(EventSourcingConfiguration.class);
+        context.refresh();
+    }
+
+    /**
+     * If there is a Consumer for stream x and the consumer does refer to a single EventSource instance,
+     * registration should succeed, if there are _multiple_ EventSources for stream x with matching name.
+     */
+    @Test
+    public void shouldRegisterConsumerAtSpecifiedEventSource() {
+        context.register(TestTextEncryptor.class);
+        context.register(ObjectMapper.class);
+        context.register(TwoEventSourcesWithSameStreamAndSecificConsumerConfiguration.class);
+        context.register(EventSourcingConfiguration.class);
+        context.refresh();
+
+        final DelegateEventSource someStreamEventSource = context.getBean("someTestEventSource", DelegateEventSource.class);
+        final List<EventConsumer<?>> eventConsumers = someStreamEventSource.registeredConsumers().getAll();
+        assertThat(eventConsumers).hasSize(1);
+        assertThat(eventConsumers.get(0)).isInstanceOf(MethodInvokingEventConsumer.class);
+    }
+
+
+    /**
+     * If there is a Consumer for stream x and the consumer does not refer to a single EventSource instance,
+     * registration should fail, if there are _multiple_ EventSources for stream x.
+     */
+    @Test(expected = BeanCreationException.class)
+    public void shouldFailToRegisterConsumerWithoutReferenceToEventSourceIfThereAreMultipleOptions() {
+        context.register(TestTextEncryptor.class);
+        context.register(ObjectMapper.class);
+        context.register(TwoEventSourcesWithSameStreamAndUnspecificConsumerConfiguration.class);
+        context.register(EventSourcingConfiguration.class);
+        context.refresh();
+    }
+
+    @Test
+    public void shouldCreateEventConsumerWithSpecificPayloadType() {
+        context.register(TestTextEncryptor.class);
+        context.register(ObjectMapper.class);
+        context.register(TestConfigurationDifferentPayload.class);
+        context.register(EventSourcingConfiguration.class);
+        context.refresh();
+
+        final DelegateEventSource someStreamEventSource = context.getBean("someStreamEventSource", DelegateEventSource.class);
+        final List<EventConsumer<?>> eventConsumers = someStreamEventSource.registeredConsumers().getAll();
+        assertThat(eventConsumers).hasSize(2);
+        assertThat(eventConsumers.get(0).payloadType()).isEqualTo(String.class);
+        assertThat(eventConsumers.get(1).payloadType()).isEqualTo(Integer.class);
+    }
+
+    @Test
+    public void shouldRegisterEventConsumerWithSpecificKeyPattern() {
+        context.register(TestTextEncryptor.class);
+        context.register(ObjectMapper.class);
+        context.register(TestConfigurationDifferentPayload.class);
+        context.register(EventSourcingConfiguration.class);
+        context.refresh();
+
+        final DelegateEventSource someStreamEventSource = context.getBean("someStreamEventSource", DelegateEventSource.class);
+        final List<EventConsumer<?>> eventConsumers = someStreamEventSource.registeredConsumers().getAll();
+        assertThat(eventConsumers).hasSize(2);
+        assertThat(eventConsumers.get(0).keyPattern().pattern()).isEqualTo("apple.*");
+        assertThat(eventConsumers.get(1).keyPattern().pattern()).isEqualTo("banana.*");
+    }
+
+    @EnableEventSource(streamName = "some-stream")
+    @EnableEventSource(name = "otherStreamTestSourceWithCustomName", streamName = "other-stream")
+    static class ThreeConsumersAtTwoEventSourcesConfiguration {
         @Bean
         public TestConsumer test() {
             return new TestConsumer();
         }
     }
 
+    @EnableEventSource(name = "someTestEventSource", streamName = "some-stream")
+    @EnableEventSource(name = "otherTestEventSource", streamName = "some-stream")
+    static class TwoEventSourcesWithSameStreamAndUnspecificConsumerConfiguration {
+        @Bean
+        public SingleUnspecificConsumer test() {
+            return new SingleUnspecificConsumer();
+        }
+    }
+
+    @EnableEventSource(name = "someTestEventSource", streamName = "some-stream")
+    @EnableEventSource(name = "otherTestEventSource", streamName = "some-stream")
+    static class TwoEventSourcesWithSameStreamAndSecificConsumerConfiguration {
+        @Bean
+        public SingleSpecificConsumer test() {
+            return new SingleSpecificConsumer();
+        }
+    }
+
+    @EnableEventSource(streamName = "some-stream")
     static class TestConfigurationDifferentPayload {
         @Bean
         public TestConsumerWithSameStreamNameAndDifferentPayload test() {
@@ -40,62 +154,11 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
-    static class TestConfigurationCustomEventSource {
+    static class TestConfigurationWithMissingEventSource{
         @Bean
         public TestConsumerWithSnapshotEventSource test() {
             return new TestConsumerWithSnapshotEventSource();
         }
-    }
-
-    @Test
-    public void shouldRegisterEventConsumers() {
-        context.register(TestTextEncryptor.class);
-        context.register(ObjectMapper.class);
-        context.register(TestConfiguration.class);
-        context.register(EventSourcingConfiguration.class);
-        context.refresh();
-
-        assertThat(context.containsBean("firstConsumer")).isTrue();
-        assertThat(context.getType("firstConsumer")).isEqualTo(MethodInvokingEventConsumer.class);
-        assertThat(context.containsBean("secondConsumer")).isTrue();
-        assertThat(context.getType("secondConsumer")).isEqualTo(MethodInvokingEventConsumer.class);
-
-        assertThat(context.containsBean("someStreamEventSource")).isTrue();
-        assertThat(context.getType("someStreamEventSource")).isEqualTo(CompactingKinesisEventSource.class);
-
-        assertThat(context.containsBean("otherStreamEventSource")).isTrue();
-        assertThat(context.getType("otherStreamEventSource")).isEqualTo(CompactingKinesisEventSource.class);
-    }
-
-    @Test
-    public void shouldRegisterMultipleConsumerForOneEventSourceAndDifferentPayloadType() {
-        context.register(TestTextEncryptor.class);
-        context.register(ObjectMapper.class);
-        context.register(TestConfigurationDifferentPayload.class);
-        context.register(EventSourcingConfiguration.class);
-        context.refresh();
-
-        assertThat(context.containsBean("firstConsumer")).isTrue();
-        assertThat(context.getType("firstConsumer")).isEqualTo(MethodInvokingEventConsumer.class);
-        assertThat(context.containsBean("secondConsumer")).isTrue();
-        assertThat(context.getType("secondConsumer")).isEqualTo(MethodInvokingEventConsumer.class);
-
-        assertThat(context.containsBean("someStreamEventSource")).isTrue();
-        assertThat(context.getType("someStreamEventSource")).isEqualTo(CompactingKinesisEventSource.class);
-
-        assertThat(context.getBeanNamesForType(CompactingKinesisEventSource.class).length).isEqualTo(1);
-    }
-
-    @Test
-    public void shouldRegisterEventConsumerWithCustomEventSource() {
-        context.register(TestTextEncryptor.class);
-        context.register(ObjectMapper.class);
-        context.register(TestConfigurationCustomEventSource.class);
-        context.register(EventSourcingConfiguration.class);
-        context.refresh();
-
-        assertThat(context.containsBean("someStreamEventSource")).isTrue();
-        assertThat(context.getType("someStreamEventSource")).isEqualTo(SnapshotEventSource.class);
     }
 
     static class TestTextEncryptor implements TextEncryptor {
@@ -114,23 +177,39 @@ public class EventSourceConsumerBeanPostProcessorTest {
     }
 
 
+    static class SingleUnspecificConsumer {
+        @EventSourceConsumer(
+                streamName = "some-stream",
+                payloadType = String.class)
+        public void first(Event<String> event) {
+        }
+
+    }
+
+    static class SingleSpecificConsumer {
+        @EventSourceConsumer(
+                eventSource = "someTestEventSource",
+                streamName = "some-stream",
+                payloadType = String.class)
+        public void first(Event<String> event) {
+        }
+
+    }
+
     static class TestConsumer {
         @EventSourceConsumer(
-                name = "firstConsumer",
                 streamName = "some-stream",
                 payloadType = String.class)
         public void first(Event<String> event) {
         }
 
         @EventSourceConsumer(
-                name = "secondConsumer",
                 streamName = "some-stream",
                 payloadType = String.class)
         public void second(Event<String> event) {
         }
 
         @EventSourceConsumer(
-                name = "thirdConsumer",
                 streamName = "other-stream",
                 payloadType = String.class)
         public void third(Event<String> event) {
@@ -139,7 +218,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     static class TestConsumerWithSameStreamNameAndDifferentPayload {
         @EventSourceConsumer(
-                name = "firstConsumer",
                 streamName = "some-stream",
                 keyPattern = "apple.*",
                 payloadType = String.class)
@@ -147,7 +225,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
 
         @EventSourceConsumer(
-                name = "secondConsumer",
                 streamName = "some-stream",
                 keyPattern = "banana.*",
                 payloadType = Integer.class)
@@ -158,10 +235,8 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     static class TestConsumerWithSnapshotEventSource {
         @EventSourceConsumer(
-                name = "firstConsumer",
-                streamName = "some-stream",
-                payloadType = String.class,
-                builder = SnapshotEventSourceBuilder.class)
+                streamName = "custom-test-stream",
+                payloadType = String.class)
         public void first(Event<String> event) {
         }
     }

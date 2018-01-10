@@ -26,8 +26,7 @@ public class EventSourceConsumerProcessTest {
         eventSource.register(eventConsumerB);
 
         EventSourceConsumerProcess process = new EventSourceConsumerProcess(singletonList(eventSource));
-
-        process.init();
+        process.start();
         Thread.sleep(100L);
 
         verify(eventSource).consumeAll(any(StreamPosition.class), any(Predicate.class));

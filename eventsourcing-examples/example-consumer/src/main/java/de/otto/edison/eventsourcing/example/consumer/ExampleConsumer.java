@@ -26,7 +26,6 @@ public class ExampleConsumer {
     }
 
     @EventSourceConsumer(
-            name = "bananaEventConsumer",
             streamName = "${exampleservice.banana-stream-name}",
             payloadType = BananaPayload.class
     )
@@ -44,7 +43,6 @@ public class ExampleConsumer {
     }
 
     @EventSourceConsumer(
-            name = "productEventConsumer",
             streamName = "${exampleservice.product-stream-name}",
             payloadType = ProductPayload.class
     )
