@@ -16,7 +16,7 @@ public abstract class AbstractEventSource implements EventSource {
      * {@link EventConsumer consumers} have to be thread safe as it may be called from multiple threads
      * (e.g. for kinesis streams there is one thread per shard)
      *
-     * @param eventConsumer
+     * @param eventConsumer the EventConsumer that is registered at the EventSource
      */
     @Override
     public void register(final EventConsumer<?> eventConsumer) {

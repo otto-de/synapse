@@ -25,20 +25,6 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
         return delegate;
     }
 
-    /**
-     * Set the ApplicationContext that this object runs in.
-     * Normally this call will be used to initialize the object.
-     * <p>Invoked after population of normal bean properties but before an init callback such
-     * as {@link InitializingBean#afterPropertiesSet()}
-     * or a custom init-method. Invoked after {@link ResourceLoaderAware#setResourceLoader},
-     * {@link ApplicationEventPublisherAware#setApplicationEventPublisher} and
-     * {@link MessageSourceAware}, if applicable.
-     *
-     * @param applicationContext the ApplicationContext object to be used by this object
-     * @throws ApplicationContextException in case of context initialization errors
-     * @throws BeansException              if thrown by application context methods
-     * @see BeanInitializationException
-     */
     @Override
     public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
         delegate = applicationContext
@@ -52,7 +38,7 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
      * {@link EventConsumer consumers} have to be thread safe as it may be called from multiple threads
      * (e.g. for kinesis streams there is one thread per shard)
      *
-     * @param eventConsumer
+     * @param eventConsumer the registered EventConsumer
      */
     @Override
     public void register(final EventConsumer<?> eventConsumer) {

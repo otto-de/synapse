@@ -18,7 +18,7 @@ public interface EventSource {
      * {@link EventConsumer consumers} have to be thread safe as it may be called from multiple threads
      * (e.g. for kinesis streams there is one thread per shard)
      *
-     * @param eventConsumer
+     * @param eventConsumer registered EventConsumer
      */
     void register(EventConsumer<?> eventConsumer);
 
