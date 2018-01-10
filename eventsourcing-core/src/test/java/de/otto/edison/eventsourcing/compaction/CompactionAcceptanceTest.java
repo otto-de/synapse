@@ -6,7 +6,6 @@ import com.jayway.jsonpath.JsonPath;
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.kinesis.KinesisStreamSetupUtils;
-import de.otto.edison.eventsourcing.s3.SnapshotReadServiceIntegrationTest;
 import de.otto.edison.eventsourcing.s3.SnapshotWriteService;
 import de.otto.edison.eventsourcing.state.StateRepository;
 import de.otto.edison.eventsourcing.testsupport.TestStreamSource;
@@ -23,12 +22,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.core.sync.ResponseInputStream;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.model.PutRecordRequest;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -51,6 +52,7 @@ public class CompactionAcceptanceTest {
 
     private static final String INTEGRATION_TEST_STREAM = "promo-compaction-test";
     private static final String INTEGRATION_TEST_BUCKET = "de-otto-promo-compaction-test-snapshots";
+    public static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.wrap(new byte[]{});
 
     @Autowired
     private KinesisClient kinesisClient;
@@ -89,6 +91,7 @@ public class CompactionAcceptanceTest {
         int firstWriteElementCount = 10;
         int secondWriteElementCount = 5;
         int fakeElementCount = 2;
+        int deletedElementCount = 1;
 
         StreamPosition startSequenceNumbers = writeToStream(INTEGRATION_TEST_STREAM, "users_small1.txt").getFirstReadPosition();
         createInitialEmptySnapshotWithSequenceNumbers(startSequenceNumbers);
@@ -101,15 +104,22 @@ public class CompactionAcceptanceTest {
         //when write additional data with partially existing ids
         writeToStream(INTEGRATION_TEST_STREAM, "integrationtest-stream.txt");
 
+        //Write an empty object for key 100000 - should be removed during compaction
+        kinesisClient.putRecord(PutRecordRequest.builder().streamName(INTEGRATION_TEST_STREAM).partitionKey("100000").data(EMPTY_BYTE_BUFFER).build());
+
+
         String fileName = compactionService.compact(INTEGRATION_TEST_STREAM);
 
         //then
         LinkedHashMap<String, JSONArray> json2 = fetchAndParseSnapshotFileFromS3(fileName);
-        assertSnapshotFileStructureAndSize(json2, firstWriteElementCount + secondWriteElementCount + fakeElementCount);
+        assertSnapshotFileStructureAndSize(json2, firstWriteElementCount + secondWriteElementCount + fakeElementCount - deletedElementCount);
         assertUsernameForUserId(json2, "1", "Frank");
         assertUsernameForUserId(json2, "2", "PGL08LJI");
         assertUsernameForUserId(json2, "20000", "PGL08LJI");
         assertUsernameForUserId(json2, "3", "Horst");
+
+        assertUserIdDoesNotExist(json2, "100000");
+
     }
 
     private void createInitialEmptySnapshotWithSequenceNumbers(StreamPosition startSequenceNumbers) throws IOException {
@@ -142,6 +152,11 @@ public class CompactionAcceptanceTest {
     private void assertUsernameForUserId(LinkedHashMap<String, JSONArray> json, final String userId, String expectedUserName) {
         JSONArray jsonArray = JsonPath.read(json, "$.data[?(@." + userId + ")]." + userId);
         assertThat(jsonArray.get(0).toString(), hasJsonPath("$.username", is(expectedUserName)));
+    }
+
+    private void assertUserIdDoesNotExist(LinkedHashMap<String, JSONArray> json, final String userId) {
+        JSONArray jsonArray = JsonPath.read(json, "$.data[?(@." + userId + ")]." + userId);
+        assertThat(jsonArray.isEmpty(), is(true));
     }
 
     private TestStreamSource writeToStream(String streamName, String fileName) {

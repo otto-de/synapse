@@ -79,9 +79,12 @@ public class SnapshotWriteService {
             jGenerator.writeArrayFieldStart(DATA_FIELD_NAME);
             stateRepository.getKeySetIterable().forEach((key) -> {
                 try {
-                    jGenerator.writeStartObject();
-                    jGenerator.writeStringField(key, stateRepository.get(key).get());
-                    jGenerator.writeEndObject();
+                    String entry = stateRepository.get(key).get();
+                    if (!("".equals(entry))) {
+                        jGenerator.writeStartObject();
+                        jGenerator.writeStringField(key, entry);
+                        jGenerator.writeEndObject();
+                    }
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }
