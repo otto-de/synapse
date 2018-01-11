@@ -34,10 +34,12 @@ public class SnapshotEventSourceBuilder implements EventSourceBuilder {
     }
 
     @Override
-    public EventSource buildEventSource(final String streamName) {
+    public EventSource buildEventSource(final String name, final String streamName) {
         Objects.requireNonNull(streamName, "stream name must not be null");
         LOG.info("Building '{}' as SnapshotEventSource", streamName);
-        return new SnapshotEventSource(streamName,
+        return new SnapshotEventSource(
+                name,
+                streamName,
                 snapshotReadService,
                 snapshotConsumerService,
                 applicationEventPublisher,

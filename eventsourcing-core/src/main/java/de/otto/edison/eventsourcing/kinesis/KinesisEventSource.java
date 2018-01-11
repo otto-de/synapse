@@ -33,10 +33,11 @@ public class KinesisEventSource extends AbstractEventSource {
     private final KinesisStream kinesisStream;
     private final Function<String, String> deserializer;
 
-    public KinesisEventSource(final KinesisStream kinesisStream,
+    public KinesisEventSource(final String name,
+                              final KinesisStream kinesisStream,
                               final TextEncryptor textEncryptor,
                               final ObjectMapper objectMapper) {
-        super(objectMapper);
+        super(name, objectMapper);
         this.deserializer = textEncryptor::decrypt;
         this.kinesisStream = kinesisStream;
     }

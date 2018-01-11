@@ -7,18 +7,15 @@ import java.util.regex.Pattern;
 
 public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
 
-    private final String streamName;
     private final Pattern keyPattern;
     private final Class<T> payloadType;
     private final Object instance;
     private final Method method;
 
-    public MethodInvokingEventConsumer(final String streamName,
-                                       final String keyPattern,
+    public MethodInvokingEventConsumer(final String keyPattern,
                                        final Class<T> payloadType,
                                        final Object instance,
                                        final Method method) {
-        Objects.requireNonNull(streamName, "stream name must not be null");
         Objects.requireNonNull(keyPattern, "keyPattern must not be null");
         Objects.requireNonNull(payloadType, "payloadType must not be null");
         Objects.requireNonNull(instance, "Unable to build MethodInvokingEventConsumer: instance parameter is null");
@@ -32,16 +29,10 @@ public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
             throw new IllegalArgumentException("Unable to build MethodInvokingEventConsumer: expected parameter type is Event, not " + paramType.getName());
         }
 
-        this.streamName = streamName;
         this.keyPattern = Pattern.compile(keyPattern);
         this.payloadType = payloadType;
         this.method = method;
         this.instance = instance;
-    }
-
-    @Override
-    public String streamName() {
-        return streamName;
     }
 
     /**

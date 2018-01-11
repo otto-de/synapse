@@ -2,8 +2,6 @@ package de.otto.edison.eventsourcing;
 
 import de.otto.edison.eventsourcing.consumer.*;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.BeanInitializationException;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
@@ -11,14 +9,22 @@ import java.util.function.Predicate;
 
 public class DelegateEventSource implements EventSource, ApplicationContextAware {
 
+    private final String name;
     private final String streamName;
     private final String eventSourceBuilder;
     private EventSource delegate;
 
-    public DelegateEventSource(final String streamName,
+    public DelegateEventSource(final String name,
+                               final String streamName,
                                final String eventSourceBuilder) {
+        this.name = name;
         this.streamName = streamName;
         this.eventSourceBuilder = eventSourceBuilder;
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 
     public EventSource getDelegate() {
@@ -29,7 +35,7 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
     public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
         delegate = applicationContext
                 .getBean(eventSourceBuilder, EventSourceBuilder.class)
-                .buildEventSource(streamName);
+                .buildEventSource(name, streamName);
     }
 
     /**

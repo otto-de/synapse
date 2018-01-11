@@ -32,7 +32,7 @@ public @interface EnableEventSource {
      *
      * @return bean name
      */
-    String name() default "";
+    String name();
 
     /**
      * The name of the event stream.

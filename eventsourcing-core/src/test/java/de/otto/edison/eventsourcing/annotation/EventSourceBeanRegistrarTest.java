@@ -24,7 +24,7 @@ public class EventSourceBeanRegistrarTest {
         }
     }
 
-    @EnableEventSource(streamName = "test-stream", builder = "snapshotEventSourceBuilder")
+    @EnableEventSource(name = "testEventSource", streamName = "test-stream", builder = "snapshotEventSourceBuilder")
     static class SingleEventSourceTestConfig {
     }
 
@@ -69,21 +69,12 @@ public class EventSourceBeanRegistrarTest {
     }
 
     @Test
-    public void shouldRegisterEventSourceWithDefaultName() {
+    public void shouldRegisterEventSource() {
         context.register(SingleEventSourceTestConfig.class);
         context.register(EventSourcingConfiguration.class);
         context.refresh();
 
-        assertThat(context.containsBean("testStreamEventSource")).isTrue();
-    }
-
-    @Test
-    public void shouldRegisterEventSourceWithCustomName() {
-        context.register(RepeatableMultiEventSourceTestConfig.class);
-        context.register(EventSourcingConfiguration.class);
-        context.refresh();
-
-        assertThat(context.containsBean("firstEventSource")).isTrue();
+        assertThat(context.containsBean("testEventSource")).isTrue();
     }
 
     @Test
@@ -102,7 +93,7 @@ public class EventSourceBeanRegistrarTest {
         context.register(EventSourcingConfiguration.class);
         context.refresh();
 
-        final DelegateEventSource testEventSource = context.getBean("testStreamEventSource", DelegateEventSource.class);
+        final DelegateEventSource testEventSource = context.getBean("testEventSource", DelegateEventSource.class);
         assertThat(testEventSource.getDelegate()).isInstanceOf(SnapshotEventSource.class);
     }
 

@@ -26,12 +26,13 @@ public class SnapshotEventSource extends AbstractEventSource {
 
     private File forcedSnapshotFile = null;
 
-    public SnapshotEventSource(final String streamName,
+    public SnapshotEventSource(final String name,
+                               final String streamName,
                                final SnapshotReadService snapshotReadService,
                                final SnapshotConsumerService snapshotConsumerService,
                                final ApplicationEventPublisher eventPublisher,
                                final ObjectMapper objectMapper) {
-        super(objectMapper);
+        super(name, objectMapper);
         this.streamName = streamName;
         this.snapshotReadService = snapshotReadService;
         this.snapshotConsumerService = snapshotConsumerService;

@@ -6,24 +6,16 @@ import java.util.regex.Pattern;
 
 public class DefaultEventConsumer<T> implements EventConsumer<T> {
 
-    private final String streamName;
     private final Pattern keyPattern;
     private final StateRepository<T> stateRepository;
     private final Class<T> payloadType;
 
-    public DefaultEventConsumer(final String streamName,
-                                final String keyPattern,
+    public DefaultEventConsumer(final String keyPattern,
                                 final Class<T> payloadType,
                                 final StateRepository<T> stateRepository) {
-        this.streamName = streamName;
         this.keyPattern = Pattern.compile(keyPattern);
         this.payloadType = payloadType;
         this.stateRepository = stateRepository;
-    }
-
-    @Override
-    public String streamName() {
-        return streamName;
     }
 
     /**

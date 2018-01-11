@@ -18,14 +18,13 @@ import static org.mockito.Mockito.when;
 public class EventConsumersTest {
 
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    public static final String TEST_STREAM = "test-stream";
 
     @Test
     public void shouldDelegateEventsToAllConsumers() throws Exception {
         // given
-        TestEventConsumer<Object> eventConsumerA = spy(testEventConsumer(TEST_STREAM, Object.class));
-        TestEventConsumer<Object> eventConsumerB = spy(testEventConsumer(TEST_STREAM, Object.class));
-        TestEventConsumer<Object> eventConsumerC = spy(testEventConsumer(TEST_STREAM, Object.class));
+        TestEventConsumer<Object> eventConsumerA = spy(testEventConsumer(".*", Object.class));
+        TestEventConsumer<Object> eventConsumerB = spy(testEventConsumer(".*", Object.class));
+        TestEventConsumer<Object> eventConsumerC = spy(testEventConsumer(".*", Object.class));
 
         EventConsumers eventConsumers = new EventConsumers(OBJECT_MAPPER);
         eventConsumers.add(eventConsumerA);
@@ -46,9 +45,9 @@ public class EventConsumersTest {
     public void shouldDelegateEventsToSpecificConsumersForEventKey() throws Exception {
         // given
 
-        TestEventConsumer<Apple> eventConsumerApple = spy(testEventConsumer(TEST_STREAM, "apple.*", Apple.class));
-        TestEventConsumer<Banana> eventConsumerBanana = spy(testEventConsumer(TEST_STREAM, "banana.*", Banana.class));
-        TestEventConsumer<Cherry> eventConsumerCherry = spy(testEventConsumer(TEST_STREAM, "cherry.*", Cherry.class));
+        TestEventConsumer<Apple> eventConsumerApple = spy(testEventConsumer("apple.*", Apple.class));
+        TestEventConsumer<Banana> eventConsumerBanana = spy(testEventConsumer("banana.*", Banana.class));
+        TestEventConsumer<Cherry> eventConsumerCherry = spy(testEventConsumer("cherry.*", Cherry.class));
 
         EventConsumers eventConsumers = new EventConsumers(OBJECT_MAPPER, asList(eventConsumerApple, eventConsumerBanana, eventConsumerCherry));
 
@@ -63,24 +62,6 @@ public class EventConsumersTest {
         verify(eventConsumerBanana).accept(new Event<>(someBananaEvent.key(), new Banana(), someBananaEvent.sequenceNumber(), someBananaEvent.arrivalTimestamp(), someBananaEvent.durationBehind().get()));
         verify(eventConsumerCherry, never()).accept(any(Event.class));
     }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldThrowIllegalArgumentExceptionWhenConsumersHaveDifferentStreamNames() {
-        // given
-        EventSource eventSourceMock = Mockito.mock(EventSource.class);
-        when(eventSourceMock.getStreamName()).thenReturn("test-stream-A");
-
-        TestEventConsumer<Object> eventConsumerA = spy(testEventConsumer("test-stream-A", Object.class));
-        TestEventConsumer<Object> eventConsumerB = spy(testEventConsumer("test-stream-B", Object.class));
-
-
-        // when
-        new EventConsumers(OBJECT_MAPPER, asList(eventConsumerA, eventConsumerB));
-
-        // then expect exception
-    }
-
-
 
     static class Apple {
         public boolean equals(Object o) {

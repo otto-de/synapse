@@ -29,11 +29,11 @@ public class KinesisEventSourceBuilder implements EventSourceBuilder {
     }
 
     @Override
-    public EventSource buildEventSource(final String streamName) {
+    public EventSource buildEventSource(final String name, final String streamName) {
         Objects.requireNonNull(streamName, "stream name must not be null");
         LOG.info("Building '{}' as KinesisEventSource", streamName);
         final KinesisStream kinesisStream = new KinesisStream(kinesisClient, streamName);
-        return new KinesisEventSource(kinesisStream, textEncryptor, objectMapper);
+        return new KinesisEventSource(name, kinesisStream, textEncryptor, objectMapper);
     }
 
 }

@@ -91,7 +91,7 @@ public class SnapshotWriteServiceTest {
 
         SnapshotConsumerService snapshotConsumerService = new SnapshotConsumerService(Encryptors.noOpText());
 
-        final EventConsumer<Map> eventConsumer = EventConsumer.of("test", ".*", Map.class,
+        final EventConsumer<Map> eventConsumer = EventConsumer.of(".*", Map.class,
                 (event) -> {
                     System.out.println(event);
                     data.put(event.key(), event.payload());

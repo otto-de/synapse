@@ -30,12 +30,10 @@ public class EventConsumers {
     public EventConsumers(final ObjectMapper objectMapper, final List<EventConsumer<?>> eventConsumers) {
         this.eventConsumers = synchronizedList(new ArrayList<>(eventConsumers));
         this.objectMapper = objectMapper;
-        assertSameStreamNameForAllConsumers();
     }
 
     public void add(final EventConsumer<?> eventConsumer) {
         this.eventConsumers.add(eventConsumer);
-        assertSameStreamNameForAllConsumers();
     }
 
     public List<EventConsumer<?>> getAll() {
@@ -65,17 +63,6 @@ public class EventConsumers {
 
     private boolean matchesEventKey(Event<String> event, Pattern keyPattern) {
         return keyPattern.matcher(event.key()).matches();
-    }
-
-    private void assertSameStreamNameForAllConsumers() {
-        long count = eventConsumers
-                .stream()
-                .map(EventConsumer::streamName)
-                .distinct()
-                .count();
-        if (count > 1) {
-            throw new IllegalArgumentException("Event consumers must have same event stream name");
-        }
     }
 
 }

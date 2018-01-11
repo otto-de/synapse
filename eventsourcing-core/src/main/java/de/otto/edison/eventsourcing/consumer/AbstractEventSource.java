@@ -4,10 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public abstract class AbstractEventSource implements EventSource {
 
+    private final String name;
     private final EventConsumers eventConsumers;
 
-    public AbstractEventSource(final ObjectMapper objectMapper) {
+    public AbstractEventSource(final String name, final ObjectMapper objectMapper) {
+        this.name = name;
         this.eventConsumers = new EventConsumers(objectMapper);
+    }
+
+    public String getName() {
+        return name;
     }
 
     /**
@@ -20,11 +26,7 @@ public abstract class AbstractEventSource implements EventSource {
      */
     @Override
     public void register(final EventConsumer<?> eventConsumer) {
-        if (eventConsumer.streamName().equals(getStreamName())) {
-            eventConsumers.add(eventConsumer);
-        } else {
-            throw new IllegalArgumentException("Consumer does not consume events from event-stream " + getStreamName());
-        }
+        eventConsumers.add(eventConsumer);
     }
 
     /**

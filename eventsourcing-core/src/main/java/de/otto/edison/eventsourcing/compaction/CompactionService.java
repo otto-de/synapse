@@ -45,9 +45,9 @@ public class CompactionService {
 
         LOG.info("Start loading entries into inMemoryCache from snapshot");
 
-        final EventSource compactingKinesisEventSource = eventSourceBuilder.buildEventSource(streamName);
+        final EventSource compactingKinesisEventSource = eventSourceBuilder.buildEventSource("compactionSource", streamName);
         compactingKinesisEventSource.register(
-                new DefaultEventConsumer<>(streamName, ".*", String.class, stateRepository)
+                new DefaultEventConsumer<>(".*", String.class, stateRepository)
         );
 
         try {

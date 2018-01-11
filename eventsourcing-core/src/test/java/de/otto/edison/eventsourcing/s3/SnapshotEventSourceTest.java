@@ -40,12 +40,14 @@ public class SnapshotEventSourceTest {
 
     @Before
     public void init() {
-        snapshotEventSource = new SnapshotEventSource(STREAM_NAME,
+        snapshotEventSource = new SnapshotEventSource(
+                "snapshotEventSource",
+                STREAM_NAME,
                 snapshotReadService,
                 snapshotConsumerService,
                 applicationEventPublisher,
                 new ObjectMapper());
-        snapshotEventSource.register(EventConsumer.of(STREAM_NAME, ".*", String.class, (event)->{}));
+        snapshotEventSource.register(EventConsumer.of(".*", String.class, (event)->{}));
     }
 
     @Test(expected = RuntimeException.class)

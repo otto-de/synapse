@@ -39,6 +39,11 @@ public class CompactingKinesisEventSource implements EventSource {
         kinesisEventSource.register(eventConsumer);
     }
 
+    @Override
+    public String getName() {
+        return kinesisEventSource.getName();
+    }
+
     /**
      * Returns the list of registered EventConsumers.
      *

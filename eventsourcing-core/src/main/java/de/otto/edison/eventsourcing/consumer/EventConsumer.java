@@ -33,18 +33,12 @@ import static java.util.regex.Pattern.compile;
 @ThreadSafe
 public interface EventConsumer<T> extends Consumer<Event<T>> {
 
-    static <T> EventConsumer<T> of(final String streamName,
-                                   final String keyPattern,
+    static <T> EventConsumer<T> of(final String keyPattern,
                                    final Class<T> payloadType,
                                    final Consumer<Event<T>> consumer) {
         return new EventConsumer<T>() {
 
             private Pattern pattern = compile(keyPattern);
-
-            @Override
-            public String streamName() {
-                return streamName;
-            }
 
             @Override
             public Class<T> payloadType() {
@@ -62,16 +56,6 @@ public interface EventConsumer<T> extends Consumer<Event<T>> {
             }
         };
     }
-
-    /**
-     * Returns the name of the consumed {@link EventSource}.
-     * <p>
-     * For streaming event-sources, this is the name of the event stream.
-     * </p>
-     *
-     * @return event stream
-     */
-    String streamName();
 
     /**
      * Returns the expected payload type of {@link Event events} consumed by this EventConsumer.

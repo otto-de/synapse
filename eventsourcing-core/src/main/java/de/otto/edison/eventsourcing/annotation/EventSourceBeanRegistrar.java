@@ -95,15 +95,6 @@ public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, 
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private Class<? extends EventSourceBuilder> asClass(final Object type) {
-        if (type instanceof Class && type != void.class) {
-            return (Class<? extends EventSourceBuilder>) type;
-        } else {
-            return null;
-        }
-    }
-
     private void registerBeanDefinition(final BeanDefinitionRegistry registry,
                                         final String beanName,
                                         final String streamName,
@@ -111,6 +102,7 @@ public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, 
         registry.registerBeanDefinition(
                 beanName,
                 genericBeanDefinition(DelegateEventSource.class)
+                        .addConstructorArgValue(beanName)
                         .addConstructorArgValue(streamName)
                         .addConstructorArgValue(builderName)
                         .setDependencyCheck(DEPENDENCY_CHECK_ALL)

@@ -13,6 +13,6 @@ public interface EventSourceBuilder {
      * @param streamName event stream
      * @return EventSource
      */
-    EventSource buildEventSource(final String streamName);
+    EventSource buildEventSource(final String name, final String streamName);
 
 }

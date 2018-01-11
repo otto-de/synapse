@@ -13,6 +13,12 @@ import java.util.function.Predicate;
 public interface EventSource {
 
     /**
+     * The name of the EventSource.
+     *
+     */
+    String getName();
+
+    /**
      * Registers a new EventConsumer at the EventSource.
      *
      * {@link EventConsumer consumers} have to be thread safe as it may be called from multiple threads

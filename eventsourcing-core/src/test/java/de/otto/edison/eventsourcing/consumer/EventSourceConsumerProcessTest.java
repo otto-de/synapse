@@ -20,8 +20,8 @@ public class EventSourceConsumerProcessTest {
     @Test
     public void shouldInvokeTwoConsumersForSameEventSource() throws Exception {
         EventSource eventSource = spy(new TestEventSource());
-        TestEventConsumer eventConsumerA = spy(testEventConsumer(TEST_STREAM_NAME, MyPayload.class));
-        TestEventConsumer eventConsumerB = spy(testEventConsumer(TEST_STREAM_NAME, MyPayload.class));
+        TestEventConsumer eventConsumerA = spy(testEventConsumer(".*", MyPayload.class));
+        TestEventConsumer eventConsumerB = spy(testEventConsumer(".*", MyPayload.class));
         eventSource.register(eventConsumerA);
         eventSource.register(eventConsumerB);
 
@@ -41,7 +41,7 @@ public class EventSourceConsumerProcessTest {
     class TestEventSource extends AbstractEventSource {
 
         public TestEventSource() {
-            super(new ObjectMapper());
+            super("testEventSource", new ObjectMapper());
         }
 
         @Override

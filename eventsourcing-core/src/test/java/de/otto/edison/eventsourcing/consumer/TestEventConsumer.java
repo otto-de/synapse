@@ -4,34 +4,21 @@ import java.util.regex.Pattern;
 
 class TestEventConsumer<T> implements EventConsumer<T> {
 
-    private final String streamName;
     private final Class<T> payloadType;
     private final Pattern keyPattern;
 
-    public static TestEventConsumer<String> testEventConsumer(final String streamName) {
-        return testEventConsumer(streamName, ".*", String.class);
+    public static <T> TestEventConsumer<T> testEventConsumer(final Class<T> payloadType) {
+        return testEventConsumer(".*", payloadType);
     }
 
-    public static <T> TestEventConsumer<T> testEventConsumer(final String streamName,
+    public static <T> TestEventConsumer<T> testEventConsumer(final String keyPattern,
                                                              final Class<T> payloadType) {
-        return testEventConsumer(streamName, ".*", payloadType);
+        return new TestEventConsumer<>(keyPattern, payloadType);
     }
 
-    public static <T> TestEventConsumer<T> testEventConsumer(final String streamName,
-                                                             final String keyPattern,
-                                                             final Class<T> payloadType) {
-        return new TestEventConsumer<>(streamName, keyPattern, payloadType);
-    }
-
-    public TestEventConsumer(final String streamName, final String keyPattern, final Class<T> payloadType) {
-        this.streamName = streamName;
+    public TestEventConsumer(final String keyPattern, final Class<T> payloadType) {
         this.keyPattern = Pattern.compile(keyPattern);
         this.payloadType = payloadType;
-    }
-
-    @Override
-    public String streamName() {
-        return streamName;
     }
 
     /**

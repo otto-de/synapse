@@ -11,21 +11,12 @@ import java.lang.annotation.*;
 public @interface EventSourceConsumer {
 
     /**
-     * The name of the consumed event stream.
-     * <p>
-     *     Resolving placeholders like "${my.stream.name}" is supported for this property.
-     * </p>
-     * @return stream name
-     */
-    String streamName() default "";
-
-    /**
      * In some situations there might be multiple EventSource beans for a single event stream. In this
      * case, the eventSource attribute can be used to select one of the available beans.
      *
      * @return name of the EventSource bean to register the EventConsumer.
      */
-    String eventSource() default "";
+    String eventSource();
 
     /**
      * The regex pattern to filter events by their key that the consumer should receive.

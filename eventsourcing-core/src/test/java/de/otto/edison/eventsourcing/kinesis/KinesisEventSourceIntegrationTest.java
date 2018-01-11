@@ -63,8 +63,8 @@ public class KinesisEventSourceIntegrationTest {
     public void setup() {
         KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, STREAM_NAME, EXPECTED_NUMBER_OF_SHARDS);
         KinesisStream kinesisStream = new KinesisStream(kinesisClient, STREAM_NAME);
-        this.eventSource = new KinesisEventSource(kinesisStream, Encryptors.noOpText(), objectMapper);
-        this.eventSource.register(EventConsumer.of(STREAM_NAME, ".*", String.class, events::add));
+        this.eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, Encryptors.noOpText(), objectMapper);
+        this.eventSource.register(EventConsumer.of(".*", String.class, events::add));
     }
 
     @Test

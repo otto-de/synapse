@@ -73,10 +73,8 @@ public class KinesisEventSourceTest {
     @Before
     public void setUp() {
         KinesisShard shard1 = new KinesisShard("shard1", kinesisStream, kinesisClient);
-        when(testDataConsumer.streamName()).thenReturn("test");
         when(testDataConsumer.keyPattern()).thenReturn(Pattern.compile(".*"));
         when(testDataConsumer.payloadType()).thenReturn(TestData.class);
-        when(stringConsumer.streamName()).thenReturn("test");
         when(stringConsumer.keyPattern()).thenReturn(Pattern.compile(".*"));
         when(stringConsumer.payloadType()).thenReturn(String.class);
         when(kinesisStream.getStreamName()).thenReturn("test");
@@ -109,7 +107,7 @@ public class KinesisEventSourceTest {
         // given
         StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
 
-        KinesisEventSource eventSource = new KinesisEventSource(kinesisStream, Encryptors.noOpText(), objectMapper);
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, Encryptors.noOpText(), objectMapper);
         eventSource.register(testDataConsumer);
 
         // when
@@ -130,7 +128,7 @@ public class KinesisEventSourceTest {
         StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
 
 
-        KinesisEventSource eventSource = new KinesisEventSource(kinesisStream, Encryptors.noOpText(), objectMapper);
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, Encryptors.noOpText(), objectMapper);
         eventSource.register(stringConsumer);
 
         // when
@@ -148,7 +146,7 @@ public class KinesisEventSourceTest {
     public void shouldAlwaysPassMillisBehindLatestToStopCondition() {
         // given
         StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
-        KinesisEventSource eventSource = new KinesisEventSource(kinesisStream, Encryptors.noOpText(), objectMapper);
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, Encryptors.noOpText(), objectMapper);
         eventSource.register(stringConsumer);
         when(stringStopCondition.test(any())).thenReturn(true);
 
@@ -176,7 +174,7 @@ public class KinesisEventSourceTest {
 
         when(kinesisStream.retrieveAllOpenShards()).thenReturn(shards);
 
-        KinesisEventSource eventSource = new KinesisEventSource(kinesisStream, Encryptors.noOpText(), objectMapper);
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, Encryptors.noOpText(), objectMapper);
         eventSource.register(testDataConsumer);
 
         // when

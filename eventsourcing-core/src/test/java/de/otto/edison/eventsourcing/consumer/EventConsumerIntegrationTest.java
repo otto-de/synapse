@@ -90,7 +90,7 @@ public class EventConsumerIntegrationTest {
         }
 
         @EventSourceConsumer(
-                streamName = "test-stream",
+                eventSource = "test",
                 keyPattern = "^banana.*",
                 payloadType = Banana.class)
         public void consumeBananaEvents(Event<Banana> event) {
@@ -99,7 +99,7 @@ public class EventConsumerIntegrationTest {
         }
 
         @EventSourceConsumer(
-                streamName = "test-stream",
+                eventSource = "test",
                 keyPattern = "^apple.*",
                 payloadType = Apple.class)
         public void consumeAppleEvents(Event<Apple> event) {
@@ -108,7 +108,7 @@ public class EventConsumerIntegrationTest {
         }
     }
 
-    @EnableEventSource(streamName = "test-stream")
+    @EnableEventSource(name = "test", streamName = "test-stream")
     static class TestConfiguration {
 
         @Bean

@@ -33,7 +33,7 @@ public class SnapshotConsumerServiceTest {
         File file = new File(getClass().getClassLoader().getResource("compaction-integrationtest-snapshot-2017-09-29T09-02Z-3053797267191232636.json.zip").getFile());
         Map<String, Map> allData = new HashMap<>();
         //when
-        final EventConsumer<Map> eventConsumer = EventConsumer.of("test", ".*", Map.class, (event) -> {
+        final EventConsumer<Map> eventConsumer = EventConsumer.of(".*", Map.class, (event) -> {
             System.out.println(event.payload());
             allData.put(event.key(), event.payload());
         });
