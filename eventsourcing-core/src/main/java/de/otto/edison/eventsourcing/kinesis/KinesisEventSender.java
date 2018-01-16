@@ -22,16 +22,37 @@ public class KinesisEventSender {
     }
 
     public void sendEvent(String key, Object payload) throws JsonProcessingException {
-        kinesisStream.send(key, convertToEncryptedByteBuffer(payload));
+        sendEvent(key, payload, true);
+    }
+
+    public void sendEvent(String key, Object payload, boolean encryptEvent) throws JsonProcessingException {
+        if (encryptEvent) {
+            kinesisStream.send(key, convertToEncryptedByteBuffer(payload));
+        } else {
+            kinesisStream.send(key, convertToByteBuffer(payload));
+        }
     }
 
     public void sendEvents(Map<String, Object> events) throws JsonProcessingException {
+        sendEvents(events, true);
+    }
+
+    public void sendEvents(Map<String, Object> events, boolean encryptEvents) throws JsonProcessingException {
         Map<String, ByteBuffer> resultMap = new HashMap<>(events.size());
         for (Map.Entry<String, Object> event : events.entrySet()) {
-            resultMap.put(event.getKey(), convertToEncryptedByteBuffer(event.getValue()));
+            if (encryptEvents) {
+                resultMap.put(event.getKey(), convertToEncryptedByteBuffer(event.getValue()));
+            } else {
+                resultMap.put(event.getKey(), convertToByteBuffer(event.getValue()));
+            }
         }
 
         kinesisStream.sendMultiple(resultMap);
+    }
+
+    private ByteBuffer convertToByteBuffer(Object payload) throws JsonProcessingException {
+        return ByteBuffer.wrap(objectMapper.writeValueAsString(payload)
+                .getBytes(Charsets.UTF_8));
     }
 
     private ByteBuffer convertToEncryptedByteBuffer(Object payload) throws JsonProcessingException {
