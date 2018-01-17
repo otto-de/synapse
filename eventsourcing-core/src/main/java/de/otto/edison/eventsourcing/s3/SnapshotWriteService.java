@@ -97,7 +97,7 @@ public class SnapshotWriteService {
             jGenerator.flush();
             zipOutputStream.closeEntry();
         } catch (Exception e) {
-            LOG.error("Exception while creating snapshot {}", e);
+            deleteFile(snapshotFile);
             throw e;
         }
         return snapshotFile;

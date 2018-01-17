@@ -40,12 +40,12 @@ import static org.mockito.Mockito.when;
 public class SnapshotWriteServiceTest {
 
     private static final String STREAM_NAME = "teststream";
-    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private SnapshotWriteService testee;
     private S3Service s3Service;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         EventSourcingProperties eventSourcingProperties = SnapshotServiceTestUtils.createEventSourcingProperties();
         s3Service = mock(S3Service.class);
         testee = new SnapshotWriteService(s3Service, eventSourcingProperties);
@@ -106,6 +106,7 @@ public class SnapshotWriteServiceTest {
         assertThat(data.get("testKey2"), is(ImmutableMap.of("testValue2", "value2")));
         assertThat(data.size(), is(2));
     }
+
     @Test
     public void shouldDeleteSnapshotEvenIfUploadFails() throws Exception {
         // given
