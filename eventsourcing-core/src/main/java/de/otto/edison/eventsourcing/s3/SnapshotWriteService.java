@@ -55,7 +55,9 @@ public class SnapshotWriteService {
             uploadSnapshot(this.snapshotBucketName, snapshotFile);
             LOG.info("Finished uploading snapshot file to s3");
         } finally {
-            deleteFile(snapshotFile);
+            if (snapshotFile != null) {
+                deleteFile(snapshotFile);
+            }
         }
         return snapshotFile.getName();
     }
@@ -95,7 +97,7 @@ public class SnapshotWriteService {
             jGenerator.flush();
             zipOutputStream.closeEntry();
         } catch (Exception e) {
-            deleteFile(snapshotFile);
+            LOG.error("Exception while creating snapshot {}", e);
             throw e;
         }
         return snapshotFile;
