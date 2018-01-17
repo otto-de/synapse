@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -32,6 +33,7 @@ public class SnapshotReadService {
     private final String snapshotBucketName;
     private final TempFileService tempFileService;
 
+    private File forcedSnapshotFile = null;
 
     public SnapshotReadService(final EventSourcingProperties properties,
                                final S3Service s3Service,
@@ -41,8 +43,25 @@ public class SnapshotReadService {
         this.tempFileService = tempFileService;
     }
 
+    /**
+     * Force to read a local snapshot file instead of retrieving it from S3 bucket.
+     *
+     * @param file local snapshot file to read
+     */
+    public void setSnapshotFile(File file) {
+        Objects.requireNonNull(file, "file must not be null");
+        if (!file.exists() || !file.canRead()) {
+            throw new IllegalArgumentException("snapshot file does not exists or is not readable");
+        }
+        this.forcedSnapshotFile = file;
+    }
 
     public Optional<File> retrieveLatestSnapshot(String streamName) {
+        if (forcedSnapshotFile != null) {
+            LOG.info("Use local Snapshot file: {}", forcedSnapshotFile);
+            return Optional.of(forcedSnapshotFile);
+        }
+
         LOG.info("Start downloading snapshot from S3");
         infoDiskUsage();
 
@@ -118,6 +137,11 @@ public class SnapshotReadService {
     }
 
     public void deleteOlderSnapshots(String streamName) {
+        if (forcedSnapshotFile != null) {
+            LOG.info("Skip deleting local Snapshot file: {}", forcedSnapshotFile);
+            return;
+        }
+
         String snapshotFileNamePrefix = getSnapshotFileNamePrefix(streamName);
         String snapshotFileSuffix = ".json.zip";
         List<File> oldestFiles;

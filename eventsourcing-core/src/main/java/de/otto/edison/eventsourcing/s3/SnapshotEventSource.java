@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.File;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -24,8 +23,6 @@ public class SnapshotEventSource extends AbstractEventSource {
     private final SnapshotConsumerService snapshotConsumerService;
     private final ApplicationEventPublisher eventPublisher;
 
-    private File forcedSnapshotFile = null;
-
     public SnapshotEventSource(final String name,
                                final String streamName,
                                final SnapshotReadService snapshotReadService,
@@ -37,14 +34,6 @@ public class SnapshotEventSource extends AbstractEventSource {
         this.snapshotReadService = snapshotReadService;
         this.snapshotConsumerService = snapshotConsumerService;
         this.eventPublisher = eventPublisher;
-    }
-
-    public void setSnapshotFile(File file) {
-        Objects.requireNonNull(file, "file must not be null");
-        if (!file.exists() || !file.canRead()) {
-            throw new IllegalArgumentException("snapshot file does not exists or is not readable");
-        }
-        this.forcedSnapshotFile = file;
     }
 
     public String getStreamName() {
@@ -63,13 +52,13 @@ public class SnapshotEventSource extends AbstractEventSource {
 
     @Override
     public SnapshotStreamPosition consumeAll(final StreamPosition startFrom,
-                                     final Predicate<Event<?>> stopCondition) {
+                                             final Predicate<Event<?>> stopCondition) {
         SnapshotStreamPosition snapshotStreamPosition;
 
         try {
             publishEvent(startFrom, EventSourceNotification.Status.STARTED);
 
-            Optional<File> snapshotFile = getSnapshotFileToConsume();
+            Optional<File> snapshotFile = snapshotReadService.retrieveLatestSnapshot(streamName);
             if (snapshotFile.isPresent()) {
                 StreamPosition streamPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), streamName, stopCondition, registeredConsumers());
                 snapshotStreamPosition = SnapshotStreamPosition.of(streamPosition, SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName()));
@@ -81,27 +70,11 @@ public class SnapshotEventSource extends AbstractEventSource {
             throw new RuntimeException(e);
         } finally {
             LOG.info("Finished reading snapshot into Memory");
-            cleanUpSnapshotFiles();
+            snapshotReadService.deleteOlderSnapshots(streamName);
         }
         publishEvent(snapshotStreamPosition, EventSourceNotification.Status.FINISHED);
         return snapshotStreamPosition;
     }
-
-   private Optional<File> getSnapshotFileToConsume() {
-        if (this.forcedSnapshotFile == null) {
-            return snapshotReadService.retrieveLatestSnapshot(streamName);
-        } else {
-            LOG.info("Use local Snapshot file: {}", forcedSnapshotFile);
-            return Optional.of(forcedSnapshotFile);
-        }
-    }
-
-    private void cleanUpSnapshotFiles() {
-        if (this.forcedSnapshotFile == null) {
-            snapshotReadService.deleteOlderSnapshots(streamName);
-        }
-    }
-
 
     private void publishEvent(StreamPosition streamPosition, EventSourceNotification.Status status) {
         if (eventPublisher != null) {
@@ -113,7 +86,7 @@ public class SnapshotEventSource extends AbstractEventSource {
             try {
                 eventPublisher.publishEvent(notification);
             } catch (Exception e) {
-                LOG.error("error publishing event source notification: {}",  notification, e);
+                LOG.error("error publishing event source notification: {}", notification, e);
             }
         }
     }
