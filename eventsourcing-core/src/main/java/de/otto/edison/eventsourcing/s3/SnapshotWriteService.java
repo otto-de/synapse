@@ -101,9 +101,9 @@ public class SnapshotWriteService {
             throw e;
         } finally {
             jGenerator.flush();
-            jGenerator.close();
             zipOutputStream.closeEntry();
             zipOutputStream.close();
+            jGenerator.close();
             bos.close();
             fos.close();
         }
