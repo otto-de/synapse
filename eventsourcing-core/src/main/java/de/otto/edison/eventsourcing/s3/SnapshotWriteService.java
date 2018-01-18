@@ -3,11 +3,13 @@ package de.otto.edison.eventsourcing.s3;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.google.common.annotations.VisibleForTesting;
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.state.StateRepository;
 import org.slf4j.Logger;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 import java.io.*;
 import java.time.Instant;
@@ -32,15 +34,19 @@ public class SnapshotWriteService {
     private static final String START_SEQUENCE_NUMBERS_FIELD_NAME = "startSequenceNumbers";
     private static final String SHARD_FIELD_NAME = "shard";
     private static final String SEQUENCE_NUMBER_FIELD_NAME = "sequenceNumber";
+
     private final S3Service s3Service;
     private final String snapshotBucketName;
+    private final TextEncryptor textEncryptor;
 
-    private JsonFactory jsonFactory = new JsonFactory();
+    private final JsonFactory jsonFactory = new JsonFactory();
 
     public SnapshotWriteService(final S3Service s3Service,
-                                final EventSourcingProperties properties) {
+                                final EventSourcingProperties properties,
+                                final TextEncryptor textEncryptor) {
         this.s3Service = s3Service;
-        snapshotBucketName = properties.getSnapshot().getBucketName();
+        this.snapshotBucketName = properties.getSnapshot().getBucketName();
+        this.textEncryptor = textEncryptor;
     }
 
 
@@ -63,6 +69,7 @@ public class SnapshotWriteService {
         return snapshotFile.getName();
     }
 
+    @VisibleForTesting
     File createSnapshot(final String streamName,
                         final StreamPosition currentStreamPosition,
                         final StateRepository<String> stateRepository) throws IOException {
@@ -84,6 +91,7 @@ public class SnapshotWriteService {
                 try {
                     String entry = stateRepository.get(key).get();
                     if (!("".equals(entry))) {
+                        entry = decryptIfNecessary(entry);
                         jGenerator.writeStartObject();
                         jGenerator.writeStringField(key, entry);
                         jGenerator.writeEndObject();
@@ -108,6 +116,15 @@ public class SnapshotWriteService {
             fos.close();
         }
         return snapshotFile;
+    }
+
+    @VisibleForTesting
+    String decryptIfNecessary(String entry) {
+        if (entry.startsWith("{")) {
+            return entry;
+        } else {
+            return textEncryptor.decrypt(entry);
+        }
     }
 
     private void deleteFile(File file) {

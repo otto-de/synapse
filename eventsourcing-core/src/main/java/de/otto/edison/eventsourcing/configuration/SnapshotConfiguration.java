@@ -40,8 +40,9 @@ public class SnapshotConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public SnapshotWriteService snapshotCreationService(final S3Service s3Service,
-                                                        final EventSourcingProperties eventSourcingProperties) {
-        return new SnapshotWriteService(s3Service, eventSourcingProperties);
+                                                        final EventSourcingProperties eventSourcingProperties,
+                                                        final TextEncryptor textEncryptor) {
+        return new SnapshotWriteService(s3Service, eventSourcingProperties, textEncryptor);
     }
 
     @Bean

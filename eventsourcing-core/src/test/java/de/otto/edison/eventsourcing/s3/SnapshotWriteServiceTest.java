@@ -7,13 +7,16 @@ import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventConsumers;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
+import de.otto.edison.eventsourcing.encryption.Base64EncodingTextEncryptor;
 import de.otto.edison.eventsourcing.state.DefaultStateRepository;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.springframework.security.crypto.codec.Hex;
 import org.springframework.security.crypto.encrypt.Encryptors;
+import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,14 +44,17 @@ public class SnapshotWriteServiceTest {
 
     private static final String STREAM_NAME = "teststream";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private SnapshotWriteService testee;
     private S3Service s3Service;
+    private TextEncryptor encryptor;
 
     @Before
     public void setUp() {
         EventSourcingProperties eventSourcingProperties = SnapshotServiceTestUtils.createEventSourcingProperties();
         s3Service = mock(S3Service.class);
-        testee = new SnapshotWriteService(s3Service, eventSourcingProperties);
+        encryptor = new Base64EncodingTextEncryptor(Encryptors.standard("test", new String(Hex.encode("test".getBytes()))));
+        testee = new SnapshotWriteService(s3Service, eventSourcingProperties, encryptor);
     }
 
     @After
@@ -146,6 +152,25 @@ public class SnapshotWriteServiceTest {
 
         // then
         assertThat(getSnapshotFilePaths().size(), is(0));
+    }
+
+    @Test
+    public void shouldNotDecryptBecauseNotEncrypted() {
+        String entry = "{\"id\": \"someId\", \"otherDings\": \"bla\" }";
+
+        String out = testee.decryptIfNecessary(entry);
+
+        assertThat(out, is(entry));
+    }
+
+    @Test
+    public void shouldDecryptBecauseEncrypted() {
+        String entry = "{\"id\": \"someId\", \"otherDings\": \"bla\" }";
+        String encryptedEntry = encryptor.encrypt(entry);
+
+        String out = testee.decryptIfNecessary(encryptedEntry);
+
+        assertThat(out, is(entry));
     }
 
     private void deleteSnapshotFilesFromTemp() throws IOException {
