@@ -100,12 +100,12 @@ public class SnapshotWriteService {
             deleteFile(snapshotFile);
             throw e;
         } finally {
-            fos.close();
-            bos.close();
             jGenerator.flush();
             jGenerator.close();
             zipOutputStream.closeEntry();
             zipOutputStream.close();
+            bos.close();
+            fos.close();
         }
         return snapshotFile;
     }
