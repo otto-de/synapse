@@ -114,6 +114,7 @@ public class SnapshotWriteService {
             jGenerator.close();
             bos.close();
             fos.close();
+            System.gc();
         }
         return snapshotFile;
     }
