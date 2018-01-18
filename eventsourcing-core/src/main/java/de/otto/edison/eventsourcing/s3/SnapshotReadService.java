@@ -128,6 +128,7 @@ public class SnapshotReadService {
         } finally {
             try {
                 if (file != null) {
+                    LOG.info("delete file {}", file.toPath().toString());
                     delete(file.toPath());
                 }
             } catch (IOException e) {
