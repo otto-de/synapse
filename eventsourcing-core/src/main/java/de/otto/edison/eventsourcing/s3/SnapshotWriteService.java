@@ -91,7 +91,7 @@ public class SnapshotWriteService {
                 try {
                     String entry = stateRepository.get(key).get();
                     if (!("".equals(entry))) {
-                        entry = decryptIfNecessary(entry);
+                        // entry = decryptIfNecessary(entry);
                         jGenerator.writeStartObject();
                         jGenerator.writeStringField(key, entry);
                         jGenerator.writeEndObject();
