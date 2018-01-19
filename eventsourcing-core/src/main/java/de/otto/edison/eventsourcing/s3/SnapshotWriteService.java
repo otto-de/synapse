@@ -142,7 +142,7 @@ public class SnapshotWriteService {
     }
 
     private void uploadSnapshot(String bucketName, final File snapshotFile) {
-        s3Service.upload(bucketName, snapshotFile, S3Service.EncryptionType.AWS_KMS);
+        s3Service.upload(bucketName, snapshotFile);
     }
 
     private void writeSequenceNumbers(StreamPosition currentStreamPosition, JsonGenerator jGenerator) throws IOException {

@@ -1,7 +1,7 @@
 apply plugin: 'java-library'
 
 dependencies {
-    implementation "de.otto.edison:edison-aws-s3:0.2.9-SNAPSHOT"
+    implementation "de.otto.edison:edison-aws-s3:0.2.4"
 
     implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
     implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
