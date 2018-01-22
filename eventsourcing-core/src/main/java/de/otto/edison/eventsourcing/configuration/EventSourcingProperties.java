@@ -23,8 +23,11 @@ public class EventSourcingProperties {
         this.consumerProcess = consumerProcess;
     }
 
+
     public static class Snapshot {
         private String bucketName;
+        private String sseType;
+        private String sseKey;
 
         public String getBucketName() {
             return bucketName;
@@ -32,6 +35,24 @@ public class EventSourcingProperties {
 
         public void setBucketName(String bucketName) {
             this.bucketName = bucketName;
+        }
+
+        public String getSseKey() {
+            return sseKey;
+        }
+
+        public Snapshot setSseKey(String sseKey) {
+            this.sseKey = sseKey;
+            return this;
+        }
+
+        public String getSseType() {
+            return sseType;
+        }
+
+        public Snapshot setSseType(String sseType) {
+            this.sseType = sseType;
+            return this;
         }
     }
 

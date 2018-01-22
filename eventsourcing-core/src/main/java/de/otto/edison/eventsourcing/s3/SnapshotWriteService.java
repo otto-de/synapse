@@ -9,7 +9,12 @@ import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.state.StateRepository;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.model.ServerSideEncryption;
 
 import java.io.*;
 import java.time.Instant;
@@ -36,17 +41,22 @@ public class SnapshotWriteService {
     private static final String SEQUENCE_NUMBER_FIELD_NAME = "sequenceNumber";
 
     private final S3Service s3Service;
-    private final String snapshotBucketName;
     private final TextEncryptor textEncryptor;
 
     private final JsonFactory jsonFactory = new JsonFactory();
 
+    private final S3Client s3Client;
+    private final EventSourcingProperties eventSourcingProperties;
+
+    @Autowired
     public SnapshotWriteService(final S3Service s3Service,
                                 final EventSourcingProperties properties,
-                                final TextEncryptor textEncryptor) {
+                                final TextEncryptor textEncryptor,
+                                final S3Client s3Client) {
         this.s3Service = s3Service;
-        this.snapshotBucketName = properties.getSnapshot().getBucketName();
+        this.eventSourcingProperties = properties;
         this.textEncryptor = textEncryptor;
+        this.s3Client = s3Client;
     }
 
 
@@ -58,7 +68,7 @@ public class SnapshotWriteService {
             LOG.info("Start creating new snapshot");
             snapshotFile = createSnapshot(streamName, position, stateRepository);
             LOG.info("Finished creating snapshot file: {}", snapshotFile.getAbsolutePath());
-            uploadSnapshot(this.snapshotBucketName, snapshotFile);
+            uploadSnapshot(eventSourcingProperties.getSnapshot().getBucketName(), snapshotFile);
             LOG.info("Finished uploading snapshot file to s3");
         } finally {
             if (snapshotFile != null) {
@@ -142,7 +152,20 @@ public class SnapshotWriteService {
     }
 
     private void uploadSnapshot(String bucketName, final File snapshotFile) {
-        s3Service.upload(bucketName, snapshotFile);
+        PutObjectRequest.Builder putObjectRequestBuilder = PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(snapshotFile.getName());
+
+        if ("kms".equals(eventSourcingProperties.getSnapshot().getSseType())) {
+            putObjectRequestBuilder.serverSideEncryption(ServerSideEncryption.AWS_KMS);
+            putObjectRequestBuilder.ssekmsKeyId(eventSourcingProperties.getSnapshot().getSseKey());
+        }
+
+        final PutObjectResponse putObjectResponse = s3Client.putObject(putObjectRequestBuilder.build(),
+                snapshotFile.toPath());
+
+        LOG.debug("upload {} to bucket {}: ", snapshotFile.getName(), bucketName, putObjectResponse.toString());
+
     }
 
     private void writeSequenceNumbers(StreamPosition currentStreamPosition, JsonGenerator jGenerator) throws IOException {
