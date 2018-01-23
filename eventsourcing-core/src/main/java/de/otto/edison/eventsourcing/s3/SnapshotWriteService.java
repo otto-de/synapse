@@ -74,15 +74,15 @@ public class SnapshotWriteService {
                         final StreamPosition currentStreamPosition,
                         final StateRepository<String> stateRepository) throws IOException {
         File snapshotFile = createSnapshotFile(streamName);
-        FileOutputStream fos = new FileOutputStream(snapshotFile);
-        BufferedOutputStream bos = new BufferedOutputStream(fos);
-        ZipOutputStream zipOutputStream = new ZipOutputStream(bos);
-        ZipEntry zipEntry = new ZipEntry(ZIP_ENTRY);
-        zipEntry.setMethod(ZipEntry.DEFLATED);
-        zipOutputStream.putNextEntry(zipEntry);
-        JsonGenerator jGenerator = jsonFactory.createGenerator(zipOutputStream, JsonEncoding.UTF8);
 
-        try {
+        try (FileOutputStream fos = new FileOutputStream(snapshotFile);
+             BufferedOutputStream bos = new BufferedOutputStream(fos);
+             ZipOutputStream zipOutputStream = new ZipOutputStream(bos)
+        ) {
+            ZipEntry zipEntry = new ZipEntry(ZIP_ENTRY);
+            zipEntry.setMethod(ZipEntry.DEFLATED);
+            zipOutputStream.putNextEntry(zipEntry);
+            JsonGenerator jGenerator = jsonFactory.createGenerator(zipOutputStream, JsonEncoding.UTF8);
             jGenerator.writeStartObject();
             writeSequenceNumbers(currentStreamPosition, jGenerator);
             // write to data file
@@ -103,17 +103,13 @@ public class SnapshotWriteService {
 
             jGenerator.writeEndArray();
             jGenerator.writeEndObject();
+            jGenerator.flush();
+            zipOutputStream.closeEntry();
         } catch (Exception e) {
             LOG.info("delete file {}", snapshotFile.toPath().toString());
             deleteFile(snapshotFile);
             throw e;
         } finally {
-            jGenerator.flush();
-            zipOutputStream.closeEntry();
-            zipOutputStream.close();
-            jGenerator.close();
-            bos.close();
-            fos.close();
             System.gc();
         }
         return snapshotFile;
