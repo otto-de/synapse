@@ -17,7 +17,6 @@ import org.mockito.Mockito;
 import org.springframework.security.crypto.codec.Hex;
 import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
-import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,15 +48,13 @@ public class SnapshotWriteServiceTest {
     private SnapshotWriteService testee;
     private S3Service s3Service;
     private TextEncryptor encryptor;
-    private S3Client s3Client;
 
     @Before
     public void setUp() {
         EventSourcingProperties eventSourcingProperties = SnapshotServiceTestUtils.createEventSourcingProperties();
         s3Service = mock(S3Service.class);
-        s3Client = mock(S3Client.class);
         encryptor = new Base64EncodingTextEncryptor(Encryptors.standard("test", new String(Hex.encode("test".getBytes()))));
-        testee = new SnapshotWriteService(s3Service, eventSourcingProperties, encryptor, s3Client);
+        testee = new SnapshotWriteService(s3Service, eventSourcingProperties, encryptor);
     }
 
     @After

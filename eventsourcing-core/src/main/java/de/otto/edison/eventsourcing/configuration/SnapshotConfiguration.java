@@ -13,7 +13,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
-import software.amazon.awssdk.services.s3.S3Client;
 
 @Configuration
 @EnableConfigurationProperties(EventSourcingProperties.class)
@@ -42,9 +41,8 @@ public class SnapshotConfiguration {
     @ConditionalOnMissingBean
     public SnapshotWriteService snapshotCreationService(final S3Service s3Service,
                                                         final EventSourcingProperties eventSourcingProperties,
-                                                        final TextEncryptor textEncryptor,
-                                                        final S3Client s3Client) {
-        return new SnapshotWriteService(s3Service, eventSourcingProperties, textEncryptor, s3Client);
+                                                        final TextEncryptor textEncryptor) {
+        return new SnapshotWriteService(s3Service, eventSourcingProperties, textEncryptor);
     }
 
     @Bean
