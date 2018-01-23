@@ -91,7 +91,7 @@ public class SnapshotWriteService {
                 try {
                     String entry = stateRepository.get(key).get();
                     if (!("".equals(entry))) {
-                        // entry = decryptIfNecessary(entry);
+                        // entry = TemporaryDecryption.decryptIfNecessary(entry);
                         jGenerator.writeStartObject();
                         jGenerator.writeStringField(key, entry);
                         jGenerator.writeEndObject();
@@ -113,15 +113,6 @@ public class SnapshotWriteService {
             System.gc();
         }
         return snapshotFile;
-    }
-
-    @VisibleForTesting
-    String decryptIfNecessary(String entry) {
-        if (entry.startsWith("{")) {
-            return entry;
-        } else {
-            return textEncryptor.decrypt(entry);
-        }
     }
 
     private void deleteFile(File file) {

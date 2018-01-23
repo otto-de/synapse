@@ -3,6 +3,7 @@ package de.otto.edison.eventsourcing.s3;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import de.otto.edison.eventsourcing.TemporaryDecryption;
 import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.EventConsumers;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
@@ -81,7 +82,7 @@ public class SnapshotConsumerService {
             JsonToken currentToken = parser.currentToken();
             if (currentToken == JsonToken.FIELD_NAME) {
                 final String key = parser.getValueAsString();
-                final String decryptedPayload = textEncryptor.decrypt(parser.nextTextValue());
+                final String decryptedPayload = TemporaryDecryption.decryptIfNecessary(parser.nextTextValue(), textEncryptor);
                 final Event<String> event = event(
                         key,
                         decryptedPayload,

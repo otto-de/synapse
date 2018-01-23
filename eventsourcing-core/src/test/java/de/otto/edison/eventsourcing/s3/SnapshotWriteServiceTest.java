@@ -154,25 +154,6 @@ public class SnapshotWriteServiceTest {
         assertThat(getSnapshotFilePaths().size(), is(0));
     }
 
-    @Test
-    public void shouldNotDecryptBecauseNotEncrypted() {
-        String entry = "{\"id\": \"someId\", \"otherDings\": \"bla\" }";
-
-        String out = testee.decryptIfNecessary(entry);
-
-        assertThat(out, is(entry));
-    }
-
-    @Test
-    public void shouldDecryptBecauseEncrypted() {
-        String entry = "{\"id\": \"someId\", \"otherDings\": \"bla\" }";
-        String encryptedEntry = encryptor.encrypt(entry);
-
-        String out = testee.decryptIfNecessary(encryptedEntry);
-
-        assertThat(out, is(entry));
-    }
-
     private void deleteSnapshotFilesFromTemp() throws IOException {
         getSnapshotFilePaths()
                 .forEach(path -> {

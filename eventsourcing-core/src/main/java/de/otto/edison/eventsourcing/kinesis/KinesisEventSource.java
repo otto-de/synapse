@@ -1,6 +1,7 @@
 package de.otto.edison.eventsourcing.kinesis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.edison.eventsourcing.TemporaryDecryption;
 import de.otto.edison.eventsourcing.consumer.AbstractEventSource;
 import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
@@ -32,6 +33,7 @@ public class KinesisEventSource extends AbstractEventSource {
 
     private final KinesisStream kinesisStream;
     private final Function<String, String> deserializer;
+    private final TextEncryptor textEncryptor;
 
     public KinesisEventSource(final String name,
                               final KinesisStream kinesisStream,
@@ -39,6 +41,7 @@ public class KinesisEventSource extends AbstractEventSource {
                               final ObjectMapper objectMapper) {
         super(name, objectMapper);
         this.deserializer = textEncryptor::decrypt;
+        this.textEncryptor = textEncryptor;
         this.kinesisStream = kinesisStream;
     }
 
@@ -93,8 +96,8 @@ public class KinesisEventSource extends AbstractEventSource {
 
     private Event<String> createEvent(Duration durationBehind, Record record) {
         return kinesisEvent(durationBehind, record, byteBuffer -> {
-            final String json = UTF_8.decode(record.data()).toString();
-            return deserializer.apply(json);
+            String json = UTF_8.decode(record.data()).toString();
+            return TemporaryDecryption.decryptIfNecessary(json, textEncryptor);
         });
     }
 
