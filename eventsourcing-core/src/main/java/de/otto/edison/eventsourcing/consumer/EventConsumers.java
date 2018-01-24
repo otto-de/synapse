@@ -51,7 +51,10 @@ public class EventConsumers {
                         if (payloadType.equals(String.class)) {
                             consumer.accept(event);
                         } else {
-                            final Object payload = objectMapper.readValue(event.payload(), payloadType);
+                            Object payload = null;
+                            if (event.payload() != null) {
+                                payload = objectMapper.readValue(event.payload(), payloadType);
+                            }
                             final Event<?> tEvent = Event.event(event.key(), payload, event.sequenceNumber(), event.arrivalTimestamp(), event.durationBehind().orElse(null));
                             consumer.accept(tEvent);
                         }

@@ -30,9 +30,7 @@ import java.util.stream.IntStream;
 
 import static com.google.common.collect.ImmutableList.of;
 import static java.util.Collections.synchronizedList;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -94,7 +92,8 @@ public class KinesisEventSourceTest {
                 .nextShardIterator("nextIterator")
                 .build();
         GetRecordsResponse response2 = GetRecordsResponse.builder()
-                .records(createRecord("green"))
+                .records(createEmptyRecord(),
+                        createRecord("green"))
                 .millisBehindLatest(2345L)
                 .nextShardIterator("yetAnotherIterator")
                 .build();
@@ -114,13 +113,13 @@ public class KinesisEventSourceTest {
         eventSource.consumeAll(initialPositions, this::stopIfGreenForString);
 
         // then
-        verify(testDataConsumer, times(2)).accept(testDataCaptor.capture());
+        verify(testDataConsumer, times(3)).accept(testDataCaptor.capture());
         List<Event<TestData>> events = testDataCaptor.getAllValues();
 
         assertThat(events.get(0).payload(), is(new TestData("blue")));
-        assertThat(events.get(1).payload(), is(new TestData("green")));
+        assertThat(events.get(1).payload(), is(nullValue()));
+        assertThat(events.get(2).payload(), is(new TestData("green")));
     }
-
 
     @Test
     public void shouldConsumeAllEventsAndDeserializeToString() throws Exception {
@@ -135,11 +134,12 @@ public class KinesisEventSourceTest {
         eventSource.consumeAll(initialPositions, this::stopIfGreenForString);
 
         // then
-        verify(stringConsumer, times(2)).accept(stringCaptor.capture());
+        verify(stringConsumer, times(3)).accept(stringCaptor.capture());
 
         List<Event<String>> events = stringCaptor.getAllValues();
         assertThat(events.get(0).payload(), is(objectMapper.writeValueAsString(new TestData("blue"))));
-        assertThat(events.get(1).payload(), is(objectMapper.writeValueAsString(new TestData("green"))));
+        assertThat(events.get(1).payload(), is(nullValue()));
+        assertThat(events.get(2).payload(), is(objectMapper.writeValueAsString(new TestData("green"))));
     }
 
     @Test
@@ -221,6 +221,14 @@ public class KinesisEventSourceTest {
                 .partitionKey(String.valueOf(nextKey++))
                 .data(ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8)))
                 .sequenceNumber("sequence-" + data)
+                .build();
+    }
+
+    private Record createEmptyRecord() {
+        return Record.builder()
+                .partitionKey(String.valueOf(nextKey++))
+                .data(ByteBuffer.allocateDirect(0))
+                .sequenceNumber("sequence-" + "empty")
                 .build();
     }
 

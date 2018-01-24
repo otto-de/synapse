@@ -192,6 +192,24 @@ public class KinesisEventSenderTest {
         assertThat(jsonObject.value, is(expected));
     }
 
+    @Test
+    public void shouldSendDeleteEventWithEmptyByteBuffer() throws JsonProcessingException {
+        //when
+        kinesisEventSender.sendEvent("someKey", null, true);
+
+        //then
+        verify(kinesisStream).send("someKey", ByteBuffer.allocateDirect(0));
+    }
+
+    @Test
+    public void shouldSendDeleteEventWithEmptyByteBufferWithoutEncryption() throws JsonProcessingException {
+        //when
+        kinesisEventSender.sendEvent("someKey", null, false);
+
+        //then
+        verify(kinesisStream).send("someKey", ByteBuffer.allocateDirect(0));
+    }
+
     private static class ExampleJsonObject {
         @JsonProperty
         private String value;

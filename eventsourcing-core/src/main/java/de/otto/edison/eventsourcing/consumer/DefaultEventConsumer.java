@@ -35,7 +35,11 @@ public class DefaultEventConsumer<T> implements EventConsumer<T> {
 
     @Override
     public void accept(final Event<T> event) {
-        stateRepository.put(event.key(), event.payload());
+        if (event.payload() == null) {
+            stateRepository.remove(event.key());
+        } else {
+            stateRepository.put(event.key(), event.payload());
+        }
     }
 
 }

@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class KinesisEventSender {
+    private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.allocateDirect(0);
 
     private final KinesisStream kinesisStream;
     private final ObjectMapper objectMapper;
@@ -51,13 +52,21 @@ public class KinesisEventSender {
     }
 
     private ByteBuffer convertToByteBuffer(Object payload) throws JsonProcessingException {
-        return ByteBuffer.wrap(objectMapper.writeValueAsString(payload)
-                .getBytes(Charsets.UTF_8));
+        if (payload == null) {
+            return EMPTY_BYTE_BUFFER;
+        } else {
+            return ByteBuffer.wrap(objectMapper.writeValueAsString(payload)
+                    .getBytes(Charsets.UTF_8));
+        }
     }
 
     private ByteBuffer convertToEncryptedByteBuffer(Object payload) throws JsonProcessingException {
-        return ByteBuffer.wrap(textEncryptor
-                .encrypt(objectMapper.writeValueAsString(payload))
-                .getBytes(Charsets.UTF_8));
+        if (payload == null) {
+            return EMPTY_BYTE_BUFFER;
+        } else {
+            return ByteBuffer.wrap(textEncryptor
+                    .encrypt(objectMapper.writeValueAsString(payload))
+                    .getBytes(Charsets.UTF_8));
+        }
     }
 }

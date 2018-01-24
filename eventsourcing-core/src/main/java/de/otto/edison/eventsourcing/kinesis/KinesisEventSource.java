@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
+import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -96,8 +97,12 @@ public class KinesisEventSource extends AbstractEventSource {
 
     private Event<String> createEvent(Duration durationBehind, Record record) {
         return kinesisEvent(durationBehind, record, byteBuffer -> {
-            String json = UTF_8.decode(record.data()).toString();
-            return TemporaryDecryption.decryptIfNecessary(json, textEncryptor);
+            if (byteBuffer.equals(ByteBuffer.allocateDirect(0))) {
+                return null;
+            } else {
+                String json = UTF_8.decode(record.data()).toString();
+                return TemporaryDecryption.decryptIfNecessary(json, textEncryptor);
+            }
         });
     }
 
