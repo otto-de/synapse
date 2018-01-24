@@ -11,7 +11,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 import java.util.List;
 import java.util.Set;
@@ -32,7 +31,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test
     public void shouldRegisterMultipleEventConsumers() {
-        context.register(TestTextEncryptor.class);
         context.register(ObjectMapper.class);
         context.register(ThreeConsumersAtTwoEventSourcesConfiguration.class);
         context.register(EventSourcingConfiguration.class);
@@ -52,7 +50,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test(expected = BeanCreationException.class)
     public void shouldFailToRegisterConsumerBecauseOfMissingEventSource() {
-        context.register(TestTextEncryptor.class);
         context.register(ObjectMapper.class);
         context.register(TestConfigurationWithMissingEventSource.class);
         context.register(EventSourcingConfiguration.class);
@@ -65,7 +62,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
      */
     @Test
     public void shouldRegisterConsumerAtSpecifiedEventSource() {
-        context.register(TestTextEncryptor.class);
         context.register(ObjectMapper.class);
         context.register(TwoEventSourcesWithSameStreamAndSecificConsumerConfiguration.class);
         context.register(EventSourcingConfiguration.class);
@@ -79,7 +75,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test
     public void shouldCreateEventConsumerWithSpecificPayloadType() {
-        context.register(TestTextEncryptor.class);
         context.register(ObjectMapper.class);
         context.register(TestConfigurationDifferentPayload.class);
         context.register(EventSourcingConfiguration.class);
@@ -95,7 +90,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test
     public void shouldRegisterEventConsumerWithSpecificKeyPattern() {
-        context.register(TestTextEncryptor.class);
         context.register(ObjectMapper.class);
         context.register(TestConfigurationDifferentPayload.class);
         context.register(EventSourcingConfiguration.class);
@@ -149,22 +143,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
             return new TestConsumerWithSnapshotEventSource();
         }
     }
-
-    static class TestTextEncryptor implements TextEncryptor {
-        public TestTextEncryptor() {
-
-        }
-        @Override
-        public String encrypt(String text) {
-            return text;
-        }
-
-        @Override
-        public String decrypt(String encryptedText) {
-            return encryptedText;
-        }
-    }
-
 
     static class SingleUnspecificConsumer {
         @EventSourceConsumer(

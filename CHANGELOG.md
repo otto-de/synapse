@@ -2,6 +2,7 @@
 
 ## 0.3.0
 * Events with "null"-payload will delete the entry.
+* Remove client side encryption because kinesis now supports server side encryption.
 
 ## 0.2.2
 * `SnapshotReadService` now allows to set a local snapshot file to read from instead retrieving it from AWS S3.   

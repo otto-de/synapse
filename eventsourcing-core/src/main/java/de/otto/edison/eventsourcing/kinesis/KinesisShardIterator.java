@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
-import org.springframework.retry.RetryListener;
 import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.listener.RetryListenerSupport;
 import org.springframework.retry.policy.SimpleRetryPolicy;
@@ -13,7 +12,6 @@ import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 import software.amazon.awssdk.services.kinesis.model.KinesisException;
-import software.amazon.awssdk.services.kinesis.model.ProvisionedThroughputExceededException;
 
 import java.util.Collections;
 

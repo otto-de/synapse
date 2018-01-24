@@ -5,12 +5,10 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
 import de.otto.edison.aws.s3.S3Service;
-import de.otto.edison.eventsourcing.TemporaryDecryption;
 import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.state.StateRepository;
 import org.slf4j.Logger;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 import java.io.*;
 import java.time.Instant;
@@ -38,16 +36,13 @@ public class SnapshotWriteService {
 
     private final S3Service s3Service;
     private final String snapshotBucketName;
-    private final TextEncryptor textEncryptor;
 
     private final JsonFactory jsonFactory = new JsonFactory();
 
     public SnapshotWriteService(final S3Service s3Service,
-                                final EventSourcingProperties properties,
-                                final TextEncryptor textEncryptor) {
+                                final EventSourcingProperties properties) {
         this.s3Service = s3Service;
         this.snapshotBucketName = properties.getSnapshot().getBucketName();
-        this.textEncryptor = textEncryptor;
     }
 
 
@@ -92,7 +87,6 @@ public class SnapshotWriteService {
                 try {
                     String entry = stateRepository.get(key).get();
                     if (!("".equals(entry))) {
-                        entry = TemporaryDecryption.decryptIfNecessary(entry, textEncryptor);
                         jGenerator.writeStartObject();
                         jGenerator.writeStringField(key, entry);
                         jGenerator.writeEndObject();

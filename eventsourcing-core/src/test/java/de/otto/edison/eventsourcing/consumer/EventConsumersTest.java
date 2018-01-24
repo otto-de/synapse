@@ -2,7 +2,6 @@ package de.otto.edison.eventsourcing.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -10,10 +9,7 @@ import java.time.Instant;
 import static de.otto.edison.eventsourcing.consumer.TestEventConsumer.testEventConsumer;
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class EventConsumersTest {
 

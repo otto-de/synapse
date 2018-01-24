@@ -2,8 +2,6 @@ package de.otto.edison.eventsourcing.consumer;
 
 
 import org.slf4j.Logger;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.context.Lifecycle;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;

@@ -1,7 +1,6 @@
 package de.otto.edison.eventsourcing.annotation;
 
 import de.otto.edison.eventsourcing.DelegateEventSource;
-import de.otto.edison.eventsourcing.EventSourceBuilder;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;

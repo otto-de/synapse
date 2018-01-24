@@ -1,13 +1,11 @@
 package de.otto.edison.eventsourcing.kinesis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.TemporaryDecryption;
 import de.otto.edison.eventsourcing.consumer.AbstractEventSource;
 import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
 import java.nio.ByteBuffer;
@@ -20,7 +18,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -33,16 +30,11 @@ public class KinesisEventSource extends AbstractEventSource {
     private static final Logger LOG = LoggerFactory.getLogger(KinesisEventSource.class);
 
     private final KinesisStream kinesisStream;
-    private final Function<String, String> deserializer;
-    private final TextEncryptor textEncryptor;
 
     public KinesisEventSource(final String name,
                               final KinesisStream kinesisStream,
-                              final TextEncryptor textEncryptor,
                               final ObjectMapper objectMapper) {
         super(name, objectMapper);
-        this.deserializer = textEncryptor::decrypt;
-        this.textEncryptor = textEncryptor;
         this.kinesisStream = kinesisStream;
     }
 
@@ -100,8 +92,7 @@ public class KinesisEventSource extends AbstractEventSource {
             if (byteBuffer.equals(ByteBuffer.allocateDirect(0))) {
                 return null;
             } else {
-                String json = UTF_8.decode(record.data()).toString();
-                return TemporaryDecryption.decryptIfNecessary(json, textEncryptor);
+                return UTF_8.decode(record.data()).toString();
             }
         });
     }

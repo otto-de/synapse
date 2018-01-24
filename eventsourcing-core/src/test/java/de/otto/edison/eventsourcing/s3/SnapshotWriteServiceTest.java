@@ -7,16 +7,12 @@ import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventConsumers;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
-import de.otto.edison.eventsourcing.encryption.Base64EncodingTextEncryptor;
 import de.otto.edison.eventsourcing.state.DefaultStateRepository;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.springframework.security.crypto.codec.Hex;
-import org.springframework.security.crypto.encrypt.Encryptors;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,9 +32,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class SnapshotWriteServiceTest {
 
@@ -47,14 +41,12 @@ public class SnapshotWriteServiceTest {
 
     private SnapshotWriteService testee;
     private S3Service s3Service;
-    private TextEncryptor encryptor;
 
     @Before
     public void setUp() {
         EventSourcingProperties eventSourcingProperties = SnapshotServiceTestUtils.createEventSourcingProperties();
         s3Service = mock(S3Service.class);
-        encryptor = new Base64EncodingTextEncryptor(Encryptors.standard("test", new String(Hex.encode("test".getBytes()))));
-        testee = new SnapshotWriteService(s3Service, eventSourcingProperties, encryptor);
+        testee = new SnapshotWriteService(s3Service, eventSourcingProperties);
     }
 
     @After
@@ -95,7 +87,7 @@ public class SnapshotWriteServiceTest {
         //then
         Map<String, Map> data = new HashMap<>();
 
-        SnapshotConsumerService snapshotConsumerService = new SnapshotConsumerService(Encryptors.noOpText());
+        SnapshotConsumerService snapshotConsumerService = new SnapshotConsumerService();
 
         final EventConsumer<Map> eventConsumer = EventConsumer.of(".*", Map.class,
                 (event) -> {

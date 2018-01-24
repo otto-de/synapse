@@ -13,7 +13,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 
 @Configuration
@@ -34,9 +33,8 @@ public class EventSourcingConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = "streamingEventSourceBuilder")
     public KinesisEventSourceBuilder streamingEventSourceBuilder(final KinesisClient kinesisClient,
-                                                                 final TextEncryptor textEncryptor,
                                                                  final ObjectMapper objectMapper) {
-        return new KinesisEventSourceBuilder(objectMapper, kinesisClient, textEncryptor);
+        return new KinesisEventSourceBuilder(objectMapper, kinesisClient);
     }
 
     @Bean

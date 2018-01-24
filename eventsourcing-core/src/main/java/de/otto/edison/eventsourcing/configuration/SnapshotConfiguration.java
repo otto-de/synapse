@@ -12,7 +12,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 @Configuration
 @EnableConfigurationProperties(EventSourcingProperties.class)
@@ -40,14 +39,13 @@ public class SnapshotConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public SnapshotWriteService snapshotCreationService(final S3Service s3Service,
-                                                        final EventSourcingProperties eventSourcingProperties,
-                                                        final TextEncryptor textEncryptor) {
-        return new SnapshotWriteService(s3Service, eventSourcingProperties, textEncryptor);
+                                                        final EventSourcingProperties eventSourcingProperties) {
+        return new SnapshotWriteService(s3Service, eventSourcingProperties);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public SnapshotConsumerService snapshotConsumerService(TextEncryptor textEncryptor) {
-        return new SnapshotConsumerService(textEncryptor);
+    public SnapshotConsumerService snapshotConsumerService() {
+        return new SnapshotConsumerService();
     }
 }

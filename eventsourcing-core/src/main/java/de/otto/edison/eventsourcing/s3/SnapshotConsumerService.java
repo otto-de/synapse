@@ -3,12 +3,9 @@ package de.otto.edison.eventsourcing.s3;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import de.otto.edison.eventsourcing.TemporaryDecryption;
 import de.otto.edison.eventsourcing.consumer.Event;
 import de.otto.edison.eventsourcing.consumer.EventConsumers;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -23,14 +20,7 @@ import static de.otto.edison.eventsourcing.consumer.Event.event;
 @Service
 public class SnapshotConsumerService {
 
-    private final TextEncryptor textEncryptor;
     private final JsonFactory jsonFactory = new JsonFactory();
-
-
-    @Autowired
-    public SnapshotConsumerService(TextEncryptor textEncryptor) {
-        this.textEncryptor = textEncryptor;
-    }
 
     public <T> StreamPosition consumeSnapshot(final File latestSnapshot,
                                               final String streamName,
@@ -82,10 +72,9 @@ public class SnapshotConsumerService {
             JsonToken currentToken = parser.currentToken();
             if (currentToken == JsonToken.FIELD_NAME) {
                 final String key = parser.getValueAsString();
-                final String decryptedPayload = TemporaryDecryption.decryptIfNecessary(parser.nextTextValue(), textEncryptor);
                 final Event<String> event = event(
                         key,
-                        decryptedPayload,
+                        parser.nextTextValue(),
                         sequenceNumber,
                         arrivalTimestamp);
                 eventConsumers.encodeAndSend(event);

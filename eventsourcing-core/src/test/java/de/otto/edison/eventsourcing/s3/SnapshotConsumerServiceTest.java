@@ -7,7 +7,6 @@ import de.otto.edison.eventsourcing.consumer.EventConsumers;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.security.crypto.encrypt.Encryptors;
 
 import java.io.File;
 import java.util.Collections;
@@ -24,7 +23,7 @@ public class SnapshotConsumerServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        testee = new SnapshotConsumerService(Encryptors.noOpText());
+        testee = new SnapshotConsumerService();
     }
 
     @Test

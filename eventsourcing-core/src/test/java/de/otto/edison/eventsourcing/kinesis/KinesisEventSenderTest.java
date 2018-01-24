@@ -12,7 +12,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import org.springframework.security.crypto.encrypt.TextEncryptor;
 
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -20,8 +19,7 @@ import java.util.Map;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Matchers.*;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -29,9 +27,6 @@ public class KinesisEventSenderTest {
 
     @Mock
     private KinesisStream kinesisStream;
-
-    @Mock
-    private TextEncryptor textEncryptor;
 
     private ObjectMapper objectMapper = new ObjectMapper();
     private KinesisEventSender kinesisEventSender;
@@ -41,38 +36,13 @@ public class KinesisEventSenderTest {
 
     @Before
     public void setUp() throws Exception {
-        kinesisEventSender = new KinesisEventSender(kinesisStream, objectMapper, textEncryptor);
+        kinesisEventSender = new KinesisEventSender(kinesisStream, objectMapper);
     }
 
     @Test
-    public void shouldSendEncryptedEvent() throws Exception {
-        // given
-        String inputValue = "banana";
-        String expectedValue = "encryptedBanana";
-        given(textEncryptor.encrypt(eq(new ExampleJsonObject(inputValue).toJson())))
-                .willReturn(new ExampleJsonObject(expectedValue).toJson());
-
+    public void shouldSendEvent() throws Exception {
         // when
-        kinesisEventSender.sendEvent("someKey", new ExampleJsonObject(inputValue));
-
-        // then
-        ArgumentCaptor<ByteBuffer> captor = ArgumentCaptor.forClass(ByteBuffer.class);
-        verify(kinesisStream).send(eq("someKey"), captor.capture());
-
-        ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(captor.getValue());
-        ExampleJsonObject jsonObject = objectMapper.readValue(inputStream, ExampleJsonObject.class);
-
-        assertThat(jsonObject.value, is(expectedValue));
-    }
-
-    @Test
-    public void shouldSendUnencryptedEvent() throws Exception {
-        // given
-        final boolean encryptEvent = false;
-        given(textEncryptor.encrypt(anyString())).willReturn(new ExampleJsonObject("wrong string").toJson());
-
-        // when
-        kinesisEventSender.sendEvent("someKey", new ExampleJsonObject("banana"), encryptEvent);
+        kinesisEventSender.sendEvent("someKey", new ExampleJsonObject("banana"));
 
         // then
         ArgumentCaptor<ByteBuffer> captor = ArgumentCaptor.forClass(ByteBuffer.class);
@@ -84,35 +54,11 @@ public class KinesisEventSenderTest {
         assertThat(jsonObject.value, is("banana"));
     }
 
-
     @Test
-    public void shouldSendEncryptedEventWhenFlagIsUsed() throws Exception {
-        // given
-        String inputValue = "banana";
-        String expectedValue = "encryptedBanana";
-        given(textEncryptor.encrypt(eq(new ExampleJsonObject(inputValue).toJson())))
-                .willReturn(new ExampleJsonObject(expectedValue).toJson());
-
-        // when
-        kinesisEventSender.sendEvent("someKey", new ExampleJsonObject(inputValue), true);
-
-        // then
-        ArgumentCaptor<ByteBuffer> captor = ArgumentCaptor.forClass(ByteBuffer.class);
-        verify(kinesisStream).send(eq("someKey"), captor.capture());
-
-        ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(captor.getValue());
-        ExampleJsonObject jsonObject = objectMapper.readValue(inputStream, ExampleJsonObject.class);
-
-        assertThat(jsonObject.value, is(expectedValue));
-    }
-
-    @Test
-    public void shouldSendMultipleEncryptedEvents() throws Exception {
+    public void shouldSendMultipleEvents() throws Exception {
         // given
         ExampleJsonObject bananaObject = new ExampleJsonObject("banana");
         ExampleJsonObject appleObject = new ExampleJsonObject("apple");
-        String expected = "encrypted";
-        given(textEncryptor.encrypt(any())).willReturn(new ExampleJsonObject(expected).toJson());
 
         // when
         kinesisEventSender.sendEvents(ImmutableMap.of(
@@ -131,71 +77,13 @@ public class KinesisEventSenderTest {
         ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(events.get("a"));
         ExampleJsonObject jsonObject = objectMapper.readValue(inputStream, ExampleJsonObject.class);
 
-        assertThat(jsonObject.value, is(expected));
-    }
-
-    @Test
-    public void shouldSendMultipleUnencryptedEvents() throws Exception {
-        // given
-        boolean encryptEvents = false;
-        ExampleJsonObject bananaObject = new ExampleJsonObject("banana");
-        ExampleJsonObject appleObject = new ExampleJsonObject("apple");
-        String expected = "encrypted";
-        given(textEncryptor.encrypt(any())).willReturn(new ExampleJsonObject(expected).toJson());
-
-        // when
-        kinesisEventSender.sendEvents(ImmutableMap.of(
-                "b", bananaObject,
-                "a", appleObject
-        ), encryptEvents);
-
-        // then
-        verify(kinesisStream).sendMultiple(byteBufferMapCaptor.capture());
-
-        Map<String, ByteBuffer> events = byteBufferMapCaptor.getValue();
-        assertThat(events.size(), is(2));
-
-        assertThat(events.keySet(), hasItems("a", "b"));
-
-        ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(events.get("a"));
-        ExampleJsonObject jsonObject = objectMapper.readValue(inputStream, ExampleJsonObject.class);
-
         assertThat(jsonObject.value, is("apple"));
-    }
-
-    @Test
-    public void shouldSendMultipleEncryptedEventsWhenFlagIsUsed() throws Exception {
-        // given
-        boolean encryptEvents = true;
-        ExampleJsonObject bananaObject = new ExampleJsonObject("banana");
-        ExampleJsonObject appleObject = new ExampleJsonObject("apple");
-        String expected = "encrypted";
-        given(textEncryptor.encrypt(any())).willReturn(new ExampleJsonObject(expected).toJson());
-
-        // when
-        kinesisEventSender.sendEvents(ImmutableMap.of(
-                "b", bananaObject,
-                "a", appleObject
-        ), encryptEvents);
-
-        // then
-        verify(kinesisStream).sendMultiple(byteBufferMapCaptor.capture());
-
-        Map<String, ByteBuffer> events = byteBufferMapCaptor.getValue();
-        assertThat(events.size(), is(2));
-
-        assertThat(events.keySet(), hasItems("a", "b"));
-
-        ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(events.get("a"));
-        ExampleJsonObject jsonObject = objectMapper.readValue(inputStream, ExampleJsonObject.class);
-
-        assertThat(jsonObject.value, is(expected));
     }
 
     @Test
     public void shouldSendDeleteEventWithEmptyByteBuffer() throws JsonProcessingException {
         //when
-        kinesisEventSender.sendEvent("someKey", null, true);
+        kinesisEventSender.sendEvent("someKey", null);
 
         //then
         verify(kinesisStream).send("someKey", ByteBuffer.allocateDirect(0));
@@ -204,7 +92,7 @@ public class KinesisEventSenderTest {
     @Test
     public void shouldSendDeleteEventWithEmptyByteBufferWithoutEncryption() throws JsonProcessingException {
         //when
-        kinesisEventSender.sendEvent("someKey", null, false);
+        kinesisEventSender.sendEvent("someKey", null);
 
         //then
         verify(kinesisStream).send("someKey", ByteBuffer.allocateDirect(0));

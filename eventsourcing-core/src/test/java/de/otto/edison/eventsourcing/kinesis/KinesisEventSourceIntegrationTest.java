@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.security.crypto.encrypt.Encryptors;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
@@ -63,7 +62,7 @@ public class KinesisEventSourceIntegrationTest {
     public void setup() {
         KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, STREAM_NAME, EXPECTED_NUMBER_OF_SHARDS);
         KinesisStream kinesisStream = new KinesisStream(kinesisClient, STREAM_NAME);
-        this.eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, Encryptors.noOpText(), objectMapper);
+        this.eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, objectMapper);
         this.eventSource.register(EventConsumer.of(".*", String.class, events::add));
     }
 
