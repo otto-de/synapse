@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
 import de.otto.edison.aws.s3.S3Service;
+import de.otto.edison.eventsourcing.TemporaryDecryption;
 import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.state.StateRepository;
@@ -91,7 +92,7 @@ public class SnapshotWriteService {
                 try {
                     String entry = stateRepository.get(key).get();
                     if (!("".equals(entry))) {
-                        // entry = TemporaryDecryption.decryptIfNecessary(entry);
+                        entry = TemporaryDecryption.decryptIfNecessary(entry, textEncryptor);
                         jGenerator.writeStartObject();
                         jGenerator.writeStringField(key, entry);
                         jGenerator.writeEndObject();

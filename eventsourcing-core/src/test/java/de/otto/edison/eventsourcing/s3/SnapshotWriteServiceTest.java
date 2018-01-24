@@ -65,7 +65,7 @@ public class SnapshotWriteServiceTest {
     @Test
     public void shouldUploadSnapshotFile() throws Exception {
         DefaultStateRepository<String> stateRepository = new DefaultStateRepository<>();
-        stateRepository.put("testKey", "testValue1");
+        stateRepository.put("testKey", "{\"content\":\"testValue1\"}");
 
         //when
         String fileName = testee.takeSnapshot(STREAM_NAME, StreamPosition.of(), stateRepository);
