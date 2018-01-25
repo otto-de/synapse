@@ -3,12 +3,13 @@ package de.otto.edison.eventsourcing.kinesis;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
+import de.otto.edison.eventsourcing.EventSender;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
-public class KinesisEventSender {
+public class KinesisEventSender implements EventSender {
     private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.allocateDirect(0);
 
     private final KinesisStream kinesisStream;

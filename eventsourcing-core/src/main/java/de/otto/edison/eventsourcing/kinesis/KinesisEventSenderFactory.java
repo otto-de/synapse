@@ -1,9 +1,11 @@
 package de.otto.edison.eventsourcing.kinesis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.edison.eventsourcing.EventSender;
+import de.otto.edison.eventsourcing.EventSenderFactory;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 
-public class KinesisEventSenderFactory {
+public class KinesisEventSenderFactory implements EventSenderFactory {
 
     private final ObjectMapper objectMapper;
     private final KinesisClient kinesisClient;
@@ -13,7 +15,7 @@ public class KinesisEventSenderFactory {
         this.kinesisClient = kinesisClient;
     }
 
-    public KinesisEventSender createSenderForStream(String streamName) {
+    public EventSender createSenderForStream(String streamName) {
         KinesisStream kinesisStream = new KinesisStream(kinesisClient, streamName);
         return new KinesisEventSender(kinesisStream, objectMapper);
     }
