@@ -8,7 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
@@ -54,7 +54,7 @@ public class SnapshotEventSourceTest {
     public void shouldThrowExceptionIfDownloadFails() throws Exception {
         // given
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.of(new File("someFilePath")));
-        when(snapshotConsumerService.consumeSnapshot(any(),any(),any(),any())).thenThrow(new IOException("boom - simulate exception while loading from S3"));
+        when(snapshotConsumerService.consumeSnapshot(any(),any(),any(),any())).thenThrow(new RuntimeException("boom - simulate exception while loading from S3"));
 
         // when
         snapshotEventSource.consumeAll();

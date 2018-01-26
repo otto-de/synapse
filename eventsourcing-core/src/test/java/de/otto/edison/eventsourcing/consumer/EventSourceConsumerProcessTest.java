@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 
 import static de.otto.edison.eventsourcing.consumer.TestEventConsumer.testEventConsumer;
 import static java.util.Collections.singletonList;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
@@ -18,6 +18,7 @@ public class EventSourceConsumerProcessTest {
     private static final String TEST_STREAM_NAME = "test-stream";
 
     @Test
+    @SuppressWarnings("unchecked")
     public void shouldInvokeTwoConsumersForSameEventSource() throws Exception {
         EventSource eventSource = spy(new TestEventSource());
         TestEventConsumer eventConsumerA = spy(testEventConsumer(".*", MyPayload.class));

@@ -1,9 +1,8 @@
 package de.otto.edison.eventsourcing.example.producer;
 
+import de.otto.edison.eventsourcing.EventSender;
 import de.otto.edison.eventsourcing.example.producer.configuration.MyServiceProperties;
 import de.otto.edison.eventsourcing.example.producer.payload.ProductPayload;
-import de.otto.edison.eventsourcing.kinesis.KinesisEventSender;
-import de.otto.edison.eventsourcing.kinesis.KinesisEventSenderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,18 +18,18 @@ public class ExampleProducer {
 
     private final static Logger LOG = LoggerFactory.getLogger(ExampleProducer.class);
 
-    private KinesisEventSender kinesisEventSender;
+    private EventSender eventSender;
 
     @Autowired
-    public ExampleProducer(KinesisEventSenderFactory kinesisEventSenderFactory, MyServiceProperties properties) {
-        kinesisEventSender = kinesisEventSenderFactory.createSenderForStream(properties.getProductStreamName());
+    public ExampleProducer(EventSender productEventSender) {
+        this.eventSender = productEventSender;
     }
 
     @Scheduled(fixedDelay = 3000L)
-    private void produceSampleData() {
+    public void produceSampleData() {
         try {
             ProductPayload productPayload = generatePayload();
-            kinesisEventSender.sendEvent(productPayload.getId(), productPayload);
+            eventSender.sendEvent(productPayload.getId(), productPayload);
         } catch (Exception e) {
             LOG.error("error occurred while sending an event", e);
         }

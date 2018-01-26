@@ -65,9 +65,9 @@ public class SnapshotEventSource extends AbstractEventSource {
             } else {
                 snapshotStreamPosition = SnapshotStreamPosition.of();
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             publishEvent(SnapshotStreamPosition.of(), EventSourceNotification.Status.FAILED);
-            throw new RuntimeException(e);
+            throw e;
         } finally {
             LOG.info("Finished reading snapshot into Memory");
             snapshotReadService.deleteOlderSnapshots(streamName);

@@ -1,13 +1,11 @@
 package de.otto.edison.eventsourcing;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import de.otto.edison.eventsourcing.inmemory.Tuple;
 
-import java.util.Map;
-
+@FunctionalInterface
 public interface EventSender {
 
-    void sendEvent(String key, Object payload) throws JsonProcessingException;
+    void sendEvent(String key, Object payload);
 
-    void sendEvents(Map<String, Object> events) throws JsonProcessingException;
 
 }

@@ -4,7 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import de.otto.edison.eventsourcing.inmemory.Tuple;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,10 +17,12 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.is;
+import static java.util.stream.Collectors.toList;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
@@ -32,7 +37,7 @@ public class KinesisEventSenderTest {
     private KinesisEventSender kinesisEventSender;
 
     @Captor
-    private ArgumentCaptor<Map<String, ByteBuffer>> byteBufferMapCaptor;
+    private ArgumentCaptor<Stream<Tuple<String, ByteBuffer>>> byteBufferMapCaptor;
 
     @Before
     public void setUp() throws Exception {
@@ -61,23 +66,23 @@ public class KinesisEventSenderTest {
         ExampleJsonObject appleObject = new ExampleJsonObject("apple");
 
         // when
-        kinesisEventSender.sendEvents(ImmutableMap.of(
-                "b", bananaObject,
-                "a", appleObject
+        kinesisEventSender.sendEvents(ImmutableList.of(
+                new Tuple<>("b", bananaObject),
+                new Tuple<>("a", appleObject)
         ));
 
         // then
-        verify(kinesisStream).sendMultiple(byteBufferMapCaptor.capture());
+        verify(kinesisStream).sendBatch(byteBufferMapCaptor.capture());
 
-        Map<String, ByteBuffer> events = byteBufferMapCaptor.getValue();
+        List<Tuple<String, ByteBuffer>> events = byteBufferMapCaptor.getValue().collect(toList());
         assertThat(events.size(), is(2));
 
-        assertThat(events.keySet(), hasItems("a", "b"));
+        assertThat(events.stream().map(Tuple::getFirst).collect(toList()), contains("b", "a"));
 
-        ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(events.get("a"));
+        ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(events.get(0).getSecond());
         ExampleJsonObject jsonObject = objectMapper.readValue(inputStream, ExampleJsonObject.class);
 
-        assertThat(jsonObject.value, is("apple"));
+        assertThat(jsonObject.value, is("banana"));
     }
 
     @Test

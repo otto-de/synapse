@@ -9,7 +9,9 @@ import java.util.function.Predicate;
 
 public class InMemoryEventSource extends AbstractEventSource {
 
-    public InMemoryEventSource(String name, ObjectMapper objectMapper) {
+    private InMemoryStream eventStream;
+
+    public InMemoryEventSource(String name, InMemoryStream inMemoryStream, ObjectMapper objectMapper) {
         super(name, objectMapper);
     }
 

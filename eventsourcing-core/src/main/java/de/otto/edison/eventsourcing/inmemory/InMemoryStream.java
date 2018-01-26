@@ -1,23 +1,21 @@
 package de.otto.edison.eventsourcing.inmemory;
 
-import de.otto.edison.eventsourcing.consumer.Event;
-
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class InMemoryStream {
 
-    final Queue<Event> eventQueue;
+    final Queue<Tuple<String, String>> eventQueue;
 
     public InMemoryStream() {
         this.eventQueue = new LinkedBlockingQueue<>();
     }
 
-    public void send(Event event) {
+    public void send(Tuple<String, String> event) {
         eventQueue.add(event);
     }
 
-    public Event receive() {
+    public Tuple<String, String> receive() {
         return eventQueue.poll();
     }
 

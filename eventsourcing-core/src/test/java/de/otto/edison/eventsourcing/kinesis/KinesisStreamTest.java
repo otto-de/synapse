@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.kinesis;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import de.otto.edison.eventsourcing.inmemory.Tuple;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,11 +13,11 @@ import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.IntStream;
 
+import static java.lang.String.valueOf;
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -161,7 +161,9 @@ public class KinesisStreamTest {
         ByteBuffer data2 = ByteBuffer.wrap("test".getBytes(StandardCharsets.UTF_8));
 
         // when
-        kinesisStream.sendMultiple(ImmutableMap.of("event1", data1, "event2", data2));
+        kinesisStream.sendBatch(ImmutableList.of(
+                new Tuple<>("event1", data1),
+                new Tuple<>("event2", data2)));
 
         // then
         ArgumentCaptor<PutRecordsRequest> captor = ArgumentCaptor.forClass(PutRecordsRequest.class);
@@ -187,24 +189,18 @@ public class KinesisStreamTest {
         when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(putRecordsResponse);
         
         // when
-        kinesisStream.sendMultiple(mapWithNEntries(KinesisStream.PUT_RECORDS_BATCH_SIZE + 1));
+        kinesisStream.sendBatch(someEvents(KinesisStream.PUT_RECORDS_BATCH_SIZE + 1));
 
         // then
         verify(kinesisClient, times(2)).putRecords(any(PutRecordsRequest.class));
     }
 
-    private Map<String, ByteBuffer> mapWithNEntries(int n) {
+    private List<Tuple<String, ByteBuffer>> someEvents(int n) {
         return IntStream.range(0, n)
-                .mapToObj(KinesisStreamTest::mapIntToMapEntry)
-                .collect(HashMap::new,
-                        (map, entry) -> map.put(entry.getKey(), entry.getValue()),
-                        HashMap::putAll);
+                .mapToObj(i -> new Tuple<>(valueOf(i), ByteBuffer.wrap(Integer.toString(i).getBytes(StandardCharsets.UTF_8))))
+                .collect(toList());
     }
 
-    private static Map.Entry<String, ByteBuffer> mapIntToMapEntry(int i) {
-        ByteBuffer byteBuffer = ByteBuffer.wrap(Integer.toString(i).getBytes(StandardCharsets.UTF_8));
-        return new HashMap.SimpleEntry<>(Integer.toString(i), byteBuffer);
-    }
 
     private Shard someShard(String shardId, boolean open) {
         return Shard.builder()

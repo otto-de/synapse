@@ -1,6 +1,6 @@
 package de.otto.edison.eventsourcing.kinesis;
 
-import com.google.common.collect.Lists;
+import de.otto.edison.eventsourcing.inmemory.Tuple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
@@ -9,10 +9,11 @@ import software.amazon.awssdk.services.kinesis.model.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.Lists.partition;
 
 public class KinesisStream {
 
@@ -94,12 +95,16 @@ public class KinesisStream {
         retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
     }
 
-    public void sendMultiple(Map<String, ByteBuffer> eventMap) {
-        ArrayList<PutRecordsRequestEntry> entries = eventMap.entrySet().stream()
-                .map(entry -> requestEntryFor(entry.getKey(), entry.getValue()))
+    public void sendBatch(List<Tuple<String, ByteBuffer>> events) {
+        sendBatch(events.stream());
+    }
+
+    public void sendBatch(Stream<Tuple<String, ByteBuffer>> events) {
+        List<PutRecordsRequestEntry> entries = events
+                .map(entry -> requestEntryFor(entry.getFirst(), entry.getSecond()))
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        Lists.partition(entries, PUT_RECORDS_BATCH_SIZE)
+        partition(entries, PUT_RECORDS_BATCH_SIZE)
                 .forEach(batch -> {
                             PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder()
                                     .streamName(streamName)
@@ -109,7 +114,6 @@ public class KinesisStream {
                             retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
                         }
                 );
-
     }
 
     private PutRecordsRequestEntry requestEntryFor(String key, ByteBuffer byteBuffer) {

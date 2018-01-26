@@ -19,20 +19,21 @@ repositories {
 ext['jackson.version'] = "2.9.3"
 
 dependencies {
-    compile project(':eventsourcing-core:')
-    compile "de.otto.edison:edison-aws-s3:0.2.3"
-    compile "software.amazon.awssdk:kinesis:${awsSdkVersion}"
-    compile 'org.springframework.security:spring-security-core:4.2.3.RELEASE'
-    compile("org.springframework.boot:spring-boot-starter-web") {
+    implementation project(':eventsourcing-core:')
+    implementation "de.otto.edison:edison-aws-s3:0.2.3"
+    implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
+    implementation 'org.springframework.security:spring-security-core:4.2.3.RELEASE'
+    implementation("org.springframework.boot:spring-boot-starter-web") {
         exclude module: "spring-boot-starter-tomcat"
     }
-    compile("org.springframework.boot:spring-boot-starter-jetty")
+    implementation("org.springframework.boot:spring-boot-starter-jetty")
 
-    compile "ch.qos.logback:logback-core:1.2.3"
-    compile "ch.qos.logback:logback-classic:1.2.3"
+    implementation "ch.qos.logback:logback-core:1.2.3"
+    implementation "ch.qos.logback:logback-classic:1.2.3"
 
 
-    testCompile 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.12'
+    testImplementation "org.mockito:mockito-core:2.13.0"
 }
 
 // Define the main class for the application

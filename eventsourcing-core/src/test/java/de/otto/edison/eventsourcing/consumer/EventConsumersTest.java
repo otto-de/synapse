@@ -8,7 +8,7 @@ import java.time.Instant;
 
 import static de.otto.edison.eventsourcing.consumer.TestEventConsumer.testEventConsumer;
 import static java.util.Arrays.asList;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class EventConsumersTest {
@@ -16,7 +16,8 @@ public class EventConsumersTest {
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Test
-    public void shouldDelegateEventsToAllConsumers() throws Exception {
+    @SuppressWarnings("unchecked")
+    public void shouldDelegateEventsToAllConsumers() {
         // given
         TestEventConsumer<Object> eventConsumerA = spy(testEventConsumer(".*", Object.class));
         TestEventConsumer<Object> eventConsumerB = spy(testEventConsumer(".*", Object.class));
@@ -38,7 +39,8 @@ public class EventConsumersTest {
     }
 
     @Test
-    public void shouldDelegateEventsToSpecificConsumersForEventKey() throws Exception {
+    @SuppressWarnings("unchecked")
+    public void shouldDelegateEventsToSpecificConsumersForEventKey() {
         // given
 
         TestEventConsumer<Apple> eventConsumerApple = spy(testEventConsumer("apple.*", Apple.class));
