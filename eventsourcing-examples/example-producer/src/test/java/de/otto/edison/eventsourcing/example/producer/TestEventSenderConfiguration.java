@@ -15,7 +15,6 @@ import org.springframework.context.annotation.Profile;
 
 @Configuration
 @EnableConfigurationProperties(MyServiceProperties.class)
-@Profile("test")
 public class TestEventSenderConfiguration {
 
     @Bean
