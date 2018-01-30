@@ -12,7 +12,6 @@ import software.amazon.awssdk.services.kinesis.model.KinesisException;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 public class KinesisShardIteratorIntegrationTest {
