@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.consumer;
 
+import de.otto.edison.eventsourcing.event.Event;
 import org.junit.Test;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
@@ -25,9 +26,9 @@ public class KinesisEventTest {
         final Event<String> event = kinesisEvent(
                 record,
                 (bb) -> UTF_8.decode(bb).toString());
-        assertThat(event.key(), is("42"));
-        assertThat(event.payload(), is("ßome dätä"));
-        assertThat(event.arrivalTimestamp(), is(now));
-        assertThat(event.sequenceNumber(), is("00001"));
+        assertThat(event.getEventBody().getKey(), is("42"));
+        assertThat(event.getEventBody().getPayload(), is("ßome dätä"));
+        assertThat(event.getArrivalTimestamp(), is(now));
+        assertThat(event.getSequenceNumber(), is("00001"));
     }
 }

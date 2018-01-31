@@ -1,6 +1,7 @@
 package de.otto.edison.eventsourcing;
 
 import de.otto.edison.eventsourcing.consumer.*;
+import de.otto.edison.eventsourcing.event.Event;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;

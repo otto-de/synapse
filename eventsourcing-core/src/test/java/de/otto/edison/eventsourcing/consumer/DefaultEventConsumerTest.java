@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.consumer;
 
+import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.state.StateRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;

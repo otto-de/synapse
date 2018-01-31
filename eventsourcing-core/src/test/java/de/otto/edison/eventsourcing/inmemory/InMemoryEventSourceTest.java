@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.inmemory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.consumer.Event;
+import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import org.junit.Test;
 
@@ -28,8 +28,8 @@ public class InMemoryEventSourceTest {
 
 
         // then
-        assertThat(eventConsumer.event.key(), is("key"));
-        assertThat(eventConsumer.event.payload(), is("payload"));
+        assertThat(eventConsumer.event.getEventBody().getKey(), is("key"));
+        assertThat(eventConsumer.event.getEventBody().getPayload(), is("payload"));
     }
 
     private static class StringEventConsumer implements EventConsumer<String> {

@@ -1,4 +1,4 @@
-package de.otto.edison.eventsourcing.consumer;
+package de.otto.edison.eventsourcing.event;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -12,8 +12,7 @@ public class Event<T> {
                                      final String sequenceNumber,
                                      final Instant approximateArrivalTimestamp) {
         return new Event<>(
-                key,
-                payload,
+                EventBody.eventBody(key,payload),
                 sequenceNumber,
                 approximateArrivalTimestamp, null);
     }
@@ -24,45 +23,48 @@ public class Event<T> {
                                      final Instant approximateArrivalTimestamp,
                                      final Duration durationBehind) {
         return new Event<>(
-                key,
-                payload,
+                EventBody.eventBody(key,payload),
                 sequenceNumber,
                 approximateArrivalTimestamp,
                 durationBehind);
     }
 
-    private final String key;
-    private final T payload;
+    public static <T> Event<T> event(final EventBody<T> eventBody,
+                                     final String sequenceNumber,
+                                     final Instant approximateArrivalTimestamp,
+                                     final Duration durationBehind) {
+        return new Event<>(
+                eventBody,
+                sequenceNumber,
+                approximateArrivalTimestamp,
+                durationBehind);
+    }
+
+    private final EventBody<T> eventBody;
     private final String sequenceNumber;
     private final Instant arrivalTimestamp;
     private final Duration durationBehind;
 
 
-    protected Event(final String key,
-                    final T payload,
+    protected Event(final EventBody<T> eventBody,
                     final String sequenceNumber,
                     final Instant approximateArrivalTimestamp,
                     final Duration durationBehind) {
-        this.key = key;
-        this.payload = payload;
+        this.eventBody = eventBody;
         this.sequenceNumber = sequenceNumber;
         this.arrivalTimestamp = approximateArrivalTimestamp;
         this.durationBehind = durationBehind;
     }
 
-    public String key() {
-        return key;
+    public EventBody<T> getEventBody() {
+        return eventBody;
     }
 
-    public T payload() {
-        return payload;
-    }
-
-    public String sequenceNumber() {
+    public String getSequenceNumber() {
         return sequenceNumber;
     }
 
-    public Instant arrivalTimestamp() {
+    public Instant getArrivalTimestamp() {
         return arrivalTimestamp;
     }
 
@@ -71,7 +73,7 @@ public class Event<T> {
      *
      * @return Duration
      */
-    public Optional<Duration> durationBehind() {
+    public Optional<Duration> getDurationBehind() {
         return Optional.ofNullable(durationBehind);
     }
 
@@ -80,8 +82,7 @@ public class Event<T> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Event<?> event = (Event<?>) o;
-        return Objects.equals(key, event.key) &&
-                Objects.equals(payload, event.payload) &&
+        return Objects.equals(eventBody, event.eventBody) &&
                 Objects.equals(sequenceNumber, event.sequenceNumber) &&
                 Objects.equals(arrivalTimestamp, event.arrivalTimestamp) &&
                 Objects.equals(durationBehind, event.durationBehind);
@@ -89,14 +90,13 @@ public class Event<T> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, payload, sequenceNumber, arrivalTimestamp, durationBehind);
+        return Objects.hash(eventBody, sequenceNumber, arrivalTimestamp, durationBehind);
     }
 
     @Override
     public String toString() {
         return "Event{" +
-                "key='" + key + '\'' +
-                ", payload=" + payload +
+                "eventBody=" + eventBody +
                 ", sequenceNumber='" + sequenceNumber + '\'' +
                 ", arrivalTimestamp=" + arrivalTimestamp +
                 ", durationBehind=" + durationBehind +

@@ -1,6 +1,7 @@
 package de.otto.edison.eventsourcing.consumer;
 
 import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
+import de.otto.edison.eventsourcing.event.Event;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.function.Consumer;

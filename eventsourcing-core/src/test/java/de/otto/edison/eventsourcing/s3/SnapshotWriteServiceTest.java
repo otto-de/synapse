@@ -94,7 +94,7 @@ public class SnapshotWriteServiceTest {
         final EventConsumer<Map> eventConsumer = EventConsumer.of(".*", Map.class,
                 (event) -> {
                     System.out.println(event);
-                    data.put(event.key(), event.payload());
+                    data.put(event.getEventBody().getKey(), event.getEventBody().getPayload());
                 });
         StreamPosition actualStreamPosition = snapshotConsumerService.consumeSnapshot(snapshot,
                 "test",

@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.example.consumer;
 
 import de.otto.edison.eventsourcing.annotation.EventSourceConsumer;
-import de.otto.edison.eventsourcing.consumer.Event;
+import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.example.consumer.payload.BananaPayload;
 import de.otto.edison.eventsourcing.example.consumer.payload.ProductPayload;
 import de.otto.edison.eventsourcing.example.consumer.state.BananaProduct;
@@ -30,13 +30,13 @@ public class ExampleConsumer {
             payloadType = BananaPayload.class
     )
     public void consumeBananas(final Event<BananaPayload> event) {
-        stateRepository.compute(event.key(), (id, bananaProduct) -> {
+        stateRepository.compute(event.getEventBody().getKey(), (id, bananaProduct) -> {
             final BananaProduct.Builder builder = bananaProduct.isPresent()
                     ? bananaProductBuilder(bananaProduct.get())
                     : bananaProductBuilder();
             return builder
-                    .withId(event.key())
-                    .withColor(event.payload().getColor())
+                    .withId(event.getEventBody().getKey())
+                    .withColor(event.getEventBody().getPayload().getColor())
                     .build();
         });
         LOG.info(stateRepository.toString());
@@ -47,13 +47,13 @@ public class ExampleConsumer {
             payloadType = ProductPayload.class
     )
     public void consumeProducts(final Event<ProductPayload> event) {
-        stateRepository.compute(event.key(), (s, bananaProduct) -> {
+        stateRepository.compute(event.getEventBody().getKey(), (s, bananaProduct) -> {
             final BananaProduct.Builder builder = bananaProduct.isPresent()
                     ? bananaProductBuilder(bananaProduct.get())
                     : bananaProductBuilder();
             return builder
-                    .withId(event.key())
-                    .withPrice(event.payload().getPrice())
+                    .withId(event.getEventBody().getKey())
+                    .withPrice(event.getEventBody().getPayload().getPrice())
                     .build();
         });
         LOG.info(stateRepository.toString());

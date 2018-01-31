@@ -2,7 +2,7 @@ package de.otto.edison.eventsourcing.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.AbstractEventSource;
-import de.otto.edison.eventsourcing.consumer.Event;
+import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.slf4j.Logger;

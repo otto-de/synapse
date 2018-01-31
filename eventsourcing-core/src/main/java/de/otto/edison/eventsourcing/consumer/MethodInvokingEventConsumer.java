@@ -1,5 +1,7 @@
 package de.otto.edison.eventsourcing.consumer;
 
+import de.otto.edison.eventsourcing.event.Event;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Objects;

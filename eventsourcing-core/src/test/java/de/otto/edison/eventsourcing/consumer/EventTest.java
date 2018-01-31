@@ -1,10 +1,11 @@
 package de.otto.edison.eventsourcing.consumer;
 
+import de.otto.edison.eventsourcing.event.Event;
 import org.junit.Test;
 
 import java.time.Instant;
 
-import static de.otto.edison.eventsourcing.consumer.Event.event;
+import static de.otto.edison.eventsourcing.event.Event.event;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -18,9 +19,9 @@ public class EventTest {
                 "ßome dätä",
                 "00001",
                 now);
-        assertThat(event.key(), is("42"));
-        assertThat(event.payload(), is("ßome dätä"));
-        assertThat(event.arrivalTimestamp(), is(now));
-        assertThat(event.sequenceNumber(), is("00001"));
+        assertThat(event.getEventBody().getKey(), is("42"));
+        assertThat(event.getEventBody().getPayload(), is("ßome dätä"));
+        assertThat(event.getArrivalTimestamp(), is(now));
+        assertThat(event.getSequenceNumber(), is("00001"));
     }
 }

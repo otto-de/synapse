@@ -1,11 +1,14 @@
 package de.otto.edison.eventsourcing.kinesis;
 
-import de.otto.edison.eventsourcing.consumer.Event;
+import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.EventBody;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.function.Function;
+
+import static de.otto.edison.eventsourcing.event.EventBody.eventBody;
 
 public class KinesisEvent<T> extends Event<T> {
 
@@ -30,8 +33,7 @@ public class KinesisEvent<T> extends Event<T> {
                          final Duration durationBehind,
                          final Function<ByteBuffer, T> decoder) {
         super(
-                record.partitionKey(),
-                decoder.apply(record.data()),
+                eventBody(record.partitionKey(), decoder.apply(record.data())),
                 record.sequenceNumber(),
                 record.approximateArrivalTimestamp(),
                 durationBehind);

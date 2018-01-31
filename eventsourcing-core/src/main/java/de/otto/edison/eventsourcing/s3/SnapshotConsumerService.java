@@ -3,7 +3,7 @@ package de.otto.edison.eventsourcing.s3;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import de.otto.edison.eventsourcing.consumer.Event;
+import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.consumer.EventConsumers;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.zip.ZipInputStream;
 
-import static de.otto.edison.eventsourcing.consumer.Event.event;
+import static de.otto.edison.eventsourcing.event.Event.event;
 
 @Service
 public class SnapshotConsumerService {

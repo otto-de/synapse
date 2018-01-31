@@ -1,6 +1,7 @@
 package de.otto.edison.eventsourcing;
 
 import de.otto.edison.eventsourcing.consumer.*;
+import de.otto.edison.eventsourcing.event.Event;
 
 import java.util.Objects;
 import java.util.function.Predicate;

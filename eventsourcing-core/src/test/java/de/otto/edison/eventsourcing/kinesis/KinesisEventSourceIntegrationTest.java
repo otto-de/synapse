@@ -2,10 +2,11 @@ package de.otto.edison.eventsourcing.kinesis;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.consumer.Event;
+import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
+import de.otto.edison.eventsourcing.event.EventBody;
 import de.otto.edison.eventsourcing.testsupport.TestStreamSource;
 import org.junit.Before;
 import org.junit.Test;
@@ -94,7 +95,7 @@ public class KinesisEventSourceIntegrationTest {
 
         assertThat(nextStreamPosition.shards(), hasSize(EXPECTED_NUMBER_OF_SHARDS));
         assertThat(events, hasSize(EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET));
-        assertThat(events.stream().map(Event::key).sorted().collect(Collectors.toList()), is(expectedListOfKeys()));
+        assertThat(events.stream().map(Event::getEventBody).map(EventBody::getKey).sorted().collect(Collectors.toList()), is(expectedListOfKeys()));
     }
 
     @Test
@@ -123,6 +124,6 @@ public class KinesisEventSourceIntegrationTest {
     }
 
     private Predicate<Event<?>> stopCondition() {
-        return e -> e.payload() == null;
+        return e -> e.getEventBody().getPayload() == null;
     }
 }

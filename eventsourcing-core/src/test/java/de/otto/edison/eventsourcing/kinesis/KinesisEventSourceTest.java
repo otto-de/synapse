@@ -3,7 +3,7 @@ package de.otto.edison.eventsourcing.kinesis;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import de.otto.edison.eventsourcing.consumer.Event;
+import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.junit.Before;
@@ -112,9 +112,9 @@ public class KinesisEventSourceTest {
         verify(testDataConsumer, times(3)).accept(testDataCaptor.capture());
         List<Event<TestData>> events = testDataCaptor.getAllValues();
 
-        assertThat(events.get(0).payload(), is(new TestData("blue")));
-        assertThat(events.get(1).payload(), is(nullValue()));
-        assertThat(events.get(2).payload(), is(new TestData("green")));
+        assertThat(events.get(0).getEventBody().getPayload(), is(new TestData("blue")));
+        assertThat(events.get(1).getEventBody().getPayload(), is(nullValue()));
+        assertThat(events.get(2).getEventBody().getPayload(), is(new TestData("green")));
     }
 
     @Test
@@ -133,9 +133,9 @@ public class KinesisEventSourceTest {
         verify(stringConsumer, times(3)).accept(stringCaptor.capture());
 
         List<Event<String>> events = stringCaptor.getAllValues();
-        assertThat(events.get(0).payload(), is(objectMapper.writeValueAsString(new TestData("blue"))));
-        assertThat(events.get(1).payload(), is(nullValue()));
-        assertThat(events.get(2).payload(), is(objectMapper.writeValueAsString(new TestData("green"))));
+        assertThat(events.get(0).getEventBody().getPayload(), is(objectMapper.writeValueAsString(new TestData("blue"))));
+        assertThat(events.get(1).getEventBody().getPayload(), is(nullValue()));
+        assertThat(events.get(2).getEventBody().getPayload(), is(objectMapper.writeValueAsString(new TestData("green"))));
     }
 
     @Test
@@ -205,10 +205,10 @@ public class KinesisEventSourceTest {
     }
 
     private boolean stopIfGreenForString(Event<?> event) {
-        if (event.payload() == null) {
+        if (event.getEventBody().getPayload() == null) {
             return false;
         }
-        return event.payload().toString().contains("green");
+        return event.getEventBody().getPayload().toString().contains("green");
     }
 
     private Record createRecord(String data) {

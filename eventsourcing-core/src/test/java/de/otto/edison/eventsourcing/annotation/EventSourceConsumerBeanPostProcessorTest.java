@@ -3,7 +3,7 @@ package de.otto.edison.eventsourcing.annotation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.DelegateEventSource;
 import de.otto.edison.eventsourcing.configuration.EventSourcingConfiguration;
-import de.otto.edison.eventsourcing.consumer.Event;
+import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
 import org.junit.After;

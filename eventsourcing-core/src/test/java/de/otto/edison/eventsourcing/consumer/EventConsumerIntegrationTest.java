@@ -5,6 +5,7 @@ import de.otto.edison.eventsourcing.annotation.EventSourceConsumer;
 import de.otto.edison.eventsourcing.configuration.EventSourcingBootstrapConfiguration;
 import de.otto.edison.eventsourcing.configuration.EventSourcingConfiguration;
 import de.otto.edison.eventsourcing.configuration.SnapshotConfiguration;
+import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.s3.SnapshotReadService;
 import org.awaitility.Awaitility;
 import org.junit.Test;
@@ -94,8 +95,8 @@ public class EventConsumerIntegrationTest {
                 keyPattern = "^banana.*",
                 payloadType = Banana.class)
         public void consumeBananaEvents(Event<Banana> event) {
-            receivedBananaEventPayloads.add(event.payload());
-            allReceivedEventKeys.add(event.key());
+            receivedBananaEventPayloads.add(event.getEventBody().getPayload());
+            allReceivedEventKeys.add(event.getEventBody().getKey());
         }
 
         @EventSourceConsumer(
@@ -103,8 +104,8 @@ public class EventConsumerIntegrationTest {
                 keyPattern = "^apple.*",
                 payloadType = Apple.class)
         public void consumeAppleEvents(Event<Apple> event) {
-            receivedAppleEventPayloads.add(event.payload());
-            allReceivedEventKeys.add(event.key());
+            receivedAppleEventPayloads.add(event.getEventBody().getPayload());
+            allReceivedEventKeys.add(event.getEventBody().getKey());
         }
     }
 

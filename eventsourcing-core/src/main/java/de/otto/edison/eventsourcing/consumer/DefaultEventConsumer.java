@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.consumer;
 
+import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.state.StateRepository;
 
 import java.util.regex.Pattern;
@@ -35,10 +36,10 @@ public class DefaultEventConsumer<T> implements EventConsumer<T> {
 
     @Override
     public void accept(final Event<T> event) {
-        if (event.payload() == null) {
-            stateRepository.remove(event.key());
+        if (event.getEventBody().getPayload() == null) {
+            stateRepository.remove(event.getEventBody().getKey());
         } else {
-            stateRepository.put(event.key(), event.payload());
+            stateRepository.put(event.getEventBody().getKey(), event.getEventBody().getPayload());
         }
     }
 

@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.consumer;
 
+import de.otto.edison.eventsourcing.event.Event;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.aop.support.AopUtils;

@@ -1,12 +1,14 @@
 package de.otto.edison.eventsourcing.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.edison.eventsourcing.event.Event;
 import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
 
 import static de.otto.edison.eventsourcing.consumer.TestEventConsumer.testEventConsumer;
+import static de.otto.edison.eventsourcing.event.Event.event;
 import static java.util.Arrays.asList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -29,7 +31,7 @@ public class EventConsumersTest {
         eventConsumers.add(eventConsumerC);
 
         // when
-        Event<String> someEvent = new Event<>("someKey", "{}", "0", Instant.now(), Duration.ZERO);
+        Event<String> someEvent = event("someKey", "{}", "0", Instant.now(), Duration.ZERO);
         eventConsumers.encodeAndSend(someEvent);
 
         // then
@@ -50,14 +52,14 @@ public class EventConsumersTest {
         EventConsumers eventConsumers = new EventConsumers(OBJECT_MAPPER, asList(eventConsumerApple, eventConsumerBanana, eventConsumerCherry));
 
         // when
-        Event<String> someAppleEvent = new Event<>("apple.123", "{}", "0", Instant.now(), Duration.ZERO);
-        Event<String> someBananaEvent = new Event<>("banana.456", "{}", "0", Instant.now(), Duration.ZERO);
+        Event<String> someAppleEvent = event("apple.123", "{}", "0", Instant.now(), Duration.ZERO);
+        Event<String> someBananaEvent = event("banana.456", "{}", "0", Instant.now(), Duration.ZERO);
         eventConsumers.encodeAndSend(someAppleEvent);
         eventConsumers.encodeAndSend(someBananaEvent);
 
         // then
-        verify(eventConsumerApple).accept(new Event<>(someAppleEvent.key(), new Apple(), someAppleEvent.sequenceNumber(), someAppleEvent.arrivalTimestamp(), someAppleEvent.durationBehind().get()));
-        verify(eventConsumerBanana).accept(new Event<>(someBananaEvent.key(), new Banana(), someBananaEvent.sequenceNumber(), someBananaEvent.arrivalTimestamp(), someBananaEvent.durationBehind().get()));
+        verify(eventConsumerApple).accept(event(someAppleEvent.getEventBody().getKey(), new Apple(), someAppleEvent.getSequenceNumber(), someAppleEvent.getArrivalTimestamp(), someAppleEvent.getDurationBehind().get()));
+        verify(eventConsumerBanana).accept(event(someBananaEvent.getEventBody().getKey(), new Banana(), someBananaEvent.getSequenceNumber(), someBananaEvent.getArrivalTimestamp(), someBananaEvent.getDurationBehind().get()));
         verify(eventConsumerCherry, never()).accept(any(Event.class));
     }
 

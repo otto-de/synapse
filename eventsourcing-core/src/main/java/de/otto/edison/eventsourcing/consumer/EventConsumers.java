@@ -1,6 +1,7 @@
 package de.otto.edison.eventsourcing.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.edison.eventsourcing.event.Event;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -52,10 +53,10 @@ public class EventConsumers {
                             consumer.accept(event);
                         } else {
                             Object payload = null;
-                            if (event.payload() != null) {
-                                payload = objectMapper.readValue(event.payload(), payloadType);
+                            if (event.getEventBody().getPayload() != null) {
+                                payload = objectMapper.readValue(event.getEventBody().getPayload(), payloadType);
                             }
-                            final Event<?> tEvent = Event.event(event.key(), payload, event.sequenceNumber(), event.arrivalTimestamp(), event.durationBehind().orElse(null));
+                            final Event<?> tEvent = Event.event(event.getEventBody().getKey(), payload, event.getSequenceNumber(), event.getArrivalTimestamp(), event.getDurationBehind().orElse(null));
                             consumer.accept(tEvent);
                         }
                     } catch (final Exception e) {
@@ -65,7 +66,7 @@ public class EventConsumers {
     }
 
     private boolean matchesEventKey(Event<String> event, Pattern keyPattern) {
-        return keyPattern.matcher(event.key()).matches();
+        return keyPattern.matcher(event.getEventBody().getKey()).matches();
     }
 
 }
