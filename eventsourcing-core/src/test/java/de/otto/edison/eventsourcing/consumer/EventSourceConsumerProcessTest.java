@@ -13,6 +13,7 @@ import static de.otto.edison.eventsourcing.event.Event.event;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 public class EventSourceConsumerProcessTest {
@@ -30,11 +31,10 @@ public class EventSourceConsumerProcessTest {
 
         EventSourceConsumerProcess process = new EventSourceConsumerProcess(singletonList(eventSource));
         process.start();
-        Thread.sleep(100L);
 
-        verify(eventSource).consumeAll(any(StreamPosition.class), any(Predicate.class));
-        verify(eventConsumerA).accept(any());
-        verify(eventConsumerB).accept(any());
+        verify(eventSource, timeout(1000)).consumeAll(any(StreamPosition.class), any(Predicate.class));
+        verify(eventConsumerA, timeout(1000)).accept(any());
+        verify(eventConsumerB, timeout(1000)).accept(any());
     }
 
     static class MyPayload {
