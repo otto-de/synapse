@@ -25,24 +25,6 @@ public class InMemoryEventSource extends AbstractEventSource {
         return getName();
     }
 
-    // TODO: move to base
-    @Override
-    public StreamPosition consumeAll() {
-        return consumeAll(StreamPosition.of(), e -> true);
-    }
-
-    // TODO: move to base
-    @Override
-    public StreamPosition consumeAll(StreamPosition startFrom) {
-        return consumeAll(startFrom, e -> true);
-    }
-
-    // TODO: move to base
-    @Override
-    public StreamPosition consumeAll(Predicate<Event<?>> stopCondition) {
-        return consumeAll(StreamPosition.of(), stopCondition);
-    }
-
     @Override
     public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<?>> stopCondition) {
         boolean shouldStop;
