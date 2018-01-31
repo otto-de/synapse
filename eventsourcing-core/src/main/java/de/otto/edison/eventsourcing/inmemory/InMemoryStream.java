@@ -7,7 +7,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class InMemoryStream {
 
-    final BlockingQueue<EventBody<String>> eventQueue;
+    private final BlockingQueue<EventBody<String>> eventQueue;
 
     public InMemoryStream() {
         this.eventQueue = new LinkedBlockingQueue<>();
