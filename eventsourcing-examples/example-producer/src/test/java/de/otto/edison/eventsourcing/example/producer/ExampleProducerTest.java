@@ -32,4 +32,6 @@ public class ExampleProducerTest {
         //then
         verify(sender).sendEvent(anyString(), any(ProductPayload.class));
     }
+
+
 }
