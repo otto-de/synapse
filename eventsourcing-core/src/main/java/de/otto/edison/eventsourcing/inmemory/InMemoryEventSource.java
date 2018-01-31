@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.AbstractEventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.EventBody;
 
 import java.time.Instant;
 import java.util.function.Predicate;
@@ -29,10 +30,15 @@ public class InMemoryEventSource extends AbstractEventSource {
     public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<?>> stopCondition) {
         boolean shouldStop;
         do {
-            Event<String> event = Event.event(inMemoryStream.receive(), "0", Instant.now());
+            EventBody<String> eventBody = inMemoryStream.receive();
+
+            if (eventBody == null) {
+                return null;
+            }
+
+            Event<String> event = Event.event(eventBody, "0", Instant.now());
 
             registeredConsumers().encodeAndSend(event);
-
             shouldStop = stopCondition.test(event);
         } while (!shouldStop);
         return null;

@@ -2,7 +2,6 @@ package de.otto.edison.eventsourcing.inmemory;
 
 import de.otto.edison.eventsourcing.event.EventBody;
 
-import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -22,7 +21,8 @@ public class InMemoryStream {
         try {
             return eventQueue.take();
         } catch (InterruptedException e) {
-            throw new IllegalStateException(e);
+            // return null when shutting down
+            return null;
         }
     }
 
