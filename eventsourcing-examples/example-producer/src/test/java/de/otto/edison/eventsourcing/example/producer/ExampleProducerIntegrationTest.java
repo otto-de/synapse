@@ -5,7 +5,6 @@ import de.otto.edison.eventsourcing.annotation.EnableEventSource;
 import de.otto.edison.eventsourcing.annotation.EventSourceConsumer;
 import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.example.producer.payload.ProductPayload;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,11 +30,6 @@ public class ExampleProducerIntegrationTest {
 
     @Autowired
     TestConsumer testConsumer;
-
-    @Before
-    public void setUp() throws Exception {
-
-    }
 
     @Test
     public void shouldProduceEvent() throws Exception {

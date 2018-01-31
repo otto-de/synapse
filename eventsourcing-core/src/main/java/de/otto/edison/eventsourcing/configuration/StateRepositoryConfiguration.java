@@ -9,9 +9,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class StateRepositoryConfiguration {
 
-    @Bean(name = "StateRepository")
-    @ConditionalOnMissingBean(StateRepository.class)
-    public StateRepository<String> stateRepository() {
+    @Bean(name = "compactionStateRepository")
+    @ConditionalOnMissingBean(name = "compactionStateRepository")
+    public StateRepository<String> compactionStateRepository() {
         return new DefaultStateRepository<>();
     }
 

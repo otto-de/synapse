@@ -3,6 +3,7 @@ package de.otto.edison.eventsourcing.example.consumer;
 import de.otto.edison.eventsourcing.example.consumer.configuration.MyServiceProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
@@ -17,13 +18,13 @@ import java.util.Arrays;
 @Component
 @EnableConfigurationProperties(MyServiceProperties.class)
 @EnableAsync
+@Profile("!test")
 public class SampleProducer {
 
     @Autowired
     private KinesisClient kinesisClient;
     @Autowired
     private MyServiceProperties properties;
-
 
     @PostConstruct
     public void produceSampleData() {

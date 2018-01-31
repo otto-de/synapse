@@ -31,11 +31,11 @@ public class CompactionService {
     @Autowired
     public CompactionService(
             SnapshotWriteService snapshotWriteService,
-            StateRepository<String> stateRepository,
+            StateRepository<String> compactionStateRepository,
             EventSourceBuilder defaultEventSourceBuilder)
     {
         this.snapshotWriteService = snapshotWriteService;
-        this.stateRepository = stateRepository;
+        this.stateRepository = compactionStateRepository;
         this.eventSourceBuilder = defaultEventSourceBuilder;
     }
 
