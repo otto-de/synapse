@@ -2,8 +2,8 @@ package de.otto.edison.eventsourcing.inmemory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.AbstractEventSource;
-import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
+import de.otto.edison.eventsourcing.event.Event;
 
 import java.time.Instant;
 import java.util.function.Predicate;
@@ -29,8 +29,7 @@ public class InMemoryEventSource extends AbstractEventSource {
     public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<?>> stopCondition) {
         boolean shouldStop;
         do {
-            Tuple<String, String> tuple = inMemoryStream.receive();
-            Event<String> event = Event.event(tuple.getFirst(), tuple.getSecond(), "0", Instant.now());
+            Event<String> event = Event.event(inMemoryStream.receive(), "0", Instant.now());
 
             registeredConsumers().encodeAndSend(event);
 

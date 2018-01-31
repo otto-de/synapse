@@ -1,14 +1,15 @@
 package de.otto.edison.eventsourcing.inmemory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
+import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.EventBody;
 import org.junit.Test;
 
 import java.util.regex.Pattern;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 
 public class InMemoryEventSourceTest {
 
@@ -21,7 +22,7 @@ public class InMemoryEventSourceTest {
         InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("some-stream", inMemoryStream, objectMapper);
         StringEventConsumer eventConsumer = new StringEventConsumer();
         inMemoryEventSource.register(eventConsumer);
-        inMemoryStream.send(new Tuple<>("key", "payload"));
+        inMemoryStream.send(EventBody.eventBody("key", "payload"));
 
         // when
         inMemoryEventSource.consumeAll(event -> true);

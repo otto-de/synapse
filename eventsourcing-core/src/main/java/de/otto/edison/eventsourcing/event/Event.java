@@ -40,6 +40,16 @@ public class Event<T> {
                 durationBehind);
     }
 
+    public static <T> Event<T> event(final EventBody<T> eventBody,
+                                     final String sequenceNumber,
+                                     final Instant approximateArrivalTimestamp) {
+        return new Event<>(
+                eventBody,
+                sequenceNumber,
+                approximateArrivalTimestamp,
+                null);
+    }
+
     private final EventBody<T> eventBody;
     private final String sequenceNumber;
     private final Instant arrivalTimestamp;

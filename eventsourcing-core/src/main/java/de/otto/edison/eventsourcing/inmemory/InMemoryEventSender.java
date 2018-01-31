@@ -2,10 +2,9 @@ package de.otto.edison.eventsourcing.inmemory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import de.otto.edison.eventsourcing.EventSender;
 
-import java.nio.ByteBuffer;
+import static de.otto.edison.eventsourcing.event.EventBody.eventBody;
 
 public class InMemoryEventSender implements EventSender {
 
@@ -24,7 +23,7 @@ public class InMemoryEventSender implements EventSender {
     @Override
     public void sendEvent(String key, Object payload) {
         try {
-            eventStream.send(new Tuple<>(key, objectMapper.writeValueAsString(payload)));
+            eventStream.send(eventBody(key, objectMapper.writeValueAsString(payload)));
         } catch (JsonProcessingException e) {
             throw new IllegalStateException(e.getMessage(), e);
         }

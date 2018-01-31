@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.kinesis;
 
 import com.google.common.collect.ImmutableList;
-import de.otto.edison.eventsourcing.inmemory.Tuple;
+import de.otto.edison.eventsourcing.event.EventBody;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,9 +15,9 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static java.lang.String.valueOf;
-import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -160,9 +160,9 @@ public class KinesisStreamTest {
         ByteBuffer data2 = ByteBuffer.wrap("test".getBytes(StandardCharsets.UTF_8));
 
         // when
-        kinesisStream.sendBatch(ImmutableList.of(
-                new Tuple<>("event1", data1),
-                new Tuple<>("event2", data2)));
+        kinesisStream.sendBatch(Stream.of(
+                EventBody.eventBody("event1", data1),
+                EventBody.eventBody("event2", data2)));
 
         // then
         ArgumentCaptor<PutRecordsRequest> captor = ArgumentCaptor.forClass(PutRecordsRequest.class);
@@ -194,12 +194,10 @@ public class KinesisStreamTest {
         verify(kinesisClient, times(2)).putRecords(any(PutRecordsRequest.class));
     }
 
-    private List<Tuple<String, ByteBuffer>> someEvents(int n) {
+    private Stream<EventBody<ByteBuffer>> someEvents(int n) {
         return IntStream.range(0, n)
-                .mapToObj(i -> new Tuple<>(valueOf(i), ByteBuffer.wrap(Integer.toString(i).getBytes(StandardCharsets.UTF_8))))
-                .collect(toList());
+                .mapToObj(i -> EventBody.eventBody(valueOf(i), ByteBuffer.wrap(Integer.toString(i).getBytes(StandardCharsets.UTF_8))));
     }
-
 
     private Shard someShard(String shardId, boolean open) {
         return Shard.builder()

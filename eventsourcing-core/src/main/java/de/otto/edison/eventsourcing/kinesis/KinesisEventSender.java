@@ -4,11 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import de.otto.edison.eventsourcing.EventSender;
-import de.otto.edison.eventsourcing.inmemory.Tuple;
+import de.otto.edison.eventsourcing.event.EventBody;
 
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.stream.Collectors;
+
+import static de.otto.edison.eventsourcing.event.EventBody.eventBody;
 
 public class KinesisEventSender implements EventSender {
     private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.allocateDirect(0);
@@ -25,9 +26,9 @@ public class KinesisEventSender implements EventSender {
         kinesisStream.send(key, convertToByteBuffer(payload));
     }
 
-    public void sendEvents(List<Tuple<String, Object>> events) {
+    public void sendEvents(List<EventBody<Object>> events) {
         kinesisStream.sendBatch(events.stream()
-                .map(e -> new Tuple<>(e.getFirst(), convertToByteBuffer(e.getSecond()))));
+                .map(e -> eventBody(e.getKey(), convertToByteBuffer(e.getPayload()))));
     }
 
     private ByteBuffer convertToByteBuffer(Object payload) {

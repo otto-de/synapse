@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import com.google.common.collect.ImmutableList;
-import de.otto.edison.eventsourcing.inmemory.Tuple;
+import de.otto.edison.eventsourcing.event.EventBody;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +35,7 @@ public class KinesisEventSenderTest {
     private KinesisEventSender kinesisEventSender;
 
     @Captor
-    private ArgumentCaptor<Stream<Tuple<String, ByteBuffer>>> byteBufferMapCaptor;
+    private ArgumentCaptor<Stream<EventBody<ByteBuffer>>> byteBufferMapCaptor;
 
     @Before
     public void setUp() throws Exception {
@@ -65,19 +65,19 @@ public class KinesisEventSenderTest {
 
         // when
         kinesisEventSender.sendEvents(ImmutableList.of(
-                new Tuple<>("b", bananaObject),
-                new Tuple<>("a", appleObject)
+                EventBody.eventBody("b", bananaObject),
+                EventBody.eventBody("a", appleObject)
         ));
 
         // then
         verify(kinesisStream).sendBatch(byteBufferMapCaptor.capture());
 
-        List<Tuple<String, ByteBuffer>> events = byteBufferMapCaptor.getValue().collect(toList());
+        List<EventBody<ByteBuffer>> events = byteBufferMapCaptor.getValue().collect(toList());
         assertThat(events.size(), is(2));
 
-        assertThat(events.stream().map(Tuple::getFirst).collect(toList()), contains("b", "a"));
+        assertThat(events.stream().map(EventBody::getKey).collect(toList()), contains("b", "a"));
 
-        ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(events.get(0).getSecond());
+        ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(events.get(0).getPayload());
         ExampleJsonObject jsonObject = objectMapper.readValue(inputStream, ExampleJsonObject.class);
 
         assertThat(jsonObject.value, is("banana"));
