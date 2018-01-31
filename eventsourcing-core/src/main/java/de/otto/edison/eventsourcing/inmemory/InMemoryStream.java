@@ -3,11 +3,12 @@ package de.otto.edison.eventsourcing.inmemory;
 import de.otto.edison.eventsourcing.event.EventBody;
 
 import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class InMemoryStream {
 
-    final Queue<EventBody<String>> eventQueue;
+    final BlockingQueue<EventBody<String>> eventQueue;
 
     public InMemoryStream() {
         this.eventQueue = new LinkedBlockingQueue<>();
@@ -18,7 +19,11 @@ public class InMemoryStream {
     }
 
     public EventBody<String> receive() {
-        return eventQueue.poll();
+        try {
+            return eventQueue.take();
+        } catch (InterruptedException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
 }

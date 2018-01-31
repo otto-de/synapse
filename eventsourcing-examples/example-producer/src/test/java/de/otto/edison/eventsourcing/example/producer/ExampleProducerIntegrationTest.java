@@ -6,6 +6,7 @@ import de.otto.edison.eventsourcing.annotation.EventSourceConsumer;
 import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.example.producer.payload.ProductPayload;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -20,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -47,17 +49,14 @@ public class ExampleProducerIntegrationTest {
     }
 
     @Test
-    @Ignore
     public void shouldProduceEvent() throws Exception {
-        // given
+        // when
         producer.produceSampleData();
 
-        // when
-        Awaitility.await()
-                .atMost(300, SECONDS)
-                .untilAtomic(testConsumer.count, is(1));
-
         //then
+        Awaitility.await()
+                .atMost(3, SECONDS)
+                .untilAtomic(testConsumer.count, greaterThanOrEqualTo(1));
     }
 
     @EnableEventSource(name = "inMemoryStream", streamName = "someStreamName")
@@ -67,7 +66,7 @@ public class ExampleProducerIntegrationTest {
     }
 
     @Component
-    static class TestConsumer {
+    public static class TestConsumer {
 
         private AtomicInteger count = new AtomicInteger();
 
