@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Configuration;
 public class TestEventConsumerConfiguration {
 
     @Bean
-    @ConditionalOnMissingBean(name = "defaultEventSourceBuilder")
     public EventSourceBuilder defaultEventSourceBuilder(final InMemoryStream productStream,
                                                         final ObjectMapper objectMapper) {
         return (name, streamName) -> new InMemoryEventSource(name, productStream, objectMapper);

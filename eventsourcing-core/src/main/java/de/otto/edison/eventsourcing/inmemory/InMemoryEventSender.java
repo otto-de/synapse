@@ -8,14 +8,11 @@ import static de.otto.edison.eventsourcing.event.EventBody.eventBody;
 
 public class InMemoryEventSender implements EventSender {
 
-    private final String name;
     private final ObjectMapper objectMapper;
     private final InMemoryStream eventStream;
 
-    public InMemoryEventSender(String name,
-                               ObjectMapper objectMapper,
+    public InMemoryEventSender(ObjectMapper objectMapper,
                                InMemoryStream eventStream) {
-        this.name = name;
         this.objectMapper = objectMapper;
         this.eventStream = eventStream;
     }

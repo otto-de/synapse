@@ -17,7 +17,6 @@ import java.util.Arrays;
 
 @Component
 @EnableConfigurationProperties(MyServiceProperties.class)
-@EnableAsync
 @Profile("!test")
 public class SampleProducer {
 

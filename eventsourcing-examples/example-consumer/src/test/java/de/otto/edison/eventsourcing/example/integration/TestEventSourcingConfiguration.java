@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableConfigurationProperties(MyServiceProperties.class)
-public class TestEventSenderConfiguration {
+public class TestEventSourcingConfiguration {
 
     @Bean
     public InMemoryStream productStream() {
@@ -33,9 +33,9 @@ public class TestEventSenderConfiguration {
                                                  final MyServiceProperties myServiceProperties) {
         return streamName -> {
             if (streamName.equals(myServiceProperties.getBananaStreamName())) {
-                return new InMemoryEventSender(streamName, objectMapper, bananaStream);
+                return new InMemoryEventSender(objectMapper, bananaStream);
             } else if (streamName.equals(myServiceProperties.getProductStreamName())) {
-                return new InMemoryEventSender(streamName, objectMapper, productStream);
+                return new InMemoryEventSender(objectMapper, productStream);
             } else {
                 throw new IllegalArgumentException("no stream for name " + streamName + " available.");
             }
@@ -44,7 +44,6 @@ public class TestEventSenderConfiguration {
 
 
     @Bean
-    @ConditionalOnMissingBean(name = "defaultEventSourceBuilder")
     public EventSourceBuilder defaultEventSourceBuilder(final InMemoryStream productStream,
                                                         final InMemoryStream bananaStream,
                                                         final MyServiceProperties myServiceProperties,
