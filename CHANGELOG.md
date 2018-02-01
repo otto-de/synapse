@@ -1,5 +1,13 @@
 # Release Notes
 
+## 0.4.0
+* Breaking changes:
+  * Change signature of `KinesisEventSender.sendEvents`. Send events takes a list of `EventBody` now
+  * Split Event class into `Event` and `EventBody`
+  * `CompactionService` now requires a `StateRepository` with name `compactionStateRepository` 
+* InMemory EventSender and EventSource for testing
+
+
 ## 0.3.0
 * Events with "null"-payload will delete the entry.
 * Remove client side encryption because kinesis now supports server side encryption.
@@ -9,11 +17,11 @@
 This functionality was moved from `SnapshotEventSource` and also works for a `CompactingKinesisEventSource` now.
 
 ## 0.2.1
-* Provide ```EncryptedOrPlainJsonTextEncryptor``` that checks whether data is plain json or is encrypted.
+* Provide `EncryptedOrPlainJsonTextEncryptor` that checks whether data is plain json or is encrypted.
 
 ## 0.2.0
-* Add option to send unencrypted events to ```KinesisEventSender.sendEvent(String, Object, boolean)``` 
-and ```KinesisEventSender.sendEvents(Map<String,Object>, boolean)```
+* Add option to send unencrypted events to `KinesisEventSender.sendEvent(String, Object, boolean)` 
+and `KinesisEventSender.sendEvents(Map<String,Object>, boolean)`
 
 ## 0.1.11
 * Fix statistics
