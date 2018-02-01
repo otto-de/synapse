@@ -18,7 +18,7 @@ public class InMemoryEventSender implements EventSender {
     }
 
     @Override
-    public void sendEvent(String key, Object payload) {
+    public <T> void sendEvent(String key, T payload) {
         try {
             eventStream.send(eventBody(key, objectMapper.writeValueAsString(payload)));
         } catch (JsonProcessingException e) {

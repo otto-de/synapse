@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
-import com.google.common.collect.ImmutableList;
 import de.otto.edison.eventsourcing.event.EventBody;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,7 +63,7 @@ public class KinesisEventSenderTest {
         ExampleJsonObject appleObject = new ExampleJsonObject("apple");
 
         // when
-        kinesisEventSender.sendEvents(ImmutableList.of(
+        kinesisEventSender.sendEvents(Stream.of(
                 EventBody.eventBody("b", bananaObject),
                 EventBody.eventBody("a", appleObject)
         ));

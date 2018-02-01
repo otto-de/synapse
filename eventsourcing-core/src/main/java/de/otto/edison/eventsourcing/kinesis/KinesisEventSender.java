@@ -7,7 +7,7 @@ import de.otto.edison.eventsourcing.EventSender;
 import de.otto.edison.eventsourcing.event.EventBody;
 
 import java.nio.ByteBuffer;
-import java.util.List;
+import java.util.stream.Stream;
 
 import static de.otto.edison.eventsourcing.event.EventBody.eventBody;
 
@@ -22,12 +22,14 @@ public class KinesisEventSender implements EventSender {
         this.objectMapper = objectMapper;
     }
 
-    public void sendEvent(String key, Object payload) {
+    @Override
+    public <T> void sendEvent(String key, T payload) {
         kinesisStream.send(key, convertToByteBuffer(payload));
     }
 
-    public void sendEvents(List<EventBody<Object>> events) {
-        kinesisStream.sendBatch(events.stream()
+    @Override
+    public <T> void sendEvents(Stream<EventBody<T>> events) {
+        kinesisStream.sendBatch(events
                 .map(e -> eventBody(e.getKey(), convertToByteBuffer(e.getPayload()))));
     }
 
