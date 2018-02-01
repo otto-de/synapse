@@ -1,6 +1,7 @@
 package de.otto.edison.eventsourcing.consumer;
 
 import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.EventBody;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -48,7 +49,7 @@ public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
     }
 
     /**
-     * Returns the pattern of {@link Event#key() event keys} accepted by this consumer.
+     * Returns the pattern of {@link EventBody#getKey()} () event keys} accepted by this consumer.
      *
      * @return Pattern
      */

@@ -15,8 +15,8 @@ import java.util.function.Predicate;
 public interface EventSource {
 
     /**
-     * The name of the EventSource.
-     *
+     * An event source's name is used to connect event sources to their consumers.
+     * @return the unique name
      */
     String getName();
 

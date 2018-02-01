@@ -66,7 +66,7 @@ public interface EventConsumer<T> extends Consumer<Event<T>> {
     Class<T> payloadType();
 
     /**
-     * Returns the pattern of {@link Event#key() event keys} accepted by this consumer.
+     * Returns the pattern of {@link de.otto.edison.eventsourcing.event.EventBody#getKey() event keys} accepted by this consumer.
      *
      * @return Pattern
      */
