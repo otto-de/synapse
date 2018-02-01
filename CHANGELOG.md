@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.4.1
+* Add `sendEvents` method to `EventSender` interface.
+
 ## 0.4.0
 * Breaking changes:
   * Change signature of `KinesisEventSender.sendEvents`. Send events takes a list of `EventBody` now
