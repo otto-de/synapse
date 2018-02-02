@@ -8,11 +8,13 @@ import org.mockito.junit.MockitoJUnitRunner;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
+import software.amazon.awssdk.services.kinesis.model.KinesisException;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -69,4 +71,28 @@ public class KinesisShardIteratorTest {
         assertThat(kinesisShardIterator.getId(), is("nextIteratorId"));
     }
 
+
+    @Test
+    public void shouldRetryReadingIteratorOnKinesisException() {
+        // given
+        GetRecordsResponse response = GetRecordsResponse.builder()
+                .records()
+                .nextShardIterator("nextIteratorId")
+                .build();
+
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class)))
+                .thenThrow(new KinesisException("forced test exception"))
+                .thenThrow(new KinesisException("forced test exception"))
+                .thenThrow(new KinesisException("forced test exception"))
+                .thenThrow(new KinesisException("forced test exception"))
+                .thenReturn(response);
+
+        // when
+        kinesisShardIterator.next();
+
+        // then
+        verify(kinesisClient, times(5)).getRecords(any(GetRecordsRequest.class));
+        assertThat(kinesisShardIterator.getId(), is("nextIteratorId"));
+
+    }
 }
