@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.state;
 
+import net.openhft.chronicle.hash.ChronicleHashClosedException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -72,6 +73,53 @@ public class ChronicleMapStateRepositoryTest {
         repository.getKeySetIterable().forEach(resultKeys::add);
         // then
         Assert.assertThat(resultKeys, containsInAnyOrder("someKeyA", "someKeyB", "someKeyC"));
+    }
+
+    @Test
+    public void shouldNotPutIntoClosedCache() {
+        ChronicleMapStateRepository<SomePojo> cache = ChronicleMapStateRepository.builder(SomePojo.class).build();
+        cache.close();
+
+        // when
+        SomePojo testPojo = new SomePojo("A", 1);
+        try {
+            cache.put("someId", testPojo);
+        } catch(ChronicleHashClosedException e) {
+            // then
+            Assert.fail("Tried to put item into a closed cache");
+        }
+    }
+
+    @Test
+    public void shouldNotGetFromClosedCache() {
+        ChronicleMapStateRepository<SomePojo> cache = ChronicleMapStateRepository.builder(SomePojo.class).build();
+        // when
+        SomePojo testPojo = new SomePojo("A", 1);
+        cache.put("someId", testPojo);
+        cache.close();
+
+        try {
+            cache.get("someId");
+        } catch(ChronicleHashClosedException e) {
+            // then
+            Assert.fail("Tried to get item from a closed cache");
+        }
+    }
+
+    @Test
+    public void shouldNotGetFullCacheLogFromClosedCache() {
+        ChronicleMapStateRepository<SomePojo> cache = ChronicleMapStateRepository.builder(SomePojo.class).build();
+        cache.close();
+
+        // when
+        try {
+            cache.getStats();
+        } catch(ChronicleHashClosedException e) {
+            // then
+            Assert.fail("Tried to get memory log from closed cache");
+        }
+
+
     }
 
 

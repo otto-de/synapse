@@ -3,6 +3,7 @@ package de.otto.edison.eventsourcing.state;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import net.openhft.chronicle.hash.ChronicleHashClosedException;
 import net.openhft.chronicle.map.ChronicleMap;
 import net.openhft.chronicle.map.ChronicleMapBuilder;
 
@@ -44,35 +45,50 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V> {
             }
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
+        } catch (ChronicleHashClosedException ignore) {
+            // ignore, because this should happen on shutdown only
         }
     }
 
     @Override
     public Optional<V> get(String key) {
-        String json = store.get(key);
-        if (json != null) {
-            try {
-                return Optional.of(objectMapper.readValue(json, clazz));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+        try {
+            String json = store.get(key);
+            if (json != null) {
+                try {
+                    return Optional.of(objectMapper.readValue(json, clazz));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
+            return Optional.empty();
+        } catch (ChronicleHashClosedException ignore) {
+            // ignore, because this should happen on shutdown only
+            return Optional.empty();
         }
-        return Optional.empty();
     }
 
     @Override
     public void remove(String key) {
-        String oldJson = store.get(key);
-        if (oldJson != null) {
-            bytesUsed.addAndGet(-oldJson.length() * 2);
+        try {
+            String oldJson = store.get(key);
+            if (oldJson != null) {
+                bytesUsed.addAndGet(-oldJson.length() * 2);
+            }
+            store.remove(key);
+        } catch (ChronicleHashClosedException ignore) {
+            // ignore, because this should happen on shutdown only
         }
-        store.remove(key);
     }
 
     @Override
     public void clear() {
         bytesUsed.set(0L);
         store.clear();
+    }
+
+    public void close() {
+        store.close();
     }
 
     @Override
@@ -87,11 +103,16 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V> {
 
     @Override
     public String getStats() {
-        float gbUsed = bytesUsed.floatValue() / 1024 / 1024 / 1024;
-        float gbTotal = (float) store.offHeapMemoryUsed() / 1024 / 1024 / 1024;
-        int percentUsed = (int) (gbUsed / gbTotal * 100);
-        long avgEntrySize = store.size() == 0 ? 0 : bytesUsed.get() / store.size();
-        return String.format("Cache for %s contains %s entries and has ~%.3fGB/%.3fGB (%s%%) mem used. (Avg. Entry %s bytes)", clazz.getSimpleName(), store.size(), gbUsed, gbTotal, percentUsed, avgEntrySize);
+        try {
+            float gbUsed = bytesUsed.floatValue() / 1024 / 1024 / 1024;
+            float gbTotal = (float) store.offHeapMemoryUsed() / 1024 / 1024 / 1024;
+            int percentUsed = (int) (gbUsed / gbTotal * 100);
+            long avgEntrySize = store.size() == 0 ? 0 : bytesUsed.get() / store.size();
+            return String.format("Cache for %s contains %s entries and has ~%.3fGB/%.3fGB (%s%%) mem used. (Avg. Entry %s bytes)", clazz.getSimpleName(), store.size(), gbUsed, gbTotal, percentUsed, avgEntrySize);
+        } catch (ChronicleHashClosedException ignore) {
+            // ignore, because this should happen on shutdown only
+            return "Chronicle Map already closed";
+        }
     }
 
 
