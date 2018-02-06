@@ -6,6 +6,8 @@ import de.otto.edison.eventsourcing.configuration.EventSourcingBootstrapConfigur
 import de.otto.edison.eventsourcing.configuration.EventSourcingConfiguration;
 import de.otto.edison.eventsourcing.configuration.SnapshotConfiguration;
 import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.kinesis.KinesisEventSource;
+import de.otto.edison.eventsourcing.s3.SnapshotEventSource;
 import de.otto.edison.eventsourcing.s3.SnapshotReadService;
 import org.awaitility.Awaitility;
 import org.junit.Test;
@@ -30,6 +32,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,7 +42,7 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {
-        "de.otto.edison.eventsourcing.encryption",
+        "de.otto.edison.eventsourcing",
 })
 @SpringBootTest(classes = {
         EventConsumerIntegrationTest.class,
@@ -58,10 +61,10 @@ public class EventConsumerIntegrationTest {
 
 
     @Test
-    public void shouldCallCorrectConsumerDependingOnEventKey() throws Exception {
+    public void shouldCallCorrectConsumerDependingOnEventKey() {
         Awaitility.await()
                 .atMost(5, TimeUnit.SECONDS)
-                .until(() -> events.size(), is(2));
+                .until(() -> events.size(), is(4));
 
         assertThat(receivedBananaEventPayloads.size(), is(2));
         assertThat(receivedBananaEventPayloads.get(0).bananaId, is("1"));
@@ -69,9 +72,16 @@ public class EventConsumerIntegrationTest {
         assertThat(receivedAppleEventPayloads.size(), is(2));
         assertThat(receivedAppleEventPayloads.get(0).appleId, is("1"));
         assertThat(receivedAppleEventPayloads.get(1).appleId, is("2"));
-        assertThat(events, hasSize(2));
+        assertThat(events, hasSize(4));
         assertThat(events.get(0).getStatus(), is(EventSourceNotification.Status.STARTED));
+        assertThat(events.get(0).getEventSource(), is(instanceOf(SnapshotEventSource.class)));
         assertThat(events.get(1).getStatus(), is(EventSourceNotification.Status.FINISHED));
+        assertThat(events.get(1).getEventSource(), is(instanceOf(SnapshotEventSource.class)));
+        assertThat(events.get(2).getStatus(), is(EventSourceNotification.Status.STARTED));
+        assertThat(events.get(2).getEventSource(), is(instanceOf(KinesisEventSource.class)));
+        assertThat(events.get(3).getStatus(), is(EventSourceNotification.Status.FAILED));
+        assertThat(events.get(3).getEventSource(), is(instanceOf(KinesisEventSource.class)));
+
     }
 
     private static class Apple {

@@ -3,6 +3,7 @@ package de.otto.edison.eventsourcing.consumer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.event.Event;
 import org.junit.Test;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -12,9 +13,7 @@ import static de.otto.edison.eventsourcing.consumer.TestEventConsumer.testEventC
 import static de.otto.edison.eventsourcing.event.Event.event;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class EventSourceConsumerProcessTest {
 
@@ -22,7 +21,7 @@ public class EventSourceConsumerProcessTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void shouldInvokeTwoConsumersForSameEventSource() throws Exception {
+    public void shouldInvokeTwoConsumersForSameEventSource() {
         EventSource eventSource = spy(new TestEventSource());
         TestEventConsumer eventConsumerA = spy(testEventConsumer(".*", MyPayload.class));
         TestEventConsumer eventConsumerB = spy(testEventConsumer(".*", MyPayload.class));
@@ -44,7 +43,7 @@ public class EventSourceConsumerProcessTest {
     class TestEventSource extends AbstractEventSource {
 
         public TestEventSource() {
-            super("testEventSource", new ObjectMapper());
+            super("testEventSource", mock(ApplicationEventPublisher.class),  new ObjectMapper());
         }
 
         @Override

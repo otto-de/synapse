@@ -2,10 +2,12 @@ package de.otto.edison.eventsourcing.kinesis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.AbstractEventSource;
+import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
 import java.nio.ByteBuffer;
@@ -33,8 +35,9 @@ public class KinesisEventSource extends AbstractEventSource {
 
     public KinesisEventSource(final String name,
                               final KinesisStream kinesisStream,
+                              final ApplicationEventPublisher eventPublisher,
                               final ObjectMapper objectMapper) {
-        super(name, objectMapper);
+        super(name, eventPublisher, objectMapper);
         this.kinesisStream = kinesisStream;
     }
 
@@ -46,30 +49,41 @@ public class KinesisEventSource extends AbstractEventSource {
     @Override
     public StreamPosition consumeAll(final StreamPosition startFrom,
                                      final Predicate<Event<?>> stopCondition) {
-
-        List<KinesisShard> kinesisShards = kinesisStream.retrieveAllOpenShards();
-        ExecutorService executorService = Executors.newFixedThreadPool(Math.min(kinesisShards.size(), 10));
-
-        List<CompletableFuture<ShardPosition>> futureShardPositions = kinesisShards
-                .stream()
-                .map(shard -> CompletableFuture.supplyAsync(
-                        () -> shard.consumeRecordsAndReturnLastSeqNumber(
-                                startFrom.positionOf(shard.getShardId()),
-                                recordStopCondition(stopCondition),
-                                recordConsumer()), executorService))
-                .collect(Collectors.toList());
-        // don't chain futureShardPositions with CompletableFuture::join as lazy execution will prevent threads from
-        // running in parallel
+        publishEvent(startFrom, EventSourceNotification.Status.STARTED);
 
         try {
-            Map<String, String> shardPositions = futureShardPositions.stream()
-                    .map(CompletableFuture::join)
-                    .collect(Collectors.toMap(ShardPosition::getShardId, ShardPosition::getSequenceNumber));
+            List<KinesisShard> kinesisShards = kinesisStream.retrieveAllOpenShards();
+            ExecutorService executorService = Executors.newFixedThreadPool(Math.min(kinesisShards.size(), 10));
 
-            return StreamPosition.of(shardPositions);
-        } finally {
-            stopAllThreads(executorService);
+            List<CompletableFuture<ShardPosition>> futureShardPositions = kinesisShards
+                    .stream()
+                    .map(shard -> CompletableFuture.supplyAsync(
+                            () -> shard.consumeRecordsAndReturnLastSeqNumber(
+                                    startFrom.positionOf(shard.getShardId()),
+                                    recordStopCondition(stopCondition),
+                                    recordConsumer()), executorService))
+                    .collect(Collectors.toList());
+
+            // don't chain futureShardPositions with CompletableFuture::join as lazy execution will prevent threads from
+            // running in parallel
+
+            try {
+                Map<String, String> shardPositions = futureShardPositions.stream()
+                        .map(CompletableFuture::join)
+                        .collect(Collectors.toMap(ShardPosition::getShardId, ShardPosition::getSequenceNumber));
+
+                StreamPosition streamPosition = StreamPosition.of(shardPositions);
+                publishEvent(streamPosition, EventSourceNotification.Status.FINISHED);
+                return streamPosition;
+            } finally {
+                stopAllThreads(executorService);
+            }
+
+        } catch (Exception e) {
+            publishEvent(StreamPosition.of(), EventSourceNotification.Status.FAILED);
+            throw e;
         }
+
     }
 
     private void stopAllThreads(ExecutorService executorService) {

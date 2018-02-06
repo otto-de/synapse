@@ -21,7 +21,6 @@ public class SnapshotEventSource extends AbstractEventSource {
     private final SnapshotReadService snapshotReadService;
     private final String streamName;
     private final SnapshotConsumerService snapshotConsumerService;
-    private final ApplicationEventPublisher eventPublisher;
 
     public SnapshotEventSource(final String name,
                                final String streamName,
@@ -29,11 +28,10 @@ public class SnapshotEventSource extends AbstractEventSource {
                                final SnapshotConsumerService snapshotConsumerService,
                                final ApplicationEventPublisher eventPublisher,
                                final ObjectMapper objectMapper) {
-        super(name, objectMapper);
+        super(name, eventPublisher, objectMapper);
         this.streamName = streamName;
         this.snapshotReadService = snapshotReadService;
         this.snapshotConsumerService = snapshotConsumerService;
-        this.eventPublisher = eventPublisher;
     }
 
     public String getStreamName() {
@@ -74,21 +72,6 @@ public class SnapshotEventSource extends AbstractEventSource {
         }
         publishEvent(snapshotStreamPosition, EventSourceNotification.Status.FINISHED);
         return snapshotStreamPosition;
-    }
-
-    private void publishEvent(StreamPosition streamPosition, EventSourceNotification.Status status) {
-        if (eventPublisher != null) {
-            EventSourceNotification notification = EventSourceNotification.builder()
-                    .withEventSource(this)
-                    .withStreamPosition(streamPosition)
-                    .withStatus(status)
-                    .build();
-            try {
-                eventPublisher.publishEvent(notification);
-            } catch (Exception e) {
-                LOG.error("error publishing event source notification: {}", notification, e);
-            }
-        }
     }
 
 }

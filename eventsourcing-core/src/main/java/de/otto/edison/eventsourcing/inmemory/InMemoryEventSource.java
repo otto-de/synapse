@@ -2,9 +2,11 @@ package de.otto.edison.eventsourcing.inmemory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.AbstractEventSource;
+import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.event.EventBody;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Instant;
 import java.util.function.Predicate;
@@ -16,8 +18,9 @@ public class InMemoryEventSource extends AbstractEventSource {
 
     public InMemoryEventSource(final String name,
                                final InMemoryStream inMemoryStream,
+                               final ApplicationEventPublisher eventPublisher,
                                final ObjectMapper objectMapper) {
-        super(name, objectMapper);
+        super(name, eventPublisher, objectMapper);
         this.inMemoryStream = inMemoryStream;
     }
 
@@ -28,6 +31,7 @@ public class InMemoryEventSource extends AbstractEventSource {
 
     @Override
     public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<?>> stopCondition) {
+        publishEvent(startFrom, EventSourceNotification.Status.STARTED);
         boolean shouldStop;
         do {
             EventBody<String> eventBody = inMemoryStream.receive();
@@ -41,6 +45,7 @@ public class InMemoryEventSource extends AbstractEventSource {
             registeredConsumers().encodeAndSend(event);
             shouldStop = stopCondition.test(event);
         } while (!shouldStop);
+        publishEvent(null, EventSourceNotification.Status.FINISHED);
         return null;
     }
 }

@@ -5,6 +5,7 @@ import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.kinesis.KinesisEventSource;
 import de.otto.edison.eventsourcing.kinesis.KinesisStream;
 import org.slf4j.Logger;
+import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 
 import java.util.Objects;
@@ -16,11 +17,14 @@ public class KinesisEventSourceBuilder implements EventSourceBuilder {
     private static final Logger LOG = getLogger(KinesisEventSourceBuilder.class);
 
     private final ObjectMapper objectMapper;
+    private ApplicationEventPublisher eventPublisher;
     private final KinesisClient kinesisClient;
 
     public KinesisEventSourceBuilder(final ObjectMapper objectMapper,
+                                     final ApplicationEventPublisher eventPublisher,
                                      final KinesisClient kinesisClient) {
         this.objectMapper = objectMapper;
+        this.eventPublisher = eventPublisher;
         this.kinesisClient = kinesisClient;
     }
 
@@ -29,7 +33,7 @@ public class KinesisEventSourceBuilder implements EventSourceBuilder {
         Objects.requireNonNull(streamName, "stream name must not be null");
         LOG.info("Building '{}' as KinesisEventSource", streamName);
         final KinesisStream kinesisStream = new KinesisStream(kinesisClient, streamName);
-        return new KinesisEventSource(name, kinesisStream, objectMapper);
+        return new KinesisEventSource(name, kinesisStream, eventPublisher, objectMapper);
     }
 
 }

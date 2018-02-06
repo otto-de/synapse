@@ -33,8 +33,9 @@ public class EventSourcingConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = "streamingEventSourceBuilder")
     public KinesisEventSourceBuilder streamingEventSourceBuilder(final KinesisClient kinesisClient,
+                                                                 final ApplicationEventPublisher eventPublisher,
                                                                  final ObjectMapper objectMapper) {
-        return new KinesisEventSourceBuilder(objectMapper, kinesisClient);
+        return new KinesisEventSourceBuilder(objectMapper, eventPublisher, kinesisClient);
     }
 
     @Bean

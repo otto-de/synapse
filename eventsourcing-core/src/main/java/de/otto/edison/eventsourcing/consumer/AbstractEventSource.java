@@ -1,14 +1,22 @@
 package de.otto.edison.eventsourcing.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.springframework.context.ApplicationEventPublisher;
+
+import static org.slf4j.LoggerFactory.getLogger;
 
 public abstract class AbstractEventSource implements EventSource {
+    private static final Logger LOG = getLogger(AbstractEventSource.class);
+
 
     private final String name;
+    private ApplicationEventPublisher eventPublisher;
     private final EventConsumers eventConsumers;
 
-    public AbstractEventSource(final String name, final ObjectMapper objectMapper) {
+    public AbstractEventSource(final String name, final ApplicationEventPublisher eventPublisher, final ObjectMapper objectMapper) {
         this.name = name;
+        this.eventPublisher = eventPublisher;
         this.eventConsumers = new EventConsumers(objectMapper);
     }
 
@@ -39,4 +47,18 @@ public abstract class AbstractEventSource implements EventSource {
         return eventConsumers;
     }
 
+    protected void publishEvent(StreamPosition streamPosition, EventSourceNotification.Status status) {
+        if (eventPublisher != null) {
+            EventSourceNotification notification = EventSourceNotification.builder()
+                    .withEventSource(this)
+                    .withStreamPosition(streamPosition)
+                    .withStatus(status)
+                    .build();
+            try {
+                eventPublisher.publishEvent(notification);
+            } catch (Exception e) {
+                LOG.error("error publishing event source notification: {}", notification, e);
+            }
+        }
+    }
 }

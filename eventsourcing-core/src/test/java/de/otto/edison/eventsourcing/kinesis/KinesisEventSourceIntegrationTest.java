@@ -14,6 +14,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -51,6 +52,9 @@ public class KinesisEventSourceIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
     private EventSource eventSource;
     private List<Event<String>> events = synchronizedList(new ArrayList<Event<String>>());
 
@@ -63,7 +67,7 @@ public class KinesisEventSourceIntegrationTest {
     public void setup() {
         KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, STREAM_NAME, EXPECTED_NUMBER_OF_SHARDS);
         KinesisStream kinesisStream = new KinesisStream(kinesisClient, STREAM_NAME);
-        this.eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, objectMapper);
+        this.eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, eventPublisher, objectMapper);
         this.eventSource.register(EventConsumer.of(".*", String.class, events::add));
     }
 

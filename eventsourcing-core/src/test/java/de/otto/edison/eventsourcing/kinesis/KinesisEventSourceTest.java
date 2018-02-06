@@ -3,9 +3,10 @@ package de.otto.edison.eventsourcing.kinesis;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
+import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
+import de.otto.edison.eventsourcing.event.Event;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,6 +14,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
@@ -59,6 +62,9 @@ public class KinesisEventSourceTest {
     @Mock
     private Predicate<Event<?>> stringStopCondition;
 
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     private ObjectMapper objectMapper = new ObjectMapper();
 
     private int nextKey = 0;
@@ -94,7 +100,6 @@ public class KinesisEventSourceTest {
                 .nextShardIterator("yetAnotherIterator")
                 .build();
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response0, response1, response2);
-
     }
 
     @Test
@@ -102,7 +107,7 @@ public class KinesisEventSourceTest {
         // given
         StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
 
-        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, objectMapper);
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, eventPublisher, objectMapper);
         eventSource.register(testDataConsumer);
 
         // when
@@ -118,12 +123,38 @@ public class KinesisEventSourceTest {
     }
 
     @Test
+    public void shouldConsumeAllEventsFromKinesisAndPublishStartedAndFinishedEvents() {
+        // given
+        StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
+
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, eventPublisher, objectMapper);
+
+        // when
+        StreamPosition finalStreamPosition = eventSource.consumeAll(initialPositions, this::stopIfGreenForString);
+
+        // then
+        ArgumentCaptor<EventSourceNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(EventSourceNotification.class);
+        verify(eventPublisher, times(2)).publishEvent(notificationArgumentCaptor.capture());
+
+        EventSourceNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
+        assertThat(startedEvent.getStatus(), is(EventSourceNotification.Status.STARTED));
+        assertThat(startedEvent.getStreamPosition(), is(initialPositions));
+        assertThat(startedEvent.getEventSource(), is(eventSource));
+
+        EventSourceNotification finishedEvent = notificationArgumentCaptor.getAllValues().get(1);
+        assertThat(finishedEvent.getStatus(), is(EventSourceNotification.Status.FINISHED));
+        assertThat(finishedEvent.getStreamPosition(), is(finalStreamPosition));
+        assertThat(finishedEvent.getEventSource(), is(eventSource));
+    }
+
+
+    @Test
     public void shouldConsumeAllEventsAndDeserializeToString() throws Exception {
         // given
         StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
 
 
-        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, objectMapper);
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, eventPublisher, objectMapper);
         eventSource.register(stringConsumer);
 
         // when
@@ -142,7 +173,7 @@ public class KinesisEventSourceTest {
     public void shouldAlwaysPassMillisBehindLatestToStopCondition() {
         // given
         StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
-        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, objectMapper);
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, eventPublisher, objectMapper);
         eventSource.register(stringConsumer);
         when(stringStopCondition.test(any())).thenReturn(true);
 
@@ -170,7 +201,7 @@ public class KinesisEventSourceTest {
 
         when(kinesisStream.retrieveAllOpenShards()).thenReturn(shards);
 
-        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, objectMapper);
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, eventPublisher, objectMapper);
         eventSource.register(testDataConsumer);
 
         // when
@@ -181,6 +212,9 @@ public class KinesisEventSourceTest {
             assertThat(e.getMessage(), containsString("boom"));
             assertThat(completedShards.size(), not(0));
             completedShards.clear();
+            ArgumentCaptor<EventSourceNotification> eventArgumentCaptor = ArgumentCaptor.forClass(EventSourceNotification.class);
+            verify(eventPublisher, times(2)).publishEvent(eventArgumentCaptor.capture());
+            assertThat(eventArgumentCaptor.getValue().getStatus(), is(EventSourceNotification.Status.FAILED));
         }
         Thread.sleep(100);
 

@@ -7,8 +7,8 @@ import de.otto.edison.eventsourcing.example.consumer.configuration.MyServiceProp
 import de.otto.edison.eventsourcing.inmemory.InMemoryEventSender;
 import de.otto.edison.eventsourcing.inmemory.InMemoryEventSource;
 import de.otto.edison.eventsourcing.inmemory.InMemoryStream;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -47,12 +47,13 @@ public class TestEventSourcingConfiguration {
     public EventSourceBuilder defaultEventSourceBuilder(final InMemoryStream productStream,
                                                         final InMemoryStream bananaStream,
                                                         final MyServiceProperties myServiceProperties,
+                                                        final ApplicationEventPublisher eventPublisher,
                                                         final ObjectMapper objectMapper) {
         return (name, streamName) -> {
             if (streamName.equals(myServiceProperties.getBananaStreamName())) {
-                return new InMemoryEventSource(name, bananaStream, objectMapper);
+                return new InMemoryEventSource(name, bananaStream, eventPublisher, objectMapper);
             } else if (streamName.equals(myServiceProperties.getProductStreamName())) {
-                return new InMemoryEventSource(name, productStream, objectMapper);
+                return new InMemoryEventSource(name, productStream, eventPublisher, objectMapper);
             } else {
                 throw new IllegalArgumentException("no stream for name " + streamName + " available.");
             }
