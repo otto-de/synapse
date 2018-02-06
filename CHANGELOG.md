@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.4.4
+* Also publish EventSourceNotification Application Events for Kinesis and InMemory EventSources
+
 ## 0.4.3
 * Remove further ChronicleMap closed errors on shutdown. 
 
