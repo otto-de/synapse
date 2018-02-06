@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.4.2
+* Prevent ChronicleMap closed errors on shutdown.
+
 ## 0.4.1
 * Add `sendEvents` method to `EventSender` interface.
 
