@@ -14,7 +14,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
@@ -215,6 +214,7 @@ public class KinesisEventSourceTest {
             ArgumentCaptor<EventSourceNotification> eventArgumentCaptor = ArgumentCaptor.forClass(EventSourceNotification.class);
             verify(eventPublisher, times(2)).publishEvent(eventArgumentCaptor.capture());
             assertThat(eventArgumentCaptor.getValue().getStatus(), is(EventSourceNotification.Status.FAILED));
+            assertThat(eventArgumentCaptor.getValue().getMessage(), is("java.lang.RuntimeException: boom"));
         }
         Thread.sleep(100);
 

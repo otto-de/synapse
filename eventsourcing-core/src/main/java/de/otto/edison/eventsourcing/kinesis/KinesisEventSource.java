@@ -80,7 +80,7 @@ public class KinesisEventSource extends AbstractEventSource {
             }
 
         } catch (Exception e) {
-            publishEvent(StreamPosition.of(), EventSourceNotification.Status.FAILED);
+            publishEvent(StreamPosition.of(), EventSourceNotification.Status.FAILED, e.getMessage());
             throw e;
         }
 

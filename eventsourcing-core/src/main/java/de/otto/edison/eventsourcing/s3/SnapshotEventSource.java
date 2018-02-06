@@ -2,9 +2,9 @@ package de.otto.edison.eventsourcing.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.AbstractEventSource;
-import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
+import de.otto.edison.eventsourcing.event.Event;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -64,7 +64,7 @@ public class SnapshotEventSource extends AbstractEventSource {
                 snapshotStreamPosition = SnapshotStreamPosition.of();
             }
         } catch (RuntimeException e) {
-            publishEvent(SnapshotStreamPosition.of(), EventSourceNotification.Status.FAILED);
+            publishEvent(SnapshotStreamPosition.of(), EventSourceNotification.Status.FAILED, e.getMessage());
             throw e;
         } finally {
             LOG.info("Finished reading snapshot into Memory");

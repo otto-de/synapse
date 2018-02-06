@@ -7,6 +7,7 @@ import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationEventPublisher;
@@ -15,10 +16,11 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import java.io.File;
 import java.util.Optional;
 
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SnapshotEventSourceTest {
@@ -50,7 +52,7 @@ public class SnapshotEventSourceTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void shouldThrowExceptionIfDownloadFails() throws Exception {
+    public void shouldThrowExceptionIfDownloadFails() {
         // given
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.of(new File("someFilePath")));
         when(snapshotConsumerService.consumeSnapshot(any(),any(),any(),any())).thenThrow(new RuntimeException("boom - simulate exception while loading from S3"));
@@ -62,7 +64,7 @@ public class SnapshotEventSourceTest {
     }
 
     @Test
-    public void shouldThrowExceptionIfBucketNotExists() throws Exception {
+    public void shouldThrowExceptionIfBucketNotExists() {
         // given
         S3Exception bucketNotFoundException = new S3Exception("boom - simulate exception while loading from S3");
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenThrow(bucketNotFoundException);
@@ -77,16 +79,21 @@ public class SnapshotEventSourceTest {
         }
 
         // then
-        EventSourceNotification expectedStartEvent = EventSourceNotification.builder()
+        EventSourceNotification expectedFailedEvent = EventSourceNotification.builder()
                 .withEventSource(snapshotEventSource)
                 .withStatus(EventSourceNotification.Status.FAILED)
                 .withStreamPosition(SnapshotStreamPosition.of())
+                .withMessage("boom - simulate exception while loading from S3 (Service: null; Status Code: 0; Request ID: null)")
                 .build();
-        verify(applicationEventPublisher).publishEvent(expectedStartEvent);
+
+        ArgumentCaptor<EventSourceNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(EventSourceNotification.class);
+        verify(applicationEventPublisher, times(2)).publishEvent(notificationArgumentCaptor.capture());
+
+        assertThat(notificationArgumentCaptor.getAllValues().get(1), is(expectedFailedEvent));
     }
 
     @Test
-    public void shouldDeleteOlderSnapshotsInCaseOfAnException() throws Exception {
+    public void shouldDeleteOlderSnapshotsInCaseOfAnException() {
         // given
         S3Exception bucketNotFoundException = new S3Exception("boom - simulate exception while loading from S3");
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenThrow(bucketNotFoundException);
@@ -103,7 +110,7 @@ public class SnapshotEventSourceTest {
     }
 
     @Test
-    public void shouldPublishStartAndFinishEvents() throws Exception {
+    public void shouldPublishStartAndFinishEvents() {
         // given
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.empty());
 
@@ -114,6 +121,7 @@ public class SnapshotEventSourceTest {
         EventSourceNotification expectedStartEvent = EventSourceNotification.builder()
                 .withEventSource(snapshotEventSource)
                 .withStatus(EventSourceNotification.Status.STARTED)
+                .withMessage("")
                 .withStreamPosition(StreamPosition.of())
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedStartEvent);
@@ -121,6 +129,7 @@ public class SnapshotEventSourceTest {
         EventSourceNotification expectedFinishedEvent = EventSourceNotification.builder()
                 .withEventSource(snapshotEventSource)
                 .withStatus(EventSourceNotification.Status.FINISHED)
+                .withMessage("")
                 .withStreamPosition(SnapshotStreamPosition.of())
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedFinishedEvent);

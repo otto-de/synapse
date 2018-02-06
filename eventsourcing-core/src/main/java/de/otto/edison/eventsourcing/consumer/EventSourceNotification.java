@@ -13,11 +13,13 @@ public class EventSourceNotification {
     private StreamPosition streamPosition;
     private EventSource eventSource;
     private Status status;
+    private String message;
 
     private EventSourceNotification(Builder builder) {
         streamPosition = builder.streamPosition;
         eventSource = builder.eventSource;
         status = builder.status;
+        message = builder.message;
     }
 
     public StreamPosition getStreamPosition() {
@@ -32,6 +34,10 @@ public class EventSourceNotification {
         return status;
     }
 
+    public String getMessage() {
+        return message;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -39,12 +45,13 @@ public class EventSourceNotification {
         EventSourceNotification that = (EventSourceNotification) o;
         return Objects.equals(streamPosition, that.streamPosition) &&
                 Objects.equals(eventSource, that.eventSource) &&
+                Objects.equals(message, that.message) &&
                 status == that.status;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(streamPosition, eventSource, status);
+        return Objects.hash(streamPosition, eventSource, message, status);
     }
 
     @Override
@@ -53,6 +60,7 @@ public class EventSourceNotification {
                 "streamPosition=" + streamPosition +
                 ", eventSource=" + eventSource +
                 ", status=" + status +
+                ", message=" + message +
                 '}';
     }
 
@@ -72,6 +80,7 @@ public class EventSourceNotification {
         private StreamPosition streamPosition;
         private EventSource eventSource;
         private Status status;
+        private String message;
 
         private Builder() {
         }
@@ -88,6 +97,11 @@ public class EventSourceNotification {
 
         public Builder withStatus(Status val) {
             status = val;
+            return this;
+        }
+
+        public Builder withMessage(String msg) {
+            message = msg;
             return this;
         }
 
