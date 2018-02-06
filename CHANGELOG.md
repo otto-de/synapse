@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.4.3
+* Remove further ChronicleMap closed errors on shutdown. 
+
 ## 0.4.2
 * Prevent ChronicleMap closed errors on shutdown.
 
