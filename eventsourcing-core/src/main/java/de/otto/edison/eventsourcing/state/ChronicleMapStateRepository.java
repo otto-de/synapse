@@ -87,7 +87,10 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V> {
         store.clear();
     }
 
-    public void close() {
+    /**
+     * only use in tests
+     */
+    void close() {
         store.close();
     }
 
