@@ -101,7 +101,12 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V> {
 
     @Override
     public long size() {
-        return store.longSize();
+        try {
+            return store.longSize();
+        } catch (ChronicleHashClosedException ignore) {
+            // ignore, because this should happen on shutdown only - size is 0 for closed maps.
+            return 0;
+        }
     }
 
     @Override

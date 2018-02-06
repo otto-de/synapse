@@ -107,6 +107,22 @@ public class ChronicleMapStateRepositoryTest {
     }
 
     @Test
+    public void shouldReturnZeroSizeForClosedCache() {
+        ChronicleMapStateRepository<SomePojo> cache = ChronicleMapStateRepository.builder(SomePojo.class).build();
+        // when
+        SomePojo testPojo = new SomePojo("A", 1);
+        cache.put("someId", testPojo);
+        cache.close();
+
+        try {
+            Assert.assertEquals("Cache should have zero size", 0, cache.size());
+        } catch(ChronicleHashClosedException e) {
+            // then
+            Assert.fail("Tried to get size of a closed cache - should not throw exception");
+        }
+    }
+
+    @Test
     public void shouldNotGetFullCacheLogFromClosedCache() {
         ChronicleMapStateRepository<SomePojo> cache = ChronicleMapStateRepository.builder(SomePojo.class).build();
         cache.close();
