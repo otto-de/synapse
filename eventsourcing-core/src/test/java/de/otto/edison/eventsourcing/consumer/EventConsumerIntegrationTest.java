@@ -142,6 +142,11 @@ public class EventConsumerIntegrationTest {
         public KinesisClient kinesisClient() {
             return new KinesisClient() {
                 @Override
+                public String serviceName() {
+                    return SERVICE_NAME;
+                }
+
+                @Override
                 public void close() {
                     // do nothing
                 }
