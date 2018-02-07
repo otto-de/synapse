@@ -37,12 +37,10 @@ public class ConsumerIntegrationTest {
     MyServiceProperties properties;
 
     private EventSender bananaSender;
-    private EventSender productSender;
 
     @Before
     public void setUp() throws Exception {
         bananaSender = eventSenderFactory.createSenderForStream(properties.getBananaStreamName());
-        productSender = eventSenderFactory.createSenderForStream(properties.getProductStreamName());
     }
 
     @Test
