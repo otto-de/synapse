@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.4.6
+Add `Clock` bean that is required by `EventSourcingStatusDetailIndicator` 
+
 ## 0.4.5
 * New sub project `eventsourcing-edison-integration`. This project contains a `StatusDetailIndicator` that provides 
 StatusDetail information for each EventSource.
