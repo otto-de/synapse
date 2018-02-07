@@ -1,5 +1,5 @@
 ext {
-    awsSdkVersion = "2.0.0-preview-7"
+    awsSdkVersion = "2.0.0-preview-8"
     springVersion = "4.3.12.RELEASE"
     springBootVersion = "1.5.8.RELEASE"
 }
