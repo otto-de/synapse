@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.4.5
+* New sub project `eventsourcing-edison-integration`. This project contains a `StatusDetailIndicator` that provides 
+StatusDetail information for each EventSource.
+
 ## 0.4.4
 * Also publish EventSourceNotification Application Events for Kinesis and InMemory EventSources
 
