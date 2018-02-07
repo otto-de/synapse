@@ -128,9 +128,4 @@ public class LocalS3Client implements S3Client {
     public void close() {
         System.out.println("s3 closing...");
     }
-
-    @Override
-    public String serviceName() {
-        return SERVICE_NAME;
-    }
 }
