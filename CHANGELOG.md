@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.4.7
+Remove `Clock` bean as this is required only for tests.
+Don't set StatusDetailIndicator to warn when kinesis consumer has finished.
+
 ## 0.4.6
 Add `Clock` bean that is required by `EventSourcingStatusDetailIndicator` 
 
