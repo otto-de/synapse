@@ -65,7 +65,7 @@ public class EventSourcingStatusDetailIndicatorTest {
     }
 
     @Test
-    public void shouldCalculateStartupTimesCorrectly() {
+    public void shouldCalculateStartupTimesCorrectlyForSnapshotEventSource() {
         //given
 
         //when
@@ -87,7 +87,29 @@ public class EventSourcingStatusDetailIndicatorTest {
         assertThat(statusDetails.get(1).getName(), is("myStreamName2"));
         assertThat(statusDetails.get(1).getMessage(), is("Startup time was 5 seconds."));
     }
+    @Test
+    public void shouldCalculateStartupTimesCorrectlyForKinesisEventSource() {
+        //given
 
+        //when
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createKinesisEventSourceNotification("myStreamName", STARTED));
+        testClock.proceed(2, ChronoUnit.SECONDS);
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createKinesisEventSourceNotification("myStreamName2", STARTED));
+        testClock.proceed(2, ChronoUnit.SECONDS);
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createKinesisEventSourceNotification("myStreamName", FINISHED));
+        testClock.proceed(3, ChronoUnit.SECONDS);
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createKinesisEventSourceNotification("myStreamName2", FINISHED));
+
+        //then
+        List<StatusDetail> statusDetails = eventSourcingStatusDetailIndicator.statusDetails();
+
+        assertThat(statusDetails.get(0).getStatus(), is(Status.OK));
+        assertThat(statusDetails.get(0).getName(), is("myStreamName"));
+        assertThat(statusDetails.get(0).getMessage(), is("Consumer finished in 4 seconds."));
+        assertThat(statusDetails.get(1).getStatus(), is(Status.OK));
+        assertThat(statusDetails.get(1).getName(), is("myStreamName2"));
+        assertThat(statusDetails.get(1).getMessage(), is("Consumer finished in 5 seconds."));
+    }
 
     @Test
     public void shouldUpdateStatusDetailForKinesisEventSource() {

@@ -41,11 +41,11 @@ public class EventSourcingStatusDetailIndicator implements StatusDetailIndicator
                     break;
                 case STARTED:
                     statusDetail = createStatusDetail(Status.OK, streamName, "Loading snapshot");
-                    startingTimeMap.put(streamName, clock.millis());
+                    startingTimeMap.put(eventSourceAndStreamName(eventSourceNotification), clock.millis());
                     break;
                 case FINISHED:
-                    long runtime = clock.millis() - startingTimeMap.get(streamName);
-                    statusDetail = createStatusDetail(Status.OK, streamName, "Startup time was " + (runtime / 1000) + " seconds.");
+                    long runtime = clock.millis() - startingTimeMap.get(eventSourceAndStreamName(eventSourceNotification));
+                    statusDetail = createStatusDetail(Status.OK, streamName, String.format("Startup time was %d seconds.", runtime / 1000));
                     break;
             }
         }
@@ -56,13 +56,19 @@ public class EventSourcingStatusDetailIndicator implements StatusDetailIndicator
                     break;
                 case STARTED:
                     statusDetail = createStatusDetail(Status.OK, streamName, "Consuming from kinesis.");
+                    startingTimeMap.put(eventSourceAndStreamName(eventSourceNotification), clock.millis());
                     break;
                 case FINISHED:
-                    statusDetail = createStatusDetail(Status.WARNING, streamName, "Consumer finished.");
+                    long runtime = clock.millis() - startingTimeMap.get(eventSourceAndStreamName(eventSourceNotification));
+                    statusDetail = createStatusDetail(Status.OK, streamName, String.format("Consumer finished in %d seconds.", runtime / 1000));
             }
         }
         statusDetailMap.put(streamName, statusDetail);
 
+    }
+
+    private String eventSourceAndStreamName(EventSourceNotification eventSourceNotification) {
+        return eventSourceNotification.getEventSource().getClass() + ":" + eventSourceNotification.getEventSource().getStreamName();
     }
 
     @Override
