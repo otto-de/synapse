@@ -25,7 +25,12 @@ public class EventSourcingStatusDetailIndicator implements StatusDetailIndicator
     private Clock clock;
 
     @Autowired
-    public EventSourcingStatusDetailIndicator(Clock clock) {
+    public EventSourcingStatusDetailIndicator() {
+        clock = Clock.systemDefaultZone();
+    }
+
+    //for test
+    EventSourcingStatusDetailIndicator(Clock clock) {
         this.clock = clock;
     }
 
