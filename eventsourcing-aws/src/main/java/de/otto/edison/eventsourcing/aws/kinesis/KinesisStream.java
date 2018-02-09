@@ -1,6 +1,6 @@
 package de.otto.edison.eventsourcing.aws.kinesis;
 
-import de.otto.edison.eventsourcing.event.Message;
+import de.otto.edison.eventsourcing.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.kinesis.KinesisClient;

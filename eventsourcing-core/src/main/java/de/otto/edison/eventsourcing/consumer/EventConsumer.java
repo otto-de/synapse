@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.consumer;
 
 import de.otto.edison.eventsourcing.configuration.ConsumerProcessProperties;
-import de.otto.edison.eventsourcing.event.Message;
+import de.otto.edison.eventsourcing.message.Message;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.function.Consumer;
@@ -66,7 +66,7 @@ public interface EventConsumer<T> extends Consumer<Message<T>> {
     Class<T> payloadType();
 
     /**
-     * Returns the pattern of {@link de.otto.edison.eventsourcing.event.EventBody#getKey() event keys} accepted by this consumer.
+     * Returns the pattern of {@link de.otto.edison.eventsourcing.message.EventBody#getKey() event keys} accepted by this consumer.
      *
      * @return Pattern
      */

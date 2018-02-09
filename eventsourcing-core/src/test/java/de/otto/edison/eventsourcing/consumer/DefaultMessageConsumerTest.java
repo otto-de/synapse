@@ -1,6 +1,6 @@
 package de.otto.edison.eventsourcing.consumer;
 
-import de.otto.edison.eventsourcing.event.Message;
+import de.otto.edison.eventsourcing.message.Message;
 import de.otto.edison.eventsourcing.state.StateRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;

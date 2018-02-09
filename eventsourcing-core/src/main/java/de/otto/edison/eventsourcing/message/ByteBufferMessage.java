@@ -1,8 +1,9 @@
-package de.otto.edison.eventsourcing.event;
+package de.otto.edison.eventsourcing.message;
 
 import java.nio.ByteBuffer;
 
-import static de.otto.edison.eventsourcing.event.Header.emptyHeader;
+import static de.otto.edison.eventsourcing.message.Header.emptyHeader;
+import static de.otto.edison.eventsourcing.message.Header.responseHeader;
 
 /**
  * A Message is an atomic packet of data that can be transmitted on a channel.
@@ -22,24 +23,24 @@ import static de.otto.edison.eventsourcing.event.Header.emptyHeader;
  *
  * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/Message.html">EIP - Message</a>
  */
-public class StringMessage extends Message<String> {
+public class ByteBufferMessage extends Message<ByteBuffer> {
 
-    public static StringMessage message(final String key,
-                                        final String payload) {
-        return new StringMessage(
+    public static ByteBufferMessage byteBufferMessage(final String key,
+                                                      final ByteBuffer payload) {
+        return new ByteBufferMessage(
                 key, emptyHeader(), payload);
     }
 
-    public static StringMessage message(final String key,
-                                        final Header header,
-                                        final String payload) {
-        return new StringMessage(
+    public static ByteBufferMessage byteBufferMessage(final String key,
+                                                      final Header header,
+                                                      final ByteBuffer payload) {
+        return new ByteBufferMessage(
                 key, header, payload);
     }
 
-    protected StringMessage(final String key,
-                            final Header header,
-                            final String payload) {
+    protected ByteBufferMessage(final String key,
+                                final Header header,
+                                final ByteBuffer payload) {
         super(key, header, payload);
     }
 

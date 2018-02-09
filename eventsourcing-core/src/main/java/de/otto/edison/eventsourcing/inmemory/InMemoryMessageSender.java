@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.MessageSender;
 
-import static de.otto.edison.eventsourcing.event.Message.message;
+import static de.otto.edison.eventsourcing.message.Message.message;
 
 public class InMemoryMessageSender implements MessageSender {
 

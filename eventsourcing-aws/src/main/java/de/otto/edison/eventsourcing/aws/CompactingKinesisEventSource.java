@@ -4,7 +4,7 @@ import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventConsumers;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
-import de.otto.edison.eventsourcing.event.Message;
+import de.otto.edison.eventsourcing.message.Message;
 
 import java.util.Objects;
 import java.util.function.Predicate;

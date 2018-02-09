@@ -4,12 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import de.otto.edison.eventsourcing.MessageSender;
-import de.otto.edison.eventsourcing.event.Message;
+import de.otto.edison.eventsourcing.message.Message;
 
 import java.nio.ByteBuffer;
 import java.util.stream.Stream;
 
-import static de.otto.edison.eventsourcing.event.Message.message;
+import static de.otto.edison.eventsourcing.message.Message.message;
 
 public class KinesisMessageSender implements MessageSender {
     private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.allocateDirect(0);

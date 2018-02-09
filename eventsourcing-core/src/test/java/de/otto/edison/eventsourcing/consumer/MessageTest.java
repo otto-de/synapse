@@ -1,11 +1,11 @@
 package de.otto.edison.eventsourcing.consumer;
 
-import de.otto.edison.eventsourcing.event.Message;
+import de.otto.edison.eventsourcing.message.Message;
 import org.junit.Test;
 
 import java.time.Instant;
 
-import static de.otto.edison.eventsourcing.event.Message.message;
+import static de.otto.edison.eventsourcing.message.Message.message;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 

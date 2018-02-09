@@ -1,7 +1,4 @@
-package de.otto.edison.eventsourcing.event;
-
-import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ImmutableMultimap;
+package de.otto.edison.eventsourcing.message;
 
 import java.time.Duration;
 import java.time.Instant;

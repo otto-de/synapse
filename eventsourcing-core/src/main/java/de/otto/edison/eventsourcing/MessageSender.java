@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing;
 
 
-import de.otto.edison.eventsourcing.event.Message;
+import de.otto.edison.eventsourcing.message.Message;
 
 import java.util.stream.Stream;
 

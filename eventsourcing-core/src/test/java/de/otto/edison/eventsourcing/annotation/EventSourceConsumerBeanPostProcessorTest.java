@@ -4,7 +4,7 @@ import de.otto.edison.eventsourcing.DelegateEventSource;
 import de.otto.edison.eventsourcing.configuration.EventSourcingAutoConfiguration;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
-import de.otto.edison.eventsourcing.event.Message;
+import de.otto.edison.eventsourcing.message.Message;
 import de.otto.edison.eventsourcing.testsupport.InMemoryEventSourceConfiguration;
 import org.junit.After;
 import org.junit.Test;

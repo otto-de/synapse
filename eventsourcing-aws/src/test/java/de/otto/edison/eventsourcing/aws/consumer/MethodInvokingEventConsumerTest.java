@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.aws.consumer;
 
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
-import de.otto.edison.eventsourcing.event.Message;
+import de.otto.edison.eventsourcing.message.Message;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.aop.support.AopUtils;

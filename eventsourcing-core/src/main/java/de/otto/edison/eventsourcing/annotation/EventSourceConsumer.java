@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.annotation;
 
 import de.otto.edison.eventsourcing.consumer.EventSource;
-import de.otto.edison.eventsourcing.event.EventBody;
+import de.otto.edison.eventsourcing.message.EventBody;
 
 import java.lang.annotation.*;
 

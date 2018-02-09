@@ -1,13 +1,13 @@
 package de.otto.edison.eventsourcing.aws.kinesis;
 
-import de.otto.edison.eventsourcing.event.Message;
+import de.otto.edison.eventsourcing.message.Message;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.function.Function;
 
-import static de.otto.edison.eventsourcing.event.Header.responseHeader;
+import static de.otto.edison.eventsourcing.message.Header.responseHeader;
 
 public class KinesisMessage<T> extends Message<T> {
 

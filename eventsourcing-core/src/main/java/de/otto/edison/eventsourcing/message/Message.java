@@ -1,12 +1,12 @@
-package de.otto.edison.eventsourcing.event;
+package de.otto.edison.eventsourcing.message;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
-import static de.otto.edison.eventsourcing.event.Header.emptyHeader;
-import static de.otto.edison.eventsourcing.event.Header.responseHeader;
+import static de.otto.edison.eventsourcing.message.Header.emptyHeader;
+import static de.otto.edison.eventsourcing.message.Header.responseHeader;
 
 /**
  * A Message is an atomic packet of data that can be transmitted on a channel.

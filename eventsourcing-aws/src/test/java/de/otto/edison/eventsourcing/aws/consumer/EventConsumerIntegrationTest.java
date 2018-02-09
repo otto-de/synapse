@@ -5,7 +5,7 @@ import de.otto.edison.eventsourcing.annotation.EventSourceConsumer;
 import de.otto.edison.eventsourcing.aws.configuration.AwsEventSourcingAutoConfiguration;
 import de.otto.edison.eventsourcing.consumer.EventSourceConsumerProcess;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
-import de.otto.edison.eventsourcing.event.Message;
+import de.otto.edison.eventsourcing.message.Message;
 import de.otto.edison.eventsourcing.aws.s3.SnapshotReadService;
 import org.awaitility.Awaitility;
 import org.junit.Test;

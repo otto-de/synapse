@@ -1,16 +1,15 @@
 package de.otto.edison.eventsourcing.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.event.Header;
-import de.otto.edison.eventsourcing.event.Message;
+import de.otto.edison.eventsourcing.message.Message;
 import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
 
 import static de.otto.edison.eventsourcing.consumer.TestEventConsumer.testEventConsumer;
-import static de.otto.edison.eventsourcing.event.Header.responseHeader;
-import static de.otto.edison.eventsourcing.event.Message.message;
+import static de.otto.edison.eventsourcing.message.Header.responseHeader;
+import static de.otto.edison.eventsourcing.message.Message.message;
 import static java.util.Arrays.asList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;

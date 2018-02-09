@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.aws.consumer;
 
 import de.otto.edison.eventsourcing.aws.kinesis.KinesisMessage;
-import de.otto.edison.eventsourcing.event.Message;
+import de.otto.edison.eventsourcing.message.Message;
 import org.junit.Test;
 import software.amazon.awssdk.services.kinesis.model.Record;
 

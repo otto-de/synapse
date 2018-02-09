@@ -4,14 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.AbstractEventSource;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
-import de.otto.edison.eventsourcing.event.Message;
+import de.otto.edison.eventsourcing.message.Message;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Instant;
 import java.util.function.Predicate;
 
-import static de.otto.edison.eventsourcing.event.Header.responseHeader;
-import static de.otto.edison.eventsourcing.event.Message.message;
+import static de.otto.edison.eventsourcing.message.Header.responseHeader;
+import static de.otto.edison.eventsourcing.message.Message.message;
 
 public class InMemoryEventSource extends AbstractEventSource {
 

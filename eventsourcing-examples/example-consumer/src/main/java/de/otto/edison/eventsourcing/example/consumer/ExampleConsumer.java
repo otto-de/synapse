@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.example.consumer;
 
 import de.otto.edison.eventsourcing.annotation.EventSourceConsumer;
-import de.otto.edison.eventsourcing.event.Message;
+import de.otto.edison.eventsourcing.message.Message;
 import de.otto.edison.eventsourcing.example.consumer.payload.BananaPayload;
 import de.otto.edison.eventsourcing.example.consumer.payload.ProductPayload;
 import de.otto.edison.eventsourcing.example.consumer.state.BananaProduct;

@@ -3,7 +3,7 @@ package de.otto.edison.eventsourcing.example.producer;
 import com.jayway.awaitility.Awaitility;
 import de.otto.edison.eventsourcing.annotation.EnableEventSource;
 import de.otto.edison.eventsourcing.annotation.EventSourceConsumer;
-import de.otto.edison.eventsourcing.event.Message;
+import de.otto.edison.eventsourcing.message.Message;
 import de.otto.edison.eventsourcing.example.producer.payload.ProductPayload;
 import org.junit.Test;
 import org.junit.runner.RunWith;
