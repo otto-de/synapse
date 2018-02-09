@@ -1,6 +1,6 @@
 package de.otto.edison.eventsourcing.consumer;
 
-import de.otto.edison.eventsourcing.configuration.EventSourcingProperties;
+import de.otto.edison.eventsourcing.configuration.ConsumerProcessProperties;
 import de.otto.edison.eventsourcing.event.Event;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -23,7 +23,7 @@ import static java.util.regex.Pattern.compile;
  * <p>
  * If you need to manually consume events using EventConsumers, auto-configuration of the
  * {@code EventSourceConsumerProcess} can be disabled by setting
- * {@link EventSourcingProperties#getConsumerProcess() edison.eventsourcing.consumer-process.enabled=false}
+ * {@link ConsumerProcessProperties#setEnabled(boolean)}  edison.eventsourcing.consumer-process.enabled=false}
  * </p>
  * <p>
  * EventConsumers are expected to be thread-safe.

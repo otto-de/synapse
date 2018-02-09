@@ -2,6 +2,7 @@ package de.otto.edison.eventsourcing.annotation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.DelegateEventSource;
+import de.otto.edison.eventsourcing.configuration.EventSourcingAutoConfiguration;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
 import de.otto.edison.eventsourcing.event.Event;
@@ -31,7 +32,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test
     public void shouldRegisterMultipleEventConsumers() {
-        context.register(ObjectMapper.class);
+        context.register(EventSourcingAutoConfiguration.class);
         context.register(ThreeConsumersAtTwoEventSourcesConfiguration.class);
         context.register(InMemoryEventSourceConfiguration.class);
         context.refresh();
@@ -50,7 +51,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test(expected = BeanCreationException.class)
     public void shouldFailToRegisterConsumerBecauseOfMissingEventSource() {
-        context.register(ObjectMapper.class);
+        context.register(EventSourcingAutoConfiguration.class);
         context.register(TestConfigurationWithMissingEventSource.class);
         context.register(InMemoryEventSourceConfiguration.class);
         context.refresh();
@@ -62,7 +63,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
      */
     @Test
     public void shouldRegisterConsumerAtSpecifiedEventSource() {
-        context.register(ObjectMapper.class);
+        context.register(EventSourcingAutoConfiguration.class);
         context.register(TwoEventSourcesWithSameStreamAndSecificConsumerConfiguration.class);
         context.register(InMemoryEventSourceConfiguration.class);
         context.refresh();
@@ -75,7 +76,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test
     public void shouldCreateEventConsumerWithSpecificPayloadType() {
-        context.register(ObjectMapper.class);
+        context.register(EventSourcingAutoConfiguration.class);
         context.register(TestConfigurationDifferentPayload.class);
         context.register(InMemoryEventSourceConfiguration.class);
         context.refresh();
@@ -90,7 +91,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test
     public void shouldRegisterEventConsumerWithSpecificKeyPattern() {
-        context.register(ObjectMapper.class);
+        context.register(EventSourcingAutoConfiguration.class);
         context.register(TestConfigurationDifferentPayload.class);
         context.register(InMemoryEventSourceConfiguration.class);
         context.refresh();
@@ -102,8 +103,8 @@ public class EventSourceConsumerBeanPostProcessorTest {
         assertThat(pattern).containsExactlyInAnyOrder("apple.*", "banana.*");
     }
 
-    @EnableEventSource(name = "testEventSource", streamName = "some-stream")
-    @EnableEventSource(name = "otherStreamTestSource", streamName = "other-stream")
+    @EnableEventSource(name = "testEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "otherStreamTestSource", streamName = "other-stream", builder = "inMemEventSourceBuilder")
     static class ThreeConsumersAtTwoEventSourcesConfiguration {
         @Bean
         public TestConsumer test() {
@@ -111,8 +112,8 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
-    @EnableEventSource(name = "someTestEventSource", streamName = "some-stream")
-    @EnableEventSource(name = "otherTestEventSource", streamName = "some-stream")
+    @EnableEventSource(name = "someTestEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "otherTestEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
     static class TwoEventSourcesWithSameStreamAndUnspecificConsumerConfiguration {
         @Bean
         public SingleUnspecificConsumer test() {
@@ -120,8 +121,8 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
-    @EnableEventSource(name = "someTestEventSource", streamName = "some-stream")
-    @EnableEventSource(name = "otherTestEventSource", streamName = "some-stream")
+    @EnableEventSource(name = "someTestEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "otherTestEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
     static class TwoEventSourcesWithSameStreamAndSecificConsumerConfiguration {
         @Bean
         public SingleSpecificConsumer test() {
@@ -129,7 +130,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
-    @EnableEventSource(name = "testEventSource", streamName = "some-stream")
+    @EnableEventSource(name = "testEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
     static class TestConfigurationDifferentPayload {
         @Bean
         public TestConsumerWithSameStreamNameAndDifferentPayload test() {

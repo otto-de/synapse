@@ -15,18 +15,21 @@ public class InMemoryEventSource extends AbstractEventSource {
 
 
     private final InMemoryStream inMemoryStream;
+    private final String streamName;
 
     public InMemoryEventSource(final String name,
+                               final String streamName,
                                final InMemoryStream inMemoryStream,
                                final ApplicationEventPublisher eventPublisher,
                                final ObjectMapper objectMapper) {
         super(name, eventPublisher, objectMapper);
+        this.streamName = streamName;
         this.inMemoryStream = inMemoryStream;
     }
 
     @Override
     public String getStreamName() {
-        return getName();
+        return streamName;
     }
 
     @Override

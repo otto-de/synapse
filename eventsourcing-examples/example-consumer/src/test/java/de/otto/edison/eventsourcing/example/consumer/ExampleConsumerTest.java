@@ -4,7 +4,7 @@ import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.example.consumer.payload.BananaPayload;
 import de.otto.edison.eventsourcing.example.consumer.payload.ProductPayload;
 import de.otto.edison.eventsourcing.example.consumer.state.BananaProduct;
-import de.otto.edison.eventsourcing.state.DefaultStateRepository;
+import de.otto.edison.eventsourcing.state.ConcurrentHashMapStateRepository;
 import de.otto.edison.eventsourcing.state.StateRepository;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,7 +22,7 @@ public class ExampleConsumerTest {
 
     @Before
     public void setUp() throws Exception {
-        stateRepository = new DefaultStateRepository<>();
+        stateRepository = new ConcurrentHashMapStateRepository<>();
         exampleConsumer = new ExampleConsumer(stateRepository);
     }
 

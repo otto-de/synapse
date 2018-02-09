@@ -17,8 +17,8 @@ public class InMemoryEventSourceConfiguration {
 
     @Bean
     public EventSourceBuilder inMemEventSourceBuilder(final ApplicationEventPublisher eventPublisher,
-                                                      final ObjectMapper objectMapper) {
-        return (name, streamName) -> new InMemoryEventSource(name, inMemoryStream(), eventPublisher, objectMapper);
+                                                        final ObjectMapper objectMapper) {
+        return (name, streamName) -> new InMemoryEventSource(name, streamName, inMemoryStream(), eventPublisher, objectMapper);
     }
 
 }

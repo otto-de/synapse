@@ -1,6 +1,5 @@
 package de.otto.edison.eventsourcing.annotation;
 
-import de.otto.edison.eventsourcing.configuration.EventSourceConsumerProcessConfiguration;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
@@ -8,7 +7,7 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Import({EventSourceBeanRegistrar.class, EventSourceConsumerProcessConfiguration.class})
+@Import(EventSourceBeanRegistrar.class)
 public @interface EnableEventSources {
     EnableEventSource[] value();
 }

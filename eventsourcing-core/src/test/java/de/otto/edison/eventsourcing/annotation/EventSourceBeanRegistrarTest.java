@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.annotation;
 
+import de.otto.edison.eventsourcing.configuration.EventSourcingAutoConfiguration;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.testsupport.InMemoryEventSourceConfiguration;
 import org.junit.After;
@@ -24,13 +25,13 @@ public class EventSourceBeanRegistrarTest {
     static class SingleEventSourceTestConfig {
     }
 
-    @EnableEventSource(name = "brokenEventSource", streamName = "some-stream")
-    @EnableEventSource(name = "brokenEventSource", streamName = "some-stream")
+    @EnableEventSource(name = "brokenEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "brokenEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
     static class MultiEventSourceTestConfigWithSameNames {
     }
 
-    @EnableEventSource(name = "firstEventSource", streamName = "some-stream")
-    @EnableEventSource(name = "secondEventSource", streamName = "some-stream")
+    @EnableEventSource(name = "firstEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "secondEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
     static class MultiEventSourceTestConfigWithDifferentNames {
     }
 
@@ -48,6 +49,7 @@ public class EventSourceBeanRegistrarTest {
 
     @Test(expected = BeanCreationException.class)
     public void shouldFailToRegisterMultipleEventSourcesForSameStreamNameWithSameName() {
+        context.register(EventSourcingAutoConfiguration.class);
         context.register(MultiEventSourceTestConfigWithSameNames.class);
         context.register(InMemoryEventSourceConfiguration.class);
         context.refresh();
@@ -55,6 +57,7 @@ public class EventSourceBeanRegistrarTest {
 
     @Test
     public void shouldRegisterMultipleEventSourcesForSameStreamNameWithDifferentNames() {
+        context.register(EventSourcingAutoConfiguration.class);
         context.register(MultiEventSourceTestConfigWithDifferentNames .class);
         context.register(InMemoryEventSourceConfiguration.class);
         context.refresh();
@@ -66,6 +69,7 @@ public class EventSourceBeanRegistrarTest {
 
     @Test
     public void shouldRegisterEventSource() {
+        context.register(EventSourcingAutoConfiguration.class);
         context.register(SingleEventSourceTestConfig.class);
         context.register(InMemoryEventSourceConfiguration.class);
         context.refresh();

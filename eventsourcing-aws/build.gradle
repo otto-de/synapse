@@ -1,12 +1,13 @@
 apply plugin: 'java-library'
 
 dependencies {
-    implementation project(':eventsourcing-core:')
+    api project(':eventsourcing-core:')
+
+    implementation "com.google.guava:guava:23.0"
     implementation "de.otto.edison:edison-aws-s3:0.2.4"
     implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
     implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.3"
-    implementation 'com.google.guava:guava:23.0'
     implementation "org.springframework.retry:spring-retry:1.2.1.RELEASE"
 
     // Use JUnit test framework

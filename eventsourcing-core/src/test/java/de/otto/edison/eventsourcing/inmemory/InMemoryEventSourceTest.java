@@ -29,7 +29,7 @@ public class InMemoryEventSourceTest {
     public void shouldSendEventInStreamToConsumer() {
         // given
         InMemoryStream inMemoryStream = new InMemoryStream();
-        InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("some-stream", inMemoryStream, eventPublisher, objectMapper);
+        InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es","some-stream", inMemoryStream, eventPublisher, objectMapper);
         StringEventConsumer eventConsumer = new StringEventConsumer();
         inMemoryEventSource.register(eventConsumer);
         inMemoryStream.send(EventBody.eventBody("key", "payload"));
@@ -47,7 +47,7 @@ public class InMemoryEventSourceTest {
     public void shouldPublishStartedAndFinishedEvents() {
         // given
         InMemoryStream inMemoryStream = new InMemoryStream();
-        InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("some-stream", inMemoryStream, eventPublisher, objectMapper);
+        InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es", "some-stream", inMemoryStream, eventPublisher, objectMapper);
         StringEventConsumer eventConsumer = new StringEventConsumer();
         inMemoryEventSource.register(eventConsumer);
         inMemoryStream.send(EventBody.eventBody("key", "payload"));
@@ -68,7 +68,7 @@ public class InMemoryEventSourceTest {
         EventSourceNotification finishedEvent = notificationArgumentCaptor.getAllValues().get(1);
         assertThat(finishedEvent.getStatus(), is(EventSourceNotification.Status.FINISHED));
         assertThat(finishedEvent.getStreamPosition(), is(nullValue()));
-        assertThat(finishedEvent.getStreamName(), is(inMemoryEventSource));
+        assertThat(finishedEvent.getStreamName(), is("some-stream"));
     }
     
     private static class StringEventConsumer implements EventConsumer<String> {
