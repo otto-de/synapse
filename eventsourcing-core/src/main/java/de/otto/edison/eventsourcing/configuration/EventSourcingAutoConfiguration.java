@@ -36,7 +36,6 @@ public class EventSourcingAutoConfiguration {
             name = "consumer-process.enabled",
             havingValue = "true",
             matchIfMissing = true)
-    @ConditionalOnBean(EventSource.class)
     public EventSourceConsumerProcess eventSourceConsumerProcess() {
         return new EventSourceConsumerProcess(eventSources);
     }

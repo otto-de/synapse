@@ -51,9 +51,9 @@ public class TestEventSourcingConfiguration {
                                                         final ObjectMapper objectMapper) {
         return (name, streamName) -> {
             if (streamName.equals(myServiceProperties.getBananaStreamName())) {
-                return new InMemoryEventSource(name, bananaStream, eventPublisher, objectMapper);
+                return new InMemoryEventSource(name, streamName, bananaStream, eventPublisher, objectMapper);
             } else if (streamName.equals(myServiceProperties.getProductStreamName())) {
-                return new InMemoryEventSource(name, productStream, eventPublisher, objectMapper);
+                return new InMemoryEventSource(name, streamName, productStream, eventPublisher, objectMapper);
             } else {
                 throw new IllegalArgumentException("no stream for name " + streamName + " available.");
             }

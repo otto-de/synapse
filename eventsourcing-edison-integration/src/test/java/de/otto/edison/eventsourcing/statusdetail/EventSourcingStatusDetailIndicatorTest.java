@@ -26,7 +26,7 @@ public class EventSourcingStatusDetailIndicatorTest {
     @Test
     public void shouldUpdateStatusDetailForSnapshotStarted() {
         //given
-        EventSourceNotification eventSourceNotification = createSnapshotEventSourceNotification("myStreamName", STARTED);
+        EventSourceNotification eventSourceNotification = createSnapshotEventSourceNotification("myStreamName", STARTED, "Loading snapshot");
 
         //when
         eventSourcingStatusDetailIndicator.onEventSourceNotification(eventSourceNotification);
@@ -43,8 +43,8 @@ public class EventSourcingStatusDetailIndicatorTest {
     @Test
     public void shouldUpdateStatusDetailFor2ndSnapshotStarted() {
         //given
-        EventSourceNotification firstEventSourceNotification = createSnapshotEventSourceNotification("myStreamName", STARTED);
-        EventSourceNotification secondEventSourceNotification = createSnapshotEventSourceNotification("myStreamName2", STARTED);
+        EventSourceNotification firstEventSourceNotification = createSnapshotEventSourceNotification("myStreamName", STARTED, "Loading snapshot");
+        EventSourceNotification secondEventSourceNotification = createSnapshotEventSourceNotification("myStreamName2", STARTED, "Loading snapshot");
 
         //when
         eventSourcingStatusDetailIndicator.onEventSourceNotification(firstEventSourceNotification);
@@ -62,86 +62,38 @@ public class EventSourcingStatusDetailIndicatorTest {
     }
 
     @Test
-    public void shouldCalculateStartupTimesCorrectlyForSnapshotEventSource() {
+    public void shouldCalculateStartupTimes() {
         //given
 
         //when
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myStreamName", STARTED));
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myStreamName", STARTED, "Loading snapshot"));
         testClock.proceed(2, ChronoUnit.SECONDS);
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myStreamName2", STARTED));
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myStreamName2", STARTED, "Loading snapshot"));
         testClock.proceed(2, ChronoUnit.SECONDS);
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myStreamName", FINISHED));
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myStreamName", FINISHED, "Done."));
         testClock.proceed(3, ChronoUnit.SECONDS);
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myStreamName2", FINISHED));
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myStreamName2", FINISHED, "Done."));
 
         //then
         List<StatusDetail> statusDetails = eventSourcingStatusDetailIndicator.statusDetails();
 
         assertThat(statusDetails.get(0).getStatus(), is(Status.OK));
         assertThat(statusDetails.get(0).getName(), is("myStreamName"));
-        assertThat(statusDetails.get(0).getMessage(), is("Startup time was 4 seconds."));
+        assertThat(statusDetails.get(0).getMessage(), is("Done. Finished consumption after 4 seconds."));
         assertThat(statusDetails.get(1).getStatus(), is(Status.OK));
         assertThat(statusDetails.get(1).getName(), is("myStreamName2"));
-        assertThat(statusDetails.get(1).getMessage(), is("Startup time was 5 seconds."));
-    }
-    @Test
-    public void shouldCalculateStartupTimesCorrectlyForKinesisEventSource() {
-        //given
-
-        //when
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createKinesisEventSourceNotification("myStreamName", STARTED));
-        testClock.proceed(2, ChronoUnit.SECONDS);
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createKinesisEventSourceNotification("myStreamName2", STARTED));
-        testClock.proceed(2, ChronoUnit.SECONDS);
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createKinesisEventSourceNotification("myStreamName", FINISHED));
-        testClock.proceed(3, ChronoUnit.SECONDS);
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createKinesisEventSourceNotification("myStreamName2", FINISHED));
-
-        //then
-        List<StatusDetail> statusDetails = eventSourcingStatusDetailIndicator.statusDetails();
-
-        assertThat(statusDetails.get(0).getStatus(), is(Status.OK));
-        assertThat(statusDetails.get(0).getName(), is("myStreamName"));
-        assertThat(statusDetails.get(0).getMessage(), is("Consumer finished in 4 seconds."));
-        assertThat(statusDetails.get(1).getStatus(), is(Status.OK));
-        assertThat(statusDetails.get(1).getName(), is("myStreamName2"));
-        assertThat(statusDetails.get(1).getMessage(), is("Consumer finished in 5 seconds."));
+        assertThat(statusDetails.get(1).getMessage(), is("Done. Finished consumption after 5 seconds."));
     }
 
-    @Test
-    public void shouldUpdateStatusDetailForKinesisEventSource() {
-        //given
-        EventSourceNotification firstEventSourceNotification = createSnapshotEventSourceNotification("myStreamName", STARTED);
-        EventSourceNotification secondEventSourceNotification = createKinesisEventSourceNotification("myStreamName2", STARTED);
-
-        //when
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(firstEventSourceNotification);
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(secondEventSourceNotification);
-
-        //then
-        List<StatusDetail> statusDetails = eventSourcingStatusDetailIndicator.statusDetails();
-
-        assertThat(statusDetails.get(0).getStatus(), is(Status.OK));
-        assertThat(statusDetails.get(0).getName(), is("myStreamName"));
-        assertThat(statusDetails.get(0).getMessage(), is("Loading snapshot"));
-        assertThat(statusDetails.get(1).getStatus(), is(Status.OK));
-        assertThat(statusDetails.get(1).getName(), is("myStreamName2"));
-        assertThat(statusDetails.get(1).getMessage(), is("Consuming from kinesis."));
-    }
-
-    private EventSourceNotification createSnapshotEventSourceNotification(String streamName, EventSourceNotification.Status status) {
+    private EventSourceNotification createSnapshotEventSourceNotification(final String streamName,
+                                                                          final EventSourceNotification.Status status,
+                                                                          final String message) {
         return EventSourceNotification.builder()
                 .withStatus(status)
                 .withEventSourceName("snapshot")
                 .withStreamName(streamName)
+                .withMessage(message)
                 .build();
     }
 
-    private EventSourceNotification createKinesisEventSourceNotification(String streamName, EventSourceNotification.Status status) {
-        return EventSourceNotification.builder()
-                .withStatus(status)
-                .withEventSourceName("kinesis")
-                .withStreamName(streamName)
-                .build();
-    }
 }

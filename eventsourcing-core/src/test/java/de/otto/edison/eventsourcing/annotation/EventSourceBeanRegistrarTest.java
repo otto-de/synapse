@@ -1,7 +1,9 @@
 package de.otto.edison.eventsourcing.annotation;
 
+import de.otto.edison.eventsourcing.DelegateEventSource;
 import de.otto.edison.eventsourcing.configuration.EventSourcingAutoConfiguration;
 import de.otto.edison.eventsourcing.consumer.EventSource;
+import de.otto.edison.eventsourcing.testsupport.TestDefaultEventSourceConfiguration;
 import de.otto.edison.eventsourcing.testsupport.InMemoryEventSourceConfiguration;
 import org.junit.After;
 import org.junit.Test;
@@ -9,6 +11,7 @@ import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.boot.test.util.EnvironmentTestUtils.addEnvironment;
 
 public class EventSourceBeanRegistrarTest {
 
@@ -35,16 +38,9 @@ public class EventSourceBeanRegistrarTest {
     static class MultiEventSourceTestConfigWithDifferentNames {
     }
 
-    @EnableEventSource(name = "firstEventSource", streamName = "first-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "firstEventSource", streamName = "first-stream")
     @EnableEventSource(name = "secondEventSource", streamName = "${test.stream-name}")
     static class RepeatableMultiEventSourceTestConfig {
-    }
-
-    @EnableEventSources({
-            @EnableEventSource(name = "firstEventSource", streamName = "first-stream", builder = "inMemEventSourceBuilder"),
-            @EnableEventSource(name = "secondEventSource", streamName = "${test.stream-name}")
-    })
-    static class MultiEventSourceTestConfig {
     }
 
     @Test(expected = BeanCreationException.class)
@@ -77,31 +73,22 @@ public class EventSourceBeanRegistrarTest {
         assertThat(context.containsBean("testEventSource")).isTrue();
     }
 
-    /* TODO
     @Test
     public void shouldRegisterEventSourceWithDefaultType() {
+        context.register(EventSourcingAutoConfiguration.class);
+        context.register(TestDefaultEventSourceConfiguration.class);
         context.register(RepeatableMultiEventSourceTestConfig.class);
-        context.register(InMemoryEventSourceConfiguration.class);
         context.refresh();
 
         final DelegateEventSource testEventSource = context.getBean("firstEventSource", DelegateEventSource.class);
-        assertThat(testEventSource.getDelegate()).isInstanceOf(CompactingKinesisEventSource.class);
-    }
-
-    @Test
-    public void shouldRegisterEventSourceWithCustomType() {
-        context.register(SingleEventSourceTestConfig.class);
-        context.register(InMemoryEventSourceConfiguration.class);
-        context.refresh();
-
-        final DelegateEventSource testEventSource = context.getBean("testEventSource", DelegateEventSource.class);
-        assertThat(testEventSource.getDelegate()).isInstanceOf(SnapshotEventSource.class);
+        assertThat(testEventSource.getDelegate()).isInstanceOf(TestDefaultEventSourceConfiguration.TestEventSource.class);
     }
 
     @Test
     public void shouldRegisterMultipleEventSources() {
         context.register(RepeatableMultiEventSourceTestConfig.class);
-        context.register(EventSourcingConfiguration.class);
+        context.register(EventSourcingAutoConfiguration.class);
+        context.register(TestDefaultEventSourceConfiguration.class);
         addEnvironment(this.context,
                 "test.stream-name=second-stream"
         );
@@ -112,32 +99,11 @@ public class EventSourceBeanRegistrarTest {
 
         final EventSource first = context.getBean("firstEventSource", DelegateEventSource.class).getDelegate();
         assertThat(first.getStreamName()).isEqualTo("first-stream");
-        assertThat(first).isInstanceOf(CompactingKinesisEventSource.class);
+        assertThat(first).isInstanceOf(TestDefaultEventSourceConfiguration.TestEventSource.class);
 
         final EventSource second = context.getBean("secondEventSource", DelegateEventSource.class).getDelegate();
         assertThat(second.getStreamName()).isEqualTo("second-stream");
-        assertThat(second).isInstanceOf(CompactingKinesisEventSource.class);
+        assertThat(second).isInstanceOf(TestDefaultEventSourceConfiguration.TestEventSource.class);
     }
 
-    @Test
-    public void shouldRegisterMultipleEventSourcesWithEnableEventSources() {
-        context.register(MultiEventSourceTestConfig.class);
-        context.register(EventSourcingConfiguration.class);
-        addEnvironment(this.context,
-                "test.stream-name=second-foo-stream"
-        );
-        context.refresh();
-
-        assertThat(context.containsBean("firstEventSource")).isTrue();
-        assertThat(context.containsBean("secondEventSource")).isTrue();
-
-        final EventSource first = context.getBean("firstEventSource", DelegateEventSource.class).getDelegate();
-        assertThat(first.getStreamName()).isEqualTo("first-stream");
-        assertThat(first).isInstanceOf(CompactingKinesisEventSource.class);
-
-        final EventSource second = context.getBean("secondEventSource", DelegateEventSource.class).getDelegate();
-        assertThat(second.getStreamName()).isEqualTo("second-foo-stream");
-        assertThat(second).isInstanceOf(CompactingKinesisEventSource.class);
-    }
-    */
 }

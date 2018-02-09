@@ -16,7 +16,7 @@ public class TestEventConsumerConfiguration {
     public EventSourceBuilder defaultEventSourceBuilder(final InMemoryStream productStream,
                                                         final ApplicationEventPublisher eventPublisher,
                                                         final ObjectMapper objectMapper) {
-        return (name, streamName) -> new InMemoryEventSource(name, productStream, eventPublisher, objectMapper);
+        return (name, streamName) -> new InMemoryEventSource(name, streamName, productStream, eventPublisher, objectMapper);
     }
 
 }
