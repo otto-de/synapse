@@ -28,7 +28,7 @@ public class KinesisMessageSender implements MessageSender {
     }
 
     @Override
-    public <T> void sendEvents(Stream<Message<T>> events) {
+    public <T> void sendBatch(Stream<Message<T>> events) {
         kinesisStream.sendBatch(events
                 .map(e -> message(e.getKey(), convertToByteBuffer(e.getPayload()))));
     }

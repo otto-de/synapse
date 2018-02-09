@@ -10,7 +10,7 @@ public interface MessageSender {
 
     <T> void send(String key, T payload);
 
-    default <T> void sendEvents(Stream<Message<T>> messageStream) {
+    default <T> void sendBatch(Stream<Message<T>> messageStream) {
         messageStream.forEach(body -> send(body.getKey(), body.getPayload()));
     }
 

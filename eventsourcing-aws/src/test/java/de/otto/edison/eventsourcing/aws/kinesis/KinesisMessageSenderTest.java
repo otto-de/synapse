@@ -64,7 +64,7 @@ public class KinesisMessageSenderTest {
         ExampleJsonObject appleObject = new ExampleJsonObject("apple");
 
         // when
-        kinesisEventSender.sendEvents(Stream.of(
+        kinesisEventSender.sendBatch(Stream.of(
                 message("b", bananaObject),
                 message("a", appleObject)
         ));
