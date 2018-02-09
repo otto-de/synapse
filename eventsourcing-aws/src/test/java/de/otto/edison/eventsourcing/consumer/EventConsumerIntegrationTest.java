@@ -6,8 +6,6 @@ import de.otto.edison.eventsourcing.configuration.EventSourcingBootstrapConfigur
 import de.otto.edison.eventsourcing.configuration.EventSourcingConfiguration;
 import de.otto.edison.eventsourcing.configuration.SnapshotConfiguration;
 import de.otto.edison.eventsourcing.event.Event;
-import de.otto.edison.eventsourcing.kinesis.KinesisEventSource;
-import de.otto.edison.eventsourcing.s3.SnapshotEventSource;
 import de.otto.edison.eventsourcing.s3.SnapshotReadService;
 import org.awaitility.Awaitility;
 import org.junit.Test;
@@ -32,7 +30,6 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -74,13 +71,13 @@ public class EventConsumerIntegrationTest {
         assertThat(receivedAppleEventPayloads.get(1).appleId, is("2"));
         assertThat(events, hasSize(4));
         assertThat(events.get(0).getStatus(), is(EventSourceNotification.Status.STARTED));
-        assertThat(events.get(0).getEventSource(), is(instanceOf(SnapshotEventSource.class)));
+        assertThat(events.get(0).getStreamName(), is("test-stream"));
         assertThat(events.get(1).getStatus(), is(EventSourceNotification.Status.FINISHED));
-        assertThat(events.get(1).getEventSource(), is(instanceOf(SnapshotEventSource.class)));
+        assertThat(events.get(1).getStreamName(), is("test-stream"));
         assertThat(events.get(2).getStatus(), is(EventSourceNotification.Status.STARTED));
-        assertThat(events.get(2).getEventSource(), is(instanceOf(KinesisEventSource.class)));
+        assertThat(events.get(2).getStreamName(), is("test-stream"));
         assertThat(events.get(3).getStatus(), is(EventSourceNotification.Status.FAILED));
-        assertThat(events.get(3).getEventSource(), is(instanceOf(KinesisEventSource.class)));
+        assertThat(events.get(3).getStreamName(), is("test-stream"));
 
     }
 

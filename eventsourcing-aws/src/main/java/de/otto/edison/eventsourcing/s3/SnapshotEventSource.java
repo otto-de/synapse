@@ -54,7 +54,7 @@ public class SnapshotEventSource extends AbstractEventSource {
         SnapshotStreamPosition snapshotStreamPosition;
 
         try {
-            publishEvent(startFrom, EventSourceNotification.Status.STARTED);
+            publishEvent(startFrom, EventSourceNotification.Status.STARTED, "Loading snapshot from S3.");
 
             Optional<File> snapshotFile = snapshotReadService.retrieveLatestSnapshot(streamName);
             if (snapshotFile.isPresent()) {
@@ -64,13 +64,13 @@ public class SnapshotEventSource extends AbstractEventSource {
                 snapshotStreamPosition = SnapshotStreamPosition.of();
             }
         } catch (RuntimeException e) {
-            publishEvent(SnapshotStreamPosition.of(), EventSourceNotification.Status.FAILED, e.getMessage());
+            publishEvent(SnapshotStreamPosition.of(), EventSourceNotification.Status.FAILED, "Failed to load snapshot from S3: " + e.getMessage());
             throw e;
         } finally {
             LOG.info("Finished reading snapshot into Memory");
             snapshotReadService.deleteOlderSnapshots(streamName);
         }
-        publishEvent(snapshotStreamPosition, EventSourceNotification.Status.FINISHED);
+        publishEvent(snapshotStreamPosition, EventSourceNotification.Status.FINISHED, "Finished to load snapshot from S3.");
         return snapshotStreamPosition;
     }
 

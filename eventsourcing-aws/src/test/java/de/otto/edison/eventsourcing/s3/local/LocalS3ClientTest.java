@@ -2,10 +2,10 @@ package de.otto.edison.eventsourcing.s3.local;
 
 import org.junit.Before;
 import org.junit.Test;
-import shaded.org.apache.commons.io.IOUtils;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.core.sync.ResponseInputStream;
 import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.utils.IoUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -131,7 +131,7 @@ public class LocalS3ClientTest {
                 .build());
 
         //then
-        String data = IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
+        String data = IoUtils.toString(inputStream);
         assertThat(data, is("testdata"));
     }
 

@@ -4,7 +4,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "edison.eventsourcing")
 public class EventSourcingProperties {
+    private Snapshot snapshot = new Snapshot();
     private ConsumerProcess consumerProcess = new ConsumerProcess();
+
+    public Snapshot getSnapshot() {
+        return snapshot;
+    }
+
+    public void setSnapshot(Snapshot snapshot) {
+        this.snapshot = snapshot;
+    }
 
     public ConsumerProcess getConsumerProcess() {
         return consumerProcess;
@@ -12,6 +21,18 @@ public class EventSourcingProperties {
 
     public void setConsumerProcess(ConsumerProcess consumerProcess) {
         this.consumerProcess = consumerProcess;
+    }
+
+    public static class Snapshot {
+        private String bucketName;
+
+        public String getBucketName() {
+            return bucketName;
+        }
+
+        public void setBucketName(String bucketName) {
+            this.bucketName = bucketName;
+        }
     }
 
     public static class ConsumerProcess {

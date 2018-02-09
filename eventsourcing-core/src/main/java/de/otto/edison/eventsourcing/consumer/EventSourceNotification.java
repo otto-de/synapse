@@ -10,24 +10,30 @@ public class EventSourceNotification {
         FINISHED
     }
 
+    private String eventSourceName;
     private StreamPosition streamPosition;
-    private EventSource eventSource;
+    private String streamName;
     private Status status;
     private String message;
 
     private EventSourceNotification(Builder builder) {
+        eventSourceName = builder.eventSourceName;
         streamPosition = builder.streamPosition;
-        eventSource = builder.eventSource;
+        streamName = builder.streamName;
         status = builder.status;
         message = builder.message;
+    }
+
+    public String getEventSourceName() {
+        return eventSourceName;
     }
 
     public StreamPosition getStreamPosition() {
         return streamPosition;
     }
 
-    public EventSource getEventSource() {
-        return eventSource;
+    public String getStreamName() {
+        return streamName;
     }
 
     public Status getStatus() {
@@ -43,24 +49,26 @@ public class EventSourceNotification {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         EventSourceNotification that = (EventSourceNotification) o;
-        return Objects.equals(streamPosition, that.streamPosition) &&
-                Objects.equals(eventSource, that.eventSource) &&
-                Objects.equals(message, that.message) &&
-                status == that.status;
+        return Objects.equals(eventSourceName, that.eventSourceName) &&
+                Objects.equals(streamPosition, that.streamPosition) &&
+                Objects.equals(streamName, that.streamName) &&
+                status == that.status &&
+                Objects.equals(message, that.message);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(streamPosition, eventSource, message, status);
+        return Objects.hash(eventSourceName, streamPosition, streamName, status, message);
     }
 
     @Override
     public String toString() {
         return "EventSourceNotification{" +
-                "streamPosition=" + streamPosition +
-                ", eventSource=" + eventSource +
+                "eventSourceName='" + eventSourceName + '\'' +
+                ", streamPosition=" + streamPosition +
+                ", streamName='" + streamName + '\'' +
                 ", status=" + status +
-                ", message=" + message +
+                ", message='" + message + '\'' +
                 '}';
     }
 
@@ -71,18 +79,24 @@ public class EventSourceNotification {
     public static Builder builder(EventSourceNotification copy) {
         Builder builder = new Builder();
         builder.streamPosition = copy.getStreamPosition();
-        builder.eventSource = copy.getEventSource();
+        builder.streamName = copy.getStreamName();
         builder.status = copy.getStatus();
         return builder;
     }
 
     public static final class Builder {
+        private String eventSourceName;
         private StreamPosition streamPosition;
-        private EventSource eventSource;
+        private String streamName;
         private Status status;
         private String message;
 
         private Builder() {
+        }
+
+        public Builder withEventSourceName(String val) {
+            eventSourceName = val;
+            return this;
         }
 
         public Builder withStreamPosition(StreamPosition val) {
@@ -90,8 +104,8 @@ public class EventSourceNotification {
             return this;
         }
 
-        public Builder withEventSource(EventSource val) {
-            eventSource = val;
+        public Builder withStreamName(String val) {
+            streamName = val;
             return this;
         }
 

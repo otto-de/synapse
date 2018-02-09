@@ -49,7 +49,7 @@ public class KinesisEventSource extends AbstractEventSource {
     @Override
     public StreamPosition consumeAll(final StreamPosition startFrom,
                                      final Predicate<Event<?>> stopCondition) {
-        publishEvent(startFrom, EventSourceNotification.Status.STARTED);
+        publishEvent(startFrom, EventSourceNotification.Status.STARTED, "Consuming messages from Kinesis.");
 
         try {
             List<KinesisShard> kinesisShards = kinesisStream.retrieveAllOpenShards();
@@ -73,14 +73,14 @@ public class KinesisEventSource extends AbstractEventSource {
                         .collect(Collectors.toMap(ShardPosition::getShardId, ShardPosition::getSequenceNumber));
 
                 StreamPosition streamPosition = StreamPosition.of(shardPositions);
-                publishEvent(streamPosition, EventSourceNotification.Status.FINISHED);
+                publishEvent(streamPosition, EventSourceNotification.Status.FINISHED, "Stopped consuming messages from Kinesis.");
                 return streamPosition;
             } finally {
                 stopAllThreads(executorService);
             }
 
         } catch (Exception e) {
-            publishEvent(StreamPosition.of(), EventSourceNotification.Status.FAILED, e.getMessage());
+            publishEvent(StreamPosition.of(), EventSourceNotification.Status.FAILED, "Error consuming messages from Kinesis: " + e.getMessage());
             throw e;
         }
 

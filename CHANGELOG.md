@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.5.0
+* Introduced eventsourcing-aws and removed aws-specific parts from eventsourcing-core
+* Renamed Event, EventConsumer etc. to Message, MessageConsumer, ...
+
 ## 0.4.8
 * **[eventsourcing-edison-integration]** Add health indicator for stream state.
  This means that a service goes unhealthy if a stream is in a not-recoverable state.

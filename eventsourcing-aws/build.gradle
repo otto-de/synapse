@@ -1,25 +1,13 @@
 apply plugin: 'java-library'
 
 dependencies {
-    implementation "org.springframework:spring-context:${springVersion}"
-    implementation 'org.springframework.security:spring-security-core:4.2.3.RELEASE'
-
-    implementation "org.springframework.boot:spring-boot:${springBootVersion}"
-    implementation "org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}"
-    implementation "org.springframework:spring-aop:${springVersion}"
-    implementation "org.aspectj:aspectjweaver:1.8.13"
-
+    implementation project(':eventsourcing-core:')
+    implementation "de.otto.edison:edison-aws-s3:0.2.4"
+    implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
+    implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.3"
-
-    implementation("net.openhft:chronicle-map:3.14.1") {
-        exclude group: "com.intellij", module: "annotations"
-    }
-
-//    // This dependency is exported to consumers, that is to say found on their compile classpath.
-//    api 'org.apache.commons:commons-math3:3.6.1'
-
-    // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     implementation 'com.google.guava:guava:23.0'
+    implementation "org.springframework.retry:spring-retry:1.2.1.RELEASE"
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
@@ -59,6 +47,18 @@ artifacts {
     archives sourcesJar
 }
 
+task startLocalStack(type:Exec) {
+    commandLine "docker", "run", "--name", "localstack_for_testing", "-d", "-p", "4567-4583:4567-4583", "-p", "8080:8080", "localstack/localstack:latest"
+}
+task stopLocalStack(type: Exec) {
+    commandLine 'docker', 'rm', '-f', 'localstack_for_testing'
+}
+
+test.dependsOn(startLocalStack)
+test.finalizedBy(stopLocalStack)
+
+
+
 uploadArchives {
     repositories {
         mavenDeployer {
@@ -72,7 +72,7 @@ uploadArchives {
             }
 
             pom.project {
-                name 'eventsourcing-core'
+                name 'eventsourcing-aws'
                 packaging 'jar'
                 description 'A library used at otto.de to implement Spring Boot based event-sourcing microserivces.'
                 url 'http://github.com/otto-de/edison-eventsourcing'
@@ -115,10 +115,6 @@ uploadArchives {
                     developer {
                         id 'hstruebe'
                         name 'Henning Strueber'
-                    }
-                    developer {
-                        id 'sweiler'
-                        name 'Simon Weiler'
                     }
                 }
             }

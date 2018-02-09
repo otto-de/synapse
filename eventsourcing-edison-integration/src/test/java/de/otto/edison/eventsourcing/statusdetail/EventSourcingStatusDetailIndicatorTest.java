@@ -1,9 +1,6 @@
 package de.otto.edison.eventsourcing.statusdetail;
 
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
-import de.otto.edison.eventsourcing.kinesis.KinesisEventSource;
-import de.otto.edison.eventsourcing.kinesis.KinesisStream;
-import de.otto.edison.eventsourcing.s3.SnapshotEventSource;
 import de.otto.edison.status.domain.Status;
 import de.otto.edison.status.domain.StatusDetail;
 import de.otto.edison.testsupport.util.TestClock;
@@ -135,14 +132,16 @@ public class EventSourcingStatusDetailIndicatorTest {
     private EventSourceNotification createSnapshotEventSourceNotification(String streamName, EventSourceNotification.Status status) {
         return EventSourceNotification.builder()
                 .withStatus(status)
-                .withEventSource(new SnapshotEventSource("esName", streamName, null, null, null, null))
+                .withEventSourceName("snapshot")
+                .withStreamName(streamName)
                 .build();
     }
 
     private EventSourceNotification createKinesisEventSourceNotification(String streamName, EventSourceNotification.Status status) {
         return EventSourceNotification.builder()
                 .withStatus(status)
-                .withEventSource(new KinesisEventSource("esName", new KinesisStream(null, streamName), null, null))
+                .withEventSourceName("kinesis")
+                .withStreamName(streamName)
                 .build();
     }
 }

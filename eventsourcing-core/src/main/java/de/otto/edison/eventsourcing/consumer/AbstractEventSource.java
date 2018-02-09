@@ -54,7 +54,8 @@ public abstract class AbstractEventSource implements EventSource {
     protected void publishEvent(StreamPosition streamPosition, EventSourceNotification.Status status, String message) {
         if (eventPublisher != null) {
             EventSourceNotification notification = EventSourceNotification.builder()
-                    .withEventSource(this)
+                    .withEventSourceName(name)
+                    .withStreamName(getStreamName())
                     .withStreamPosition(streamPosition)
                     .withStatus(status)
                     .withMessage(message)

@@ -63,12 +63,12 @@ public class InMemoryEventSourceTest {
         EventSourceNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
         assertThat(startedEvent.getStatus(), is(EventSourceNotification.Status.STARTED));
         assertThat(startedEvent.getStreamPosition(), is(StreamPosition.of()));
-        assertThat(startedEvent.getEventSource(), is(inMemoryEventSource));
+        assertThat(startedEvent.getStreamName(), is("some-stream"));
 
         EventSourceNotification finishedEvent = notificationArgumentCaptor.getAllValues().get(1);
         assertThat(finishedEvent.getStatus(), is(EventSourceNotification.Status.FINISHED));
         assertThat(finishedEvent.getStreamPosition(), is(nullValue()));
-        assertThat(finishedEvent.getEventSource(), is(inMemoryEventSource));
+        assertThat(finishedEvent.getStreamName(), is(inMemoryEventSource));
     }
     
     private static class StringEventConsumer implements EventConsumer<String> {

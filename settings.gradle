@@ -1,4 +1,5 @@
 include "eventsourcing-core"
+include "eventsourcing-aws"
 include "eventsourcing-edison-integration"
 include "eventsourcing-examples:example-consumer"
 include "eventsourcing-examples:example-producer"

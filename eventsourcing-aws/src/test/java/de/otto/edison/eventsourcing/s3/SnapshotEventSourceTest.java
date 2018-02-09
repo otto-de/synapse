@@ -80,10 +80,11 @@ public class SnapshotEventSourceTest {
 
         // then
         EventSourceNotification expectedFailedEvent = EventSourceNotification.builder()
-                .withEventSource(snapshotEventSource)
+                .withEventSourceName("snapshotEventSource")
+                .withStreamName(STREAM_NAME)
                 .withStatus(EventSourceNotification.Status.FAILED)
                 .withStreamPosition(SnapshotStreamPosition.of())
-                .withMessage("boom - simulate exception while loading from S3 (Service: null; Status Code: 0; Request ID: null)")
+                .withMessage("Failed to load snapshot from S3: boom - simulate exception while loading from S3 (Service: null; Status Code: 0; Request ID: null)")
                 .build();
 
         ArgumentCaptor<EventSourceNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(EventSourceNotification.class);
@@ -119,17 +120,19 @@ public class SnapshotEventSourceTest {
 
         // then
         EventSourceNotification expectedStartEvent = EventSourceNotification.builder()
-                .withEventSource(snapshotEventSource)
+                .withEventSourceName("snapshotEventSource")
+                .withStreamName(STREAM_NAME)
                 .withStatus(EventSourceNotification.Status.STARTED)
-                .withMessage("")
+                .withMessage("Loading snapshot from S3.")
                 .withStreamPosition(StreamPosition.of())
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedStartEvent);
 
         EventSourceNotification expectedFinishedEvent = EventSourceNotification.builder()
-                .withEventSource(snapshotEventSource)
+                .withEventSourceName("snapshotEventSource")
+                .withStreamName(STREAM_NAME)
                 .withStatus(EventSourceNotification.Status.FINISHED)
-                .withMessage("")
+                .withMessage("Finished to load snapshot from S3.")
                 .withStreamPosition(SnapshotStreamPosition.of())
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedFinishedEvent);

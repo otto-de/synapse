@@ -2,10 +2,10 @@ package de.otto.edison.eventsourcing.annotation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.DelegateEventSource;
-import de.otto.edison.eventsourcing.configuration.EventSourcingConfiguration;
-import de.otto.edison.eventsourcing.event.Event;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
+import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.testsupport.InMemoryEventSourceConfiguration;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.BeanCreationException;
@@ -33,7 +33,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
     public void shouldRegisterMultipleEventConsumers() {
         context.register(ObjectMapper.class);
         context.register(ThreeConsumersAtTwoEventSourcesConfiguration.class);
-        context.register(EventSourcingConfiguration.class);
+        context.register(InMemoryEventSourceConfiguration.class);
         context.refresh();
 
         final DelegateEventSource someStreamEventSource = context.getBean("testEventSource", DelegateEventSource.class);
@@ -52,7 +52,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
     public void shouldFailToRegisterConsumerBecauseOfMissingEventSource() {
         context.register(ObjectMapper.class);
         context.register(TestConfigurationWithMissingEventSource.class);
-        context.register(EventSourcingConfiguration.class);
+        context.register(InMemoryEventSourceConfiguration.class);
         context.refresh();
     }
 
@@ -64,7 +64,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
     public void shouldRegisterConsumerAtSpecifiedEventSource() {
         context.register(ObjectMapper.class);
         context.register(TwoEventSourcesWithSameStreamAndSecificConsumerConfiguration.class);
-        context.register(EventSourcingConfiguration.class);
+        context.register(InMemoryEventSourceConfiguration.class);
         context.refresh();
 
         final DelegateEventSource someStreamEventSource = context.getBean("someTestEventSource", DelegateEventSource.class);
@@ -77,7 +77,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
     public void shouldCreateEventConsumerWithSpecificPayloadType() {
         context.register(ObjectMapper.class);
         context.register(TestConfigurationDifferentPayload.class);
-        context.register(EventSourcingConfiguration.class);
+        context.register(InMemoryEventSourceConfiguration.class);
         context.refresh();
 
         final DelegateEventSource someStreamEventSource = context.getBean("testEventSource", DelegateEventSource.class);
@@ -92,7 +92,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
     public void shouldRegisterEventConsumerWithSpecificKeyPattern() {
         context.register(ObjectMapper.class);
         context.register(TestConfigurationDifferentPayload.class);
-        context.register(EventSourcingConfiguration.class);
+        context.register(InMemoryEventSourceConfiguration.class);
         context.refresh();
 
         final DelegateEventSource someStreamEventSource = context.getBean("testEventSource", DelegateEventSource.class);

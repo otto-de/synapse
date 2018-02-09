@@ -138,12 +138,12 @@ public class KinesisEventSourceTest {
         EventSourceNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
         assertThat(startedEvent.getStatus(), is(EventSourceNotification.Status.STARTED));
         assertThat(startedEvent.getStreamPosition(), is(initialPositions));
-        assertThat(startedEvent.getEventSource(), is(eventSource));
+        assertThat(startedEvent.getStreamName(), is("test"));
 
         EventSourceNotification finishedEvent = notificationArgumentCaptor.getAllValues().get(1);
         assertThat(finishedEvent.getStatus(), is(EventSourceNotification.Status.FINISHED));
         assertThat(finishedEvent.getStreamPosition(), is(finalStreamPosition));
-        assertThat(finishedEvent.getEventSource(), is(eventSource));
+        assertThat(finishedEvent.getStreamName(), is("test"));
     }
 
 
@@ -214,7 +214,7 @@ public class KinesisEventSourceTest {
             ArgumentCaptor<EventSourceNotification> eventArgumentCaptor = ArgumentCaptor.forClass(EventSourceNotification.class);
             verify(eventPublisher, times(2)).publishEvent(eventArgumentCaptor.capture());
             assertThat(eventArgumentCaptor.getValue().getStatus(), is(EventSourceNotification.Status.FAILED));
-            assertThat(eventArgumentCaptor.getValue().getMessage(), is("java.lang.RuntimeException: boom"));
+            assertThat(eventArgumentCaptor.getValue().getMessage(), is("Error consuming messages from Kinesis: java.lang.RuntimeException: boom"));
         }
         Thread.sleep(100);
 
