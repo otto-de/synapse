@@ -9,6 +9,7 @@ import de.otto.edison.eventsourcing.message.Message;
 import java.nio.ByteBuffer;
 import java.util.stream.Stream;
 
+import static de.otto.edison.eventsourcing.message.ByteBufferMessage.byteBufferMessage;
 import static de.otto.edison.eventsourcing.message.Message.message;
 
 public class KinesisMessageSender implements MessageSender {
@@ -23,8 +24,10 @@ public class KinesisMessageSender implements MessageSender {
     }
 
     @Override
-    public <T> void send(String key, T payload) {
-        kinesisStream.send(key, convertToByteBuffer(payload));
+    public <T> void send(Message<T> message) {
+        kinesisStream.send(
+                byteBufferMessage(message.getKey(), convertToByteBuffer(message.getPayload()))
+        );
     }
 
     @Override

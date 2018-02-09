@@ -84,8 +84,8 @@ public class KinesisStream {
         return streamName;
     }
 
-    public void send(String key, ByteBuffer byteBuffer) {
-        PutRecordsRequestEntry putRecordsRequestEntry = requestEntryFor(key, byteBuffer);
+    public void send(Message<ByteBuffer> message) {
+        PutRecordsRequestEntry putRecordsRequestEntry = requestEntryFor(message.getKey(), message.getPayload());
 
         PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder()
                 .streamName(streamName)

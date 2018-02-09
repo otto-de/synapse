@@ -17,6 +17,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static de.otto.edison.eventsourcing.message.ByteBufferMessage.byteBufferMessage;
 import static de.otto.edison.eventsourcing.message.Message.message;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.contains;
@@ -45,15 +46,19 @@ public class KinesisMessageSenderTest {
     @Test
     public void shouldSendEvent() throws Exception {
         // when
-        kinesisEventSender.send("someKey", new ExampleJsonObject("banana"));
+        kinesisEventSender.send(
+                message("someKey", new ExampleJsonObject("banana"))
+        );
 
         // then
-        ArgumentCaptor<ByteBuffer> captor = ArgumentCaptor.forClass(ByteBuffer.class);
-        verify(kinesisStream).send(eq("someKey"), captor.capture());
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Message<ByteBuffer>> captor = ArgumentCaptor.forClass(Message.class);
+        verify(kinesisStream).send(captor.capture());
 
-        ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(captor.getValue());
+        ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(captor.getValue().getPayload());
         ExampleJsonObject jsonObject = objectMapper.readValue(inputStream, ExampleJsonObject.class);
 
+        assertThat(captor.getValue().getKey(), is("someKey"));
         assertThat(jsonObject.value, is("banana"));
     }
 
@@ -89,7 +94,7 @@ public class KinesisMessageSenderTest {
         kinesisEventSender.send("someKey", null);
 
         //then
-        verify(kinesisStream).send("someKey", ByteBuffer.allocateDirect(0));
+        verify(kinesisStream).send(byteBufferMessage("someKey", ByteBuffer.allocateDirect(0)));
     }
 
     @Test
@@ -98,7 +103,7 @@ public class KinesisMessageSenderTest {
         kinesisEventSender.send("someKey", null);
 
         //then
-        verify(kinesisStream).send("someKey", ByteBuffer.allocateDirect(0));
+        verify(kinesisStream).send(byteBufferMessage("someKey", ByteBuffer.allocateDirect(0)));
     }
 
     private static class ExampleJsonObject {

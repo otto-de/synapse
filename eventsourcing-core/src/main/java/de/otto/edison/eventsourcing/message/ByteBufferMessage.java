@@ -1,9 +1,12 @@
 package de.otto.edison.eventsourcing.message;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import static de.otto.edison.eventsourcing.message.Header.emptyHeader;
 import static de.otto.edison.eventsourcing.message.Header.responseHeader;
+import static java.nio.ByteBuffer.wrap;
+import static java.nio.charset.StandardCharsets.*;
 
 /**
  * A Message is an atomic packet of data that can be transmitted on a channel.
@@ -32,10 +35,23 @@ public class ByteBufferMessage extends Message<ByteBuffer> {
     }
 
     public static ByteBufferMessage byteBufferMessage(final String key,
+                                                      final String payload) {
+        return new ByteBufferMessage(
+                key, emptyHeader(), wrap(payload.getBytes(UTF_8)));
+    }
+
+    public static ByteBufferMessage byteBufferMessage(final String key,
                                                       final Header header,
                                                       final ByteBuffer payload) {
         return new ByteBufferMessage(
                 key, header, payload);
+    }
+
+    public static ByteBufferMessage byteBufferMessage(final String key,
+                                                      final Header header,
+                                                      final String payload) {
+        return new ByteBufferMessage(
+                key, header, wrap(payload.getBytes(UTF_8)));
     }
 
     protected ByteBufferMessage(final String key,

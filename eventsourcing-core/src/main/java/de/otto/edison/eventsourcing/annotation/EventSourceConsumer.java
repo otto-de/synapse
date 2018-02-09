@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.annotation;
 
 import de.otto.edison.eventsourcing.consumer.EventSource;
-import de.otto.edison.eventsourcing.message.EventBody;
+import de.otto.edison.eventsourcing.message.Message;
 
 import java.lang.annotation.*;
 
@@ -26,7 +26,7 @@ public @interface EventSourceConsumer {
     String keyPattern() default ".*";
 
     /**
-     * The type of the {@link EventBody#getPayload()} produced by the {@link EventSource}
+     * The type of the {@link Message#getPayload()} produced by the {@link EventSource}
      *
      * @return payload type
      */

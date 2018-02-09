@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
+import de.otto.edison.eventsourcing.message.Header;
 import de.otto.edison.eventsourcing.message.Message;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,6 +31,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.google.common.collect.ImmutableList.of;
+import static de.otto.edison.eventsourcing.message.Header.responseHeader;
+import static de.otto.edison.eventsourcing.message.Message.message;
+import static java.time.Duration.ofMillis;
 import static java.util.Collections.synchronizedList;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
@@ -180,7 +184,9 @@ public class KinesisEventSourceTest {
         eventSource.consumeAll(initialPositions, stringStopCondition);
 
         // then
-        verify(stringStopCondition).test(Message.message(null, null, null, null, Duration.ofMillis(555L)));
+        verify(stringStopCondition).test(
+                message(null, responseHeader(null, null, ofMillis(555L)), null)
+        );
     }
 
     @Test

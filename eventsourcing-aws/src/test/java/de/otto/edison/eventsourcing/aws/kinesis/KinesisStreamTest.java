@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static de.otto.edison.eventsourcing.message.ByteBufferMessage.byteBufferMessage;
 import static de.otto.edison.eventsourcing.message.Message.message;
 import static java.lang.String.valueOf;
 import static org.hamcrest.Matchers.hasSize;
@@ -134,7 +135,7 @@ public class KinesisStreamTest {
         ByteBuffer data = ByteBuffer.wrap("test".getBytes(StandardCharsets.UTF_8));
 
         // when
-        kinesisStream.send("someKey", data);
+        kinesisStream.send(byteBufferMessage("someKey", "test"));
 
         // then
         ArgumentCaptor<PutRecordsRequest> captor = ArgumentCaptor.forClass(PutRecordsRequest.class);
