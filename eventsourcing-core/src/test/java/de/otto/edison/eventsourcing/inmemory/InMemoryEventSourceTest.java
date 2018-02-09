@@ -4,15 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
-import de.otto.edison.eventsourcing.event.Event;
-import de.otto.edison.eventsourcing.event.EventBody;
-import org.hamcrest.Matchers;
+import de.otto.edison.eventsourcing.event.Message;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.regex.Pattern;
 
+import static de.otto.edison.eventsourcing.event.Message.message;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
@@ -32,15 +31,15 @@ public class InMemoryEventSourceTest {
         InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es","some-stream", inMemoryStream, eventPublisher, objectMapper);
         StringEventConsumer eventConsumer = new StringEventConsumer();
         inMemoryEventSource.register(eventConsumer);
-        inMemoryStream.send(EventBody.eventBody("key", "payload"));
+        inMemoryStream.send(message("key", "payload"));
 
         // when
         inMemoryEventSource.consumeAll(event -> true);
 
 
         // then
-        assertThat(eventConsumer.event.getEventBody().getKey(), is("key"));
-        assertThat(eventConsumer.event.getEventBody().getPayload(), is("payload"));
+        assertThat(eventConsumer.message.getKey(), is("key"));
+        assertThat(eventConsumer.message.getPayload(), is("payload"));
     }
 
     @Test
@@ -50,7 +49,7 @@ public class InMemoryEventSourceTest {
         InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es", "some-stream", inMemoryStream, eventPublisher, objectMapper);
         StringEventConsumer eventConsumer = new StringEventConsumer();
         inMemoryEventSource.register(eventConsumer);
-        inMemoryStream.send(EventBody.eventBody("key", "payload"));
+        inMemoryStream.send(message("key", "payload"));
 
         // when
         inMemoryEventSource.consumeAll(event -> true);
@@ -72,7 +71,7 @@ public class InMemoryEventSourceTest {
     }
     
     private static class StringEventConsumer implements EventConsumer<String> {
-        private Event<String> event;
+        private Message<String> message;
 
         @Override
         public Class<String> payloadType() {
@@ -85,8 +84,8 @@ public class InMemoryEventSourceTest {
         }
 
         @Override
-        public void accept(Event<String> event) {
-            this.event = event;
+        public void accept(Message<String> message) {
+            this.message = message;
         }
     }
 }

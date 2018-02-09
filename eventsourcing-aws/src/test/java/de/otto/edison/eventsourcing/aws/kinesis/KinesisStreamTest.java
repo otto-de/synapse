@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.aws.kinesis;
 
 import com.google.common.collect.ImmutableList;
-import de.otto.edison.eventsourcing.event.EventBody;
+import de.otto.edison.eventsourcing.event.Message;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static de.otto.edison.eventsourcing.event.Message.message;
 import static java.lang.String.valueOf;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -161,8 +162,8 @@ public class KinesisStreamTest {
 
         // when
         kinesisStream.sendBatch(Stream.of(
-                EventBody.eventBody("event1", data1),
-                EventBody.eventBody("event2", data2)));
+                message("event1", data1),
+                message("event2", data2)));
 
         // then
         ArgumentCaptor<PutRecordsRequest> captor = ArgumentCaptor.forClass(PutRecordsRequest.class);
@@ -194,9 +195,9 @@ public class KinesisStreamTest {
         verify(kinesisClient, times(2)).putRecords(any(PutRecordsRequest.class));
     }
 
-    private Stream<EventBody<ByteBuffer>> someEvents(int n) {
+    private Stream<Message<ByteBuffer>> someEvents(int n) {
         return IntStream.range(0, n)
-                .mapToObj(i -> EventBody.eventBody(valueOf(i), ByteBuffer.wrap(Integer.toString(i).getBytes(StandardCharsets.UTF_8))));
+                .mapToObj(i -> message(valueOf(i), ByteBuffer.wrap(Integer.toString(i).getBytes(StandardCharsets.UTF_8))));
     }
 
     private Shard someShard(String shardId, boolean open) {

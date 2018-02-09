@@ -1,6 +1,6 @@
 package de.otto.edison.eventsourcing.consumer;
 
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 import de.otto.edison.eventsourcing.state.StateRepository;
 
 import java.util.regex.Pattern;
@@ -20,7 +20,7 @@ public class DefaultEventConsumer<T> implements EventConsumer<T> {
     }
 
     /**
-     * Returns the expected payload type of {@link Event events} consumed by this EventConsumer.
+     * Returns the expected payload type of {@link Message events} consumed by this EventConsumer.
      *
      * @return payload type
      */
@@ -35,11 +35,11 @@ public class DefaultEventConsumer<T> implements EventConsumer<T> {
     }
 
     @Override
-    public void accept(final Event<T> event) {
-        if (event.getEventBody().getPayload() == null) {
-            stateRepository.remove(event.getEventBody().getKey());
+    public void accept(final Message<T> message) {
+        if (message.getPayload() == null) {
+            stateRepository.remove(message.getKey());
         } else {
-            stateRepository.put(event.getEventBody().getKey(), event.getEventBody().getPayload());
+            stateRepository.put(message.getKey(), message.getPayload());
         }
     }
 

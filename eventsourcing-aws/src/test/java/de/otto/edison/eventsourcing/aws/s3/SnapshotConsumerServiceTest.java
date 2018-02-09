@@ -33,8 +33,8 @@ public class SnapshotConsumerServiceTest {
         Map<String, Map> allData = new HashMap<>();
         //when
         final EventConsumer<Map> eventConsumer = EventConsumer.of(".*", Map.class, (event) -> {
-            System.out.println(event.getEventBody().getPayload());
-            allData.put(event.getEventBody().getKey(), event.getEventBody().getPayload());
+            System.out.println(event.getPayload());
+            allData.put(event.getKey(), event.getPayload());
         });
         final StreamPosition shardPositions = testee.consumeSnapshot(
                 file,

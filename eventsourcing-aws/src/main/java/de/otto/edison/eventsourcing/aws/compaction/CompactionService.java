@@ -2,7 +2,7 @@ package de.otto.edison.eventsourcing.aws.compaction;
 
 import de.otto.edison.eventsourcing.EventSourceBuilder;
 import de.otto.edison.eventsourcing.consumer.DefaultEventConsumer;
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.aws.s3.SnapshotWriteService;
@@ -56,7 +56,7 @@ public class CompactionService {
         }
     }
 
-    private Predicate<Event<?>> stopCondition() {
+    private Predicate<Message<?>> stopCondition() {
         return event -> event.getDurationBehind()
                 .map(CompactionService::isLessThan10Seconds)
                 .orElse(true);

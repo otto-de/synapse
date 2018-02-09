@@ -1,11 +1,10 @@
 package de.otto.edison.eventsourcing.annotation;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.DelegateEventSource;
 import de.otto.edison.eventsourcing.configuration.EventSourcingAutoConfiguration;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 import de.otto.edison.eventsourcing.testsupport.InMemoryEventSourceConfiguration;
 import org.junit.After;
 import org.junit.Test;
@@ -149,7 +148,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
         @EventSourceConsumer(
                 eventSource = "someTestEventSource",
                 payloadType = String.class)
-        public void first(Event<String> event) {
+        public void first(Message<String> message) {
         }
 
     }
@@ -158,7 +157,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
         @EventSourceConsumer(
                 eventSource = "someTestEventSource",
                 payloadType = String.class)
-        public void first(Event<String> event) {
+        public void first(Message<String> message) {
         }
 
     }
@@ -167,19 +166,19 @@ public class EventSourceConsumerBeanPostProcessorTest {
         @EventSourceConsumer(
                 eventSource= "testEventSource",
                 payloadType = String.class)
-        public void first(Event<String> event) {
+        public void first(Message<String> message) {
         }
 
         @EventSourceConsumer(
                 eventSource = "testEventSource",
                 payloadType = String.class)
-        public void second(Event<String> event) {
+        public void second(Message<String> message) {
         }
 
         @EventSourceConsumer(
                 eventSource = "otherStreamTestSource",
                 payloadType = String.class)
-        public void third(Event<String> event) {
+        public void third(Message<String> message) {
         }
     }
 
@@ -188,14 +187,14 @@ public class EventSourceConsumerBeanPostProcessorTest {
                 eventSource = "testEventSource",
                 keyPattern = "apple.*",
                 payloadType = String.class)
-        public void first(Event<String> event) {
+        public void first(Message<String> message) {
         }
 
         @EventSourceConsumer(
                 eventSource = "testEventSource",
                 keyPattern = "banana.*",
                 payloadType = Integer.class)
-        public void second(Event<String> event) {
+        public void second(Message<String> message) {
         }
 
     }
@@ -204,7 +203,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
         @EventSourceConsumer(
                 eventSource = "someTestEventSource",
                 payloadType = String.class)
-        public void first(Event<String> event) {
+        public void first(Message<String> message) {
         }
     }
 

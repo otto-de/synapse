@@ -1,8 +1,7 @@
 package de.otto.edison.eventsourcing.example.producer.configuration;
 
-import de.otto.edison.eventsourcing.EventSender;
-import de.otto.edison.eventsourcing.EventSenderFactory;
-import de.otto.edison.eventsourcing.example.producer.configuration.MyServiceProperties;
+import de.otto.edison.eventsourcing.MessageSender;
+import de.otto.edison.eventsourcing.MessageSenderFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,8 +11,8 @@ import org.springframework.context.annotation.Configuration;
 public class EventSenderConfiguration {
 
     @Bean
-    public EventSender productEventSender(final EventSenderFactory eventSenderFactory,
-                                          final MyServiceProperties properties) {
-        return eventSenderFactory.createSenderForStream(properties.getProductStreamName());
+    public MessageSender productEventSender(final MessageSenderFactory messageSenderFactory,
+                                            final MyServiceProperties properties) {
+        return messageSenderFactory.createSenderForStream(properties.getProductStreamName());
     }
 }

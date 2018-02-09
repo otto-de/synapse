@@ -1,6 +1,6 @@
 package de.otto.edison.eventsourcing.example.consumer;
 
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 import de.otto.edison.eventsourcing.example.consumer.payload.BananaPayload;
 import de.otto.edison.eventsourcing.example.consumer.payload.ProductPayload;
 import de.otto.edison.eventsourcing.example.consumer.state.BananaProduct;
@@ -79,7 +79,7 @@ public class ExampleConsumerTest {
         assertThat(retrievedBanana.map(BananaProduct::getPrice), is(Optional.of(300L)));
     }
 
-    private <T> Event<T> testEvent(String key, T payload) {
-        return Event.event(key, payload, "0", Instant.now());
+    private <T> Message<T> testEvent(String key, T payload) {
+        return Message.message(key, payload, "0", Instant.now());
     }
 }

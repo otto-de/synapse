@@ -1,6 +1,6 @@
 package de.otto.edison.eventsourcing.example.producer;
 
-import de.otto.edison.eventsourcing.EventSender;
+import de.otto.edison.eventsourcing.MessageSender;
 import de.otto.edison.eventsourcing.example.producer.payload.ProductPayload;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,11 +14,11 @@ import static org.mockito.Mockito.verify;
 public class ExampleProducerTest {
 
     ExampleProducer testee;
-    EventSender sender;
+    MessageSender sender;
 
     @Before
     public void setUp() throws Exception {
-        sender = mock(EventSender.class);
+        sender = mock(MessageSender.class);
         testee = new ExampleProducer(sender);
     }
 
@@ -30,7 +30,7 @@ public class ExampleProducerTest {
         testee.produceSampleData();
 
         //then
-        verify(sender).sendEvent(anyString(), any(ProductPayload.class));
+        verify(sender).send(anyString(), any(ProductPayload.class));
     }
 
 

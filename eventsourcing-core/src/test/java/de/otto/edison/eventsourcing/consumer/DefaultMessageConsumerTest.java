@@ -1,6 +1,6 @@
 package de.otto.edison.eventsourcing.consumer;
 
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 import de.otto.edison.eventsourcing.state.StateRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,7 +12,7 @@ import java.time.Instant;
 import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DefaultEventConsumerTest {
+public class DefaultMessageConsumerTest {
 
     @Mock
     private StateRepository<String> stateRepository;
@@ -23,7 +23,7 @@ public class DefaultEventConsumerTest {
         DefaultEventConsumer<String> consumer = createDefaultEventConsumer();
 
         //when
-        consumer.accept(Event.event("someKey", "12345", "someSeqNumber", Instant.now()));
+        consumer.accept(Message.message("someKey", "12345", "someSeqNumber", Instant.now()));
 
         //then
         verify(stateRepository).put("someKey", "12345");
@@ -35,7 +35,7 @@ public class DefaultEventConsumerTest {
         DefaultEventConsumer<String> consumer = createDefaultEventConsumer();
 
         //when
-        consumer.accept(Event.event("someKey", null, "someSeqNumber", Instant.now()));
+        consumer.accept(Message.message("someKey", null, "someSeqNumber", Instant.now()));
 
         //then
         verify(stateRepository).remove("someKey");

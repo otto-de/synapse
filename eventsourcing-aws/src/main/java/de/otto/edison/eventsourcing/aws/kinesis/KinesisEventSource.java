@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.AbstractEventSource;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -23,7 +23,7 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static de.otto.edison.eventsourcing.aws.kinesis.KinesisEvent.kinesisEvent;
+import static de.otto.edison.eventsourcing.aws.kinesis.KinesisMessage.kinesisMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
 
@@ -48,7 +48,7 @@ public class KinesisEventSource extends AbstractEventSource {
 
     @Override
     public StreamPosition consumeAll(final StreamPosition startFrom,
-                                     final Predicate<Event<?>> stopCondition) {
+                                     final Predicate<Message<?>> stopCondition) {
         publishEvent(startFrom, EventSourceNotification.Status.STARTED, "Consuming messages from Kinesis.");
 
         try {
@@ -101,8 +101,8 @@ public class KinesisEventSource extends AbstractEventSource {
         }
     }
 
-    private Event<String> createEvent(Duration durationBehind, Record record) {
-        return kinesisEvent(durationBehind, record, byteBuffer -> {
+    private Message<String> createEvent(Duration durationBehind, Record record) {
+        return kinesisMessage(durationBehind, record, byteBuffer -> {
             if (byteBuffer.equals(ByteBuffer.allocateDirect(0))) {
                 return null;
             } else {
@@ -111,10 +111,10 @@ public class KinesisEventSource extends AbstractEventSource {
         });
     }
 
-    private BiFunction<Long, Record, Boolean> recordStopCondition(final Predicate<Event<?>> stopCondition) {
+    private BiFunction<Long, Record, Boolean> recordStopCondition(final Predicate<Message<?>> stopCondition) {
         return (millis, record) -> {
             if (record == null) {
-                return stopCondition.test(Event.event(null, null, null, null, ofMillis(millis)));
+                return stopCondition.test(Message.message(null, null, null, null, ofMillis(millis)));
             }
             return stopCondition.test(createEvent(ofMillis(millis), record));
         };
@@ -122,8 +122,8 @@ public class KinesisEventSource extends AbstractEventSource {
 
     private BiConsumer<Long, Record> recordConsumer() {
         return (millis, record) -> {
-            final Event<String> jsonEvent = createEvent(ofMillis(millis), record);
-            registeredConsumers().encodeAndSend(jsonEvent);
+            final Message<String> jsonMessage = createEvent(ofMillis(millis), record);
+            registeredConsumers().encodeAndSend(jsonMessage);
         };
     }
 }

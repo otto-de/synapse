@@ -1,6 +1,6 @@
 package de.otto.edison.eventsourcing.aws.kinesis;
 
-import de.otto.edison.eventsourcing.event.EventBody;
+import de.otto.edison.eventsourcing.event.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
@@ -95,7 +95,7 @@ public class KinesisStream {
         retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
     }
 
-    public void sendBatch(Stream<EventBody<ByteBuffer>> events) {
+    public void sendBatch(Stream<Message<ByteBuffer>> events) {
         List<PutRecordsRequestEntry> entries = events
                 .map(entry -> requestEntryFor(entry.getKey(), entry.getPayload()))
                 .collect(Collectors.toCollection(ArrayList::new));

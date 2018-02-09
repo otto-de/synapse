@@ -1,6 +1,6 @@
 package de.otto.edison.eventsourcing.consumer;
 
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.aop.support.AopUtils;
@@ -14,16 +14,16 @@ public class MethodInvokingEventConsumerTest {
 
     private boolean eventReceived;
 
-    public void validMethod(final Event<String> event) {
+    public void validMethod(final Message<String> message) {
         eventReceived = true;
     }
 
-    public String validMethodWithReturnValue(final Event<String> event) {
+    public String validMethodWithReturnValue(final Message<String> message) {
         eventReceived = true;
         return "";
     }
 
-    public void methodWithTooManyParameters(final Event<String> event, final String foo) {
+    public void methodWithTooManyParameters(final Message<String> message, final String foo) {
         eventReceived = true;
     }
 
@@ -39,26 +39,26 @@ public class MethodInvokingEventConsumerTest {
     @Test
     @SuppressWarnings("unchecked")
     public void shouldBuildEventConsumerForValidMethod() throws NoSuchMethodException {
-        final Method method = MethodInvokingEventConsumerTest.class.getMethod("validMethod", Event.class);
+        final Method method = MethodInvokingEventConsumerTest.class.getMethod("validMethod", Message.class);
         final Method method1 = AopUtils.selectInvocableMethod(method, MethodInvokingEventConsumerTest.class);
         final MethodInvokingEventConsumer eventConsumer = new MethodInvokingEventConsumer(".*", String.class, this, method1);
-        eventConsumer.accept(mock(Event.class));
+        eventConsumer.accept(mock(Message.class));
         assertThat(eventReceived).isTrue();
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void shouldBuildEventConsumerAndIgnoreReturnValue() throws NoSuchMethodException {
-        final Method method = MethodInvokingEventConsumerTest.class.getMethod("validMethodWithReturnValue", Event.class);
+        final Method method = MethodInvokingEventConsumerTest.class.getMethod("validMethodWithReturnValue", Message.class);
         final MethodInvokingEventConsumer eventConsumer = new MethodInvokingEventConsumer(".*", String.class, this, method);
-        eventConsumer.accept(mock(Event.class));
+        eventConsumer.accept(mock(Message.class));
         assertThat(eventReceived).isTrue();
     }
 
     @Test(expected = IllegalArgumentException.class)
     @SuppressWarnings("unchecked")
     public void shouldFailBuildingEventConsumerWithTooManyArgs() throws NoSuchMethodException {
-        final Method method = MethodInvokingEventConsumerTest.class.getMethod("methodWithTooManyParameters", Event.class, String.class);
+        final Method method = MethodInvokingEventConsumerTest.class.getMethod("methodWithTooManyParameters", Message.class, String.class);
         new MethodInvokingEventConsumer(".*", String.class, this, method);
     }
 

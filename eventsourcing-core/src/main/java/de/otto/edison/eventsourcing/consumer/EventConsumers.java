@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -42,22 +42,22 @@ public class EventConsumers {
     }
 
     @SuppressWarnings({"unchecked", "raw"})
-    public void encodeAndSend(final Event<String> event) {
+    public void encodeAndSend(final Message<String> message) {
         eventConsumers
                 .stream()
-                .filter(consumer -> matchesEventKey(event, consumer.keyPattern()))
+                .filter(consumer -> matchesEventKey(message, consumer.keyPattern()))
                 .forEach((EventConsumer consumer) -> {
                     try {
                         final Class<?> payloadType = consumer.payloadType();
                         if (payloadType.equals(String.class)) {
-                            consumer.accept(event);
+                            consumer.accept(message);
                         } else {
                             Object payload = null;
-                            if (event.getEventBody().getPayload() != null) {
-                                payload = objectMapper.readValue(event.getEventBody().getPayload(), payloadType);
+                            if (message.getPayload() != null) {
+                                payload = objectMapper.readValue(message.getPayload(), payloadType);
                             }
-                            final Event<?> tEvent = Event.event(event.getEventBody().getKey(), payload, event.getSequenceNumber(), event.getArrivalTimestamp(), event.getDurationBehind().orElse(null));
-                            consumer.accept(tEvent);
+                            final Message<?> tMessage = Message.message(message.getKey(), message.getHeader(), payload);
+                            consumer.accept(tMessage);
                         }
                     } catch (final Exception e) {
                         LOG.error(e.getMessage(), e);
@@ -65,8 +65,8 @@ public class EventConsumers {
                 });
     }
 
-    private boolean matchesEventKey(Event<String> event, Pattern keyPattern) {
-        return keyPattern.matcher(event.getEventBody().getKey()).matches();
+    private boolean matchesEventKey(Message<String> message, Pattern keyPattern) {
+        return keyPattern.matcher(message.getKey()).matches();
     }
 
 }

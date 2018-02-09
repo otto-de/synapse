@@ -1,6 +1,6 @@
 package de.otto.edison.eventsourcing.consumer;
 
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 
 import java.util.regex.Pattern;
 
@@ -24,7 +24,7 @@ class TestEventConsumer<T> implements EventConsumer<T> {
     }
 
     /**
-     * Returns the expected payload type of {@link Event events} consumed by this EventConsumer.
+     * Returns the expected payload type of {@link Message events} consumed by this EventConsumer.
      *
      * @return payload type
      */
@@ -34,7 +34,7 @@ class TestEventConsumer<T> implements EventConsumer<T> {
     }
 
     /**
-     * Returns the pattern of {@link Event#key() event keys} accepted by this consumer.
+     * Returns the pattern of {@link Message#key() event keys} accepted by this consumer.
      *
      * @return Pattern
      */
@@ -44,7 +44,7 @@ class TestEventConsumer<T> implements EventConsumer<T> {
     }
 
     @Override
-    public void accept(Event<T> myPayloadEvent) {
+    public void accept(Message<T> myPayloadMessage) {
         // do nothing here for tests
     }
 

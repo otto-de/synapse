@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.AbstractEventSource;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
-import de.otto.edison.eventsourcing.event.Event;
-import de.otto.edison.eventsourcing.event.EventBody;
+import de.otto.edison.eventsourcing.event.Message;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Instant;
 import java.util.function.Predicate;
+
+import static de.otto.edison.eventsourcing.event.Header.responseHeader;
+import static de.otto.edison.eventsourcing.event.Message.message;
 
 public class InMemoryEventSource extends AbstractEventSource {
 
@@ -33,20 +35,20 @@ public class InMemoryEventSource extends AbstractEventSource {
     }
 
     @Override
-    public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<?>> stopCondition) {
+    public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Message<?>> stopCondition) {
         publishEvent(startFrom, EventSourceNotification.Status.STARTED);
         boolean shouldStop;
         do {
-            EventBody<String> eventBody = inMemoryStream.receive();
+            Message<String> message = inMemoryStream.receive();
 
-            if (eventBody == null) {
+            if (message == null) {
                 return null;
             }
 
-            Event<String> event = Event.event(eventBody, "0", Instant.now());
-
-            registeredConsumers().encodeAndSend(event);
-            shouldStop = stopCondition.test(event);
+            registeredConsumers().encodeAndSend(
+                    message(message.getKey(), responseHeader("0", Instant.now()), message.getPayload())
+            );
+            shouldStop = stopCondition.test(message);
         } while (!shouldStop);
         publishEvent(null, EventSourceNotification.Status.FINISHED);
         return null;

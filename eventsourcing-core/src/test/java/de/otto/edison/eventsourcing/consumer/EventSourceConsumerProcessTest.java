@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 import org.junit.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -10,7 +10,7 @@ import java.time.Instant;
 import java.util.function.Predicate;
 
 import static de.otto.edison.eventsourcing.consumer.TestEventConsumer.testEventConsumer;
-import static de.otto.edison.eventsourcing.event.Event.event;
+import static de.otto.edison.eventsourcing.event.Message.message;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -52,8 +52,8 @@ public class EventSourceConsumerProcessTest {
         }
 
         @Override
-        public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<?>> stopCondition) {
-            registeredConsumers().encodeAndSend(event("someKey", "{}", "0", Instant.now(), Duration.ZERO));
+        public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Message<?>> stopCondition) {
+            registeredConsumers().encodeAndSend(Message.message("someKey", "{}", "0", Instant.now(), Duration.ZERO));
             return StreamPosition.of();
         }
     }

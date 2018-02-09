@@ -2,8 +2,8 @@ package de.otto.edison.eventsourcing.aws.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.aws.configuration.AwsProperties;
-import de.otto.edison.eventsourcing.EventSenderFactory;
-import de.otto.edison.eventsourcing.aws.kinesis.KinesisEventSenderFactory;
+import de.otto.edison.eventsourcing.MessageSenderFactory;
+import de.otto.edison.eventsourcing.aws.kinesis.KinesisMessageSenderFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -38,10 +38,10 @@ public class KinesisConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(EventSenderFactory.class)
-    public EventSenderFactory eventSenderFactory(ObjectMapper objectMapper,
-                                                 KinesisClient kinesisClient) {
-        return new KinesisEventSenderFactory(objectMapper, kinesisClient);
+    @ConditionalOnMissingBean(MessageSenderFactory.class)
+    public MessageSenderFactory eventSenderFactory(ObjectMapper objectMapper,
+                                                   KinesisClient kinesisClient) {
+        return new KinesisMessageSenderFactory(objectMapper, kinesisClient);
     }
 
 }

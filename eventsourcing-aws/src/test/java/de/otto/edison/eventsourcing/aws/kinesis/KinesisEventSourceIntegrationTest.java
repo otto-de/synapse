@@ -2,11 +2,10 @@ package de.otto.edison.eventsourcing.aws.kinesis;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
-import de.otto.edison.eventsourcing.event.EventBody;
 import de.otto.edison.eventsourcing.aws.testsupport.TestStreamSource;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,11 +55,11 @@ public class KinesisEventSourceIntegrationTest {
     private ApplicationEventPublisher eventPublisher;
 
     private EventSource eventSource;
-    private List<Event<String>> events = synchronizedList(new ArrayList<Event<String>>());
+    private List<Message<String>> messages = synchronizedList(new ArrayList<Message<String>>());
 
     @Before
     public void before() {
-        events.clear();
+        messages.clear();
     }
 
     @PostConstruct
@@ -68,7 +67,7 @@ public class KinesisEventSourceIntegrationTest {
         KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, STREAM_NAME, EXPECTED_NUMBER_OF_SHARDS);
         KinesisStream kinesisStream = new KinesisStream(kinesisClient, STREAM_NAME);
         this.eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, eventPublisher, objectMapper);
-        this.eventSource.register(EventConsumer.of(".*", String.class, events::add));
+        this.eventSource.register(EventConsumer.of(".*", String.class, messages::add));
     }
 
     @Test
@@ -82,8 +81,8 @@ public class KinesisEventSourceIntegrationTest {
                 stopCondition()
         );
 
-        assertThat(events, not(empty()));
-        assertThat(events, hasSize(EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET));
+        assertThat(messages, not(empty()));
+        assertThat(messages, hasSize(EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET));
     }
 
     @Test
@@ -98,8 +97,8 @@ public class KinesisEventSourceIntegrationTest {
                 stopCondition());
 
         assertThat(nextStreamPosition.shards(), hasSize(EXPECTED_NUMBER_OF_SHARDS));
-        assertThat(events, hasSize(EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET));
-        assertThat(events.stream().map(Event::getEventBody).map(EventBody::getKey).sorted().collect(Collectors.toList()), is(expectedListOfKeys()));
+        assertThat(messages, hasSize(EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET));
+        assertThat(messages.stream().map(Message::getKey).sorted().collect(Collectors.toList()), is(expectedListOfKeys()));
     }
 
     @Test
@@ -113,7 +112,7 @@ public class KinesisEventSourceIntegrationTest {
                 startFrom,
                 stopCondition());
 
-        assertThat(events, empty());
+        assertThat(messages, empty());
         assertThat(next.shards(), hasSize(EXPECTED_NUMBER_OF_SHARDS));
     }
 
@@ -127,7 +126,7 @@ public class KinesisEventSourceIntegrationTest {
         return IntStream.range(EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET + 1, EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET + EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET + 1).mapToObj(String::valueOf).collect(Collectors.toList());
     }
 
-    private Predicate<Event<?>> stopCondition() {
-        return e -> e.getEventBody().getPayload() == null;
+    private Predicate<Message<?>> stopCondition() {
+        return e -> e.getPayload() == null;
     }
 }

@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.consumer;
 
 import de.otto.edison.eventsourcing.configuration.ConsumerProcessProperties;
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.function.Consumer;
@@ -32,11 +32,11 @@ import static java.util.regex.Pattern.compile;
  * @param <T> the type of the event's payload
  */
 @ThreadSafe
-public interface EventConsumer<T> extends Consumer<Event<T>> {
+public interface EventConsumer<T> extends Consumer<Message<T>> {
 
     static <T> EventConsumer<T> of(final String keyPattern,
                                    final Class<T> payloadType,
-                                   final Consumer<Event<T>> consumer) {
+                                   final Consumer<Message<T>> consumer) {
         return new EventConsumer<T>() {
 
             private Pattern pattern = compile(keyPattern);
@@ -52,14 +52,14 @@ public interface EventConsumer<T> extends Consumer<Event<T>> {
             }
 
             @Override
-            public void accept(Event<T> tEvent) {
-                consumer.accept(tEvent);
+            public void accept(Message<T> tMessage) {
+                consumer.accept(tMessage);
             }
         };
     }
 
     /**
-     * Returns the expected payload type of {@link Event events} consumed by this EventConsumer.
+     * Returns the expected payload type of {@link Message events} consumed by this EventConsumer.
      *
      * @return payload type
      */

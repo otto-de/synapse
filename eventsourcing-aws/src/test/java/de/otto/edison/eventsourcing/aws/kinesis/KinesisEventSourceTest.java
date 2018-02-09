@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,16 +50,16 @@ public class KinesisEventSourceTest {
     private EventConsumer<TestData> testDataConsumer;
 
     @Captor
-    private ArgumentCaptor<Event<TestData>> testDataCaptor;
+    private ArgumentCaptor<Message<TestData>> testDataCaptor;
 
     @Mock
     private EventConsumer<String> stringConsumer;
 
     @Captor
-    private ArgumentCaptor<Event<String>> stringCaptor;
+    private ArgumentCaptor<Message<String>> stringCaptor;
 
     @Mock
-    private Predicate<Event<?>> stringStopCondition;
+    private Predicate<Message<?>> stringStopCondition;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
@@ -114,11 +114,11 @@ public class KinesisEventSourceTest {
 
         // then
         verify(testDataConsumer, times(3)).accept(testDataCaptor.capture());
-        List<Event<TestData>> events = testDataCaptor.getAllValues();
+        List<Message<TestData>> messages = testDataCaptor.getAllValues();
 
-        assertThat(events.get(0).getEventBody().getPayload(), is(new TestData("blue")));
-        assertThat(events.get(1).getEventBody().getPayload(), is(nullValue()));
-        assertThat(events.get(2).getEventBody().getPayload(), is(new TestData("green")));
+        assertThat(messages.get(0).getPayload(), is(new TestData("blue")));
+        assertThat(messages.get(1).getPayload(), is(nullValue()));
+        assertThat(messages.get(2).getPayload(), is(new TestData("green")));
     }
 
     @Test
@@ -162,10 +162,10 @@ public class KinesisEventSourceTest {
         // then
         verify(stringConsumer, times(3)).accept(stringCaptor.capture());
 
-        List<Event<String>> events = stringCaptor.getAllValues();
-        assertThat(events.get(0).getEventBody().getPayload(), is(objectMapper.writeValueAsString(new TestData("blue"))));
-        assertThat(events.get(1).getEventBody().getPayload(), is(nullValue()));
-        assertThat(events.get(2).getEventBody().getPayload(), is(objectMapper.writeValueAsString(new TestData("green"))));
+        List<Message<String>> messages = stringCaptor.getAllValues();
+        assertThat(messages.get(0).getPayload(), is(objectMapper.writeValueAsString(new TestData("blue"))));
+        assertThat(messages.get(1).getPayload(), is(nullValue()));
+        assertThat(messages.get(2).getPayload(), is(objectMapper.writeValueAsString(new TestData("green"))));
     }
 
     @Test
@@ -180,7 +180,7 @@ public class KinesisEventSourceTest {
         eventSource.consumeAll(initialPositions, stringStopCondition);
 
         // then
-        verify(stringStopCondition).test(Event.event(null, null, null, null, Duration.ofMillis(555L)));
+        verify(stringStopCondition).test(Message.message(null, null, null, null, Duration.ofMillis(555L)));
     }
 
     @Test
@@ -238,11 +238,11 @@ public class KinesisEventSourceTest {
         return shard;
     }
 
-    private boolean stopIfGreenForString(Event<?> event) {
-        if (event.getEventBody().getPayload() == null) {
+    private boolean stopIfGreenForString(Message<?> message) {
+        if (message.getPayload() == null) {
             return false;
         }
-        return event.getEventBody().getPayload().toString().contains("green");
+        return message.getPayload().toString().contains("green");
     }
 
     private Record createRecord(String data) {

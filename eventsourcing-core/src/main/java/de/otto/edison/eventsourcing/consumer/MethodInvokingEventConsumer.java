@@ -1,7 +1,6 @@
 package de.otto.edison.eventsourcing.consumer;
 
-import de.otto.edison.eventsourcing.event.Event;
-import de.otto.edison.eventsourcing.event.EventBody;
+import de.otto.edison.eventsourcing.event.Message;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -28,7 +27,7 @@ public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
             throw new IllegalArgumentException("Unable to build MethodInvokingEventConsumer: illegal number of arguments ");
         }
         final Class<?> paramType = method.getParameterTypes()[0];
-        if (!paramType.equals(Event.class)) {
+        if (!paramType.equals(Message.class)) {
             throw new IllegalArgumentException("Unable to build MethodInvokingEventConsumer: expected parameter type is Event, not " + paramType.getName());
         }
 
@@ -39,7 +38,7 @@ public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
     }
 
     /**
-     * Returns the expected payload type of {@link Event events} consumed by this EventConsumer.
+     * Returns the expected payload type of {@link Message events} consumed by this EventConsumer.
      *
      * @return payload type
      */
@@ -49,7 +48,7 @@ public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
     }
 
     /**
-     * Returns the pattern of {@link EventBody#getKey()} () event keys} accepted by this consumer.
+     * Returns the pattern of {@link Message#getKey()} () event keys} accepted by this consumer.
      *
      * @return Pattern
      */
@@ -59,9 +58,9 @@ public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
     }
 
     @Override
-    public void accept(final Event<T> event) {
+    public void accept(final Message<T> message) {
         try {
-            method.invoke(instance, event);
+            method.invoke(instance, message);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new IllegalStateException(e);
         }

@@ -1,10 +1,10 @@
 package de.otto.edison.eventsourcing.example.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.EventSenderFactory;
+import de.otto.edison.eventsourcing.MessageSenderFactory;
 import de.otto.edison.eventsourcing.EventSourceBuilder;
 import de.otto.edison.eventsourcing.example.consumer.configuration.MyServiceProperties;
-import de.otto.edison.eventsourcing.inmemory.InMemoryEventSender;
+import de.otto.edison.eventsourcing.inmemory.InMemoryMessageSender;
 import de.otto.edison.eventsourcing.inmemory.InMemoryEventSource;
 import de.otto.edison.eventsourcing.inmemory.InMemoryStream;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -27,15 +27,15 @@ public class TestEventSourcingConfiguration {
     }
 
     @Bean
-    public EventSenderFactory eventSenderFactory(final ObjectMapper objectMapper,
-                                                 final InMemoryStream productStream,
-                                                 final InMemoryStream bananaStream,
-                                                 final MyServiceProperties myServiceProperties) {
+    public MessageSenderFactory eventSenderFactory(final ObjectMapper objectMapper,
+                                                   final InMemoryStream productStream,
+                                                   final InMemoryStream bananaStream,
+                                                   final MyServiceProperties myServiceProperties) {
         return streamName -> {
             if (streamName.equals(myServiceProperties.getBananaStreamName())) {
-                return new InMemoryEventSender(objectMapper, bananaStream);
+                return new InMemoryMessageSender(objectMapper, bananaStream);
             } else if (streamName.equals(myServiceProperties.getProductStreamName())) {
-                return new InMemoryEventSender(objectMapper, productStream);
+                return new InMemoryMessageSender(objectMapper, productStream);
             } else {
                 throw new IllegalArgumentException("no stream for name " + streamName + " available.");
             }

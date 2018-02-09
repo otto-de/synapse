@@ -1,14 +1,16 @@
 package de.otto.edison.eventsourcing.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Header;
+import de.otto.edison.eventsourcing.event.Message;
 import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
 
 import static de.otto.edison.eventsourcing.consumer.TestEventConsumer.testEventConsumer;
-import static de.otto.edison.eventsourcing.event.Event.event;
+import static de.otto.edison.eventsourcing.event.Header.responseHeader;
+import static de.otto.edison.eventsourcing.event.Message.message;
 import static java.util.Arrays.asList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -31,13 +33,13 @@ public class EventConsumersTest {
         eventConsumers.add(eventConsumerC);
 
         // when
-        Event<String> someEvent = event("someKey", "{}", "0", Instant.now(), Duration.ZERO);
-        eventConsumers.encodeAndSend(someEvent);
+        Message<String> someMessage = message("someKey", "{}", "0", Instant.now(), Duration.ZERO);
+        eventConsumers.encodeAndSend(someMessage);
 
         // then
-        verify(eventConsumerA).accept(any(Event.class));
-        verify(eventConsumerB).accept(any(Event.class));
-        verify(eventConsumerC).accept(any(Event.class));
+        verify(eventConsumerA).accept(any(Message.class));
+        verify(eventConsumerB).accept(any(Message.class));
+        verify(eventConsumerC).accept(any(Message.class));
     }
 
     @Test
@@ -52,15 +54,17 @@ public class EventConsumersTest {
         EventConsumers eventConsumers = new EventConsumers(OBJECT_MAPPER, asList(eventConsumerApple, eventConsumerBanana, eventConsumerCherry));
 
         // when
-        Event<String> someAppleEvent = event("apple.123", "{}", "0", Instant.now(), Duration.ZERO);
-        Event<String> someBananaEvent = event("banana.456", "{}", "0", Instant.now(), Duration.ZERO);
-        eventConsumers.encodeAndSend(someAppleEvent);
-        eventConsumers.encodeAndSend(someBananaEvent);
+        Message<String> someAppleMessage = message("apple.123", responseHeader("0", Instant.now(), Duration.ZERO),"{}");
+        Message<String> someBananaMessage = message("banana.456", responseHeader("0", Instant.now(), Duration.ZERO), "{}");
+        eventConsumers.encodeAndSend(someAppleMessage);
+        eventConsumers.encodeAndSend(someBananaMessage);
 
         // then
-        verify(eventConsumerApple).accept(event(someAppleEvent.getEventBody().getKey(), new Apple(), someAppleEvent.getSequenceNumber(), someAppleEvent.getArrivalTimestamp(), someAppleEvent.getDurationBehind().get()));
-        verify(eventConsumerBanana).accept(event(someBananaEvent.getEventBody().getKey(), new Banana(), someBananaEvent.getSequenceNumber(), someBananaEvent.getArrivalTimestamp(), someBananaEvent.getDurationBehind().get()));
-        verify(eventConsumerCherry, never()).accept(any(Event.class));
+        verify(eventConsumerApple).accept(
+                message(someAppleMessage.getKey(), responseHeader(someAppleMessage.getHeader().getSequenceNumber(), someAppleMessage.getArrivalTimestamp(), someAppleMessage.getDurationBehind().get()), new Apple()));
+        verify(eventConsumerBanana).accept(
+                message(someBananaMessage.getKey(), responseHeader(someBananaMessage.getHeader().getSequenceNumber(), someBananaMessage.getArrivalTimestamp(), someBananaMessage.getDurationBehind().get()), new Banana()));
+        verify(eventConsumerCherry, never()).accept(any(Message.class));
     }
 
     static class Apple {

@@ -4,7 +4,7 @@ import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventConsumers;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -64,8 +64,8 @@ public class CompactingKinesisEventSource implements EventSource {
     }
 
     @Override
-    public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Event<?>> stopCondition) {
-        Predicate<Event<?>> neverStop = e -> false;
+    public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Message<?>> stopCondition) {
+        Predicate<Message<?>> neverStop = e -> false;
         final StreamPosition streamPosition = snapshotEventSource.consumeAll(neverStop);
         return kinesisEventSource.consumeAll(streamPosition, stopCondition);
     }

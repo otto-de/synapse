@@ -1,9 +1,9 @@
 package de.otto.edison.eventsourcing.example.producer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.EventSenderFactory;
+import de.otto.edison.eventsourcing.MessageSenderFactory;
 import de.otto.edison.eventsourcing.example.producer.configuration.MyServiceProperties;
-import de.otto.edison.eventsourcing.inmemory.InMemoryEventSender;
+import de.otto.edison.eventsourcing.inmemory.InMemoryMessageSender;
 import de.otto.edison.eventsourcing.inmemory.InMemoryStream;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -19,8 +19,8 @@ public class TestEventSenderConfiguration {
     }
 
     @Bean
-    public EventSenderFactory eventSenderFactory(final ObjectMapper objectMapper, final InMemoryStream productStream) {
-        return streamName -> new InMemoryEventSender(objectMapper, productStream);
+    public MessageSenderFactory eventSenderFactory(final ObjectMapper objectMapper, final InMemoryStream productStream) {
+        return streamName -> new InMemoryMessageSender(objectMapper, productStream);
     }
 
 }

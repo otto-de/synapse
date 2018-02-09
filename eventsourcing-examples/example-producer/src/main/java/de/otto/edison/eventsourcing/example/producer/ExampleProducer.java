@@ -1,6 +1,6 @@
 package de.otto.edison.eventsourcing.example.producer;
 
-import de.otto.edison.eventsourcing.EventSender;
+import de.otto.edison.eventsourcing.MessageSender;
 import de.otto.edison.eventsourcing.example.producer.configuration.MyServiceProperties;
 import de.otto.edison.eventsourcing.example.producer.payload.ProductPayload;
 import org.slf4j.Logger;
@@ -18,18 +18,18 @@ public class ExampleProducer {
 
     private final static Logger LOG = LoggerFactory.getLogger(ExampleProducer.class);
 
-    private EventSender eventSender;
+    private MessageSender messageSender;
 
     @Autowired
-    public ExampleProducer(EventSender productEventSender) {
-        this.eventSender = productEventSender;
+    public ExampleProducer(MessageSender productMessageSender) {
+        this.messageSender = productMessageSender;
     }
 
     @Scheduled(fixedDelay = 3000L)
     public void produceSampleData() {
         try {
             ProductPayload productPayload = generatePayload();
-            eventSender.sendEvent(productPayload.getId(), productPayload);
+            messageSender.send(productPayload.getId(), productPayload);
         } catch (Exception e) {
             LOG.error("error occurred while sending an event", e);
         }

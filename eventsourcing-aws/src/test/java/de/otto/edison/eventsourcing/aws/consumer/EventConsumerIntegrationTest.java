@@ -2,12 +2,10 @@ package de.otto.edison.eventsourcing.aws.consumer;
 
 import de.otto.edison.eventsourcing.annotation.EnableEventSource;
 import de.otto.edison.eventsourcing.annotation.EventSourceConsumer;
-import de.otto.edison.eventsourcing.configuration.EventSourcingAutoConfiguration;
 import de.otto.edison.eventsourcing.aws.configuration.AwsEventSourcingAutoConfiguration;
-import de.otto.edison.eventsourcing.aws.configuration.SnapshotAutoConfiguration;
 import de.otto.edison.eventsourcing.consumer.EventSourceConsumerProcess;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 import de.otto.edison.eventsourcing.aws.s3.SnapshotReadService;
 import org.awaitility.Awaitility;
 import org.junit.Test;
@@ -101,18 +99,18 @@ public class EventConsumerIntegrationTest {
                 eventSource = "test",
                 keyPattern = "^banana.*",
                 payloadType = Banana.class)
-        public void consumeBananaEvents(Event<Banana> event) {
-            receivedBananaEventPayloads.add(event.getEventBody().getPayload());
-            allReceivedEventKeys.add(event.getEventBody().getKey());
+        public void consumeBananaEvents(Message<Banana> message) {
+            receivedBananaEventPayloads.add(message.getPayload());
+            allReceivedEventKeys.add(message.getKey());
         }
 
         @EventSourceConsumer(
                 eventSource = "test",
                 keyPattern = "^apple.*",
                 payloadType = Apple.class)
-        public void consumeAppleEvents(Event<Apple> event) {
-            receivedAppleEventPayloads.add(event.getEventBody().getPayload());
-            allReceivedEventKeys.add(event.getEventBody().getKey());
+        public void consumeAppleEvents(Message<Apple> message) {
+            receivedAppleEventPayloads.add(message.getPayload());
+            allReceivedEventKeys.add(message.getKey());
         }
     }
 

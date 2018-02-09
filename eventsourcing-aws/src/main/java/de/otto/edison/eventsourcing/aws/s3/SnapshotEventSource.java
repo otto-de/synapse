@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.consumer.AbstractEventSource;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -50,7 +50,7 @@ public class SnapshotEventSource extends AbstractEventSource {
 
     @Override
     public SnapshotStreamPosition consumeAll(final StreamPosition startFrom,
-                                             final Predicate<Event<?>> stopCondition) {
+                                             final Predicate<Message<?>> stopCondition) {
         SnapshotStreamPosition snapshotStreamPosition;
 
         try {

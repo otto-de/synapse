@@ -2,7 +2,7 @@
 
 ## 0.5.0
 * Introduced eventsourcing-aws and removed aws-specific parts from eventsourcing-core
-* Renamed Event, EventConsumer etc. to Message, MessageConsumer, ...
+* Renamed Event to Message and removed EventBody
 
 ## 0.4.8
 * **[eventsourcing-edison-integration]** Add health indicator for stream state.

@@ -1,8 +1,8 @@
 package de.otto.edison.eventsourcing.example.integration;
 
 import com.jayway.awaitility.Awaitility;
-import de.otto.edison.eventsourcing.EventSender;
-import de.otto.edison.eventsourcing.EventSenderFactory;
+import de.otto.edison.eventsourcing.MessageSender;
+import de.otto.edison.eventsourcing.MessageSenderFactory;
 import de.otto.edison.eventsourcing.example.consumer.Server;
 import de.otto.edison.eventsourcing.example.consumer.configuration.MyServiceProperties;
 import de.otto.edison.eventsourcing.example.consumer.payload.BananaPayload;
@@ -31,16 +31,16 @@ public class ConsumerIntegrationTest {
     StateRepository<BananaProduct> bananaProductStateRepository;
 
     @Autowired
-    EventSenderFactory eventSenderFactory;
+    MessageSenderFactory messageSenderFactory;
 
     @Autowired
     MyServiceProperties properties;
 
-    private EventSender bananaSender;
+    private MessageSender bananaSender;
 
     @Before
     public void setUp() throws Exception {
-        bananaSender = eventSenderFactory.createSenderForStream(properties.getBananaStreamName());
+        bananaSender = messageSenderFactory.createSenderForStream(properties.getBananaStreamName());
     }
 
     @Test
@@ -51,7 +51,7 @@ public class ConsumerIntegrationTest {
         bananaPayload.setColor("yellow");
 
         // when
-        bananaSender.sendEvent("banana_id", bananaPayload);
+        bananaSender.send("banana_id", bananaPayload);
 
         // then
         Awaitility.await()

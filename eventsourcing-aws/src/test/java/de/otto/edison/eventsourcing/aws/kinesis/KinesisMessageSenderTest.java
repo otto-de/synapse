@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
-import de.otto.edison.eventsourcing.event.EventBody;
+import de.otto.edison.eventsourcing.event.Message;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,6 +17,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static de.otto.edison.eventsourcing.event.Message.message;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
@@ -25,26 +26,26 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
-public class KinesisEventSenderTest {
+public class KinesisMessageSenderTest {
 
     @Mock
     private KinesisStream kinesisStream;
 
     private ObjectMapper objectMapper = new ObjectMapper();
-    private KinesisEventSender kinesisEventSender;
+    private KinesisMessageSender kinesisEventSender;
 
     @Captor
-    private ArgumentCaptor<Stream<EventBody<ByteBuffer>>> byteBufferMapCaptor;
+    private ArgumentCaptor<Stream<Message<ByteBuffer>>> byteBufferMapCaptor;
 
     @Before
     public void setUp() throws Exception {
-        kinesisEventSender = new KinesisEventSender(kinesisStream, objectMapper);
+        kinesisEventSender = new KinesisMessageSender(kinesisStream, objectMapper);
     }
 
     @Test
     public void shouldSendEvent() throws Exception {
         // when
-        kinesisEventSender.sendEvent("someKey", new ExampleJsonObject("banana"));
+        kinesisEventSender.send("someKey", new ExampleJsonObject("banana"));
 
         // then
         ArgumentCaptor<ByteBuffer> captor = ArgumentCaptor.forClass(ByteBuffer.class);
@@ -64,17 +65,17 @@ public class KinesisEventSenderTest {
 
         // when
         kinesisEventSender.sendEvents(Stream.of(
-                EventBody.eventBody("b", bananaObject),
-                EventBody.eventBody("a", appleObject)
+                message("b", bananaObject),
+                message("a", appleObject)
         ));
 
         // then
         verify(kinesisStream).sendBatch(byteBufferMapCaptor.capture());
 
-        List<EventBody<ByteBuffer>> events = byteBufferMapCaptor.getValue().collect(toList());
+        List<Message<ByteBuffer>> events = byteBufferMapCaptor.getValue().collect(toList());
         assertThat(events.size(), is(2));
 
-        assertThat(events.stream().map(EventBody::getKey).collect(toList()), contains("b", "a"));
+        assertThat(events.stream().map(Message::getKey).collect(toList()), contains("b", "a"));
 
         ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(events.get(0).getPayload());
         ExampleJsonObject jsonObject = objectMapper.readValue(inputStream, ExampleJsonObject.class);
@@ -85,7 +86,7 @@ public class KinesisEventSenderTest {
     @Test
     public void shouldSendDeleteEventWithEmptyByteBuffer() throws JsonProcessingException {
         //when
-        kinesisEventSender.sendEvent("someKey", null);
+        kinesisEventSender.send("someKey", null);
 
         //then
         verify(kinesisStream).send("someKey", ByteBuffer.allocateDirect(0));
@@ -94,7 +95,7 @@ public class KinesisEventSenderTest {
     @Test
     public void shouldSendDeleteEventWithEmptyByteBufferWithoutEncryption() throws JsonProcessingException {
         //when
-        kinesisEventSender.sendEvent("someKey", null);
+        kinesisEventSender.send("someKey", null);
 
         //then
         verify(kinesisStream).send("someKey", ByteBuffer.allocateDirect(0));

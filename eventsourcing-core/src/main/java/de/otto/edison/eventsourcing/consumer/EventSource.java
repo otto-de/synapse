@@ -1,12 +1,12 @@
 package de.otto.edison.eventsourcing.consumer;
 
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
- * An event source of {@link Event events}.
+ * An event source of {@link Message events}.
  * <p>
  *     Event sources can be consumed by {@link Consumer consumers}.
  * </p>
@@ -85,7 +85,7 @@ public interface EventSource {
      * @param stopCondition the predicate used as a stop condition
      * @return the new read position
      */
-    default StreamPosition consumeAll(Predicate<Event<?>> stopCondition) {
+    default StreamPosition consumeAll(Predicate<Message<?>> stopCondition) {
         return consumeAll(StreamPosition.of(), stopCondition);
     }
 
@@ -102,5 +102,5 @@ public interface EventSource {
      * @return the new read position
      */
     StreamPosition consumeAll(StreamPosition startFrom,
-                              Predicate<Event<?>> stopCondition);
+                              Predicate<Message<?>> stopCondition);
 }

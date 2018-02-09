@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.example.consumer;
 
 import de.otto.edison.eventsourcing.annotation.EventSourceConsumer;
-import de.otto.edison.eventsourcing.event.Event;
+import de.otto.edison.eventsourcing.event.Message;
 import de.otto.edison.eventsourcing.example.consumer.payload.BananaPayload;
 import de.otto.edison.eventsourcing.example.consumer.payload.ProductPayload;
 import de.otto.edison.eventsourcing.example.consumer.state.BananaProduct;
@@ -29,14 +29,14 @@ public class ExampleConsumer {
             eventSource = "bananaSource",
             payloadType = BananaPayload.class
     )
-    public void consumeBananas(final Event<BananaPayload> event) {
-        stateRepository.compute(event.getEventBody().getKey(), (id, bananaProduct) -> {
+    public void consumeBananas(final Message<BananaPayload> message) {
+        stateRepository.compute(message.getKey(), (id, bananaProduct) -> {
             final BananaProduct.Builder builder = bananaProduct.isPresent()
                     ? bananaProductBuilder(bananaProduct.get())
                     : bananaProductBuilder();
             return builder
-                    .withId(event.getEventBody().getKey())
-                    .withColor(event.getEventBody().getPayload().getColor())
+                    .withId(message.getKey())
+                    .withColor(message.getPayload().getColor())
                     .build();
         });
         LOG.info(stateRepository.toString());
@@ -46,14 +46,14 @@ public class ExampleConsumer {
             eventSource = "productSource",
             payloadType = ProductPayload.class
     )
-    public void consumeProducts(final Event<ProductPayload> event) {
-        stateRepository.compute(event.getEventBody().getKey(), (s, bananaProduct) -> {
+    public void consumeProducts(final Message<ProductPayload> message) {
+        stateRepository.compute(message.getKey(), (s, bananaProduct) -> {
             final BananaProduct.Builder builder = bananaProduct.isPresent()
                     ? bananaProductBuilder(bananaProduct.get())
                     : bananaProductBuilder();
             return builder
-                    .withId(event.getEventBody().getKey())
-                    .withPrice(event.getEventBody().getPayload().getPrice())
+                    .withId(message.getKey())
+                    .withPrice(message.getPayload().getPrice())
                     .build();
         });
         LOG.info(stateRepository.toString());
