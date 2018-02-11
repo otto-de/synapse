@@ -11,6 +11,8 @@ import static de.otto.edison.eventsourcing.message.Header.responseHeader;
 
 public class KinesisMessage<T> extends Message<T> {
 
+    // TODO: wozu eine Decoder Function?
+
     public static <T> Message<T> kinesisMessage(final Record record,
                                                 final Function<ByteBuffer, T> decoder) {
         return new KinesisMessage<>(

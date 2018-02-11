@@ -2,11 +2,11 @@ package de.otto.edison.eventsourcing.aws.kinesis;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.message.Message;
+import de.otto.edison.eventsourcing.aws.testsupport.TestStreamSource;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
-import de.otto.edison.eventsourcing.aws.testsupport.TestStreamSource;
+import de.otto.edison.eventsourcing.message.Message;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,8 +18,10 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.model.PutRecordRequest;
 
 import javax.annotation.PostConstruct;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -28,6 +30,7 @@ import java.util.stream.IntStream;
 
 import static java.util.Collections.synchronizedList;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
@@ -40,6 +43,7 @@ import static org.hamcrest.core.IsNot.not;
 @SpringBootTest(classes = KinesisEventSourceIntegrationTest.class)
 public class KinesisEventSourceIntegrationTest {
 
+    private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.wrap(new byte[]{});
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET = 10;
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET = 10;
     private static final int EXPECTED_NUMBER_OF_SHARDS = 2;
@@ -83,6 +87,26 @@ public class KinesisEventSourceIntegrationTest {
 
         assertThat(messages, not(empty()));
         assertThat(messages, hasSize(EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET));
+    }
+
+    @Test
+    public void consumeDeleteMessagesFromKinesisStream() {
+        // given
+        final StreamPosition streamPosition = eventSource.consumeAll(
+                StreamPosition.of(),
+                stopCondition()
+        );
+        messages.clear();
+        kinesisClient.putRecord(PutRecordRequest.builder().streamName(STREAM_NAME).partitionKey("deleteEvent").data(EMPTY_BYTE_BUFFER).build());
+        // when
+        eventSource.consumeAll(
+                streamPosition,
+                stopCondition()
+        );
+        // then
+        assertThat(messages, hasSize(1));
+        assertThat(messages.get(0).getKey(), is("deleteEvent"));
+        assertThat(messages.get(0).getPayload(), is(nullValue()));
     }
 
     @Test

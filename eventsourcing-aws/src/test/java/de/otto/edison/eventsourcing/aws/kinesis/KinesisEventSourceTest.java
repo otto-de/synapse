@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableMap;
 import de.otto.edison.eventsourcing.consumer.EventConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
-import de.otto.edison.eventsourcing.message.Header;
 import de.otto.edison.eventsourcing.message.Message;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,7 +20,6 @@ import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -35,11 +33,17 @@ import static de.otto.edison.eventsourcing.message.Header.responseHeader;
 import static de.otto.edison.eventsourcing.message.Message.message;
 import static java.time.Duration.ofMillis;
 import static java.util.Collections.synchronizedList;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KinesisEventSourceTest {
@@ -185,7 +189,7 @@ public class KinesisEventSourceTest {
 
         // then
         verify(stringStopCondition).test(
-                message(null, responseHeader(null, null, ofMillis(555L)), null)
+                message("", responseHeader(null, null, ofMillis(555L)), null)
         );
     }
 

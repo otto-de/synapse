@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
 
+import javax.annotation.Nonnull;
 import java.util.regex.Pattern;
 
 import static de.otto.edison.eventsourcing.message.Message.message;
@@ -73,11 +74,13 @@ public class InMemoryEventSourceTest {
     private static class StringEventConsumer implements EventConsumer<String> {
         private Message<String> message;
 
+        @Nonnull
         @Override
         public Class<String> payloadType() {
             return String.class;
         }
 
+        @Nonnull
         @Override
         public Pattern keyPattern() {
             return Pattern.compile(".*");

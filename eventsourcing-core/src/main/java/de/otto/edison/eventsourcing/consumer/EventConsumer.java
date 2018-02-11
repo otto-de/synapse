@@ -3,6 +3,7 @@ package de.otto.edison.eventsourcing.consumer;
 import de.otto.edison.eventsourcing.configuration.ConsumerProcessProperties;
 import de.otto.edison.eventsourcing.message.Message;
 
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -42,11 +43,13 @@ public interface EventConsumer<T> extends Consumer<Message<T>> {
             private Pattern pattern = compile(keyPattern);
 
             @Override
+            @Nonnull
             public Class<T> payloadType() {
                 return payloadType;
             }
 
             @Override
+            @Nonnull
             public Pattern keyPattern() {
                 return pattern;
             }
@@ -63,13 +66,15 @@ public interface EventConsumer<T> extends Consumer<Message<T>> {
      *
      * @return payload type
      */
+    @Nonnull
     Class<T> payloadType();
 
     /**
-     * Returns the pattern of {@link de.otto.edison.eventsourcing.message.EventBody#getKey() event keys} accepted by this consumer.
+     * Returns the pattern of {@link de.otto.edison.eventsourcing.message.Message#getKey() event keys} accepted by this consumer.
      *
      * @return Pattern
      */
+    @Nonnull
     Pattern keyPattern();
 
 }

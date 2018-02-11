@@ -17,13 +17,17 @@ import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static de.otto.edison.eventsourcing.aws.kinesis.KinesisStream.PUT_RECORDS_BATCH_SIZE;
 import static de.otto.edison.eventsourcing.message.ByteBufferMessage.byteBufferMessage;
 import static de.otto.edison.eventsourcing.message.Message.message;
 import static java.lang.String.valueOf;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KinesisStreamTest {
@@ -151,6 +155,30 @@ public class KinesisStreamTest {
     }
 
     @Test
+    public void shouldSendDeleteEventWithEmptyByteBuffer() throws Exception {
+        // given
+        PutRecordsResponse putRecordsResponse = PutRecordsResponse.builder()
+                .failedRecordCount(0)
+                .build();
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(putRecordsResponse);
+
+        // when
+        kinesisStream.send(byteBufferMessage("someKey", (ByteBuffer) null));
+
+        // then
+        ArgumentCaptor<PutRecordsRequest> captor = ArgumentCaptor.forClass(PutRecordsRequest.class);
+        verify(kinesisClient).putRecords(captor.capture());
+        PutRecordsRequest putRecordsRequest = captor.getValue();
+
+        assertThat(putRecordsRequest.streamName(), is("streamName"));
+
+        List<PutRecordsRequestEntry> records = putRecordsRequest.records();
+        assertThat(records, hasSize(1));
+        assertThat(records.get(0).partitionKey(), is("someKey"));
+        assertThat(records.get(0).data(), is(ByteBuffer.allocateDirect(0)));
+    }
+
+    @Test
     public void shouldSendMultipleEvents() throws Exception {
         // given
         PutRecordsResponse putRecordsResponse = PutRecordsResponse.builder()
@@ -190,7 +218,7 @@ public class KinesisStreamTest {
         when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(putRecordsResponse);
         
         // when
-        kinesisStream.sendBatch(someEvents(KinesisStream.PUT_RECORDS_BATCH_SIZE + 1));
+        kinesisStream.sendBatch(someEvents(PUT_RECORDS_BATCH_SIZE + 1));
 
         // then
         verify(kinesisClient, times(2)).putRecords(any(PutRecordsRequest.class));

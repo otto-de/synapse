@@ -1,12 +1,14 @@
 package de.otto.edison.eventsourcing.example.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.MessageSenderFactory;
 import de.otto.edison.eventsourcing.EventSourceBuilder;
+import de.otto.edison.eventsourcing.MessageSenderFactory;
 import de.otto.edison.eventsourcing.example.consumer.configuration.MyServiceProperties;
-import de.otto.edison.eventsourcing.inmemory.InMemoryMessageSender;
 import de.otto.edison.eventsourcing.inmemory.InMemoryEventSource;
+import de.otto.edison.eventsourcing.inmemory.InMemoryMessageSender;
 import de.otto.edison.eventsourcing.inmemory.InMemoryStream;
+import de.otto.edison.eventsourcing.translator.JsonStringMessageTranslator;
+import de.otto.edison.eventsourcing.translator.MessageTranslator;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -31,11 +33,12 @@ public class TestEventSourcingConfiguration {
                                                    final InMemoryStream productStream,
                                                    final InMemoryStream bananaStream,
                                                    final MyServiceProperties myServiceProperties) {
+        final MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator(objectMapper);
         return streamName -> {
             if (streamName.equals(myServiceProperties.getBananaStreamName())) {
-                return new InMemoryMessageSender(objectMapper, bananaStream);
+                return new InMemoryMessageSender(messageTranslator, bananaStream);
             } else if (streamName.equals(myServiceProperties.getProductStreamName())) {
-                return new InMemoryMessageSender(objectMapper, productStream);
+                return new InMemoryMessageSender(messageTranslator, productStream);
             } else {
                 throw new IllegalArgumentException("no stream for name " + streamName + " available.");
             }

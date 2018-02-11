@@ -4,11 +4,11 @@ import com.google.common.base.Charsets;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import de.otto.edison.aws.s3.S3Service;
-import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.aws.kinesis.KinesisStreamSetupUtils;
 import de.otto.edison.eventsourcing.aws.s3.SnapshotWriteService;
-import de.otto.edison.eventsourcing.state.StateRepository;
 import de.otto.edison.eventsourcing.aws.testsupport.TestStreamSource;
+import de.otto.edison.eventsourcing.consumer.StreamPosition;
+import de.otto.edison.eventsourcing.state.StateRepository;
 import net.minidev.json.JSONArray;
 import org.junit.After;
 import org.junit.Before;
@@ -40,7 +40,10 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
@@ -52,7 +55,7 @@ public class SnapshotAcceptanceTest {
 
     private static final String INTEGRATION_TEST_STREAM = "promo-compaction-test";
     private static final String INTEGRATION_TEST_BUCKET = "de-otto-promo-compaction-test-snapshots";
-    public static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.wrap(new byte[]{});
+    private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.wrap(new byte[]{});
 
     @Autowired
     private KinesisClient kinesisClient;

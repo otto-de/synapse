@@ -2,6 +2,7 @@ package de.otto.edison.eventsourcing.consumer;
 
 import de.otto.edison.eventsourcing.message.Message;
 
+import javax.annotation.Nonnull;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Objects;
@@ -42,6 +43,7 @@ public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
      *
      * @return payload type
      */
+    @Nonnull
     @Override
     public Class<T> payloadType() {
         return payloadType;
@@ -52,6 +54,7 @@ public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
      *
      * @return Pattern
      */
+    @Nonnull
     @Override
     public Pattern keyPattern() {
         return keyPattern;

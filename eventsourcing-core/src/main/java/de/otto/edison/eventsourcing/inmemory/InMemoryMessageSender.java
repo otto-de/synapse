@@ -1,32 +1,24 @@
 package de.otto.edison.eventsourcing.inmemory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.MessageSender;
 import de.otto.edison.eventsourcing.message.Message;
-
-import static de.otto.edison.eventsourcing.message.Message.message;
-import static de.otto.edison.eventsourcing.message.StringMessage.stringMessage;
+import de.otto.edison.eventsourcing.translator.MessageTranslator;
 
 public class InMemoryMessageSender implements MessageSender {
 
-    private final ObjectMapper objectMapper;
+    private final MessageTranslator<String> messageTranslator;
     private final InMemoryStream eventStream;
 
-    public InMemoryMessageSender(ObjectMapper objectMapper,
-                                 InMemoryStream eventStream) {
-        this.objectMapper = objectMapper;
+    public InMemoryMessageSender(final MessageTranslator<String> messageTranslator,
+                                 final InMemoryStream eventStream) {
+        this.messageTranslator = messageTranslator;
         this.eventStream = eventStream;
     }
 
     @Override
-    public <T> void send(Message<T> message) {
-        try {
-            eventStream.send(
-                    stringMessage(message.getKey(), objectMapper.writeValueAsString(message.getPayload()))
-            );
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException(e.getMessage(), e);
-        }
+    public <T> void send(final Message<T> message) {
+        eventStream.send(
+                messageTranslator.translate(message)
+        );
     }
 }

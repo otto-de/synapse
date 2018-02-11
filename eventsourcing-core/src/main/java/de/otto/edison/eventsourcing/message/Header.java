@@ -5,10 +5,16 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
-/*
- * TODO: extends ImmutableMultimap<String, Object>
+/**
+ * The Header of a {@link Message}.
+ *
+ * <p>
+ * <img src="http://www.enterpriseintegrationpatterns.com/img/MessageSolution.gif" alt="Message">
+ * </p>
+ *
  */
 public class Header  {
+    // TODO: Header extends ImmutableMultimap<String, Object>
 
     private static final Header EMPTY_HEADER = new Header("", Instant.MIN, null);
 

@@ -12,7 +12,9 @@ import static de.otto.edison.eventsourcing.message.Header.responseHeader;
 import static de.otto.edison.eventsourcing.message.Message.message;
 import static java.util.Arrays.asList;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 public class EventConsumersTest {
 
@@ -32,7 +34,11 @@ public class EventConsumersTest {
         eventConsumers.add(eventConsumerC);
 
         // when
-        Message<String> someMessage = message("someKey", "{}", "0", Instant.now(), Duration.ZERO);
+        Message<String> someMessage = message(
+                "someKey",
+                responseHeader("0", Instant.now(), Duration.ZERO),
+                "{}"
+        );
         eventConsumers.encodeAndSend(someMessage);
 
         // then
@@ -60,9 +66,15 @@ public class EventConsumersTest {
 
         // then
         verify(eventConsumerApple).accept(
-                message(someAppleMessage.getKey(), responseHeader(someAppleMessage.getHeader().getSequenceNumber(), someAppleMessage.getArrivalTimestamp(), someAppleMessage.getDurationBehind().get()), new Apple()));
+                message(
+                        someAppleMessage.getKey(),
+                        responseHeader(someAppleMessage.getHeader().getSequenceNumber(), someAppleMessage.getHeader().getArrivalTimestamp(), someAppleMessage.getHeader().getDurationBehind().get()),
+                        new Apple()));
         verify(eventConsumerBanana).accept(
-                message(someBananaMessage.getKey(), responseHeader(someBananaMessage.getHeader().getSequenceNumber(), someBananaMessage.getArrivalTimestamp(), someBananaMessage.getDurationBehind().get()), new Banana()));
+                message(
+                        someBananaMessage.getKey(),
+                        responseHeader(someBananaMessage.getHeader().getSequenceNumber(), someBananaMessage.getHeader().getArrivalTimestamp(), someBananaMessage.getHeader().getDurationBehind().get()),
+                        new Banana()));
         verify(eventConsumerCherry, never()).accept(any(Message.class));
     }
 

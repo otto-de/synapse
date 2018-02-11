@@ -2,6 +2,7 @@ package de.otto.edison.eventsourcing.consumer;
 
 import de.otto.edison.eventsourcing.message.Message;
 
+import javax.annotation.Nonnull;
 import java.util.regex.Pattern;
 
 class TestEventConsumer<T> implements EventConsumer<T> {
@@ -28,6 +29,7 @@ class TestEventConsumer<T> implements EventConsumer<T> {
      *
      * @return payload type
      */
+    @Nonnull
     @Override
     public Class<T> payloadType() {
         return payloadType;
@@ -38,6 +40,7 @@ class TestEventConsumer<T> implements EventConsumer<T> {
      *
      * @return Pattern
      */
+    @Nonnull
     @Override
     public Pattern keyPattern() {
         return keyPattern;

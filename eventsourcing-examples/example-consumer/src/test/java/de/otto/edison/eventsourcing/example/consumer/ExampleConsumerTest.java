@@ -1,9 +1,9 @@
 package de.otto.edison.eventsourcing.example.consumer;
 
-import de.otto.edison.eventsourcing.message.Message;
 import de.otto.edison.eventsourcing.example.consumer.payload.BananaPayload;
 import de.otto.edison.eventsourcing.example.consumer.payload.ProductPayload;
 import de.otto.edison.eventsourcing.example.consumer.state.BananaProduct;
+import de.otto.edison.eventsourcing.message.Message;
 import de.otto.edison.eventsourcing.state.ConcurrentHashMapStateRepository;
 import de.otto.edison.eventsourcing.state.StateRepository;
 import org.junit.Before;
@@ -12,8 +12,9 @@ import org.junit.Test;
 import java.time.Instant;
 import java.util.Optional;
 
-import static org.junit.Assert.assertThat;
+import static de.otto.edison.eventsourcing.message.Header.responseHeader;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 public class ExampleConsumerTest {
 
@@ -80,6 +81,10 @@ public class ExampleConsumerTest {
     }
 
     private <T> Message<T> testEvent(String key, T payload) {
-        return Message.message(key, payload, "0", Instant.now());
+        return Message.message(
+                key,
+                responseHeader("0", Instant.now(), null),
+                payload
+        );
     }
 }

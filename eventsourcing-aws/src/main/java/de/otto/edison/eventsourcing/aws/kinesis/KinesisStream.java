@@ -18,6 +18,7 @@ import static com.google.common.collect.Lists.partition;
 public class KinesisStream {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisStream.class);
+    private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.allocateDirect(0);
     static final int PUT_RECORDS_BATCH_SIZE = 500;
 
     private final KinesisClient kinesisClient;
@@ -115,7 +116,7 @@ public class KinesisStream {
     private PutRecordsRequestEntry requestEntryFor(String key, ByteBuffer byteBuffer) {
         return PutRecordsRequestEntry.builder()
                 .partitionKey(key)
-                .data(byteBuffer)
+                .data(byteBuffer != null ? byteBuffer : EMPTY_BYTE_BUFFER)
                 .build();
     }
 }

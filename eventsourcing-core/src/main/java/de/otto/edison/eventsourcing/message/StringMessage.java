@@ -1,12 +1,15 @@
 package de.otto.edison.eventsourcing.message;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import static de.otto.edison.eventsourcing.message.Header.emptyHeader;
 
 /**
  * A Message is an atomic packet of data that can be transmitted on a channel.
  *
  * <p>
- * <img src="http://www.enterpriseintegrationpatterns.com/img/MessageSolution.gif" />
+ * <img src="http://www.enterpriseintegrationpatterns.com/img/MessageSolution.gif" alt="Message">
  * </p>
  *
  * <p>Thus to transmit data, an application must break the data into one or more packets,
@@ -22,22 +25,22 @@ import static de.otto.edison.eventsourcing.message.Header.emptyHeader;
  */
 public class StringMessage extends Message<String> {
 
-    public static StringMessage stringMessage(final String key,
-                                              final String payload) {
+    public static StringMessage stringMessage(@Nonnull final String key,
+                                              @Nullable final String payload) {
         return new StringMessage(
                 key, emptyHeader(), payload);
     }
 
-    public static StringMessage stringMessage(final String key,
-                                              final Header header,
-                                              final String payload) {
+    public static StringMessage stringMessage(@Nonnull final String key,
+                                              @Nonnull final Header header,
+                                              @Nullable final String payload) {
         return new StringMessage(
                 key, header, payload);
     }
 
-    protected StringMessage(final String key,
-                            final Header header,
-                            final String payload) {
+    private StringMessage(final @Nonnull String key,
+                          final @Nonnull Header header,
+                          final @Nullable String payload) {
         super(key, header, payload);
     }
 

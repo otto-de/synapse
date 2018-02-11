@@ -24,6 +24,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static de.otto.edison.eventsourcing.aws.kinesis.KinesisMessage.kinesisMessage;
+import static de.otto.edison.eventsourcing.message.Header.responseHeader;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
 
@@ -114,7 +115,11 @@ public class KinesisEventSource extends AbstractEventSource {
     private BiFunction<Long, Record, Boolean> recordStopCondition(final Predicate<Message<?>> stopCondition) {
         return (millis, record) -> {
             if (record == null) {
-                return stopCondition.test(Message.message(null, null, null, null, ofMillis(millis)));
+                return stopCondition.test(Message.message(
+                        "",
+                        responseHeader(null, null, ofMillis(millis)),
+                        null
+                ));
             }
             return stopCondition.test(createEvent(ofMillis(millis), record));
         };

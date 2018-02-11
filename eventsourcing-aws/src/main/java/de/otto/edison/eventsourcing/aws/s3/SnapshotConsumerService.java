@@ -3,9 +3,9 @@ package de.otto.edison.eventsourcing.aws.s3;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import de.otto.edison.eventsourcing.message.Message;
 import de.otto.edison.eventsourcing.consumer.EventConsumers;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
+import de.otto.edison.eventsourcing.message.Message;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.zip.ZipInputStream;
 
+import static de.otto.edison.eventsourcing.message.Header.responseHeader;
 import static de.otto.edison.eventsourcing.message.Message.message;
 
 @Service
@@ -72,11 +73,11 @@ public class SnapshotConsumerService {
             JsonToken currentToken = parser.currentToken();
             if (currentToken == JsonToken.FIELD_NAME) {
                 final String key = parser.getValueAsString();
-                final Message<String> message = Message.message(
+                final Message<String> message = message(
                         key,
-                        parser.nextTextValue(),
-                        sequenceNumber,
-                        arrivalTimestamp);
+                        responseHeader(sequenceNumber, arrivalTimestamp, null),
+                        parser.nextTextValue()
+                );
                 eventConsumers.encodeAndSend(message);
                 abort = stopCondition.test(message);
             }

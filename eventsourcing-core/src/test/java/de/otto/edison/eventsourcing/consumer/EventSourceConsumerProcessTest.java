@@ -10,10 +10,14 @@ import java.time.Instant;
 import java.util.function.Predicate;
 
 import static de.otto.edison.eventsourcing.consumer.TestEventConsumer.testEventConsumer;
+import static de.otto.edison.eventsourcing.message.Header.responseHeader;
 import static de.otto.edison.eventsourcing.message.Message.message;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
 
 public class EventSourceConsumerProcessTest {
 
@@ -53,7 +57,11 @@ public class EventSourceConsumerProcessTest {
 
         @Override
         public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Message<?>> stopCondition) {
-            registeredConsumers().encodeAndSend(Message.message("someKey", "{}", "0", Instant.now(), Duration.ZERO));
+            registeredConsumers().encodeAndSend(message(
+                    "someKey",
+                    responseHeader("0", Instant.now(), Duration.ZERO),
+                    "{}"
+            ));
             return StreamPosition.of();
         }
     }
