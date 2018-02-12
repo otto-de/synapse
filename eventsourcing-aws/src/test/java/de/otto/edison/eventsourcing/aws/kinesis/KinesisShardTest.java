@@ -14,7 +14,9 @@ import java.util.function.BiFunction;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KinesisShardTest {
@@ -93,7 +95,7 @@ public class KinesisShardTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
 
         // when
-        kinesisShard.consumeRecordsAndReturnLastSeqNumber("0", (x, y) -> true, consumer);
+        kinesisShard.consumeRecords("0", (x, y) -> true, consumer);
 
         // then
         verify(consumer).accept(1234L, record1);
@@ -112,7 +114,7 @@ public class KinesisShardTest {
         when(mockStopCondition.apply(any(), any())).thenReturn(true);
 
         // when
-        kinesisShard.consumeRecordsAndReturnLastSeqNumber("0", mockStopCondition, consumer);
+        kinesisShard.consumeRecords("0", mockStopCondition, consumer);
 
         // then
         verify(mockStopCondition).apply(1234L, null);
@@ -137,7 +139,7 @@ public class KinesisShardTest {
         doThrow(new RuntimeException("forced exception for test")).when(consumer).accept(1234L, record1);
 
         // when
-        kinesisShard.consumeRecordsAndReturnLastSeqNumber("0", (x, y) -> true, consumer);
+        kinesisShard.consumeRecords("0", (x, y) -> true, consumer);
 
         //then
         verify(consumer).accept(1234L, record1);

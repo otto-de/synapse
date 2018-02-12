@@ -59,7 +59,7 @@ public class KinesisEventSource extends AbstractEventSource {
             List<CompletableFuture<ShardPosition>> futureShardPositions = kinesisShards
                     .stream()
                     .map(shard -> CompletableFuture.supplyAsync(
-                            () -> shard.consumeRecordsAndReturnLastSeqNumber(
+                            () -> shard.consumeRecords(
                                     startFrom.positionOf(shard.getShardId()),
                                     recordStopCondition(stopCondition),
                                     recordConsumer()), executorService))

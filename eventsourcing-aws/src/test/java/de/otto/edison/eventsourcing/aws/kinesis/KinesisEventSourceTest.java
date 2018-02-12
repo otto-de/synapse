@@ -3,8 +3,8 @@ package de.otto.edison.eventsourcing.aws.kinesis;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import de.otto.edison.eventsourcing.consumer.MessageConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
+import de.otto.edison.eventsourcing.consumer.MessageConsumer;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.message.Message;
 import org.junit.Before;
@@ -235,7 +235,7 @@ public class KinesisEventSourceTest {
     private KinesisShard createShardMockWithSideEffect(int i, Runnable sideEffect) {
         KinesisShard shard = mock(KinesisShard.class);
         when(shard.getShardId()).thenReturn(String.valueOf(i));
-        when(shard.consumeRecordsAndReturnLastSeqNumber(any(), any(), any())).thenAnswer(
+        when(shard.consumeRecords(any(), any(), any())).thenAnswer(
                 x -> {
                     sideEffect.run();
                     return (ShardPosition
