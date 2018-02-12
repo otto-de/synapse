@@ -20,33 +20,33 @@ public class EventConsumers {
 
     private static final Logger LOG = getLogger(EventConsumers.class);
 
-    private final List<EventConsumer<?>> eventConsumers;
+    private final List<MessageConsumer<?>> messageConsumers;
     private final ObjectMapper objectMapper;
 
     public EventConsumers(final ObjectMapper objectMapper) {
-        this.eventConsumers = synchronizedList(new ArrayList<>());
+        this.messageConsumers = synchronizedList(new ArrayList<>());
         this.objectMapper = objectMapper;
     }
 
-    public EventConsumers(final ObjectMapper objectMapper, final List<EventConsumer<?>> eventConsumers) {
-        this.eventConsumers = synchronizedList(new ArrayList<>(eventConsumers));
+    public EventConsumers(final ObjectMapper objectMapper, final List<MessageConsumer<?>> messageConsumers) {
+        this.messageConsumers = synchronizedList(new ArrayList<>(messageConsumers));
         this.objectMapper = objectMapper;
     }
 
-    public void add(final EventConsumer<?> eventConsumer) {
-        this.eventConsumers.add(eventConsumer);
+    public void add(final MessageConsumer<?> messageConsumer) {
+        this.messageConsumers.add(messageConsumer);
     }
 
-    public List<EventConsumer<?>> getAll() {
-        return unmodifiableList(eventConsumers);
+    public List<MessageConsumer<?>> getAll() {
+        return unmodifiableList(messageConsumers);
     }
 
     @SuppressWarnings({"unchecked", "raw"})
     public void encodeAndSend(final Message<String> message) {
-        eventConsumers
+        messageConsumers
                 .stream()
                 .filter(consumer -> matchesEventKey(message, consumer.keyPattern()))
-                .forEach((EventConsumer consumer) -> {
+                .forEach((MessageConsumer consumer) -> {
                     try {
                         final Class<?> payloadType = consumer.payloadType();
                         if (payloadType.equals(String.class)) {

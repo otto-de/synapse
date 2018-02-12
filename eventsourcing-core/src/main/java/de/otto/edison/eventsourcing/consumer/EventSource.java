@@ -23,12 +23,12 @@ public interface EventSource {
     /**
      * Registers a new EventConsumer at the EventSource.
      *
-     * {@link EventConsumer consumers} have to be thread safe as it may be called from multiple threads
+     * {@link MessageConsumer consumers} have to be thread safe as it may be called from multiple threads
      * (e.g. for kinesis streams there is one thread per shard)
      *
-     * @param eventConsumer registered EventConsumer
+     * @param messageConsumer registered EventConsumer
      */
-    void register(EventConsumer<?> eventConsumer);
+    void register(MessageConsumer<?> messageConsumer);
 
     /**
      * Returns registered EventConsumers.
@@ -50,7 +50,7 @@ public interface EventSource {
     /**
      * Consumes all events from the EventSource, until the (current) end of the stream is reached.
      * <p>
-     *     The registered {@link EventConsumer consumers} will be called zero or more times, depending on
+     *     The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
      *     the number of events retrieved from the EventSource.
      * </p>
      *
@@ -64,7 +64,7 @@ public interface EventSource {
      * Consumes all events from the EventSource, beginning with {@link StreamPosition startFrom}, until
      * the (current) end of the stream is reached.
      * <p>
-     *     The registered {@link EventConsumer consumers} will be called zero or more times, depending on
+     *     The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
      *     the number of events retrieved from the EventSource.
      * </p>
      *
@@ -78,7 +78,7 @@ public interface EventSource {
     /**
      * Consumes all events from the EventSource until the {@link Predicate stopCondition} is met.
      * <p>
-     *     The registered {@link EventConsumer consumers} will be called zero or more times, depending on
+     *     The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
      *     the number of events retrieved from the EventSource.
      * </p>
      *
@@ -93,7 +93,7 @@ public interface EventSource {
      * Consumes all events from the EventSource, beginning with {@link StreamPosition startFrom}, until
      * the {@link Predicate stopCondition} is met.
      * <p>
-     *     The registered {@link EventConsumer consumers} will be called zero or more times, depending on
+     *     The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
      *     the number of events retrieved from the EventSource.
      * </p>
      *

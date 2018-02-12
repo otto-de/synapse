@@ -3,7 +3,7 @@ package de.otto.edison.eventsourcing.aws.kinesis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.aws.testsupport.TestStreamSource;
-import de.otto.edison.eventsourcing.consumer.EventConsumer;
+import de.otto.edison.eventsourcing.consumer.MessageConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.message.Message;
@@ -71,7 +71,7 @@ public class KinesisEventSourceIntegrationTest {
         KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, STREAM_NAME, EXPECTED_NUMBER_OF_SHARDS);
         KinesisStream kinesisStream = new KinesisStream(kinesisClient, STREAM_NAME);
         this.eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, eventPublisher, objectMapper);
-        this.eventSource.register(EventConsumer.of(".*", String.class, messages::add));
+        this.eventSource.register(MessageConsumer.of(".*", String.class, messages::add));
     }
 
     @Test

@@ -7,7 +7,7 @@ import org.junit.Test;
 import java.time.Duration;
 import java.time.Instant;
 
-import static de.otto.edison.eventsourcing.consumer.TestEventConsumer.testEventConsumer;
+import static de.otto.edison.eventsourcing.consumer.TestMessageConsumer.testEventConsumer;
 import static de.otto.edison.eventsourcing.message.Header.responseHeader;
 import static de.otto.edison.eventsourcing.message.Message.message;
 import static java.util.Arrays.asList;
@@ -16,7 +16,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
-public class EventConsumersTest {
+public class MessageConsumersTest {
 
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -24,9 +24,9 @@ public class EventConsumersTest {
     @SuppressWarnings("unchecked")
     public void shouldDelegateEventsToAllConsumers() {
         // given
-        TestEventConsumer<Object> eventConsumerA = spy(testEventConsumer(".*", Object.class));
-        TestEventConsumer<Object> eventConsumerB = spy(testEventConsumer(".*", Object.class));
-        TestEventConsumer<Object> eventConsumerC = spy(testEventConsumer(".*", Object.class));
+        TestMessageConsumer<Object> eventConsumerA = spy(testEventConsumer(".*", Object.class));
+        TestMessageConsumer<Object> eventConsumerB = spy(testEventConsumer(".*", Object.class));
+        TestMessageConsumer<Object> eventConsumerC = spy(testEventConsumer(".*", Object.class));
 
         EventConsumers eventConsumers = new EventConsumers(OBJECT_MAPPER);
         eventConsumers.add(eventConsumerA);
@@ -52,9 +52,9 @@ public class EventConsumersTest {
     public void shouldDelegateEventsToSpecificConsumersForEventKey() {
         // given
 
-        TestEventConsumer<Apple> eventConsumerApple = spy(testEventConsumer("apple.*", Apple.class));
-        TestEventConsumer<Banana> eventConsumerBanana = spy(testEventConsumer("banana.*", Banana.class));
-        TestEventConsumer<Cherry> eventConsumerCherry = spy(testEventConsumer("cherry.*", Cherry.class));
+        TestMessageConsumer<Apple> eventConsumerApple = spy(testEventConsumer("apple.*", Apple.class));
+        TestMessageConsumer<Banana> eventConsumerBanana = spy(testEventConsumer("banana.*", Banana.class));
+        TestMessageConsumer<Cherry> eventConsumerCherry = spy(testEventConsumer("cherry.*", Cherry.class));
 
         EventConsumers eventConsumers = new EventConsumers(OBJECT_MAPPER, asList(eventConsumerApple, eventConsumerBanana, eventConsumerCherry));
 

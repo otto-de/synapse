@@ -42,14 +42,14 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
     /**
      * Registers a new EventConsumer at the EventSource.
      * <p>
-     * {@link EventConsumer consumers} have to be thread safe as it may be called from multiple threads
+     * {@link MessageConsumer consumers} have to be thread safe as it may be called from multiple threads
      * (e.g. for kinesis streams there is one thread per shard)
      *
-     * @param eventConsumer the registered EventConsumer
+     * @param messageConsumer the registered EventConsumer
      */
     @Override
-    public void register(final EventConsumer<?> eventConsumer) {
-        delegate.register(eventConsumer);
+    public void register(final MessageConsumer<?> messageConsumer) {
+        delegate.register(messageConsumer);
     }
 
     /**
@@ -79,7 +79,7 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
      * Consumes all events from the EventSource, beginning with {@link StreamPosition startFrom}, until
      * the {@link Predicate stopCondition} is met.
      * <p>
-     * The registered {@link EventConsumer consumers} will be called zero or more times, depending on
+     * The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
      * the number of events retrieved from the EventSource.
      * </p>
      *

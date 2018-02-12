@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.aws.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.consumer.EventConsumer;
+import de.otto.edison.eventsourcing.consumer.MessageConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.junit.Before;
@@ -48,7 +48,7 @@ public class SnapshotEventSourceTest {
                 snapshotConsumerService,
                 applicationEventPublisher,
                 new ObjectMapper());
-        snapshotEventSource.register(EventConsumer.of(".*", String.class, (event)->{}));
+        snapshotEventSource.register(MessageConsumer.of(".*", String.class, (event)->{}));
     }
 
     @Test(expected = RuntimeException.class)

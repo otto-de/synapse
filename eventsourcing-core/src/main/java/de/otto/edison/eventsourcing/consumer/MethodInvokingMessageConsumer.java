@@ -8,17 +8,25 @@ import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-public class MethodInvokingEventConsumer<T> implements EventConsumer<T> {
+/**
+ * A {@link MessageConsumer} that is calling a method of a class instance for every accepted {@link Message}
+ * <p>
+ *     <img src="http://www.enterpriseintegrationpatterns.com/img/MessageEndpointSolution.gif" alt="MesageConsumer">
+ * </p>
+
+ * @param <T> The expected type of the message's payload
+ */
+public class MethodInvokingMessageConsumer<T> implements MessageConsumer<T> {
 
     private final Pattern keyPattern;
     private final Class<T> payloadType;
     private final Object instance;
     private final Method method;
 
-    public MethodInvokingEventConsumer(final String keyPattern,
-                                       final Class<T> payloadType,
-                                       final Object instance,
-                                       final Method method) {
+    public MethodInvokingMessageConsumer(final String keyPattern,
+                                         final Class<T> payloadType,
+                                         final Object instance,
+                                         final Method method) {
         Objects.requireNonNull(keyPattern, "keyPattern must not be null");
         Objects.requireNonNull(payloadType, "payloadType must not be null");
         Objects.requireNonNull(instance, "Unable to build MethodInvokingEventConsumer: instance parameter is null");

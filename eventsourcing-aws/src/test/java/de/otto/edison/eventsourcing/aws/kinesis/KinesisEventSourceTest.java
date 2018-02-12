@@ -3,7 +3,7 @@ package de.otto.edison.eventsourcing.aws.kinesis;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import de.otto.edison.eventsourcing.consumer.EventConsumer;
+import de.otto.edison.eventsourcing.consumer.MessageConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.message.Message;
@@ -55,13 +55,13 @@ public class KinesisEventSourceTest {
     private KinesisClient kinesisClient;
 
     @Mock
-    private EventConsumer<TestData> testDataConsumer;
+    private MessageConsumer<TestData> testDataConsumer;
 
     @Captor
     private ArgumentCaptor<Message<TestData>> testDataCaptor;
 
     @Mock
-    private EventConsumer<String> stringConsumer;
+    private MessageConsumer<String> stringConsumer;
 
     @Captor
     private ArgumentCaptor<Message<String>> stringCaptor;

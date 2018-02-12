@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.annotation;
 
 import de.otto.edison.eventsourcing.consumer.EventSource;
-import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
+import de.otto.edison.eventsourcing.consumer.MethodInvokingMessageConsumer;
 import org.slf4j.Logger;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;
@@ -98,10 +98,10 @@ public class EventSourceConsumerBeanPostProcessor implements BeanPostProcessor, 
         return listeners;
     }
 
-    private MethodInvokingEventConsumer<?> eventConsumerFor(final EventSourceConsumer annotation,
-                                                            final Method annotatedMethod,
-                                                            final Object bean) {
-        return new MethodInvokingEventConsumer<>(annotation.keyPattern(), annotation.payloadType(), bean, annotatedMethod);
+    private MethodInvokingMessageConsumer<?> eventConsumerFor(final EventSourceConsumer annotation,
+                                                              final Method annotatedMethod,
+                                                              final Object bean) {
+        return new MethodInvokingMessageConsumer<>(annotation.keyPattern(), annotation.payloadType(), bean, annotatedMethod);
     }
 
     private EventSource matchingEventSourceFor(final EventSourceConsumer annotation) {

@@ -2,7 +2,7 @@ package de.otto.edison.eventsourcing.aws.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import de.otto.edison.eventsourcing.consumer.EventConsumer;
+import de.otto.edison.eventsourcing.consumer.MessageConsumer;
 import de.otto.edison.eventsourcing.consumer.EventConsumers;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.junit.Before;
@@ -32,7 +32,7 @@ public class SnapshotConsumerServiceTest {
         File file = new File(getClass().getClassLoader().getResource("compaction-integrationtest-snapshot-2017-09-29T09-02Z-3053797267191232636.json.zip").getFile());
         Map<String, Map> allData = new HashMap<>();
         //when
-        final EventConsumer<Map> eventConsumer = EventConsumer.of(".*", Map.class, (event) -> {
+        final MessageConsumer<Map> messageConsumer = MessageConsumer.of(".*", Map.class, (event) -> {
             System.out.println(event.getPayload());
             allData.put(event.getKey(), event.getPayload());
         });
@@ -40,7 +40,7 @@ public class SnapshotConsumerServiceTest {
                 file,
                 "test",
                 (event) -> false,
-                new EventConsumers(OBJECT_MAPPER, Collections.singletonList(eventConsumer)));
+                new EventConsumers(OBJECT_MAPPER, Collections.singletonList(messageConsumer)));
         //then
         assertThat(shardPositions.shards().size(), is(2));
         assertThat(shardPositions.positionOf("shardId-000000000000"), is("0"));

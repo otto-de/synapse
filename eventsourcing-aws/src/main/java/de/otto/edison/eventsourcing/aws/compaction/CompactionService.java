@@ -2,7 +2,7 @@ package de.otto.edison.eventsourcing.aws.compaction;
 
 import de.otto.edison.eventsourcing.EventSourceBuilder;
 import de.otto.edison.eventsourcing.aws.s3.SnapshotWriteService;
-import de.otto.edison.eventsourcing.consumer.DefaultEventConsumer;
+import de.otto.edison.eventsourcing.consumer.DefaultMessageConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.message.Message;
@@ -40,7 +40,7 @@ public class CompactionService {
 
         final EventSource compactingKinesisEventSource = eventSourceBuilder.buildEventSource("compactionSource", streamName);
         compactingKinesisEventSource.register(
-                new DefaultEventConsumer<>(".*", String.class, stateRepository)
+                new DefaultMessageConsumer<>(".*", String.class, stateRepository)
         );
 
         try {

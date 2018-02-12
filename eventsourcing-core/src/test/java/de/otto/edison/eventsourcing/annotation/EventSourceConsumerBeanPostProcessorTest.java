@@ -2,8 +2,8 @@ package de.otto.edison.eventsourcing.annotation;
 
 import de.otto.edison.eventsourcing.DelegateEventSource;
 import de.otto.edison.eventsourcing.configuration.EventSourcingAutoConfiguration;
-import de.otto.edison.eventsourcing.consumer.EventConsumer;
-import de.otto.edison.eventsourcing.consumer.MethodInvokingEventConsumer;
+import de.otto.edison.eventsourcing.consumer.MessageConsumer;
+import de.otto.edison.eventsourcing.consumer.MethodInvokingMessageConsumer;
 import de.otto.edison.eventsourcing.message.Message;
 import de.otto.edison.eventsourcing.testsupport.InMemoryEventSourceConfiguration;
 import org.junit.After;
@@ -37,15 +37,15 @@ public class EventSourceConsumerBeanPostProcessorTest {
         context.refresh();
 
         final DelegateEventSource someStreamEventSource = context.getBean("testEventSource", DelegateEventSource.class);
-        final List<EventConsumer<?>> eventConsumers = someStreamEventSource.registeredConsumers().getAll();
-        assertThat(eventConsumers).hasSize(2);
-        assertThat(eventConsumers.get(0)).isInstanceOf(MethodInvokingEventConsumer.class);
-        assertThat(eventConsumers.get(1)).isInstanceOf(MethodInvokingEventConsumer.class);
+        final List<MessageConsumer<?>> messageConsumers = someStreamEventSource.registeredConsumers().getAll();
+        assertThat(messageConsumers).hasSize(2);
+        assertThat(messageConsumers.get(0)).isInstanceOf(MethodInvokingMessageConsumer.class);
+        assertThat(messageConsumers.get(1)).isInstanceOf(MethodInvokingMessageConsumer.class);
 
         final DelegateEventSource otherStreamEventSource = context.getBean("otherStreamTestSource", DelegateEventSource.class);
-        final List<EventConsumer<?>> otherEventConsumers = otherStreamEventSource.registeredConsumers().getAll();
-        assertThat(otherEventConsumers).hasSize(1);
-        assertThat(otherEventConsumers.get(0)).isInstanceOf(MethodInvokingEventConsumer.class);
+        final List<MessageConsumer<?>> otherMessageConsumers = otherStreamEventSource.registeredConsumers().getAll();
+        assertThat(otherMessageConsumers).hasSize(1);
+        assertThat(otherMessageConsumers.get(0)).isInstanceOf(MethodInvokingMessageConsumer.class);
     }
 
     @Test(expected = BeanCreationException.class)
@@ -68,9 +68,9 @@ public class EventSourceConsumerBeanPostProcessorTest {
         context.refresh();
 
         final DelegateEventSource someStreamEventSource = context.getBean("someTestEventSource", DelegateEventSource.class);
-        final List<EventConsumer<?>> eventConsumers = someStreamEventSource.registeredConsumers().getAll();
-        assertThat(eventConsumers).hasSize(1);
-        assertThat(eventConsumers.get(0)).isInstanceOf(MethodInvokingEventConsumer.class);
+        final List<MessageConsumer<?>> messageConsumers = someStreamEventSource.registeredConsumers().getAll();
+        assertThat(messageConsumers).hasSize(1);
+        assertThat(messageConsumers.get(0)).isInstanceOf(MethodInvokingMessageConsumer.class);
     }
 
     @Test
@@ -81,9 +81,9 @@ public class EventSourceConsumerBeanPostProcessorTest {
         context.refresh();
 
         final DelegateEventSource someStreamEventSource = context.getBean("testEventSource", DelegateEventSource.class);
-        final List<EventConsumer<?>> eventConsumers = someStreamEventSource.registeredConsumers().getAll();
-        assertThat(eventConsumers).hasSize(2);
-        Set<Object> payloadTYpes = eventConsumers.stream().map(EventConsumer::payloadType).collect(toSet());
+        final List<MessageConsumer<?>> messageConsumers = someStreamEventSource.registeredConsumers().getAll();
+        assertThat(messageConsumers).hasSize(2);
+        Set<Object> payloadTYpes = messageConsumers.stream().map(MessageConsumer::payloadType).collect(toSet());
         assertThat(payloadTYpes).containsExactlyInAnyOrder(String.class, Integer.class);
     }
 
@@ -96,9 +96,9 @@ public class EventSourceConsumerBeanPostProcessorTest {
         context.refresh();
 
         final DelegateEventSource someStreamEventSource = context.getBean("testEventSource", DelegateEventSource.class);
-        final List<EventConsumer<?>> eventConsumers = someStreamEventSource.registeredConsumers().getAll();
-        assertThat(eventConsumers).hasSize(2);
-        Set<String> pattern = eventConsumers.stream().map(consumer -> consumer.keyPattern().pattern()).collect(toSet());
+        final List<MessageConsumer<?>> messageConsumers = someStreamEventSource.registeredConsumers().getAll();
+        assertThat(messageConsumers).hasSize(2);
+        Set<String> pattern = messageConsumers.stream().map(consumer -> consumer.keyPattern().pattern()).collect(toSet());
         assertThat(pattern).containsExactlyInAnyOrder("apple.*", "banana.*");
     }
 

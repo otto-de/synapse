@@ -21,7 +21,7 @@ public class DefaultMessageConsumerTest {
     @Test
     public void shouldStoreEventInStateRepositoryOnAccept() {
         //given
-        DefaultEventConsumer<String> consumer = createDefaultEventConsumer();
+        DefaultMessageConsumer<String> consumer = createDefaultEventConsumer();
 
         //when
         consumer.accept(Message.message(
@@ -37,7 +37,7 @@ public class DefaultMessageConsumerTest {
     @Test
     public void shouldRemoveEventFromStateRepositoryWhenDeletedOnAccept() {
         //given
-        DefaultEventConsumer<String> consumer = createDefaultEventConsumer();
+        DefaultMessageConsumer<String> consumer = createDefaultEventConsumer();
 
         //when
         consumer.accept(Message.message(
@@ -51,7 +51,7 @@ public class DefaultMessageConsumerTest {
 
     }
 
-    private DefaultEventConsumer<String> createDefaultEventConsumer() {
-        return new DefaultEventConsumer<>(".*", String.class, stateRepository);
+    private DefaultMessageConsumer<String> createDefaultEventConsumer() {
+        return new DefaultMessageConsumer<>(".*", String.class, stateRepository);
     }
 }

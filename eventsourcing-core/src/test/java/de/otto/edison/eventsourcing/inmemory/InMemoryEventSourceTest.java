@@ -1,7 +1,7 @@
 package de.otto.edison.eventsourcing.inmemory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.consumer.EventConsumer;
+import de.otto.edison.eventsourcing.consumer.MessageConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.message.Message;
@@ -30,7 +30,7 @@ public class InMemoryEventSourceTest {
         // given
         InMemoryStream inMemoryStream = new InMemoryStream();
         InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es","some-stream", inMemoryStream, eventPublisher, objectMapper);
-        StringEventConsumer eventConsumer = new StringEventConsumer();
+        StringMessageConsumer eventConsumer = new StringMessageConsumer();
         inMemoryEventSource.register(eventConsumer);
         inMemoryStream.send(message("key", "payload"));
 
@@ -48,7 +48,7 @@ public class InMemoryEventSourceTest {
         // given
         InMemoryStream inMemoryStream = new InMemoryStream();
         InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es", "some-stream", inMemoryStream, eventPublisher, objectMapper);
-        StringEventConsumer eventConsumer = new StringEventConsumer();
+        StringMessageConsumer eventConsumer = new StringMessageConsumer();
         inMemoryEventSource.register(eventConsumer);
         inMemoryStream.send(message("key", "payload"));
 
@@ -71,7 +71,7 @@ public class InMemoryEventSourceTest {
         assertThat(finishedEvent.getStreamName(), is("some-stream"));
     }
     
-    private static class StringEventConsumer implements EventConsumer<String> {
+    private static class StringMessageConsumer implements MessageConsumer<String> {
         private Message<String> message;
 
         @Nonnull

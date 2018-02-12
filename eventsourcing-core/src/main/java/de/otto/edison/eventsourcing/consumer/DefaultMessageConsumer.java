@@ -6,15 +6,15 @@ import de.otto.edison.eventsourcing.state.StateRepository;
 import javax.annotation.Nonnull;
 import java.util.regex.Pattern;
 
-public class DefaultEventConsumer<T> implements EventConsumer<T> {
+public class DefaultMessageConsumer<T> implements MessageConsumer<T> {
 
     private final Pattern keyPattern;
     private final StateRepository<T> stateRepository;
     private final Class<T> payloadType;
 
-    public DefaultEventConsumer(final String keyPattern,
-                                final Class<T> payloadType,
-                                final StateRepository<T> stateRepository) {
+    public DefaultMessageConsumer(final String keyPattern,
+                                  final Class<T> payloadType,
+                                  final StateRepository<T> stateRepository) {
         this.keyPattern = Pattern.compile(keyPattern);
         this.payloadType = payloadType;
         this.stateRepository = stateRepository;

@@ -1,6 +1,6 @@
 package de.otto.edison.eventsourcing.aws;
 
-import de.otto.edison.eventsourcing.consumer.EventConsumer;
+import de.otto.edison.eventsourcing.consumer.MessageConsumer;
 import de.otto.edison.eventsourcing.consumer.EventConsumers;
 import de.otto.edison.eventsourcing.consumer.EventSource;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
@@ -32,15 +32,15 @@ public class CompactingKinesisEventSource implements EventSource {
     /**
      * Registers a new EventConsumer at the EventSource.
      * <p>
-     * {@link EventConsumer consumers} have to be thread safe as it may be called from multiple threads
+     * {@link MessageConsumer consumers} have to be thread safe as it may be called from multiple threads
      * (e.g. for kinesis streams there is one thread per shard)
      *
-     * @param eventConsumer registered EventConsumer
+     * @param messageConsumer registered EventConsumer
      */
     @Override
-    public void register(final EventConsumer<?> eventConsumer) {
-        snapshotEventSource.register(eventConsumer);
-        kinesisEventSource.register(eventConsumer);
+    public void register(final MessageConsumer<?> messageConsumer) {
+        snapshotEventSource.register(messageConsumer);
+        kinesisEventSource.register(messageConsumer);
     }
 
     @Override

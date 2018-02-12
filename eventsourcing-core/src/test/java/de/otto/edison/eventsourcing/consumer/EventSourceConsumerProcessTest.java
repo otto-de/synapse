@@ -9,7 +9,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.function.Predicate;
 
-import static de.otto.edison.eventsourcing.consumer.TestEventConsumer.testEventConsumer;
+import static de.otto.edison.eventsourcing.consumer.TestMessageConsumer.testEventConsumer;
 import static de.otto.edison.eventsourcing.message.Header.responseHeader;
 import static de.otto.edison.eventsourcing.message.Message.message;
 import static java.util.Collections.singletonList;
@@ -27,8 +27,8 @@ public class EventSourceConsumerProcessTest {
     @SuppressWarnings("unchecked")
     public void shouldInvokeTwoConsumersForSameEventSource() {
         EventSource eventSource = spy(new TestEventSource());
-        TestEventConsumer eventConsumerA = spy(testEventConsumer(".*", MyPayload.class));
-        TestEventConsumer eventConsumerB = spy(testEventConsumer(".*", MyPayload.class));
+        TestMessageConsumer eventConsumerA = spy(testEventConsumer(".*", MyPayload.class));
+        TestMessageConsumer eventConsumerB = spy(testEventConsumer(".*", MyPayload.class));
         eventSource.register(eventConsumerA);
         eventSource.register(eventConsumerB);
 

@@ -5,21 +5,21 @@ import de.otto.edison.eventsourcing.message.Message;
 import javax.annotation.Nonnull;
 import java.util.regex.Pattern;
 
-class TestEventConsumer<T> implements EventConsumer<T> {
+class TestMessageConsumer<T> implements MessageConsumer<T> {
 
     private final Class<T> payloadType;
     private final Pattern keyPattern;
 
-    public static <T> TestEventConsumer<T> testEventConsumer(final Class<T> payloadType) {
+    public static <T> TestMessageConsumer<T> testEventConsumer(final Class<T> payloadType) {
         return testEventConsumer(".*", payloadType);
     }
 
-    public static <T> TestEventConsumer<T> testEventConsumer(final String keyPattern,
-                                                             final Class<T> payloadType) {
-        return new TestEventConsumer<>(keyPattern, payloadType);
+    public static <T> TestMessageConsumer<T> testEventConsumer(final String keyPattern,
+                                                               final Class<T> payloadType) {
+        return new TestMessageConsumer<>(keyPattern, payloadType);
     }
 
-    public TestEventConsumer(final String keyPattern, final Class<T> payloadType) {
+    public TestMessageConsumer(final String keyPattern, final Class<T> payloadType) {
         this.keyPattern = Pattern.compile(keyPattern);
         this.payloadType = payloadType;
     }

@@ -42,12 +42,12 @@ import static org.mockito.Mockito.when;
         "de.otto.edison.eventsourcing",
 })
 @SpringBootTest(classes = {
-        EventConsumerIntegrationTest.class,
-        EventConsumerIntegrationTest.TestConfiguration.class,
+        MessageConsumerIntegrationTest.class,
+        MessageConsumerIntegrationTest.TestConfiguration.class,
         AwsEventSourcingAutoConfiguration.class,
         EventSourceConsumerProcess.class
 })
-public class EventConsumerIntegrationTest {
+public class MessageConsumerIntegrationTest {
 
     private static List<String> allReceivedEventKeys = new ArrayList<>();
     private static List<Apple> receivedAppleEventPayloads = new ArrayList<>();
