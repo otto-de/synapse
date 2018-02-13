@@ -14,14 +14,14 @@ public class KinesisMessageSenderFactory implements MessageSenderFactory {
     private final MessageTranslator<ByteBuffer> messageTranslator;
     private final KinesisClient kinesisClient;
 
-    public KinesisMessageSenderFactory(ObjectMapper objectMapper, KinesisClient kinesisClient) {
+    public KinesisMessageSenderFactory(final ObjectMapper objectMapper,
+                                       final KinesisClient kinesisClient) {
         this.messageTranslator = new JsonByteBufferMessageTranslator(objectMapper);
         this.kinesisClient = kinesisClient;
     }
 
-    public MessageSender createSenderForStream(String streamName) {
-        final KinesisStream kinesisStream = new KinesisStream(kinesisClient, streamName);
-        return new KinesisMessageSender(kinesisStream, messageTranslator);
+    public MessageSender createSenderForStream(final String streamName) {
+        return new KinesisMessageSender(streamName, messageTranslator, kinesisClient);
     }
 
 }

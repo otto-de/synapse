@@ -1,32 +1,20 @@
 package de.otto.edison.eventsourcing.aws.kinesis;
 
 import com.google.common.collect.ImmutableList;
-import de.otto.edison.eventsourcing.message.Message;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
-import static de.otto.edison.eventsourcing.aws.kinesis.KinesisStream.PUT_RECORDS_BATCH_SIZE;
-import static de.otto.edison.eventsourcing.message.ByteBufferMessage.byteBufferMessage;
-import static de.otto.edison.eventsourcing.message.Message.message;
-import static java.lang.String.valueOf;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -128,106 +116,6 @@ public class KinesisStreamTest {
         assertThat(shards.get(1).getShardId(), is("shard4"));
     }
 
-    @Test
-    public void shouldSendEvent() throws Exception {
-        // given
-        PutRecordsResponse putRecordsResponse = PutRecordsResponse.builder()
-                .failedRecordCount(0)
-                .build();
-        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(putRecordsResponse);
-
-        ByteBuffer data = ByteBuffer.wrap("test".getBytes(StandardCharsets.UTF_8));
-
-        // when
-        kinesisStream.send(byteBufferMessage("someKey", "test"));
-
-        // then
-        ArgumentCaptor<PutRecordsRequest> captor = ArgumentCaptor.forClass(PutRecordsRequest.class);
-        verify(kinesisClient).putRecords(captor.capture());
-        PutRecordsRequest putRecordsRequest = captor.getValue();
-
-        assertThat(putRecordsRequest.streamName(), is("streamName"));
-
-        List<PutRecordsRequestEntry> records = putRecordsRequest.records();
-        assertThat(records, hasSize(1));
-        assertThat(records.get(0).partitionKey(), is("someKey"));
-        assertThat(records.get(0).data(), is(data));
-    }
-
-    @Test
-    public void shouldSendDeleteEventWithEmptyByteBuffer() throws Exception {
-        // given
-        PutRecordsResponse putRecordsResponse = PutRecordsResponse.builder()
-                .failedRecordCount(0)
-                .build();
-        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(putRecordsResponse);
-
-        // when
-        kinesisStream.send(byteBufferMessage("someKey", (ByteBuffer) null));
-
-        // then
-        ArgumentCaptor<PutRecordsRequest> captor = ArgumentCaptor.forClass(PutRecordsRequest.class);
-        verify(kinesisClient).putRecords(captor.capture());
-        PutRecordsRequest putRecordsRequest = captor.getValue();
-
-        assertThat(putRecordsRequest.streamName(), is("streamName"));
-
-        List<PutRecordsRequestEntry> records = putRecordsRequest.records();
-        assertThat(records, hasSize(1));
-        assertThat(records.get(0).partitionKey(), is("someKey"));
-        assertThat(records.get(0).data(), is(ByteBuffer.allocateDirect(0)));
-    }
-
-    @Test
-    public void shouldSendMultipleEvents() throws Exception {
-        // given
-        PutRecordsResponse putRecordsResponse = PutRecordsResponse.builder()
-                .failedRecordCount(0)
-                .build();
-        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(putRecordsResponse);
-
-        ByteBuffer data1 = ByteBuffer.wrap("test".getBytes(StandardCharsets.UTF_8));
-        ByteBuffer data2 = ByteBuffer.wrap("test".getBytes(StandardCharsets.UTF_8));
-
-        // when
-        kinesisStream.sendBatch(Stream.of(
-                message("event1", data1),
-                message("event2", data2)));
-
-        // then
-        ArgumentCaptor<PutRecordsRequest> captor = ArgumentCaptor.forClass(PutRecordsRequest.class);
-        verify(kinesisClient).putRecords(captor.capture());
-        PutRecordsRequest putRecordsRequest = captor.getValue();
-
-        assertThat(putRecordsRequest.streamName(), is("streamName"));
-
-        List<PutRecordsRequestEntry> records = putRecordsRequest.records();
-        assertThat(records, hasSize(2));
-        assertThat(records.get(0).partitionKey(), is("event1"));
-        assertThat(records.get(0).data(), is(data1));
-        assertThat(records.get(1).partitionKey(), is("event2"));
-        assertThat(records.get(1).data(), is(data2));
-    }
-
-    @Test
-    public void shouldBatchEventsWhenTooManyShouldBeSent() throws Exception {
-        // given
-        PutRecordsResponse putRecordsResponse = PutRecordsResponse.builder()
-                .failedRecordCount(0)
-                .build();
-        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(putRecordsResponse);
-        
-        // when
-        kinesisStream.sendBatch(someEvents(PUT_RECORDS_BATCH_SIZE + 1));
-
-        // then
-        verify(kinesisClient, times(2)).putRecords(any(PutRecordsRequest.class));
-    }
-
-    private Stream<Message<ByteBuffer>> someEvents(int n) {
-        return IntStream.range(0, n)
-                .mapToObj(i -> message(valueOf(i), ByteBuffer.wrap(Integer.toString(i).getBytes(StandardCharsets.UTF_8))));
-    }
 
     private Shard someShard(String shardId, boolean open) {
         return Shard.builder()

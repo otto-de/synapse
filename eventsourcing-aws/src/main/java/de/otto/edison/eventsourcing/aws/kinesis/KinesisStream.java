@@ -1,34 +1,28 @@
 package de.otto.edison.eventsourcing.aws.kinesis;
 
-import de.otto.edison.eventsourcing.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
-import software.amazon.awssdk.services.kinesis.model.*;
+import software.amazon.awssdk.services.kinesis.model.DescribeStreamRequest;
+import software.amazon.awssdk.services.kinesis.model.DescribeStreamResponse;
+import software.amazon.awssdk.services.kinesis.model.Shard;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.common.collect.Lists.partition;
 
 public class KinesisStream {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisStream.class);
-    private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.allocateDirect(0);
     static final int PUT_RECORDS_BATCH_SIZE = 500;
 
     private final KinesisClient kinesisClient;
     private final String streamName;
-    private final RetryPutRecordsKinesisClient retryPutRecordsKinesisClient;
 
     public KinesisStream(KinesisClient kinesisClient, String streamName) {
         this.kinesisClient = kinesisClient;
         this.streamName = streamName;
-        retryPutRecordsKinesisClient = new RetryPutRecordsKinesisClient(kinesisClient);
     }
 
     public List<KinesisShard> retrieveAllOpenShards() {
@@ -85,38 +79,4 @@ public class KinesisStream {
         return streamName;
     }
 
-    public void send(Message<ByteBuffer> message) {
-        PutRecordsRequestEntry putRecordsRequestEntry = requestEntryFor(message.getKey(), message.getPayload());
-
-        PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder()
-                .streamName(streamName)
-                .records(putRecordsRequestEntry)
-                .build();
-
-        retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
-    }
-
-    public void sendBatch(Stream<Message<ByteBuffer>> events) {
-        List<PutRecordsRequestEntry> entries = events
-                .map(entry -> requestEntryFor(entry.getKey(), entry.getPayload()))
-                .collect(Collectors.toCollection(ArrayList::new));
-
-        partition(entries, PUT_RECORDS_BATCH_SIZE)
-                .forEach(batch -> {
-                            PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder()
-                                    .streamName(streamName)
-                                    .records(batch)
-                                    .build();
-
-                            retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
-                        }
-                );
-    }
-
-    private PutRecordsRequestEntry requestEntryFor(String key, ByteBuffer byteBuffer) {
-        return PutRecordsRequestEntry.builder()
-                .partitionKey(key)
-                .data(byteBuffer != null ? byteBuffer : EMPTY_BYTE_BUFFER)
-                .build();
-    }
 }
