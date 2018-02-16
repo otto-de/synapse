@@ -132,6 +132,10 @@ uploadArchives {
                         id 'hstruebe'
                         name 'Henning Strueber'
                     }
+                    developer {
+                        id 'sweiler'
+                        name 'Simon Weiler'
+                    }
                 }
             }
         }

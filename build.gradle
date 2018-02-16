@@ -7,6 +7,14 @@ ext {
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 
+apply plugin: 'io.codearte.nexus-staging'
+
+nexusStaging {
+    username=sonatypeUsername
+    password=sonatypePassword
+    packageGroup='de.otto'
+}
+
 subprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
