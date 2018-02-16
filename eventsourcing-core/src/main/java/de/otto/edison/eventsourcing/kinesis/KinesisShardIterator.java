@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.kinesis;
 
+import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.retry.RetryCallback;
@@ -8,22 +9,21 @@ import org.springframework.retry.backoff.ExponentialBackOffPolicy;
 import org.springframework.retry.listener.RetryListenerSupport;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 import software.amazon.awssdk.services.kinesis.model.KinesisException;
-
-import java.util.Collections;
 
 public class KinesisShardIterator {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShardIterator.class);
 
     static final int FETCH_RECORDS_LIMIT = 10000;
-    static final int RETRY_MAX_ATTEMPTS = 16;
-    static final int RETRY_BACK_OFF_POLICY_INITIAL_INTERVAL = 1000;
-    static final int RETRY_BACK_OFF_POLICY_MAX_INTERVAL = 60000;
-    static final double RETRY_BACK_OFF_POLICY_MULTIPLIER = 2.0;
+    private static final int RETRY_MAX_ATTEMPTS = 16;
+    private static final int RETRY_BACK_OFF_POLICY_INITIAL_INTERVAL = 1000;
+    private static final int RETRY_BACK_OFF_POLICY_MAX_INTERVAL = 64000;
+    private static final double RETRY_BACK_OFF_POLICY_MULTIPLIER = 2.0;
 
     private final KinesisClient kinesisClient;
     private String id;
@@ -59,7 +59,8 @@ public class KinesisShardIterator {
     private RetryTemplate createRetryTemplate() {
         SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy(
                 RETRY_MAX_ATTEMPTS,
-                Collections.singletonMap(KinesisException.class, true));
+                ImmutableMap.of(KinesisException.class, true,
+                        SdkClientException.class, true));
 
         ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
         backOffPolicy.setInitialInterval(RETRY_BACK_OFF_POLICY_INITIAL_INTERVAL);
