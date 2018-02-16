@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.4.8
+* **[eventsourcing-edison-integration]** Add health indicator for stream state.
+ This means that a service goes unhealthy if a stream is in a not-recoverable state.
+* **[eventsourcing-core]** Fix retry policy in `KinesisShardIterator` to retry
+ also on connection errors, not only on throughput exceed errors. 
+
 ## 0.4.7
 Remove `Clock` bean as this is required only for tests.
 Don't set StatusDetailIndicator to warn when kinesis consumer has finished.
