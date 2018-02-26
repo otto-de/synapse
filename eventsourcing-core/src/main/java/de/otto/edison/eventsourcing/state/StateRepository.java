@@ -18,6 +18,7 @@ public interface StateRepository<V> {
 
     Iterable<String> getKeySetIterable();
 
+    // TODO: This is not thread-safe!
     default V compute(String key,
                       BiFunction<? super String, ? super Optional<V>, ? extends V> remappingFunction) {
         Objects.requireNonNull(remappingFunction);
