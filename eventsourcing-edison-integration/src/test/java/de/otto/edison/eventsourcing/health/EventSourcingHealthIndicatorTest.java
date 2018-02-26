@@ -37,7 +37,7 @@ public class EventSourcingHealthIndicatorTest {
         EventSourceNotification eventSourceNotification = EventSourceNotification.builder()
                 .withStatus(EventSourceNotification.Status.FAILED)
                 .withMessage("some message")
-                .withEventSource(mockEventSource)
+                .withStreamName("some-stream")
                 .build();
         healthCheck.onEventSourceNotification(eventSourceNotification);
 
