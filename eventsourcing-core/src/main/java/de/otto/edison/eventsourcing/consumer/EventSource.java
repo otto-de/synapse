@@ -35,7 +35,7 @@ public interface EventSource {
      *
      * @return EventConsumers
      */
-    DispatchingMessageConsumer registeredConsumers();
+    DispatchingMessageConsumer dispatchingMessageConsumer();
 
     /**
      * Returns the name of the EventSource.

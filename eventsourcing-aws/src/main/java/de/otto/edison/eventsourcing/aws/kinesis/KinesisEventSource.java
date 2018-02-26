@@ -47,7 +47,7 @@ public class KinesisEventSource extends AbstractEventSource {
             StreamResponse streamResponse;
             boolean consumeMore;
             do {
-                streamResponse = kinesisStream.consumeStream(currentPosition, stopCondition, registeredConsumers());
+                streamResponse = kinesisStream.consumeStream(currentPosition, stopCondition, dispatchingMessageConsumer());
                 currentPosition = streamResponse.getStreamPosition();
                 consumeMore = streamResponse.getStatus() != Status.STOPPED && !isStopping();
                 if (consumeMore) {

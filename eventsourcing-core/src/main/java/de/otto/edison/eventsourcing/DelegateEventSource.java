@@ -61,8 +61,8 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
      * @return EventConsumers
      */
     @Override
-    public DispatchingMessageConsumer registeredConsumers() {
-        return delegate.registeredConsumers();
+    public DispatchingMessageConsumer dispatchingMessageConsumer() {
+        return delegate.dispatchingMessageConsumer();
     }
 
     /**

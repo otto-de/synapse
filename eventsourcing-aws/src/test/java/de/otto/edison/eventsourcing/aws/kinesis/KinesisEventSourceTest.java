@@ -80,7 +80,7 @@ public class KinesisEventSourceTest {
         eventSource.register(testDataConsumer);
 
         // then
-        assertThat(eventSource.registeredConsumers().getAll(), contains(testDataConsumer));
+        assertThat(eventSource.dispatchingMessageConsumer().getAll(), contains(testDataConsumer));
     }
 
     @Test
@@ -96,7 +96,7 @@ public class KinesisEventSourceTest {
         eventSource.consumeAll(initialPositions, this::stopIfGreenForString);
 
         // then
-        verify(kinesisStream).consumeStream(eq(initialPositions), any(Predicate.class), eq(eventSource.registeredConsumers()));
+        verify(kinesisStream).consumeStream(eq(initialPositions), any(Predicate.class), eq(eventSource.dispatchingMessageConsumer()));
     }
 
     @Test

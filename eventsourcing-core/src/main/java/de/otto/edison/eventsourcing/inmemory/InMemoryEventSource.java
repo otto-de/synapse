@@ -46,7 +46,7 @@ public class InMemoryEventSource extends AbstractEventSource {
             }
 
             final Message<String> messageWithHeaders = message(receivedMessage.getKey(), responseHeader("0", Instant.now()), receivedMessage.getPayload());
-            registeredConsumers().accept(messageWithHeaders);
+            dispatchingMessageConsumer().accept(messageWithHeaders);
             shouldStop = stopCondition.test(receivedMessage);
         } while (!shouldStop);
         publishEvent(null, EventSourceNotification.Status.FINISHED);

@@ -58,7 +58,7 @@ public class SnapshotEventSource extends AbstractEventSource {
 
             Optional<File> snapshotFile = snapshotReadService.retrieveLatestSnapshot(streamName);
             if (snapshotFile.isPresent()) {
-                StreamPosition streamPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), streamName, stopCondition, registeredConsumers());
+                StreamPosition streamPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), streamName, stopCondition, dispatchingMessageConsumer());
                 snapshotStreamPosition = SnapshotStreamPosition.of(streamPosition, SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName()));
             } else {
                 snapshotStreamPosition = SnapshotStreamPosition.of();

@@ -59,7 +59,7 @@ public abstract class AbstractEventSource implements EventSource {
      * @return list of registered EventConsumers
      */
     @Override
-    public DispatchingMessageConsumer registeredConsumers() {
+    public DispatchingMessageConsumer dispatchingMessageConsumer() {
         return dispatchingMessageConsumer;
     }
 

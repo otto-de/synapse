@@ -62,7 +62,7 @@ public class EventSourceConsumerProcessTest {
                     responseHeader("0", Instant.now(), Duration.ZERO),
                     "{}"
             );
-            registeredConsumers().accept(message);
+            dispatchingMessageConsumer().accept(message);
             return StreamPosition.of();
         }
     }

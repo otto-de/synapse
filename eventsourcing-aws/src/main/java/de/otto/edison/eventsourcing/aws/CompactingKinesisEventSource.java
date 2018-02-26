@@ -54,8 +54,8 @@ public class CompactingKinesisEventSource implements EventSource {
      * @return list of registered EventConsumers
      */
     @Override
-    public DispatchingMessageConsumer registeredConsumers() {
-        return snapshotEventSource.registeredConsumers();
+    public DispatchingMessageConsumer dispatchingMessageConsumer() {
+        return snapshotEventSource.dispatchingMessageConsumer();
     }
 
     @Override
