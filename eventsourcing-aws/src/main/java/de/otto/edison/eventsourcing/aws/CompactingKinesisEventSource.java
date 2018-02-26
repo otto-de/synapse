@@ -1,8 +1,8 @@
 package de.otto.edison.eventsourcing.aws;
 
-import de.otto.edison.eventsourcing.consumer.MessageConsumer;
-import de.otto.edison.eventsourcing.consumer.EventConsumers;
+import de.otto.edison.eventsourcing.consumer.DispatchingMessageConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSource;
+import de.otto.edison.eventsourcing.consumer.MessageConsumer;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.message.Message;
 
@@ -54,7 +54,7 @@ public class CompactingKinesisEventSource implements EventSource {
      * @return list of registered EventConsumers
      */
     @Override
-    public EventConsumers registeredConsumers() {
+    public DispatchingMessageConsumer registeredConsumers() {
         return snapshotEventSource.registeredConsumers();
     }
 
@@ -68,5 +68,16 @@ public class CompactingKinesisEventSource implements EventSource {
         Predicate<Message<?>> neverStop = e -> false;
         final StreamPosition streamPosition = snapshotEventSource.consumeAll(neverStop);
         return kinesisEventSource.consumeAll(streamPosition, stopCondition);
+    }
+
+    @Override
+    public void stop() {
+        kinesisEventSource.stop();
+        snapshotEventSource.stop();
+    }
+
+    @Override
+    public boolean isStopping() {
+        return kinesisEventSource.isStopping() || snapshotEventSource.isStopping();
     }
 }

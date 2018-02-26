@@ -1,6 +1,9 @@
 package de.otto.edison.eventsourcing;
 
-import de.otto.edison.eventsourcing.consumer.*;
+import de.otto.edison.eventsourcing.consumer.DispatchingMessageConsumer;
+import de.otto.edison.eventsourcing.consumer.EventSource;
+import de.otto.edison.eventsourcing.consumer.MessageConsumer;
+import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.message.Message;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -58,7 +61,7 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
      * @return EventConsumers
      */
     @Override
-    public EventConsumers registeredConsumers() {
+    public DispatchingMessageConsumer registeredConsumers() {
         return delegate.registeredConsumers();
     }
 
@@ -91,6 +94,16 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
     public StreamPosition consumeAll(final StreamPosition startFrom,
                                      final Predicate<Message<?>> stopCondition) {
         return delegate.consumeAll(startFrom, stopCondition);
+    }
+
+    @Override
+    public void stop() {
+        delegate.stop();
+    }
+
+    @Override
+    public boolean isStopping() {
+        return delegate.isStopping();
     }
 
     @Override

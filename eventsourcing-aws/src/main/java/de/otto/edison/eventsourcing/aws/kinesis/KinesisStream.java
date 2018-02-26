@@ -1,5 +1,8 @@
 package de.otto.edison.eventsourcing.aws.kinesis;
 
+import de.otto.edison.eventsourcing.consumer.MessageConsumer;
+import de.otto.edison.eventsourcing.consumer.StreamPosition;
+import de.otto.edison.eventsourcing.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
@@ -9,28 +12,86 @@ import software.amazon.awssdk.services.kinesis.model.Shard;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.lang.Math.min;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static java.util.concurrent.Executors.newFixedThreadPool;
+import static java.util.stream.Collectors.toList;
+
+//TODO: KinesisStreamReaderEndpoint?
 
 public class KinesisStream {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisStream.class);
-    static final int PUT_RECORDS_BATCH_SIZE = 500;
+    public static final int MAX_NUMBER_OF_THREADS = 10;
 
-    private final KinesisClient kinesisClient;
     private final String streamName;
+    private final KinesisClient kinesisClient;
+    private final AtomicBoolean stop = new AtomicBoolean(false);
 
-    public KinesisStream(KinesisClient kinesisClient, String streamName) {
-        this.kinesisClient = kinesisClient;
+
+    public KinesisStream(final KinesisClient kinesisClient,
+                         final String streamName) {
         this.streamName = streamName;
+        this.kinesisClient = kinesisClient;
     }
 
-    public List<KinesisShard> retrieveAllOpenShards() {
+    public String getStreamName() {
+        return streamName;
+    }
+
+    public StreamResponse consumeStream(final StreamPosition startFrom,
+                                        final Predicate<Message<?>> stopCondition,
+                                        final MessageConsumer<String> consumer) {
+        final List<KinesisShard> kinesisShards = retrieveAllOpenShards();
+        final ExecutorService executorService = newFixedThreadPool(min(kinesisShards.size(), MAX_NUMBER_OF_THREADS));
+        try {
+            final List<CompletableFuture<ShardResponse>> futureShardPositions = kinesisShards
+                    .stream()
+                    .map(shard -> supplyAsync(
+                            () -> shard.consumeShard(startFrom.positionOf(shard.getShardId()), stopCondition, consumer),
+                            executorService))
+                    .collect(toList());
+
+            // don't chain futureShardPositions with CompletableFuture::join as lazy execution will prevent threads from
+            // running in parallel
+
+            return StreamResponse.of(
+                    futureShardPositions
+                            .stream()
+                            .map(CompletableFuture::join)
+                            .collect(toList())
+            );
+        } catch (final RuntimeException e) {
+            LOG.error("Failed to consume from Kinesis stream {}: {}", streamName, e.getMessage());
+            // When an exception occurs in a completable future's thread, other threads continue running.
+            // Stop all before proceeding.
+            executorService.shutdownNow();
+            try {
+                boolean allThreadsSafelyTerminated = executorService.awaitTermination(30, TimeUnit.SECONDS);
+                if (!allThreadsSafelyTerminated) {
+                    LOG.error("Kinesis Thread for stream {} is still running", streamName);
+                }
+
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+            }
+            throw e;
+        }
+    }
+
+    List<KinesisShard> retrieveAllOpenShards() {
         List<Shard> shardList = retrieveAllShards();
 
         return shardList.stream()
                 .filter(this::isShardOpen)
-                .map(shard -> new KinesisShard(shard.shardId(), this, kinesisClient))
+                .map(shard -> new KinesisShard(shard.shardId(), streamName, kinesisClient))
                 .collect(toImmutableList());
     }
 
@@ -73,10 +134,6 @@ public class KinesisStream {
             LOG.warn("Shard with id {} is closed. Cannot retrieve data.", shard.shardId());
             return false;
         }
-    }
-
-    public String getStreamName() {
-        return streamName;
     }
 
 }

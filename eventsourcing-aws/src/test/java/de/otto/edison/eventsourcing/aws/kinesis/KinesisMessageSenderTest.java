@@ -24,7 +24,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static de.otto.edison.eventsourcing.aws.kinesis.KinesisStream.PUT_RECORDS_BATCH_SIZE;
 import static de.otto.edison.eventsourcing.message.Message.message;
 import static java.lang.String.valueOf;
 import static org.hamcrest.Matchers.hasSize;
@@ -126,7 +125,7 @@ public class KinesisMessageSenderTest {
         when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(putRecordsResponse);
 
         // when
-        kinesisEventSender.sendBatch(someEvents(PUT_RECORDS_BATCH_SIZE + 1));
+        kinesisEventSender.sendBatch(someEvents(500 + 1));
 
         // then
         verify(kinesisClient, times(2)).putRecords(any(PutRecordsRequest.class));

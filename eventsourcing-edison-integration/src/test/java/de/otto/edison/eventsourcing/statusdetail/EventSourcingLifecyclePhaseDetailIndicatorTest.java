@@ -14,12 +14,12 @@ import static de.otto.edison.eventsourcing.consumer.EventSourceNotification.Stat
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-public class EventSourcingStatusDetailIndicatorTest {
+public class EventSourcingLifecyclePhaseDetailIndicatorTest {
 
     private final EventSourcingStatusDetailIndicator eventSourcingStatusDetailIndicator;
     private TestClock testClock = TestClock.now();
 
-    public EventSourcingStatusDetailIndicatorTest() {
+    public EventSourcingLifecyclePhaseDetailIndicatorTest() {
         eventSourcingStatusDetailIndicator = new EventSourcingStatusDetailIndicator(testClock);
     }
 

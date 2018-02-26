@@ -35,7 +35,7 @@ public interface EventSource {
      *
      * @return EventConsumers
      */
-    EventConsumers registeredConsumers();
+    DispatchingMessageConsumer registeredConsumers();
 
     /**
      * Returns the name of the EventSource.
@@ -103,4 +103,8 @@ public interface EventSource {
      */
     StreamPosition consumeAll(StreamPosition startFrom,
                               Predicate<Message<?>> stopCondition);
+
+    void stop();
+
+    boolean isStopping();
 }

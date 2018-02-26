@@ -120,7 +120,6 @@ public class TestStreamSource {
                         .explicitHashKey(entry.getValue())
                         .build())
                 .collect(toImmutableList());
-
     }
 
     public void putRecords(String streamName, List<PutRecordsRequestEntry> records) {

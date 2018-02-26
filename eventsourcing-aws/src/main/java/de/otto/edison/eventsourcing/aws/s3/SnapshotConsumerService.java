@@ -3,7 +3,7 @@ package de.otto.edison.eventsourcing.aws.s3;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import de.otto.edison.eventsourcing.consumer.EventConsumers;
+import de.otto.edison.eventsourcing.consumer.DispatchingMessageConsumer;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.message.Message;
 import org.springframework.stereotype.Service;
@@ -26,7 +26,7 @@ public class SnapshotConsumerService {
     public <T> StreamPosition consumeSnapshot(final File latestSnapshot,
                                               final String streamName,
                                               final Predicate<Message<?>> stopCondition,
-                                              final EventConsumers eventConsumers) {
+                                              final DispatchingMessageConsumer dispatchingMessageConsumer) {
 
         try (
                 FileInputStream fileInputStream = new FileInputStream(latestSnapshot);
@@ -48,7 +48,7 @@ public class SnapshotConsumerService {
                                     parser,
                                     shardPositions.positionOf(streamName),
                                     stopCondition,
-                                    eventConsumers);
+                                    dispatchingMessageConsumer);
                             break;
                         default:
                             break;
@@ -65,7 +65,7 @@ public class SnapshotConsumerService {
     private <T> void processSnapshotData(final JsonParser parser,
                                          final String sequenceNumber,
                                          final Predicate<Message<?>> stopCondition,
-                                         final EventConsumers eventConsumers) throws IOException {
+                                         final DispatchingMessageConsumer dispatchingMessageConsumer) throws IOException {
         // Would be better to store event meta data together with key+value:
         final Instant arrivalTimestamp = Instant.EPOCH;
         boolean abort = false;
@@ -78,7 +78,7 @@ public class SnapshotConsumerService {
                         responseHeader(sequenceNumber, arrivalTimestamp, null),
                         parser.nextTextValue()
                 );
-                eventConsumers.encodeAndSend(message);
+                dispatchingMessageConsumer.accept(message);
                 abort = stopCondition.test(message);
             }
         }

@@ -39,16 +39,15 @@ public class InMemoryEventSource extends AbstractEventSource {
         publishEvent(startFrom, EventSourceNotification.Status.STARTED);
         boolean shouldStop;
         do {
-            Message<String> message = inMemoryStream.receive();
+            final Message<String> receivedMessage = inMemoryStream.receive();
 
-            if (message == null) {
+            if (receivedMessage == null) {
                 return null;
             }
 
-            registeredConsumers().encodeAndSend(
-                    message(message.getKey(), responseHeader("0", Instant.now()), message.getPayload())
-            );
-            shouldStop = stopCondition.test(message);
+            final Message<String> messageWithHeaders = message(receivedMessage.getKey(), responseHeader("0", Instant.now()), receivedMessage.getPayload());
+            registeredConsumers().accept(messageWithHeaders);
+            shouldStop = stopCondition.test(receivedMessage);
         } while (!shouldStop);
         publishEvent(null, EventSourceNotification.Status.FINISHED);
         return null;

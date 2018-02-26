@@ -3,8 +3,8 @@ package de.otto.edison.eventsourcing.aws.s3;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import de.otto.edison.aws.s3.S3Service;
+import de.otto.edison.eventsourcing.consumer.DispatchingMessageConsumer;
 import de.otto.edison.eventsourcing.consumer.MessageConsumer;
-import de.otto.edison.eventsourcing.consumer.EventConsumers;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.state.ConcurrentHashMapStateRepository;
 import org.junit.After;
@@ -98,7 +98,7 @@ public class SnapshotWriteServiceTest {
         StreamPosition actualStreamPosition = snapshotConsumerService.consumeSnapshot(snapshot,
                 "test",
                 (event) -> false,
-                new EventConsumers(OBJECT_MAPPER, singletonList(messageConsumer)));
+                new DispatchingMessageConsumer(OBJECT_MAPPER, singletonList(messageConsumer)));
 
         assertThat(actualStreamPosition, is(streamPosition));
         assertThat(data.get("testKey"), is(ImmutableMap.of("testValue1", "value1")));

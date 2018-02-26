@@ -16,7 +16,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
-public class MessageConsumersTest {
+public class DispatchingMessageConsumerTest {
 
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -28,10 +28,10 @@ public class MessageConsumersTest {
         TestMessageConsumer<Object> eventConsumerB = spy(testEventConsumer(".*", Object.class));
         TestMessageConsumer<Object> eventConsumerC = spy(testEventConsumer(".*", Object.class));
 
-        EventConsumers eventConsumers = new EventConsumers(OBJECT_MAPPER);
-        eventConsumers.add(eventConsumerA);
-        eventConsumers.add(eventConsumerB);
-        eventConsumers.add(eventConsumerC);
+        DispatchingMessageConsumer dispatchingMessageConsumer = new DispatchingMessageConsumer(OBJECT_MAPPER);
+        dispatchingMessageConsumer.add(eventConsumerA);
+        dispatchingMessageConsumer.add(eventConsumerB);
+        dispatchingMessageConsumer.add(eventConsumerC);
 
         // when
         Message<String> someMessage = message(
@@ -39,7 +39,7 @@ public class MessageConsumersTest {
                 responseHeader("0", Instant.now(), Duration.ZERO),
                 "{}"
         );
-        eventConsumers.encodeAndSend(someMessage);
+        dispatchingMessageConsumer.accept(someMessage);
 
         // then
         verify(eventConsumerA).accept(any(Message.class));
@@ -56,13 +56,13 @@ public class MessageConsumersTest {
         TestMessageConsumer<Banana> eventConsumerBanana = spy(testEventConsumer("banana.*", Banana.class));
         TestMessageConsumer<Cherry> eventConsumerCherry = spy(testEventConsumer("cherry.*", Cherry.class));
 
-        EventConsumers eventConsumers = new EventConsumers(OBJECT_MAPPER, asList(eventConsumerApple, eventConsumerBanana, eventConsumerCherry));
+        DispatchingMessageConsumer dispatchingMessageConsumer = new DispatchingMessageConsumer(OBJECT_MAPPER, asList(eventConsumerApple, eventConsumerBanana, eventConsumerCherry));
 
         // when
         Message<String> someAppleMessage = message("apple.123", responseHeader("0", Instant.now(), Duration.ZERO),"{}");
         Message<String> someBananaMessage = message("banana.456", responseHeader("0", Instant.now(), Duration.ZERO), "{}");
-        eventConsumers.encodeAndSend(someAppleMessage);
-        eventConsumers.encodeAndSend(someBananaMessage);
+        dispatchingMessageConsumer.accept(someAppleMessage);
+        dispatchingMessageConsumer.accept(someBananaMessage);
 
         // then
         verify(eventConsumerApple).accept(

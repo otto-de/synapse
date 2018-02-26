@@ -65,6 +65,7 @@ public class EventSourceConsumerProcess implements SmartLifecycle {
                     eventSource.consumeAll(ignore -> stopThread.get());
                 } catch (Exception e) {
                     LOG.error("Starting failed: " + e.getMessage(), e);
+                    eventSource.stop();
                 }
             }));
         } else {
@@ -79,6 +80,7 @@ public class EventSourceConsumerProcess implements SmartLifecycle {
         this.stopThread.set(true);
         if (executorService != null) {
             try {
+                eventSources.forEach(EventSource::stop);
                 executorService.shutdownNow();
                 executorService.awaitTermination(2, TimeUnit.MINUTES);
             } catch (InterruptedException e) {

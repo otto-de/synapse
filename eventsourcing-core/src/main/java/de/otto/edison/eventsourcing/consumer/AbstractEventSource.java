@@ -4,24 +4,40 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import static org.slf4j.LoggerFactory.getLogger;
 
 public abstract class AbstractEventSource implements EventSource {
+
     private static final Logger LOG = getLogger(AbstractEventSource.class);
 
-
     private final String name;
-    private ApplicationEventPublisher eventPublisher;
-    private final EventConsumers eventConsumers;
+    private final ApplicationEventPublisher eventPublisher;
+    private final DispatchingMessageConsumer dispatchingMessageConsumer;
+    private final AtomicBoolean stopping = new AtomicBoolean(false);
 
-    public AbstractEventSource(final String name, final ApplicationEventPublisher eventPublisher, final ObjectMapper objectMapper) {
+    public AbstractEventSource(final String name,
+                               final ApplicationEventPublisher eventPublisher,
+                               final ObjectMapper objectMapper) {
         this.name = name;
         this.eventPublisher = eventPublisher;
-        this.eventConsumers = new EventConsumers(objectMapper);
+        this.dispatchingMessageConsumer = new DispatchingMessageConsumer(objectMapper);
     }
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public void stop() {
+        LOG.info("Stopping EventSource {}", name);
+        stopping.set(true);
+    }
+
+    @Override
+    public boolean isStopping() {
+        return stopping.get();
     }
 
     /**
@@ -34,7 +50,7 @@ public abstract class AbstractEventSource implements EventSource {
      */
     @Override
     public void register(final MessageConsumer<?> messageConsumer) {
-        eventConsumers.add(messageConsumer);
+        dispatchingMessageConsumer.add(messageConsumer);
     }
 
     /**
@@ -43,8 +59,8 @@ public abstract class AbstractEventSource implements EventSource {
      * @return list of registered EventConsumers
      */
     @Override
-    public EventConsumers registeredConsumers() {
-        return eventConsumers;
+    public DispatchingMessageConsumer registeredConsumers() {
+        return dispatchingMessageConsumer;
     }
 
     protected void publishEvent(StreamPosition streamPosition, EventSourceNotification.Status status) {

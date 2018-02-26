@@ -16,34 +16,24 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
-import software.amazon.awssdk.services.kinesis.model.*;
+import software.amazon.awssdk.services.kinesis.model.Record;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import static com.google.common.collect.ImmutableList.of;
-import static de.otto.edison.eventsourcing.message.Header.responseHeader;
-import static de.otto.edison.eventsourcing.message.Message.message;
-import static java.time.Duration.ofMillis;
-import static java.util.Collections.synchronizedList;
-import static org.hamcrest.Matchers.containsString;
+import static java.util.Collections.singletonMap;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KinesisEventSourceTest {
@@ -57,17 +47,11 @@ public class KinesisEventSourceTest {
     @Mock
     private MessageConsumer<TestData> testDataConsumer;
 
-    @Captor
-    private ArgumentCaptor<Message<TestData>> testDataCaptor;
-
     @Mock
     private MessageConsumer<String> stringConsumer;
 
     @Captor
     private ArgumentCaptor<Message<String>> stringCaptor;
-
-    @Mock
-    private Predicate<Message<?>> stringStopCondition;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
@@ -79,38 +63,63 @@ public class KinesisEventSourceTest {
 
     @Before
     public void setUp() {
-        KinesisShard shard1 = new KinesisShard("shard1", kinesisStream, kinesisClient);
-        when(testDataConsumer.keyPattern()).thenReturn(Pattern.compile(".*"));
-        when(testDataConsumer.payloadType()).thenReturn(TestData.class);
-        when(stringConsumer.keyPattern()).thenReturn(Pattern.compile(".*"));
-        when(stringConsumer.payloadType()).thenReturn(String.class);
+        initMocks(this);
+        KinesisShard shard1 = new KinesisShard("shard1", "test", kinesisClient);
         when(kinesisStream.getStreamName()).thenReturn("test");
-        when(kinesisStream.retrieveAllOpenShards()).thenReturn(of(shard1));
-        when(kinesisClient.getShardIterator(any(GetShardIteratorRequest.class))).thenReturn(GetShardIteratorResponse.builder()
-                .shardIterator("someIterator")
-                .build());
-
-        GetRecordsResponse response0 = GetRecordsResponse.builder()
-                .records()
-                .millisBehindLatest(555L)
-                .nextShardIterator("iterator1")
-                .build();
-        GetRecordsResponse response1 = GetRecordsResponse.builder()
-                .records(createRecord("blue"))
-                .millisBehindLatest(1234L)
-                .nextShardIterator("nextIterator")
-                .build();
-        GetRecordsResponse response2 = GetRecordsResponse.builder()
-                .records(createEmptyRecord(),
-                        createRecord("green"))
-                .millisBehindLatest(2345L)
-                .nextShardIterator("yetAnotherIterator")
-                .build();
-        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response0, response1, response2);
+        when(kinesisStream.consumeStream(any(StreamPosition.class), any(Predicate.class), any(MessageConsumer.class)))
+                .thenReturn(StreamResponse.of(Status.OK, StreamPosition.of(singletonMap("shard1", "4711"))));
     }
 
     @Test
-    public void shouldConsumeAllEventsFromKinesisWithObjectMapper() {
+    public void shouldRegisterConsumer() {
+        // given
+
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, eventPublisher, objectMapper);
+
+        // when
+        eventSource.register(testDataConsumer);
+
+        // then
+        assertThat(eventSource.registeredConsumers().getAll(), contains(testDataConsumer));
+    }
+
+    @Test
+    public void shouldConsumeAllEventsWithRegisteredConsumers() {
+        // given
+        StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
+
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, eventPublisher, objectMapper);
+        eventSource.register(testDataConsumer);
+        eventSource.stop();
+
+        // when
+        eventSource.consumeAll(initialPositions, this::stopIfGreenForString);
+
+        // then
+        verify(kinesisStream).consumeStream(eq(initialPositions), any(Predicate.class), eq(eventSource.registeredConsumers()));
+    }
+
+    @Test
+    public void shouldFinishConsumptionOnStopCondition() {
+        // given
+        StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
+        when(kinesisStream.consumeStream(any(StreamPosition.class), any(Predicate.class), any(MessageConsumer.class)))
+                .thenReturn(StreamResponse.of(Status.STOPPED, StreamPosition.of(singletonMap("shard1", "4711"))));
+
+
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, eventPublisher, objectMapper);
+        eventSource.register(testDataConsumer);
+
+        // when
+        final StreamPosition streamPosition = eventSource.consumeAll(initialPositions, (message) -> true);
+
+        // then
+        assertThat(eventSource.isStopping(), is(false));
+        assertThat(streamPosition, is(StreamPosition.of(singletonMap("shard1", "4711"))));
+    }
+
+    @Test
+    public void shouldFinishConsumptionOnStop() {
         // given
         StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
 
@@ -118,26 +127,23 @@ public class KinesisEventSourceTest {
         eventSource.register(testDataConsumer);
 
         // when
-        eventSource.consumeAll(initialPositions, this::stopIfGreenForString);
+        eventSource.stop();
+        eventSource.consumeAll(initialPositions, (message) -> false);
 
         // then
-        verify(testDataConsumer, times(3)).accept(testDataCaptor.capture());
-        List<Message<TestData>> messages = testDataCaptor.getAllValues();
-
-        assertThat(messages.get(0).getPayload(), is(new TestData("blue")));
-        assertThat(messages.get(1).getPayload(), is(nullValue()));
-        assertThat(messages.get(2).getPayload(), is(new TestData("green")));
+        assertThat(eventSource.isStopping(), is(true));
     }
 
     @Test
-    public void shouldConsumeAllEventsFromKinesisAndPublishStartedAndFinishedEvents() {
+    public void shouldPublishStartedAndFinishedEvents() {
         // given
         StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, eventPublisher, objectMapper);
+        eventSource.stop();
 
         // when
-        StreamPosition finalStreamPosition = eventSource.consumeAll(initialPositions, this::stopIfGreenForString);
+        StreamPosition finalStreamPosition = eventSource.consumeAll(initialPositions, (message) -> false);
 
         // then
         ArgumentCaptor<EventSourceNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(EventSourceNotification.class);
@@ -156,97 +162,35 @@ public class KinesisEventSourceTest {
 
 
     @Test
-    public void shouldConsumeAllEventsAndDeserializeToString() throws Exception {
+    public void shouldPublishStartedAndFailedEvents() {
         // given
         StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
 
-
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, eventPublisher, objectMapper);
-        eventSource.register(stringConsumer);
-
-        // when
-        eventSource.consumeAll(initialPositions, this::stopIfGreenForString);
-
-        // then
-        verify(stringConsumer, times(3)).accept(stringCaptor.capture());
-
-        List<Message<String>> messages = stringCaptor.getAllValues();
-        assertThat(messages.get(0).getPayload(), is(objectMapper.writeValueAsString(new TestData("blue"))));
-        assertThat(messages.get(1).getPayload(), is(nullValue()));
-        assertThat(messages.get(2).getPayload(), is(objectMapper.writeValueAsString(new TestData("green"))));
-    }
-
-    @Test
-    public void shouldAlwaysPassMillisBehindLatestToStopCondition() {
-        // given
-        StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
-        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, eventPublisher, objectMapper);
-        eventSource.register(stringConsumer);
-        when(stringStopCondition.test(any())).thenReturn(true);
-
-        // when
-        eventSource.consumeAll(initialPositions, stringStopCondition);
-
-        // then
-        verify(stringStopCondition).test(
-                message("", responseHeader(null, null, ofMillis(555L)), null)
-        );
-    }
-
-    @Test
-    public void shouldFinishAllParallelThreadsWhenExceptionIsThrown() throws Exception {
-        // given
-        List<String> completedShards = synchronizedList(new ArrayList<>());
-
-        List<KinesisShard> shards = IntStream.range(0, 1000)
-                .mapToObj(i -> createShardMockWithSideEffect(i, () -> {
-                            completedShards.add(String.valueOf(i));
-                            if (i % 50 == 49) {
-                                throw new RuntimeException("boom");
-                            }
-                        }
-                ))
-                .collect(Collectors.toList());
-
-        when(kinesisStream.retrieveAllOpenShards()).thenReturn(shards);
-
-        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, eventPublisher, objectMapper);
-        eventSource.register(testDataConsumer);
+        when(kinesisStream.consumeStream(any(StreamPosition.class), any(Predicate.class), any(MessageConsumer.class))).thenThrow(new RuntimeException("Error Message"));
 
         // when
         try {
-            eventSource.consumeAll(StreamPosition.of());
-            fail("exception expected");
-        } catch (RuntimeException e) {
-            assertThat(e.getMessage(), containsString("boom"));
-            assertThat(completedShards.size(), not(0));
-            completedShards.clear();
-            ArgumentCaptor<EventSourceNotification> eventArgumentCaptor = ArgumentCaptor.forClass(EventSourceNotification.class);
-            verify(eventPublisher, times(2)).publishEvent(eventArgumentCaptor.capture());
-            assertThat(eventArgumentCaptor.getValue().getStatus(), is(EventSourceNotification.Status.FAILED));
-            assertThat(eventArgumentCaptor.getValue().getMessage(), is("Error consuming messages from Kinesis: java.lang.RuntimeException: boom"));
+            eventSource.consumeAll(initialPositions, this::stopIfGreenForString);
+            fail("expected RuntimeException");
+        } catch (final RuntimeException e) {
+            // then
+            ArgumentCaptor<EventSourceNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(EventSourceNotification.class);
+            verify(eventPublisher, times(2)).publishEvent(notificationArgumentCaptor.capture());
+
+            EventSourceNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
+            assertThat(startedEvent.getStatus(), is(EventSourceNotification.Status.STARTED));
+            assertThat(startedEvent.getStreamPosition(), is(initialPositions));
+            assertThat(startedEvent.getStreamName(), is("test"));
+
+            EventSourceNotification failedEvent = notificationArgumentCaptor.getAllValues().get(1);
+            assertThat(failedEvent.getStatus(), is(EventSourceNotification.Status.FAILED));
+            assertThat(failedEvent.getMessage(), is("Error consuming messages from Kinesis: Error Message"));
+            assertThat(failedEvent.getStreamPosition(), is(initialPositions));
+            assertThat(failedEvent.getStreamName(), is("test"));
         }
-        Thread.sleep(100);
-
-        //then
-        assertThat(completedShards.size(), is(0));
     }
 
-    private KinesisShard createShardMockWithSideEffect(int i, Runnable sideEffect) {
-        KinesisShard shard = mock(KinesisShard.class);
-        when(shard.getShardId()).thenReturn(String.valueOf(i));
-        when(shard.consumeRecords(any(), any(), any())).thenAnswer(
-                x -> {
-                    sideEffect.run();
-                    return (ShardPosition
-                            .builder()
-                            .withShardId(String.valueOf(i))
-                            .withSequenceNumber(String.valueOf(i))
-                            .build());
-                }
-        );
-        return shard;
-    }
 
     private boolean stopIfGreenForString(Message<?> message) {
         if (message.getPayload() == null) {

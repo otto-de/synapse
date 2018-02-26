@@ -47,4 +47,11 @@ public class StreamPosition {
     public int hashCode() {
         return Objects.hash(shardPositions);
     }
+
+    @Override
+    public String toString() {
+        return "StreamPosition{" +
+                "shardPositions=" + shardPositions +
+                '}';
+    }
 }

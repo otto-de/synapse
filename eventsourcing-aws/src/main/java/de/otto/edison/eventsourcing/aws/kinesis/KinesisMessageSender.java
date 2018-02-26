@@ -18,7 +18,7 @@ import static com.google.common.collect.Lists.partition;
 public class KinesisMessageSender implements MessageSender {
 
     private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.allocateDirect(0);
-    static final int PUT_RECORDS_BATCH_SIZE = 500;
+    private static final int PUT_RECORDS_BATCH_SIZE = 500;
 
     private final String streamName;
     private final MessageTranslator<ByteBuffer> messageTranslator;

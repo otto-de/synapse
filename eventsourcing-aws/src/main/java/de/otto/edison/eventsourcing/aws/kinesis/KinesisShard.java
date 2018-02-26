@@ -1,14 +1,18 @@
 package de.otto.edison.eventsourcing.aws.kinesis;
 
+import de.otto.edison.eventsourcing.consumer.MessageConsumer;
+import de.otto.edison.eventsourcing.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.time.Duration;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
+import static de.otto.edison.eventsourcing.aws.kinesis.KinesisMessage.kinesisMessage;
+import static de.otto.edison.eventsourcing.aws.kinesis.Status.OK;
+import static de.otto.edison.eventsourcing.aws.kinesis.Status.STOPPED;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 
@@ -16,12 +20,14 @@ public class KinesisShard {
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShard.class);
 
     private final String shardId;
+    private final String streamName;
     private final KinesisClient kinesisClient;
-    private final KinesisStream kinesisStream;
 
-    public KinesisShard(String shardId, KinesisStream kinesisStream, KinesisClient kinesisClient) {
+    public KinesisShard(final String shardId,
+                        final String streamName,
+                        final KinesisClient kinesisClient) {
         this.shardId = shardId;
-        this.kinesisStream = kinesisStream;
+        this.streamName = streamName;
         this.kinesisClient = kinesisClient;
     }
 
@@ -29,22 +35,60 @@ public class KinesisShard {
         return shardId;
     }
 
-    public KinesisShardIterator retrieveIterator(String sequenceNumber) {
+    public ShardResponse consumeShard(final String startFromSeqNumber,
+                                      final Predicate<Message<?>> stopCondition,
+                                      final MessageConsumer<String> consumer) {
+        String lastSequenceNumber = startFromSeqNumber;
+        boolean stopRetrieval = false;
+        try {
+            LOG.info("Reading from stream {}, shard {} with starting sequence number {}",
+                    streamName,
+                    shardId,
+                    startFromSeqNumber);
+
+            final GetRecordsResponse recordsResponse = retrieveIterator(lastSequenceNumber).next();
+            final Duration durationBehind = ofMillis(recordsResponse.millisBehindLatest());
+
+            if (!isEmptyStream(recordsResponse)) {
+                for (final Record record : recordsResponse.records()) {
+                    try {
+                        final Message<String> kinesisMessage = kinesisMessage(durationBehind, record);
+                        consumer.accept(kinesisMessage);
+                        stopRetrieval = stopRetrieval || stopCondition.test(kinesisMessage);
+                    } catch (Exception e) {
+                        LOG.error("consumer failed while processing {}: {}", record, e);
+                    }
+                    lastSequenceNumber = record.sequenceNumber();
+                }
+
+                logInfo(streamName, recordsResponse, durationBehind);
+            }
+        } catch (final Exception e) {
+            LOG.error("Kinesis consumer died unexpectedly.", e);
+            throw e;
+        }
+        return ShardResponse.of(
+                stopRetrieval ? STOPPED : OK,
+                new ShardPosition(shardId, lastSequenceNumber));
+    }
+
+    public KinesisShardIterator retrieveIterator(final String sequenceNumber) {
         GetShardIteratorResponse shardIteratorResponse;
         try {
             shardIteratorResponse = kinesisClient.getShardIterator(buildIteratorShardRequest(sequenceNumber));
         } catch (final InvalidArgumentException e) {
-            LOG.error(format("invalidShardSequenceNumber in Snapshot %s/%s - reading from HORIZON", kinesisStream.getStreamName(), shardId));
+            LOG.error(format("invalidShardSequenceNumber in Snapshot %s/%s - reading from HORIZON", streamName, shardId));
+            // TODO: "0" used as "magic value" to start from beginning.
             shardIteratorResponse = kinesisClient.getShardIterator(buildIteratorShardRequest("0"));
         }
         return new KinesisShardIterator(kinesisClient, shardIteratorResponse.shardIterator());
     }
 
-    private GetShardIteratorRequest buildIteratorShardRequest(String sequenceNumber) {
-        GetShardIteratorRequest.Builder shardRequestBuilder = GetShardIteratorRequest
+    private GetShardIteratorRequest buildIteratorShardRequest(final String sequenceNumber) {
+        final GetShardIteratorRequest.Builder shardRequestBuilder = GetShardIteratorRequest
                 .builder()
                 .shardId(shardId)
-                .streamName(kinesisStream.getStreamName());
+                .streamName(streamName);
 
         if (sequenceNumber == null || sequenceNumber.equals("0")) {
             shardRequestBuilder.shardIteratorType(ShardIteratorType.TRIM_HORIZON);
@@ -57,48 +101,9 @@ public class KinesisShard {
     }
 
 
-    public ShardPosition consumeRecords(final String startFromSeqNumber,
-                                        final BiFunction<Long, Record, Boolean> stopCondition,
-                                        final BiConsumer<Long, Record> consumer) {
-        try {
-            LOG.info("Reading from stream {}, shard {} with starting sequence number {}",
-                    kinesisStream.getStreamName(),
-                    shardId,
-                    startFromSeqNumber);
-
-            String lastSequenceNumber = startFromSeqNumber;
-            boolean stopRetrieval;
-            do {
-                GetRecordsResponse recordsResponse = retrieveIterator(startFromSeqNumber).next();
-
-                stopRetrieval = stopCondition.apply(recordsResponse.millisBehindLatest(), null);
-                if (!isEmptyStream(recordsResponse)) {
-                    Long millisBehindLatest = recordsResponse.millisBehindLatest();
-                    for (final Record record : recordsResponse.records()) {
-                        try {
-                            consumer.accept(millisBehindLatest, record);
-                        } catch (Exception e) {
-                            LOG.error("consumer failed while processing {}", record, e);
-                        }
-                        stopRetrieval = stopCondition.apply(millisBehindLatest, record);
-                        lastSequenceNumber = record.sequenceNumber();
-                    }
-
-                    logInfo(kinesisStream.getStreamName(), recordsResponse, ofMillis(millisBehindLatest));
-                }
-                if (!stopRetrieval) {
-                    stopRetrieval = waitABit();
-                }
-            } while (!stopRetrieval);
-            LOG.info("Terminating event source for stream '{}' shard '{}'", kinesisStream.getStreamName(), shardId);
-            return new ShardPosition(shardId, lastSequenceNumber);
-        } catch (Exception e) {
-            LOG.error("kinesis consumer died unexpectedly.", e);
-            throw e;
-        }
-    }
-
-    private void logInfo(String streamName, GetRecordsResponse recordsResponse, Duration durationBehind) {
+    private void logInfo(final String streamName,
+                         final GetRecordsResponse recordsResponse,
+                         final Duration durationBehind) {
         final String durationString = format("%s days %s hrs %s min %s sec", durationBehind.toDays(), durationBehind.toHours() % 24, durationBehind.toMinutes() % 60, durationBehind.getSeconds() % 60);
         LOG.info("Consumed {} records from stream '{}' shard '{}'; behind latest: {}",
                 recordsResponse.records().size(),
@@ -107,18 +112,7 @@ public class KinesisShard {
                 durationString);
     }
 
-    private boolean waitABit() {
-        try {
-            /* See DECISIONS.md - Question #1 */
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            LOG.warn("Thread got interrupted");
-            return true;
-        }
-        return false;
-    }
-
-    private boolean isEmptyStream(GetRecordsResponse recordsResponse) {
+    private boolean isEmptyStream(final GetRecordsResponse recordsResponse) {
         return recordsResponse.records().isEmpty();
     }
 

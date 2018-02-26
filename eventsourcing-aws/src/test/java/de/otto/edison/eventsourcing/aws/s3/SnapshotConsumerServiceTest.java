@@ -2,8 +2,8 @@ package de.otto.edison.eventsourcing.aws.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import de.otto.edison.eventsourcing.consumer.DispatchingMessageConsumer;
 import de.otto.edison.eventsourcing.consumer.MessageConsumer;
-import de.otto.edison.eventsourcing.consumer.EventConsumers;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +40,7 @@ public class SnapshotConsumerServiceTest {
                 file,
                 "test",
                 (event) -> false,
-                new EventConsumers(OBJECT_MAPPER, Collections.singletonList(messageConsumer)));
+                new DispatchingMessageConsumer(OBJECT_MAPPER, Collections.singletonList(messageConsumer)));
         //then
         assertThat(shardPositions.shards().size(), is(2));
         assertThat(shardPositions.positionOf("shardId-000000000000"), is("0"));

@@ -57,11 +57,12 @@ public class EventSourceConsumerProcessTest {
 
         @Override
         public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Message<?>> stopCondition) {
-            registeredConsumers().encodeAndSend(message(
+            final Message<String> message = message(
                     "someKey",
                     responseHeader("0", Instant.now(), Duration.ZERO),
                     "{}"
-            ));
+            );
+            registeredConsumers().accept(message);
             return StreamPosition.of();
         }
     }
