@@ -1,0 +1,21 @@
+edison:
+  s3-properties:
+    enabled: false
+    bucketname: test
+  ldap:
+    enabled: false
+
+synapse:
+  snapshot:
+    bucket-name: de-otto-promo-compaction-test-snapshots
+  compaction:
+    enabled: true
+
+service:
+  encryption:
+    password: test
+    salt: test
+
+aws:
+  profile: ft3-nonlive
+

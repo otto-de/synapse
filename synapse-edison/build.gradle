@@ -1,0 +1,108 @@
+apply plugin: 'java-library'
+
+ext.edisonrelease = "1.2.4"
+
+dependencies {
+    implementation project(':synapse-core:')
+    implementation "de.otto.edison:edison-core:" + edisonrelease
+    implementation "org.springframework:spring-context:${springVersion}"
+    implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
+    implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
+
+    // Use JUnit test framework
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.hamcrest:hamcrest-all:1.3'
+    testImplementation "de.otto.edison:edison-testsupport:" + edisonrelease
+    testImplementation "org.mockito:mockito-core:2.13.0"
+}
+
+apply plugin: 'maven'
+
+jar {
+    manifest.attributes provider: 'gradle'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+apply plugin: 'signing'
+
+signing {
+    sign configurations.archives
+}
+
+artifacts {
+    archives jar
+    archives javadocJar
+    archives sourcesJar
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+
+            pom.project {
+                name 'synapse-edison'
+                packaging 'jar'
+                description 'A library used at otto.de to integrate synapse-core with edison-microservice.'
+                url 'http://github.com/otto-de/edison-eventsourcing'
+
+                scm {
+                    url 'scm:git@github.com:otto-de/edison-eventsourcing.git'
+                    connection 'scm:git@github.com:otto-de/edison-eventsourcing.git'
+                    developerConnection 'scm:git@github.com:otto-de/edison-eventsourcing.git'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'gsteinacker'
+                        name 'Guido Steinacker'
+                    }
+                    developer {
+                        id 'mbargmann'
+                        name 'Matthias Bargmann'
+                    }
+                    developer {
+                        id 'fbregulla'
+                        name 'Frank Bregulla'
+                    }
+                    developer {
+                        id 'ftorkler'
+                        name 'Florian Torkler'
+                    }
+                    developer {
+                        id 'miregel'
+                        name 'Micha Regel'
+                    }
+                    developer {
+                        id 'hstruebe'
+                        name 'Henning Strueber'
+                    }
+                }
+            }
+        }
+    }
+}

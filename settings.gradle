@@ -1,6 +1,6 @@
-include "eventsourcing-core"
-include "eventsourcing-aws"
-include "eventsourcing-edison-integration"
-include "eventsourcing-examples:example-consumer"
-include "eventsourcing-examples:example-producer"
+include "synapse-core"
+include "synapse-aws"
+include "synapse-edison"
+include "synapse-examples:example-consumer"
+include "synapse-examples:example-producer"
 

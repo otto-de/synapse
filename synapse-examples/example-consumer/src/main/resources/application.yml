@@ -1,0 +1,19 @@
+management:
+    context-path: /internal
+
+synapse:
+  snapshot:
+    enabled: true
+    bucket-name: synapse-example-snapshot-bucket
+  consumer-process:
+    enabled: true
+
+exampleservice:
+  product-channel: example-products
+  banana-channel: example-bananas
+
+logging:
+    config: classpath:logback-console.xml
+
+server:
+  port: 5555
