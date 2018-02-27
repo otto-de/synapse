@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class ChronicleMapStateRepository<V> implements StateRepository<V> {
 
-    private final AtomicLong bytesUsed = new AtomicLong(0L);
+    protected final AtomicLong bytesUsed = new AtomicLong(0L);
 
     private final Class<V> clazz;
     private final ObjectMapper objectMapper;
@@ -35,7 +35,7 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V> {
     }
 
     @Override
-    public void put(String key, V value) {
+    public synchronized void put(String key, V value) {
         try {
             String json = objectMapper.writeValueAsString(value);
             bytesUsed.addAndGet(json.length() * 2);
@@ -69,13 +69,12 @@ public class ChronicleMapStateRepository<V> implements StateRepository<V> {
     }
 
     @Override
-    public void remove(String key) {
+    public synchronized void remove(String key) {
         try {
-            String oldJson = store.get(key);
+            String oldJson = store.remove(key);
             if (oldJson != null) {
-                bytesUsed.addAndGet(-oldJson.length() * 2);
+                bytesUsed.addAndGet(-oldJson.getBytes().length * 2);
             }
-            store.remove(key);
         } catch (ChronicleHashClosedException ignore) {
             // ignore, because this should happen on shutdown only
         }

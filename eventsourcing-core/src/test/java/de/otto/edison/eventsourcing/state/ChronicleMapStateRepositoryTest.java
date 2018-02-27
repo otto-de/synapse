@@ -1,5 +1,6 @@
 package de.otto.edison.eventsourcing.state;
 
+import groovy.lang.IntRange;
 import net.openhft.chronicle.hash.ChronicleHashClosedException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -8,9 +9,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.IntStream;
 
+import static java.lang.String.format;
+import static java.util.concurrent.Executors.newFixedThreadPool;
+import static java.util.stream.IntStream.range;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
 
 public class ChronicleMapStateRepositoryTest {
 
@@ -23,7 +34,7 @@ public class ChronicleMapStateRepositoryTest {
         Optional<SomePojo> result = repository.get("someKey");
         // then
         Assert.assertTrue(result.isPresent());
-        Assert.assertThat(result.get(), is(new SomePojo("A", 1)));
+        assertThat(result.get(), is(new SomePojo("A", 1)));
     }
 
     @Test
@@ -49,6 +60,35 @@ public class ChronicleMapStateRepositoryTest {
     }
 
     @Test
+    public void shouldCalculateCorrectSizeWhenRemovingEntries() throws Exception {
+        // given
+        ChronicleMapStateRepository<SomePojo> repository = ChronicleMapStateRepository.builder(SomePojo.class).build();
+
+        ExecutorService executorService = newFixedThreadPool(20);
+
+        // when
+        range(0, 9).forEach((i) ->
+                executorService.submit(() ->
+                        range(0, 1000).forEach((j) ->
+                                {
+                                    int randomNum = ThreadLocalRandom.current().nextInt(0, 10000000);
+                                    //System.out.println(Integer.toBinaryString(randomNum));
+                                    repository.put("someKey", new SomePojo(Integer.toBinaryString(randomNum), randomNum));
+                                }
+                        )
+                )
+        );
+        range(0, 9).forEach((i) -> executorService.submit(() ->
+                range(0, 1000).forEach((j) -> repository.remove("someKey")))
+        );
+
+        executorService.shutdown();
+        repository.remove("someKey");
+
+        assertThat(repository.bytesUsed.get(), is(0L));
+    }
+
+    @Test
     public void shouldReturnCorrectEntrySize() throws Exception {
         // given
         ChronicleMapStateRepository<SomePojo> repository = ChronicleMapStateRepository.builder(SomePojo.class).build();
@@ -58,7 +98,7 @@ public class ChronicleMapStateRepositoryTest {
         // when
         long resultSize = repository.size();
         // then
-        Assert.assertThat(resultSize, is(3L));
+        assertThat(resultSize, is(3L));
     }
 
     @Test
@@ -72,7 +112,7 @@ public class ChronicleMapStateRepositoryTest {
         List<String> resultKeys = new ArrayList<>();
         repository.getKeySetIterable().forEach(resultKeys::add);
         // then
-        Assert.assertThat(resultKeys, containsInAnyOrder("someKeyA", "someKeyB", "someKeyC"));
+        assertThat(resultKeys, containsInAnyOrder("someKeyA", "someKeyB", "someKeyC"));
     }
 
     @Test
@@ -84,7 +124,7 @@ public class ChronicleMapStateRepositoryTest {
         SomePojo testPojo = new SomePojo("A", 1);
         try {
             cache.put("someId", testPojo);
-        } catch(ChronicleHashClosedException e) {
+        } catch (ChronicleHashClosedException e) {
             // then
             Assert.fail("Tried to put item into a closed cache");
         }
@@ -100,7 +140,7 @@ public class ChronicleMapStateRepositoryTest {
 
         try {
             cache.get("someId");
-        } catch(ChronicleHashClosedException e) {
+        } catch (ChronicleHashClosedException e) {
             // then
             Assert.fail("Tried to get item from a closed cache");
         }
@@ -116,7 +156,7 @@ public class ChronicleMapStateRepositoryTest {
 
         try {
             Assert.assertEquals("Cache should have zero size", 0, cache.size());
-        } catch(ChronicleHashClosedException e) {
+        } catch (ChronicleHashClosedException e) {
             // then
             Assert.fail("Tried to get size of a closed cache - should not throw exception");
         }
@@ -130,7 +170,7 @@ public class ChronicleMapStateRepositoryTest {
         // when
         try {
             cache.getStats();
-        } catch(ChronicleHashClosedException e) {
+        } catch (ChronicleHashClosedException e) {
             // then
             Assert.fail("Tried to get memory log from closed cache");
         }
@@ -138,15 +178,14 @@ public class ChronicleMapStateRepositoryTest {
 
     }
 
-
-
     public static class SomePojo {
 
         public String someString;
         public int someInteger;
 
         // for json serialization
-        SomePojo() { }
+        SomePojo() {
+        }
 
         SomePojo(String someString, int someInteger) {
             this.someString = someString;
