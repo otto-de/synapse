@@ -23,7 +23,7 @@ import static java.time.format.DateTimeFormatter.ofPattern;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class SnapshotWriteService {
-    private static final Logger LOG = getLogger(SnapshotReadService.class);
+    private static final Logger LOG = getLogger(SnapshotWriteService.class);
 
     private static final DateTimeFormatter dateTimeFormatter = ofPattern("yyyy-MM-dd'T'HH-mmX").withZone(ZoneOffset.UTC);
 
