@@ -108,7 +108,7 @@ public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, 
                         .setAutowireMode(AUTOWIRE_BY_NAME)
                         .getBeanDefinition()
         );
-        LOG.info("Registered EventSource {} with for streamName {}", beanName, streamName);
+        LOG.info("Registered EventSource {} with for streamName {} using {}", beanName, streamName, builderName);
     }
 
 }

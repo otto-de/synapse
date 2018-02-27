@@ -39,8 +39,8 @@ public class KinesisConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(MessageSenderFactory.class)
-    public MessageSenderFactory eventSenderFactory(ObjectMapper objectMapper,
-                                                   KinesisClient kinesisClient) {
+    public MessageSenderFactory messageSenderFactory(ObjectMapper objectMapper,
+                                                     KinesisClient kinesisClient) {
         return new KinesisMessageSenderFactory(objectMapper, kinesisClient);
     }
 

@@ -1,16 +1,17 @@
 package de.otto.edison.eventsourcing.example.consumer;
 
 import de.otto.edison.eventsourcing.annotation.EventSourceConsumer;
-import de.otto.edison.eventsourcing.message.Message;
 import de.otto.edison.eventsourcing.example.consumer.payload.BananaPayload;
 import de.otto.edison.eventsourcing.example.consumer.payload.ProductPayload;
 import de.otto.edison.eventsourcing.example.consumer.state.BananaProduct;
+import de.otto.edison.eventsourcing.message.Message;
 import de.otto.edison.eventsourcing.state.StateRepository;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import static de.otto.edison.eventsourcing.example.consumer.state.BananaProduct.bananaProductBuilder;
+import static java.lang.String.valueOf;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Component
@@ -39,7 +40,7 @@ public class ExampleConsumer {
                     .withColor(message.getPayload().getColor())
                     .build();
         });
-        LOG.info(stateRepository.toString());
+        LOG.info("Updated StateRepository using BananaPayload: " + valueOf(stateRepository.get(message.getKey()).orElse(null)));
     }
 
     @EventSourceConsumer(
@@ -56,6 +57,6 @@ public class ExampleConsumer {
                     .withPrice(message.getPayload().getPrice())
                     .build();
         });
-        LOG.info(stateRepository.toString());
+        LOG.info("Updated StateRepository using ProductPayload: " + valueOf(stateRepository.get(message.getKey()).orElse(null)));
     }
 }

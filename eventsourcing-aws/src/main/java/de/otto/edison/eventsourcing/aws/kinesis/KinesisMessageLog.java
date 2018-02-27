@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
@@ -24,28 +23,28 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.stream.Collectors.toList;
 
-//TODO: KinesisStreamReaderEndpoint?
+//TODO: KinesisMessageLogReaderEndpoint?
 
-public class KinesisStream {
+public class KinesisMessageLog implements MessageLog {
 
-    private static final Logger LOG = LoggerFactory.getLogger(KinesisStream.class);
-    public static final int MAX_NUMBER_OF_THREADS = 10;
+    private static final Logger LOG = LoggerFactory.getLogger(KinesisMessageLog.class);
+    private static final int MAX_NUMBER_OF_THREADS = 10;
 
     private final String streamName;
     private final KinesisClient kinesisClient;
-    private final AtomicBoolean stop = new AtomicBoolean(false);
 
-
-    public KinesisStream(final KinesisClient kinesisClient,
-                         final String streamName) {
+    public KinesisMessageLog(final KinesisClient kinesisClient,
+                             final String streamName) {
         this.streamName = streamName;
         this.kinesisClient = kinesisClient;
     }
 
+    @Override
     public String getStreamName() {
         return streamName;
     }
 
+    @Override
     public StreamResponse consumeStream(final StreamPosition startFrom,
                                         final Predicate<Message<?>> stopCondition,
                                         final MessageConsumer<String> consumer) {

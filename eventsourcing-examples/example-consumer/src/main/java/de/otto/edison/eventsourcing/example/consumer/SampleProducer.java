@@ -1,19 +1,19 @@
 package de.otto.edison.eventsourcing.example.consumer;
 
+import de.otto.edison.eventsourcing.MessageSender;
 import de.otto.edison.eventsourcing.example.consumer.configuration.MyServiceProperties;
+import de.otto.edison.eventsourcing.example.consumer.payload.BananaPayload;
+import de.otto.edison.eventsourcing.example.consumer.payload.ProductPayload;
+import de.otto.edison.eventsourcing.message.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
-import software.amazon.awssdk.services.kinesis.model.PutRecordsRequest;
-import software.amazon.awssdk.services.kinesis.model.PutRecordsRequestEntry;
 
 import javax.annotation.PostConstruct;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.List;
+
+import static java.util.Arrays.asList;
 
 @Component
 @EnableConfigurationProperties(MyServiceProperties.class)
@@ -21,9 +21,9 @@ import java.util.Arrays;
 public class SampleProducer {
 
     @Autowired
-    private KinesisClient kinesisClient;
+    private MessageSender bananaMessageSender;
     @Autowired
-    private MyServiceProperties properties;
+    private MessageSender productMessageSender;
 
     @PostConstruct
     public void produceSampleData() {
@@ -32,54 +32,41 @@ public class SampleProducer {
     }
 
     protected void produceBananaSampleData() {
-        PutRecordsRequest putRecordBatchRequest = PutRecordsRequest
-                .builder()
-                .streamName(properties.getBananaStreamName())
-                .records(Arrays.asList(createBananaRequest("1"),
-                        createBananaRequest("2"),
-                        createBananaRequest("3"),
-                        createBananaRequest("4"),
-                        createBananaRequest("5"),
-                        createBananaRequest("6")
-                ))
-                .build();
-
-        kinesisClient.putRecords(putRecordBatchRequest);
+        final List<Message<BananaPayload>> bananaMessages = asList(
+                sampleBananaMessage("1"),
+                sampleBananaMessage("2"),
+                sampleBananaMessage("3"),
+                sampleBananaMessage("4"),
+                sampleBananaMessage("5"),
+                sampleBananaMessage("6")
+        );
+        bananaMessageSender.sendBatch(bananaMessages);
     }
 
     protected void produceProductsSampleData() {
-        PutRecordsRequest putRecordBatchRequest = PutRecordsRequest
-                .builder()
-                .streamName(properties.getProductStreamName())
-                .records(Arrays.asList(
-                        createProductRequest("1"),
-                        createProductRequest("2"),
-                        createProductRequest("3"),
-                        createProductRequest("4"),
-                        createProductRequest("5"),
-                        createProductRequest("6")
-                ))
-                .build();
-
-        kinesisClient.putRecords(putRecordBatchRequest);
+        final List<Message<ProductPayload>> productMessages = asList(
+                sampleProductMessage("1"),
+                sampleProductMessage("2"),
+                sampleProductMessage("3"),
+                sampleProductMessage("4"),
+                sampleProductMessage("5"),
+                sampleProductMessage("6")
+                );
+        productMessageSender.sendBatch(productMessages);
     }
 
-    private PutRecordsRequestEntry createBananaRequest(String id) {
-        String bananaJson = "{\"id\":\"" + id + "\", \"color\":\"red\"}";
-        return PutRecordsRequestEntry
-                .builder()
-                .partitionKey(id)
-                .data(ByteBuffer.wrap(bananaJson.getBytes(StandardCharsets.UTF_8)))
-                .build();
+    private Message<BananaPayload> sampleBananaMessage(final String id) {
+        final BananaPayload bananaPayload = new BananaPayload();
+        bananaPayload.setId(id);
+        bananaPayload.setColor("red");
+        return Message.message(id, bananaPayload);
     }
 
-    private PutRecordsRequestEntry createProductRequest(String id) {
-        String productJson = "{\"id\":\"" + id + "\", \"price\":123}";
-        return PutRecordsRequestEntry
-                .builder()
-                .partitionKey(id)
-                .data(ByteBuffer.wrap(productJson.getBytes(StandardCharsets.UTF_8)))
-                .build();
+    private Message<ProductPayload> sampleProductMessage(final String id) {
+        final ProductPayload productPayload = new ProductPayload();
+        productPayload.setId(id);
+        productPayload.setPrice(123L);
+        return Message.message(id, productPayload);
     }
 
 

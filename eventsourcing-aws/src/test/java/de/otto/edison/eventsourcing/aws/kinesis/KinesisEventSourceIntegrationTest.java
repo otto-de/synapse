@@ -75,8 +75,8 @@ public class KinesisEventSourceIntegrationTest {
     @PostConstruct
     public void setup() {
         KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, STREAM_NAME, EXPECTED_NUMBER_OF_SHARDS);
-        KinesisStream kinesisStream = new KinesisStream(kinesisClient, STREAM_NAME);
-        this.eventSource = new KinesisEventSource("kinesisEventSource", kinesisStream, eventPublisher, objectMapper);
+        KinesisMessageLog kinesisMessageLog = new KinesisMessageLog(kinesisClient, STREAM_NAME);
+        this.eventSource = new KinesisEventSource("kinesisEventSource", kinesisMessageLog, eventPublisher, objectMapper);
         this.eventSource.register(MessageConsumer.of(".*", String.class, (message) -> messages.add(message)));
     }
 

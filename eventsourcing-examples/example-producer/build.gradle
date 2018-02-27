@@ -19,6 +19,7 @@ repositories {
 ext['jackson.version'] = "2.9.3"
 
 dependencies {
+    implementation project(':eventsourcing-aws:')
     implementation project(':eventsourcing-core:')
     implementation "de.otto.edison:edison-aws-s3:0.2.3"
     implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"

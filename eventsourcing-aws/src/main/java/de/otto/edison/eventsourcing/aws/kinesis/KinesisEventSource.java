@@ -18,19 +18,19 @@ public class KinesisEventSource extends AbstractEventSource {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisEventSource.class);
 
-    private final KinesisStream kinesisStream;
+    private final MessageLog messageLog;
 
     public KinesisEventSource(final String name,
-                              final KinesisStream kinesisStream,
+                              final MessageLog messageLog,
                               final ApplicationEventPublisher eventPublisher,
                               final ObjectMapper objectMapper) {
         super(name, eventPublisher, objectMapper);
-        this.kinesisStream = kinesisStream;
+        this.messageLog = messageLog;
     }
 
     @Override
     public String getStreamName() {
-        return kinesisStream.getStreamName();
+        return messageLog.getStreamName();
     }
 
     @Override
@@ -47,7 +47,7 @@ public class KinesisEventSource extends AbstractEventSource {
             StreamResponse streamResponse;
             boolean consumeMore;
             do {
-                streamResponse = kinesisStream.consumeStream(currentPosition, stopCondition, dispatchingMessageConsumer());
+                streamResponse = messageLog.consumeStream(currentPosition, stopCondition, dispatchingMessageConsumer());
                 currentPosition = streamResponse.getStreamPosition();
                 consumeMore = streamResponse.getStatus() != Status.STOPPED && !isStopping();
                 if (consumeMore) {

@@ -30,7 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
-public class KinesisStreamTest {
+public class KinesisMessageLogTest {
 
     @Mock
     private KinesisClient kinesisClient;
@@ -40,12 +40,12 @@ public class KinesisStreamTest {
     @Mock
     private MessageConsumer<String> messageConsumer;
 
-    private KinesisStream kinesisStream;
+    private KinesisMessageLog kinesisMessageLog;
     private int nextKey = 0;
 
     @Before
     public void setUp() throws Exception {
-        kinesisStream = new KinesisStream(kinesisClient, "streamName");
+        kinesisMessageLog = new KinesisMessageLog(kinesisClient, "streamName");
     }
 
     @Test
@@ -54,7 +54,7 @@ public class KinesisStreamTest {
         describeStreamResponse(ImmutableList.of());
 
         // when
-        List<KinesisShard> shards = kinesisStream.retrieveAllOpenShards();
+        List<KinesisShard> shards = kinesisMessageLog.retrieveAllOpenShards();
 
         // then
         assertThat(shards, hasSize(0));
@@ -66,7 +66,7 @@ public class KinesisStreamTest {
         describeStreamResponse(ImmutableList.of(someShard("shard1", true)));
 
         // when
-        List<KinesisShard> shards = kinesisStream.retrieveAllOpenShards();
+        List<KinesisShard> shards = kinesisMessageLog.retrieveAllOpenShards();
 
         // then
         assertThat(shards, hasSize(1));
@@ -83,7 +83,7 @@ public class KinesisStreamTest {
                         someShard("shard3", true)));
 
         // when
-        List<KinesisShard> shards = kinesisStream.retrieveAllOpenShards();
+        List<KinesisShard> shards = kinesisMessageLog.retrieveAllOpenShards();
 
         // then
         assertThat(shards, hasSize(2));
@@ -103,7 +103,7 @@ public class KinesisStreamTest {
                         someShard("shard4", true)));
 
         // when
-        List<KinesisShard> shards = kinesisStream.retrieveAllOpenShards();
+        List<KinesisShard> shards = kinesisMessageLog.retrieveAllOpenShards();
 
         // then
         assertThat(shards, hasSize(4));
@@ -125,7 +125,7 @@ public class KinesisStreamTest {
                         someShard("shard4", true)));
 
         // when
-        List<KinesisShard> shards = kinesisStream.retrieveAllOpenShards();
+        List<KinesisShard> shards = kinesisMessageLog.retrieveAllOpenShards();
 
         // then
         assertThat(shards, hasSize(2));
@@ -143,12 +143,12 @@ public class KinesisStreamTest {
                         someShard("shard1", true)));
         describeRecordsForShard();
 
-        KinesisStream kinesisStream= new KinesisStream(kinesisClient, "testStream");
+        KinesisMessageLog kinesisMessageLog = new KinesisMessageLog(kinesisClient, "testStream");
 
         // when
         StreamResponse response = StreamResponse.of(OK, initialPositions);
         do {
-            response = kinesisStream.consumeStream(response.getStreamPosition(), this::stopIfGreenForString, messageConsumer);
+            response = kinesisMessageLog.consumeStream(response.getStreamPosition(), this::stopIfGreenForString, messageConsumer);
         } while(response.getStatus() != Status.STOPPED);
 
         // then

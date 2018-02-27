@@ -37,7 +37,7 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class KinesisMessageSenderTest {
 
-    private KinesisMessageSender kinesisEventSender;
+    private KinesisMessageSender kinesisMessageSender;
 
     @Mock
     private KinesisClient kinesisClient;
@@ -48,7 +48,7 @@ public class KinesisMessageSenderTest {
 
     @Before
     public void setUp() throws Exception {
-        kinesisEventSender = new KinesisMessageSender("test", messageTranslator, kinesisClient);
+        kinesisMessageSender = new KinesisMessageSender("test", messageTranslator, kinesisClient);
     }
 
     @Test
@@ -61,7 +61,7 @@ public class KinesisMessageSenderTest {
                 .build());
 
         // when
-        kinesisEventSender.send(message);
+        kinesisMessageSender.send(message);
 
         // then
         verify(kinesisClient).putRecords(putRecordsRequestCaptor.capture());
@@ -88,7 +88,7 @@ public class KinesisMessageSenderTest {
                 .build());
 
         // when
-        kinesisEventSender.sendBatch(Stream.of(
+        kinesisMessageSender.sendBatch(Stream.of(
                 message("b", bananaObject),
                 message("a", appleObject)
         ));
@@ -125,7 +125,7 @@ public class KinesisMessageSenderTest {
         when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(putRecordsResponse);
 
         // when
-        kinesisEventSender.sendBatch(someEvents(500 + 1));
+        kinesisMessageSender.sendBatch(someEvents(500 + 1));
 
         // then
         verify(kinesisClient, times(2)).putRecords(any(PutRecordsRequest.class));
@@ -139,7 +139,7 @@ public class KinesisMessageSenderTest {
                 .build());
 
         //when
-        kinesisEventSender.send("someKey", null);
+        kinesisMessageSender.send("someKey", null);
 
         //then
         verify(kinesisClient).putRecords(putRecordsRequestCaptor.capture());

@@ -29,15 +29,13 @@ public class Message<T> {
 
     public static <T> Message<T> message(final @Nonnull String key,
                                          final @Nullable T payload) {
-        return new Message<>(
-                key, emptyHeader(), payload);
+        return new Message<>(key, emptyHeader(), payload);
     }
 
     public static <T> Message<T> message(final @Nonnull String key,
                                          final @Nonnull Header header,
                                          final @Nullable T payload) {
-        return new Message<>(
-                key, header, payload);
+        return new Message<>(key, header, payload);
     }
 
     // TODO: Message sollte keinen key haben. Eine abgeleitete, spezielle Message einführen oder den Key zum Header hinzufügen.

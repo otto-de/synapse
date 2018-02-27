@@ -14,8 +14,8 @@ edison:
       enabled: true
 
 exampleservice:
-  product-stream-name: edison-example-products
-  banana-stream-name: edison-example-bananas
+  product-channel: example-products
+  banana-channel: example-bananas
 
 logging:
     config: classpath:logback-console.xml

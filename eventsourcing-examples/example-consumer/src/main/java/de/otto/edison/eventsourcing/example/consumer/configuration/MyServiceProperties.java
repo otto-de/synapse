@@ -4,24 +4,24 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "exampleservice")
 public class MyServiceProperties {
-    private String productStreamName;
-    private String bananaStreamName;
+    private String productChannel;
+    private String bananaChannel;
 
-    public String getProductStreamName() {
-        return productStreamName;
+    public String getProductChannel() {
+        return productChannel;
     }
 
-    public MyServiceProperties setProductStreamName(String productStreamName) {
-        this.productStreamName = productStreamName;
+    public MyServiceProperties setProductChannel(String productChannel) {
+        this.productChannel = productChannel;
         return this;
     }
 
-    public String getBananaStreamName() {
-        return bananaStreamName;
+    public String getBananaChannel() {
+        return bananaChannel;
     }
 
-    public MyServiceProperties setBananaStreamName(String bananaStreamName) {
-        this.bananaStreamName = bananaStreamName;
+    public MyServiceProperties setBananaChannel(String bananaChannel) {
+        this.bananaChannel = bananaChannel;
         return this;
     }
 }
