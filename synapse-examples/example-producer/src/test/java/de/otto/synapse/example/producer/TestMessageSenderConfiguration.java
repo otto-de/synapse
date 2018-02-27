@@ -1,11 +1,11 @@
 package de.otto.synapse.example.producer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.MessageSenderFactory;
+import de.otto.synapse.channel.InMemoryChannel;
+import de.otto.synapse.channel.InMemoryChannels;
 import de.otto.synapse.example.producer.configuration.MyServiceProperties;
-import de.otto.synapse.inmemory.InMemoryChannel;
-import de.otto.synapse.inmemory.InMemoryChannels;
-import de.otto.synapse.inmemory.InMemoryMessageSender;
+import de.otto.synapse.sender.InMemoryMessageSender;
+import de.otto.synapse.sender.MessageSenderFactory;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

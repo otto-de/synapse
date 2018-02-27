@@ -1,6 +1,8 @@
 package de.otto.synapse.consumer;
 
 import de.otto.synapse.configuration.ConsumerProcessProperties;
+import de.otto.synapse.eventsource.EventSource;
+import de.otto.synapse.eventsource.EventSourceConsumerProcess;
 import de.otto.synapse.message.Message;
 
 import javax.annotation.Nonnull;

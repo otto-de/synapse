@@ -1,8 +1,8 @@
 package de.otto.synapse.annotation;
 
-import de.otto.synapse.DelegateEventSource;
 import de.otto.synapse.configuration.EventSourcingAutoConfiguration;
-import de.otto.synapse.consumer.EventSource;
+import de.otto.synapse.eventsource.DelegateEventSource;
+import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.testsupport.InMemoryEventSourceConfiguration;
 import de.otto.synapse.testsupport.TestDefaultEventSourceConfiguration;
 import org.junit.After;

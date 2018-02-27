@@ -1,12 +1,12 @@
 package de.otto.synapse.annotation;
 
-import de.otto.synapse.consumer.EventSource;
+import de.otto.synapse.eventsource.EventSource;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
 
 /**
- * Enables auto-configuration of {@link de.otto.synapse.consumer.EventSource event sources}.
+ * Enables auto-configuration of {@link EventSource event sources}.
  * <p>
  *     A Spring bean with type {@code EventSource} is registered at the ApplicationContext. The name of the
  *     beans is specified by {@link #name()}.

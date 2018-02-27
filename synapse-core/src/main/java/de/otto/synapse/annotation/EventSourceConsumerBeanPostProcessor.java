@@ -1,7 +1,7 @@
 package de.otto.synapse.annotation;
 
-import de.otto.synapse.consumer.EventSource;
 import de.otto.synapse.consumer.MethodInvokingMessageConsumer;
+import de.otto.synapse.eventsource.EventSource;
 import org.slf4j.Logger;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.BeansException;

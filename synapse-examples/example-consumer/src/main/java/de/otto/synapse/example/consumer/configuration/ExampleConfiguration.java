@@ -1,12 +1,12 @@
 package de.otto.synapse.example.consumer.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.EventSourceBuilder;
-import de.otto.synapse.MessageSender;
 import de.otto.synapse.annotation.EnableEventSource;
+import de.otto.synapse.eventsource.EventSourceBuilder;
+import de.otto.synapse.eventsource.InMemoryEventSource;
 import de.otto.synapse.example.consumer.state.BananaProduct;
-import de.otto.synapse.inmemory.InMemoryEventSource;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.sender.MessageSender;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
@@ -16,7 +16,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static de.otto.synapse.inmemory.InMemoryChannels.getChannel;
+import static de.otto.synapse.channel.InMemoryChannels.getChannel;
 
 @Configuration
 @EnableConfigurationProperties({MyServiceProperties.class})

@@ -1,9 +1,9 @@
 package de.otto.synapse.annotation;
 
-import de.otto.synapse.DelegateEventSource;
 import de.otto.synapse.configuration.EventSourcingAutoConfiguration;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MethodInvokingMessageConsumer;
+import de.otto.synapse.eventsource.DelegateEventSource;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.InMemoryEventSourceConfiguration;
 import org.junit.After;

@@ -1,9 +1,9 @@
 package de.otto.synapse.aws.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.synapse.channel.StreamPosition;
 import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.consumer.MessageConsumer;
-import de.otto.synapse.consumer.StreamPosition;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

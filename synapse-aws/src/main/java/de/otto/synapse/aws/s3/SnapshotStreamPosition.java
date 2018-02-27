@@ -1,6 +1,6 @@
 package de.otto.synapse.aws.s3;
 
-import de.otto.synapse.consumer.StreamPosition;
+import de.otto.synapse.channel.StreamPosition;
 
 import java.time.Instant;
 import java.util.function.Function;

@@ -1,11 +1,11 @@
 package de.otto.synapse.example.producer.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.MessageSender;
-import de.otto.synapse.MessageSenderFactory;
-import de.otto.synapse.inmemory.InMemoryChannel;
-import de.otto.synapse.inmemory.InMemoryMessageSender;
+import de.otto.synapse.channel.InMemoryChannel;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.sender.InMemoryMessageSender;
+import de.otto.synapse.sender.MessageSender;
+import de.otto.synapse.sender.MessageSenderFactory;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
 import org.slf4j.Logger;
@@ -13,7 +13,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static de.otto.synapse.inmemory.InMemoryChannels.getChannel;
+import static de.otto.synapse.channel.InMemoryChannels.getChannel;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Configuration

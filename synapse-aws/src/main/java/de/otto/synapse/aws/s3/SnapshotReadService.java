@@ -1,7 +1,7 @@
 package de.otto.synapse.aws.s3;
 
 import de.otto.edison.aws.s3.S3Service;
-import de.otto.synapse.aws.configuration.SnapshotProperties;
+import de.otto.synapse.configuration.aws.SnapshotProperties;
 import org.slf4j.Logger;
 import software.amazon.awssdk.services.s3.model.S3Object;
 

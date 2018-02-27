@@ -1,12 +1,12 @@
 package de.otto.synapse.example.integration;
 
 import com.jayway.awaitility.Awaitility;
-import de.otto.synapse.MessageSender;
-import de.otto.synapse.MessageSenderFactory;
 import de.otto.synapse.example.consumer.Server;
 import de.otto.synapse.example.consumer.configuration.MyServiceProperties;
 import de.otto.synapse.example.consumer.payload.BananaPayload;
 import de.otto.synapse.example.consumer.state.BananaProduct;
+import de.otto.synapse.sender.MessageSender;
+import de.otto.synapse.sender.MessageSenderFactory;
 import de.otto.synapse.state.StateRepository;
 import org.junit.Before;
 import org.junit.Test;

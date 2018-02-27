@@ -1,5 +1,7 @@
 package de.otto.synapse.consumer;
 
+import de.otto.synapse.channel.StreamPosition;
+
 import java.util.Objects;
 
 public class EventSourceNotification {

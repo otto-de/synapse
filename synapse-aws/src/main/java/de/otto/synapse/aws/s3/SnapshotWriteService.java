@@ -5,8 +5,8 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
 import de.otto.edison.aws.s3.S3Service;
-import de.otto.synapse.aws.configuration.SnapshotProperties;
-import de.otto.synapse.consumer.StreamPosition;
+import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.configuration.aws.SnapshotProperties;
 import de.otto.synapse.state.StateRepository;
 import org.slf4j.Logger;
 

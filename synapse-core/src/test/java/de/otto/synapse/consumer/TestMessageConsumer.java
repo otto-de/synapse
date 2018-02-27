@@ -5,7 +5,7 @@ import de.otto.synapse.message.Message;
 import javax.annotation.Nonnull;
 import java.util.regex.Pattern;
 
-class TestMessageConsumer<T> implements MessageConsumer<T> {
+public class TestMessageConsumer<T> implements MessageConsumer<T> {
 
     private final Class<T> payloadType;
     private final Pattern keyPattern;

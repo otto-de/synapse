@@ -1,6 +1,5 @@
 package de.otto.synapse.state;
 
-import groovy.lang.IntRange;
 import net.openhft.chronicle.hash.ChronicleHashClosedException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -10,13 +9,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.IntStream;
 
-import static java.lang.String.format;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.stream.IntStream.range;
 import static org.hamcrest.Matchers.containsInAnyOrder;

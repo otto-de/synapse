@@ -1,13 +1,13 @@
 # Release Notes
 
-## 0.5.0
+## 0.5.0 Major Refactoring
 * Renamed project to OTTO Synapse:
   * eventsourcing-core -> synapse-core
   * eventsourcing-aws -> synapse-aws
   * eventsourcing-edison-integration -> synapse-edison
 * Renamed packages to de.otto.synapse.*
 * Renamed properties to synapse.*
-* Introduced eventsourcing-aws and removed aws-specific parts from eventsourcing-core
+* Introduced eventsourcing-aws and removed aws-specific parts from eventsourcing-/synapse-core
 * Renamed Event to Message and removed EventBody
 
 ## 0.4.8

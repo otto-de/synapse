@@ -1,10 +1,10 @@
 package de.otto.synapse.testsupport;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.EventSourceBuilder;
-import de.otto.synapse.consumer.EventSource;
-import de.otto.synapse.inmemory.InMemoryChannel;
-import de.otto.synapse.inmemory.InMemoryEventSource;
+import de.otto.synapse.channel.InMemoryChannel;
+import de.otto.synapse.eventsource.EventSource;
+import de.otto.synapse.eventsource.EventSourceBuilder;
+import de.otto.synapse.eventsource.InMemoryEventSource;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 

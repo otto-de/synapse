@@ -1,6 +1,6 @@
 package de.otto.synapse.aws.s3;
 
-import de.otto.synapse.aws.configuration.SnapshotProperties;
+import de.otto.synapse.configuration.aws.SnapshotProperties;
 
 public class SnapshotServiceTestUtils {
     public static SnapshotProperties snapshotProperties() {

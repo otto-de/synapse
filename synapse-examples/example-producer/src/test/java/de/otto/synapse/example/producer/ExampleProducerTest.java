@@ -1,7 +1,7 @@
 package de.otto.synapse.example.producer;
 
-import de.otto.synapse.MessageSender;
 import de.otto.synapse.example.producer.payload.ProductPayload;
+import de.otto.synapse.sender.MessageSender;
 import org.junit.Before;
 import org.junit.Test;
 

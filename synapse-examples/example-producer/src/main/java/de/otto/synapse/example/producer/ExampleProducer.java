@@ -1,8 +1,8 @@
 package de.otto.synapse.example.producer;
 
-import de.otto.synapse.MessageSender;
 import de.otto.synapse.example.producer.configuration.MyServiceProperties;
 import de.otto.synapse.example.producer.payload.ProductPayload;
+import de.otto.synapse.sender.MessageSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

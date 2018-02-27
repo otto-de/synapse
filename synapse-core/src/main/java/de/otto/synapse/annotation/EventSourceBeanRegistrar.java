@@ -1,6 +1,6 @@
 package de.otto.synapse.annotation;
 
-import de.otto.synapse.DelegateEventSource;
+import de.otto.synapse.eventsource.DelegateEventSource;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;

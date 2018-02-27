@@ -3,8 +3,8 @@ package de.otto.synapse.aws.s3;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import de.otto.synapse.channel.StreamPosition;
 import de.otto.synapse.consumer.DispatchingMessageConsumer;
-import de.otto.synapse.consumer.StreamPosition;
 import de.otto.synapse.message.Message;
 import org.springframework.stereotype.Service;
 

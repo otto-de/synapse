@@ -1,6 +1,6 @@
 package de.otto.synapse.annotation;
 
-import de.otto.synapse.consumer.EventSource;
+import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.message.Message;
 
 import java.lang.annotation.*;
