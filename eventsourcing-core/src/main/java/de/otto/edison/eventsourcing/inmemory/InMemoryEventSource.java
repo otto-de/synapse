@@ -16,17 +16,17 @@ import static de.otto.edison.eventsourcing.message.Message.message;
 public class InMemoryEventSource extends AbstractEventSource {
 
 
-    private final InMemoryStream inMemoryStream;
+    private final InMemoryChannel inMemoryChannel;
     private final String streamName;
 
     public InMemoryEventSource(final String name,
                                final String streamName,
-                               final InMemoryStream inMemoryStream,
+                               final InMemoryChannel inMemoryChannel,
                                final ApplicationEventPublisher eventPublisher,
                                final ObjectMapper objectMapper) {
         super(name, eventPublisher, objectMapper);
         this.streamName = streamName;
-        this.inMemoryStream = inMemoryStream;
+        this.inMemoryChannel = inMemoryChannel;
     }
 
     @Override
@@ -35,11 +35,12 @@ public class InMemoryEventSource extends AbstractEventSource {
     }
 
     @Override
-    public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Message<?>> stopCondition) {
+    public StreamPosition consumeAll(final StreamPosition startFrom,
+                                     final Predicate<Message<?>> stopCondition) {
         publishEvent(startFrom, EventSourceNotification.Status.STARTED);
         boolean shouldStop;
         do {
-            final Message<String> receivedMessage = inMemoryStream.receive();
+            final Message<String> receivedMessage = inMemoryChannel.receive();
 
             if (receivedMessage == null) {
                 return null;

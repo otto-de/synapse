@@ -5,11 +5,11 @@ import de.otto.edison.eventsourcing.message.Message;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class InMemoryStream {
+public class InMemoryChannel {
 
     private final BlockingQueue<Message<String>> eventQueue;
 
-    public InMemoryStream() {
+    public InMemoryChannel() {
         this.eventQueue = new LinkedBlockingQueue<>();
     }
 

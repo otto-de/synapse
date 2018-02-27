@@ -3,8 +3,8 @@ package de.otto.edison.eventsourcing.testsupport;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.EventSourceBuilder;
 import de.otto.edison.eventsourcing.consumer.EventSource;
+import de.otto.edison.eventsourcing.inmemory.InMemoryChannel;
 import de.otto.edison.eventsourcing.inmemory.InMemoryEventSource;
-import de.otto.edison.eventsourcing.inmemory.InMemoryStream;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 
@@ -12,8 +12,8 @@ import org.springframework.context.annotation.Bean;
 public class TestDefaultEventSourceConfiguration {
 
     @Bean
-    public InMemoryStream inMemoryStream() {
-        return new InMemoryStream();
+    public InMemoryChannel inMemoryStream() {
+        return new InMemoryChannel();
     }
 
     @Bean
@@ -26,23 +26,23 @@ public class TestDefaultEventSourceConfiguration {
 
         public TestEventSource(String name,
                                String streamName,
-                               InMemoryStream inMemoryStream,
+                               InMemoryChannel inMemoryChannel,
                                ApplicationEventPublisher eventPublisher,
                                ObjectMapper objectMapper) {
-            super(name, streamName, inMemoryStream, eventPublisher, objectMapper);
+            super(name, streamName, inMemoryChannel, eventPublisher, objectMapper);
         }
     }
 
     public static class TestDefaultEventSourceBuilder implements EventSourceBuilder {
 
-        private final InMemoryStream inMemoryStream;
+        private final InMemoryChannel inMemoryChannel;
         private final ApplicationEventPublisher eventPublisher;
         private final ObjectMapper objectMapper;
 
-        public TestDefaultEventSourceBuilder(final InMemoryStream inMemoryStream,
+        public TestDefaultEventSourceBuilder(final InMemoryChannel inMemoryChannel,
                                              final ApplicationEventPublisher eventPublisher,
                                              final ObjectMapper objectMapper) {
-            this.inMemoryStream = inMemoryStream;
+            this.inMemoryChannel = inMemoryChannel;
 
             this.eventPublisher = eventPublisher;
             this.objectMapper = objectMapper;
@@ -50,7 +50,7 @@ public class TestDefaultEventSourceConfiguration {
 
         @Override
         public EventSource buildEventSource(String name, String streamName) {
-            return new TestEventSource(name, streamName, inMemoryStream, eventPublisher, objectMapper);
+            return new TestEventSource(name, streamName, inMemoryChannel, eventPublisher, objectMapper);
         }
     }
 

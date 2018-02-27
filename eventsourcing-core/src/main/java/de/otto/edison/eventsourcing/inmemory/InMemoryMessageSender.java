@@ -7,17 +7,17 @@ import de.otto.edison.eventsourcing.translator.MessageTranslator;
 public class InMemoryMessageSender implements MessageSender {
 
     private final MessageTranslator<String> messageTranslator;
-    private final InMemoryStream eventStream;
+    private final InMemoryChannel channel;
 
     public InMemoryMessageSender(final MessageTranslator<String> messageTranslator,
-                                 final InMemoryStream eventStream) {
+                                 final InMemoryChannel channel) {
         this.messageTranslator = messageTranslator;
-        this.eventStream = eventStream;
+        this.channel = channel;
     }
 
     @Override
     public <T> void send(final Message<T> message) {
-        eventStream.send(
+        channel.send(
                 messageTranslator.translate(message)
         );
     }

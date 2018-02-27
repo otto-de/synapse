@@ -13,7 +13,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static de.otto.edison.eventsourcing.inmemory.InMemoryStreams.getChannel;
+import static de.otto.edison.eventsourcing.inmemory.InMemoryChannels.getChannel;
 
 @Configuration
 @EnableConfigurationProperties(MyServiceProperties.class)

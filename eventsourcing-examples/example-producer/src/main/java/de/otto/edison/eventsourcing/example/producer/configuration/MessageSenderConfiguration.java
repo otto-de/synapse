@@ -3,8 +3,8 @@ package de.otto.edison.eventsourcing.example.producer.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.eventsourcing.MessageSender;
 import de.otto.edison.eventsourcing.MessageSenderFactory;
+import de.otto.edison.eventsourcing.inmemory.InMemoryChannel;
 import de.otto.edison.eventsourcing.inmemory.InMemoryMessageSender;
-import de.otto.edison.eventsourcing.inmemory.InMemoryStream;
 import de.otto.edison.eventsourcing.message.Message;
 import de.otto.edison.eventsourcing.translator.JsonStringMessageTranslator;
 import de.otto.edison.eventsourcing.translator.MessageTranslator;
@@ -13,7 +13,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static de.otto.edison.eventsourcing.inmemory.InMemoryStreams.getChannel;
+import static de.otto.edison.eventsourcing.inmemory.InMemoryChannels.getChannel;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Configuration
@@ -26,7 +26,7 @@ public class MessageSenderConfiguration {
     public MessageSenderFactory messageSenderFactory(final ObjectMapper objectMapper) {
         final MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator(objectMapper);
         return streamName -> {
-            final InMemoryStream channel = getChannel(streamName);
+            final InMemoryChannel channel = getChannel(streamName);
             return new MessageSender() {
                 final MessageSender delegate = new InMemoryMessageSender(messageTranslator, channel);
 

@@ -1,8 +1,8 @@
 package de.otto.edison.eventsourcing.inmemory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.eventsourcing.consumer.MessageConsumer;
 import de.otto.edison.eventsourcing.consumer.EventSourceNotification;
+import de.otto.edison.eventsourcing.consumer.MessageConsumer;
 import de.otto.edison.eventsourcing.consumer.StreamPosition;
 import de.otto.edison.eventsourcing.message.Message;
 import org.junit.Test;
@@ -28,11 +28,11 @@ public class InMemoryEventSourceTest {
     @Test
     public void shouldSendEventInStreamToConsumer() {
         // given
-        InMemoryStream inMemoryStream = new InMemoryStream();
-        InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es","some-stream", inMemoryStream, eventPublisher, objectMapper);
+        InMemoryChannel inMemoryChannel = new InMemoryChannel();
+        InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es","some-stream", inMemoryChannel, eventPublisher, objectMapper);
         StringMessageConsumer eventConsumer = new StringMessageConsumer();
         inMemoryEventSource.register(eventConsumer);
-        inMemoryStream.send(message("key", "payload"));
+        inMemoryChannel.send(message("key", "payload"));
 
         // when
         inMemoryEventSource.consumeAll(event -> true);
@@ -46,11 +46,11 @@ public class InMemoryEventSourceTest {
     @Test
     public void shouldPublishStartedAndFinishedEvents() {
         // given
-        InMemoryStream inMemoryStream = new InMemoryStream();
-        InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es", "some-stream", inMemoryStream, eventPublisher, objectMapper);
+        InMemoryChannel inMemoryChannel = new InMemoryChannel();
+        InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es", "some-stream", inMemoryChannel, eventPublisher, objectMapper);
         StringMessageConsumer eventConsumer = new StringMessageConsumer();
         inMemoryEventSource.register(eventConsumer);
-        inMemoryStream.send(message("key", "payload"));
+        inMemoryChannel.send(message("key", "payload"));
 
         // when
         inMemoryEventSource.consumeAll(event -> true);
