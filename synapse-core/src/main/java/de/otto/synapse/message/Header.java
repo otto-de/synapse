@@ -39,6 +39,7 @@ public class Header  {
                 null);
     }
 
+    // TODO sequenceNumber -> StreamPosition
     private final String sequenceNumber;
     private final Instant arrivalTimestamp;
     private final Duration durationBehind;

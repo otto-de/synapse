@@ -2,7 +2,7 @@ package de.otto.synapse.aws.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.consumer.MessageConsumer;
 import org.junit.Before;
@@ -36,7 +36,7 @@ public class SnapshotConsumerServiceTest {
             System.out.println(event.getPayload());
             allData.put(event.getKey(), event.getPayload());
         });
-        final StreamPosition shardPositions = testee.consumeSnapshot(
+        final ChannelPosition shardPositions = testee.consumeSnapshot(
                 file,
                 "test",
                 (event) -> false,

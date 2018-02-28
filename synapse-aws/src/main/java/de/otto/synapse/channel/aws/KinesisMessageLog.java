@@ -1,8 +1,7 @@
 package de.otto.synapse.channel.aws;
 
-import de.otto.synapse.channel.ShardResponse;
-import de.otto.synapse.channel.StreamPosition;
-import de.otto.synapse.channel.StreamResponse;
+import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
@@ -47,23 +46,23 @@ public class KinesisMessageLog implements MessageLog {
     }
 
     @Override
-    public StreamResponse consumeStream(final StreamPosition startFrom,
-                                        final Predicate<Message<?>> stopCondition,
-                                        final MessageConsumer<String> consumer) {
+    public ChannelResponse consumeStream(final ChannelPosition startFrom,
+                                         final Predicate<Message<?>> stopCondition,
+                                         final MessageConsumer<String> consumer) {
         final List<KinesisShard> kinesisShards = retrieveAllOpenShards();
         final ExecutorService executorService = newFixedThreadPool(min(kinesisShards.size(), MAX_NUMBER_OF_THREADS));
         try {
-            final List<CompletableFuture<ShardResponse>> futureShardPositions = kinesisShards
+            final List<CompletableFuture<ChannelResponse>> futureShardPositions = kinesisShards
                     .stream()
                     .map(shard -> supplyAsync(
-                            () -> shard.consumeShard(startFrom.positionOf(shard.getShardId()), stopCondition, consumer),
+                            () -> shard.consumeShard(startFrom, stopCondition, consumer),
                             executorService))
                     .collect(toList());
 
             // don't chain futureShardPositions with CompletableFuture::join as lazy execution will prevent threads from
             // running in parallel
 
-            return StreamResponse.of(
+            return ChannelResponse.of(
                     futureShardPositions
                             .stream()
                             .map(CompletableFuture::join)

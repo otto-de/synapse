@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
 import de.otto.edison.aws.s3.S3Service;
-import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.configuration.aws.SnapshotProperties;
 import de.otto.synapse.state.StateRepository;
 import org.slf4j.Logger;
@@ -47,7 +47,7 @@ public class SnapshotWriteService {
 
 
     public String writeSnapshot(final String streamName,
-                                final StreamPosition position,
+                                final ChannelPosition position,
                                 final StateRepository<String> stateRepository) throws IOException {
         File snapshotFile = null;
         try {
@@ -67,7 +67,7 @@ public class SnapshotWriteService {
 
     @VisibleForTesting
     File createSnapshot(final String streamName,
-                        final StreamPosition currentStreamPosition,
+                        final ChannelPosition currentChannelPosition,
                         final StateRepository<String> stateRepository) throws IOException {
         File snapshotFile = createSnapshotFile(streamName);
 
@@ -80,7 +80,7 @@ public class SnapshotWriteService {
             zipOutputStream.putNextEntry(zipEntry);
             JsonGenerator jGenerator = jsonFactory.createGenerator(zipOutputStream, JsonEncoding.UTF8);
             jGenerator.writeStartObject();
-            writeSequenceNumbers(currentStreamPosition, jGenerator);
+            writeSequenceNumbers(currentChannelPosition, jGenerator);
             // write to data file
             jGenerator.writeArrayFieldStart(DATA_FIELD_NAME);
             stateRepository.getKeySetIterable().forEach((key) -> {
@@ -127,13 +127,13 @@ public class SnapshotWriteService {
         s3Service.upload(bucketName, snapshotFile);
     }
 
-    private void writeSequenceNumbers(StreamPosition currentStreamPosition, JsonGenerator jGenerator) throws IOException {
+    private void writeSequenceNumbers(ChannelPosition currentChannelPosition, JsonGenerator jGenerator) throws IOException {
         jGenerator.writeArrayFieldStart(START_SEQUENCE_NUMBERS_FIELD_NAME);
-        currentStreamPosition.shards().forEach(shardId -> {
+        currentChannelPosition.shards().forEach(shardId -> {
             try {
                 jGenerator.writeStartObject();
                 jGenerator.writeStringField(SHARD_FIELD_NAME, shardId);
-                jGenerator.writeStringField(SEQUENCE_NUMBER_FIELD_NAME, currentStreamPosition.positionOf(shardId));
+                jGenerator.writeStringField(SEQUENCE_NUMBER_FIELD_NAME, currentChannelPosition.positionOf(shardId));
                 jGenerator.writeEndObject();
             } catch (IOException e) {
                 throw new RuntimeException(e);

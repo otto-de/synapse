@@ -1,7 +1,7 @@
 package de.otto.synapse.eventsource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.TestMessageConsumer;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
@@ -37,7 +37,7 @@ public class EventSourceConsumerProcessTest {
         EventSourceConsumerProcess process = new EventSourceConsumerProcess(singletonList(eventSource));
         process.start();
 
-        verify(eventSource, timeout(1000)).consumeAll(any(StreamPosition.class), any(Predicate.class));
+        verify(eventSource, timeout(1000)).consumeAll(any(ChannelPosition.class), any(Predicate.class));
         verify(eventConsumerA, timeout(1000)).accept(any());
         verify(eventConsumerB, timeout(1000)).accept(any());
     }
@@ -58,14 +58,14 @@ public class EventSourceConsumerProcessTest {
         }
 
         @Override
-        public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Message<?>> stopCondition) {
+        public ChannelPosition consumeAll(ChannelPosition startFrom, Predicate<Message<?>> stopCondition) {
             final Message<String> message = message(
                     "someKey",
                     responseHeader("0", Instant.now(), Duration.ZERO),
                     "{}"
             );
             dispatchingMessageConsumer().accept(message);
-            return StreamPosition.of();
+            return ChannelPosition.fromHorizon();
         }
     }
 

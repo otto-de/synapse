@@ -1,8 +1,8 @@
 package de.otto.synapse.eventsource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.InMemoryChannel;
-import de.otto.synapse.channel.StreamPosition;
 import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.message.Message;
 import org.springframework.context.ApplicationEventPublisher;
@@ -35,8 +35,8 @@ public class InMemoryEventSource extends AbstractEventSource {
     }
 
     @Override
-    public StreamPosition consumeAll(final StreamPosition startFrom,
-                                     final Predicate<Message<?>> stopCondition) {
+    public ChannelPosition consumeAll(final ChannelPosition startFrom,
+                                      final Predicate<Message<?>> stopCondition) {
         publishEvent(startFrom, EventSourceNotification.Status.STARTED);
         boolean shouldStop;
         do {

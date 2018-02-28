@@ -1,9 +1,9 @@
 package de.otto.synapse.eventsource.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.channel.Status;
-import de.otto.synapse.channel.StreamPosition;
-import de.otto.synapse.channel.StreamResponse;
 import de.otto.synapse.channel.aws.MessageLog;
 import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.eventsource.AbstractEventSource;
@@ -42,17 +42,17 @@ public class KinesisEventSource extends AbstractEventSource {
     }
 
     @Override
-    public StreamPosition consumeAll(final StreamPosition startFrom,
-                                     final Predicate<Message<?>> stopCondition) {
-        StreamPosition currentPosition = startFrom;
+    public ChannelPosition consumeAll(final ChannelPosition startFrom,
+                                      final Predicate<Message<?>> stopCondition) {
+        ChannelPosition currentPosition = startFrom;
         publishEvent(startFrom, EventSourceNotification.Status.STARTED, "Consuming messages from Kinesis.");
         try {
-            StreamResponse streamResponse;
+            ChannelResponse channelResponse;
             boolean consumeMore;
             do {
-                streamResponse = messageLog.consumeStream(currentPosition, stopCondition, dispatchingMessageConsumer());
-                currentPosition = streamResponse.getStreamPosition();
-                consumeMore = streamResponse.getStatus() != Status.STOPPED && !isStopping();
+                channelResponse = messageLog.consumeStream(currentPosition, stopCondition, dispatchingMessageConsumer());
+                currentPosition = channelResponse.getChannelPosition();
+                consumeMore = channelResponse.getStatus() != Status.STOPPED && !isStopping();
                 if (consumeMore) {
                     consumeMore = waitABit();
                 }

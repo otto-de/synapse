@@ -3,7 +3,7 @@ package de.otto.synapse.aws.s3;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import de.otto.edison.aws.s3.S3Service;
-import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;
@@ -61,7 +61,7 @@ public class SnapshotWriteServiceTest {
         stateRepository.put("testKey", "{\"content\":\"testValue1\"}");
 
         //when
-        String fileName = testee.writeSnapshot(STREAM_NAME, StreamPosition.of(), stateRepository);
+        String fileName = testee.writeSnapshot(STREAM_NAME, ChannelPosition.fromHorizon(), stateRepository);
 
         //then
         ArgumentCaptor<File> fileArgumentCaptor = ArgumentCaptor.forClass(File.class);
@@ -82,8 +82,8 @@ public class SnapshotWriteServiceTest {
 //        stateRepository.put("testKey2", "testValue2");
 
         //when
-        StreamPosition streamPosition = StreamPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
-        File snapshot = testee.createSnapshot(STREAM_NAME, streamPosition, stateRepository);
+        ChannelPosition channelPosition = ChannelPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
+        File snapshot = testee.createSnapshot(STREAM_NAME, channelPosition, stateRepository);
 
         //then
         Map<String, Map> data = new HashMap<>();
@@ -95,12 +95,12 @@ public class SnapshotWriteServiceTest {
                     System.out.println(event);
                     data.put(event.getKey(), event.getPayload());
                 });
-        StreamPosition actualStreamPosition = snapshotConsumerService.consumeSnapshot(snapshot,
+        ChannelPosition actualChannelPosition = snapshotConsumerService.consumeSnapshot(snapshot,
                 "test",
                 (event) -> false,
                 new DispatchingMessageConsumer(OBJECT_MAPPER, singletonList(messageConsumer)));
 
-        assertThat(actualStreamPosition, is(streamPosition));
+        assertThat(actualChannelPosition, is(channelPosition));
         assertThat(data.get("testKey"), is(ImmutableMap.of("testValue1", "value1")));
         assertThat(data.get("testKey2"), is(ImmutableMap.of("testValue2", "value2")));
         assertThat(data.size(), is(2));
@@ -114,11 +114,11 @@ public class SnapshotWriteServiceTest {
         stateRepository.put("testKey", "testValue1");
         stateRepository.put("testKey2", "testValue2");
 
-        StreamPosition streamPosition = StreamPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
+        ChannelPosition channelPosition = ChannelPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
 
         // when
         try {
-            testee.writeSnapshot(STREAM_NAME, streamPosition, stateRepository);
+            testee.writeSnapshot(STREAM_NAME, channelPosition, stateRepository);
         } catch (RuntimeException e) {
             // ignore exception
         }
@@ -134,11 +134,11 @@ public class SnapshotWriteServiceTest {
         ConcurrentHashMapStateRepository<String> stateRepository = mock(ConcurrentHashMapStateRepository.class);
         when(stateRepository.get(any())).thenThrow(new RuntimeException("forced test exception"));
 
-        StreamPosition streamPosition = StreamPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
+        ChannelPosition channelPosition = ChannelPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
 
         // when
         try {
-            testee.writeSnapshot(STREAM_NAME, streamPosition, stateRepository);
+            testee.writeSnapshot(STREAM_NAME, channelPosition, stateRepository);
         } catch (RuntimeException e) {
             // ignore exception
         }

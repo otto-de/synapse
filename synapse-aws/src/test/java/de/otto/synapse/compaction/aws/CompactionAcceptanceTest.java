@@ -5,7 +5,7 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.aws.s3.SnapshotWriteService;
-import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.aws.KinesisStreamSetupUtils;
 import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.testsupport.TestStreamSource;
@@ -96,7 +96,7 @@ public class CompactionAcceptanceTest {
         int fakeElementCount = 2;
         int deletedElementCount = 1;
 
-        StreamPosition startSequenceNumbers = writeToStream(INTEGRATION_TEST_STREAM, "users_small1.txt").getFirstReadPosition();
+        ChannelPosition startSequenceNumbers = writeToStream(INTEGRATION_TEST_STREAM, "users_small1.txt").getFirstReadPosition();
         createInitialEmptySnapshotWithSequenceNumbers(startSequenceNumbers);
 
         String filenameBefore = compactionService.compact(INTEGRATION_TEST_STREAM);
@@ -125,7 +125,7 @@ public class CompactionAcceptanceTest {
 
     }
 
-    private void createInitialEmptySnapshotWithSequenceNumbers(StreamPosition startSequenceNumbers) throws IOException {
+    private void createInitialEmptySnapshotWithSequenceNumbers(ChannelPosition startSequenceNumbers) throws IOException {
         snapshotWriteService.writeSnapshot(INTEGRATION_TEST_STREAM, startSequenceNumbers, stateRepository);
     }
 

@@ -1,7 +1,7 @@
 package de.otto.synapse.channel.aws;
 
-import de.otto.synapse.channel.ShardPosition;
-import de.otto.synapse.channel.ShardResponse;
+import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
@@ -37,16 +37,16 @@ public class KinesisShard {
         return shardId;
     }
 
-    public ShardResponse consumeShard(final String startFromSeqNumber,
-                                      final Predicate<Message<?>> stopCondition,
-                                      final MessageConsumer<String> consumer) {
-        String lastSequenceNumber = startFromSeqNumber;
+    public ChannelResponse consumeShard(final ChannelPosition channelPosition,
+                                        final Predicate<Message<?>> stopCondition,
+                                        final MessageConsumer<String> consumer) {
+        String lastSequenceNumber = channelPosition.positionOf(shardId);
         boolean stopRetrieval = false;
         try {
             LOG.info("Reading from stream {}, shard {} with starting sequence number {}",
                     streamName,
                     shardId,
-                    startFromSeqNumber);
+                    lastSequenceNumber);
 
             final GetRecordsResponse recordsResponse = retrieveIterator(lastSequenceNumber).next();
             final Duration durationBehind = ofMillis(recordsResponse.millisBehindLatest());
@@ -69,9 +69,9 @@ public class KinesisShard {
             LOG.error("Kinesis consumer died unexpectedly.", e);
             throw e;
         }
-        return ShardResponse.of(
+        return ChannelResponse.of(
                 stopRetrieval ? STOPPED : OK,
-                new ShardPosition(shardId, lastSequenceNumber));
+                ChannelPosition.of(shardId, lastSequenceNumber));
     }
 
     public KinesisShardIterator retrieveIterator(final String sequenceNumber) {

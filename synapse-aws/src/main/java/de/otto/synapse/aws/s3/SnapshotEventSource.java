@@ -1,7 +1,7 @@
 package de.otto.synapse.aws.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.eventsource.AbstractEventSource;
 import de.otto.synapse.message.Message;
@@ -39,32 +39,32 @@ public class SnapshotEventSource extends AbstractEventSource {
     }
 
     @Override
-    public SnapshotStreamPosition consumeAll() {
-        return consumeAll(StreamPosition.of(), event -> false);
+    public SnapshotChannelPosition consumeAll() {
+        return consumeAll(ChannelPosition.fromHorizon(), event -> false);
     }
 
     @Override
-    public SnapshotStreamPosition consumeAll(StreamPosition startFrom) {
-        return consumeAll(StreamPosition.of());
+    public SnapshotChannelPosition consumeAll(ChannelPosition startFrom) {
+        return consumeAll(ChannelPosition.fromHorizon());
     }
 
     @Override
-    public SnapshotStreamPosition consumeAll(final StreamPosition startFrom,
-                                             final Predicate<Message<?>> stopCondition) {
-        SnapshotStreamPosition snapshotStreamPosition;
+    public SnapshotChannelPosition consumeAll(final ChannelPosition startFrom,
+                                              final Predicate<Message<?>> stopCondition) {
+        SnapshotChannelPosition snapshotStreamPosition;
 
         try {
             publishEvent(startFrom, EventSourceNotification.Status.STARTED, "Loading snapshot from S3.");
 
             Optional<File> snapshotFile = snapshotReadService.retrieveLatestSnapshot(streamName);
             if (snapshotFile.isPresent()) {
-                StreamPosition streamPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), streamName, stopCondition, dispatchingMessageConsumer());
-                snapshotStreamPosition = SnapshotStreamPosition.of(streamPosition, SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName()));
+                ChannelPosition channelPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), streamName, stopCondition, dispatchingMessageConsumer());
+                snapshotStreamPosition = SnapshotChannelPosition.of(channelPosition, SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName()));
             } else {
-                snapshotStreamPosition = SnapshotStreamPosition.of();
+                snapshotStreamPosition = SnapshotChannelPosition.of();
             }
         } catch (RuntimeException e) {
-            publishEvent(SnapshotStreamPosition.of(), EventSourceNotification.Status.FAILED, "Failed to load snapshot from S3: " + e.getMessage());
+            publishEvent(SnapshotChannelPosition.of(), EventSourceNotification.Status.FAILED, "Failed to load snapshot from S3: " + e.getMessage());
             throw e;
         } finally {
             LOG.info("Finished reading snapshot into Memory");

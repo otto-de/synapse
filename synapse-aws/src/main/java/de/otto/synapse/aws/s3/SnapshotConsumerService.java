@@ -3,7 +3,7 @@ package de.otto.synapse.aws.s3;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.message.Message;
 import org.springframework.stereotype.Service;
@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.zip.ZipInputStream;
 
+import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 
@@ -23,17 +24,17 @@ public class SnapshotConsumerService {
 
     private final JsonFactory jsonFactory = new JsonFactory();
 
-    public <T> StreamPosition consumeSnapshot(final File latestSnapshot,
-                                              final String streamName,
-                                              final Predicate<Message<?>> stopCondition,
-                                              final DispatchingMessageConsumer dispatchingMessageConsumer) {
+    public <T> ChannelPosition consumeSnapshot(final File latestSnapshot,
+                                               final String streamName,
+                                               final Predicate<Message<?>> stopCondition,
+                                               final DispatchingMessageConsumer dispatchingMessageConsumer) {
 
         try (
                 FileInputStream fileInputStream = new FileInputStream(latestSnapshot);
                 BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
                 ZipInputStream zipInputStream = new ZipInputStream(bufferedInputStream)
         ) {
-            StreamPosition shardPositions = StreamPosition.of();
+            ChannelPosition shardPositions = fromHorizon();
             zipInputStream.getNextEntry();
             JsonParser parser = jsonFactory.createParser(zipInputStream);
             while (!parser.isClosed()) {
@@ -44,8 +45,12 @@ public class SnapshotConsumerService {
                             shardPositions = processSequenceNumbers(parser);
                             break;
                         case "data":
+                            // TODO: This expects "startSequenceNumbers" to come _before_ "data" which can/should not be guaranteed in JSON
                             processSnapshotData(
                                     parser,
+
+                                    /* TODO: Hier wird der StreamName als ShardName verwendet. Damit wird der Message _keine_ sinnvolle Position im Header mitgegeben! */
+
                                     shardPositions.positionOf(streamName),
                                     stopCondition,
                                     dispatchingMessageConsumer);
@@ -66,7 +71,7 @@ public class SnapshotConsumerService {
                                          final String sequenceNumber,
                                          final Predicate<Message<?>> stopCondition,
                                          final DispatchingMessageConsumer dispatchingMessageConsumer) throws IOException {
-        // Would be better to store event meta data together with key+value:
+        // TODO: Would be better to store event meta data together with key+value:
         final Instant arrivalTimestamp = Instant.EPOCH;
         boolean abort = false;
         while (!abort && parser.nextToken() != JsonToken.END_ARRAY) {
@@ -84,7 +89,7 @@ public class SnapshotConsumerService {
         }
     }
 
-    private StreamPosition processSequenceNumbers(final JsonParser parser) throws IOException {
+    private ChannelPosition processSequenceNumbers(final JsonParser parser) throws IOException {
         final Map<String, String> shardPositions = new HashMap<>();
 
         String shardId = null;
@@ -115,7 +120,7 @@ public class SnapshotConsumerService {
                     break;
             }
         }
-        return StreamPosition.of(shardPositions);
+        return ChannelPosition.of(shardPositions);
     }
 
 

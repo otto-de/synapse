@@ -1,6 +1,6 @@
 package de.otto.synapse.consumer;
 
-import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.channel.ChannelPosition;
 
 import java.util.Objects;
 
@@ -13,14 +13,14 @@ public class EventSourceNotification {
     }
 
     private String eventSourceName;
-    private StreamPosition streamPosition;
+    private ChannelPosition channelPosition;
     private String streamName;
     private Status status;
     private String message;
 
     private EventSourceNotification(Builder builder) {
         eventSourceName = builder.eventSourceName;
-        streamPosition = builder.streamPosition;
+        channelPosition = builder.channelPosition;
         streamName = builder.streamName;
         status = builder.status;
         message = builder.message;
@@ -30,8 +30,8 @@ public class EventSourceNotification {
         return eventSourceName;
     }
 
-    public StreamPosition getStreamPosition() {
-        return streamPosition;
+    public ChannelPosition getChannelPosition() {
+        return channelPosition;
     }
 
     public String getStreamName() {
@@ -52,7 +52,7 @@ public class EventSourceNotification {
         if (o == null || getClass() != o.getClass()) return false;
         EventSourceNotification that = (EventSourceNotification) o;
         return Objects.equals(eventSourceName, that.eventSourceName) &&
-                Objects.equals(streamPosition, that.streamPosition) &&
+                Objects.equals(channelPosition, that.channelPosition) &&
                 Objects.equals(streamName, that.streamName) &&
                 status == that.status &&
                 Objects.equals(message, that.message);
@@ -60,14 +60,14 @@ public class EventSourceNotification {
 
     @Override
     public int hashCode() {
-        return Objects.hash(eventSourceName, streamPosition, streamName, status, message);
+        return Objects.hash(eventSourceName, channelPosition, streamName, status, message);
     }
 
     @Override
     public String toString() {
         return "EventSourceNotification{" +
                 "eventSourceName='" + eventSourceName + '\'' +
-                ", streamPosition=" + streamPosition +
+                ", streamPosition=" + channelPosition +
                 ", streamName='" + streamName + '\'' +
                 ", status=" + status +
                 ", message='" + message + '\'' +
@@ -80,7 +80,7 @@ public class EventSourceNotification {
 
     public static Builder builder(EventSourceNotification copy) {
         Builder builder = new Builder();
-        builder.streamPosition = copy.getStreamPosition();
+        builder.channelPosition = copy.getChannelPosition();
         builder.streamName = copy.getStreamName();
         builder.status = copy.getStatus();
         return builder;
@@ -88,7 +88,7 @@ public class EventSourceNotification {
 
     public static final class Builder {
         private String eventSourceName;
-        private StreamPosition streamPosition;
+        private ChannelPosition channelPosition;
         private String streamName;
         private Status status;
         private String message;
@@ -101,8 +101,8 @@ public class EventSourceNotification {
             return this;
         }
 
-        public Builder withStreamPosition(StreamPosition val) {
-            streamPosition = val;
+        public Builder withStreamPosition(ChannelPosition val) {
+            channelPosition = val;
             return this;
         }
 

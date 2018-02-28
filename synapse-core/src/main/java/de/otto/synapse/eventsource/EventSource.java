@@ -1,6 +1,6 @@
 package de.otto.synapse.eventsource;
 
-import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
@@ -59,12 +59,12 @@ public interface EventSource {
      *
      * @return the new read position
      */
-    default StreamPosition consumeAll() {
-        return consumeAll(StreamPosition.of(), event -> false);
+    default ChannelPosition consumeAll() {
+        return consumeAll(ChannelPosition.fromHorizon(), event -> false);
     }
 
     /**
-     * Consumes all events from the EventSource, beginning with {@link StreamPosition startFrom}, until
+     * Consumes all events from the EventSource, beginning with {@link ChannelPosition startFrom}, until
      * the (current) end of the stream is reached.
      * <p>
      *     The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
@@ -74,7 +74,7 @@ public interface EventSource {
      * @param startFrom the read position returned from earlier executions
      * @return the new read position
      */
-    default StreamPosition consumeAll(StreamPosition startFrom) {
+    default ChannelPosition consumeAll(ChannelPosition startFrom) {
         return consumeAll(startFrom, event -> false);
     }
 
@@ -88,12 +88,12 @@ public interface EventSource {
      * @param stopCondition the predicate used as a stop condition
      * @return the new read position
      */
-    default StreamPosition consumeAll(Predicate<Message<?>> stopCondition) {
-        return consumeAll(StreamPosition.of(), stopCondition);
+    default ChannelPosition consumeAll(Predicate<Message<?>> stopCondition) {
+        return consumeAll(ChannelPosition.fromHorizon(), stopCondition);
     }
 
     /**
-     * Consumes all events from the EventSource, beginning with {@link StreamPosition startFrom}, until
+     * Consumes all events from the EventSource, beginning with {@link ChannelPosition startFrom}, until
      * the {@link Predicate stopCondition} is met.
      * <p>
      *     The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
@@ -104,8 +104,8 @@ public interface EventSource {
      * @param stopCondition the predicate used as a stop condition
      * @return the new read position
      */
-    StreamPosition consumeAll(StreamPosition startFrom,
-                              Predicate<Message<?>> stopCondition);
+    ChannelPosition consumeAll(ChannelPosition startFrom,
+                               Predicate<Message<?>> stopCondition);
 
     void stop();
 

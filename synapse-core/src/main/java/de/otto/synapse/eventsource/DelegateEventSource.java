@@ -1,6 +1,6 @@
 package de.otto.synapse.eventsource;
 
-import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
@@ -78,7 +78,7 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
     }
 
     /**
-     * Consumes all events from the EventSource, beginning with {@link StreamPosition startFrom}, until
+     * Consumes all events from the EventSource, beginning with {@link ChannelPosition startFrom}, until
      * the {@link Predicate stopCondition} is met.
      * <p>
      * The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
@@ -90,8 +90,8 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
      * @return the new read position
      */
     @Override
-    public StreamPosition consumeAll(final StreamPosition startFrom,
-                                     final Predicate<Message<?>> stopCondition) {
+    public ChannelPosition consumeAll(final ChannelPosition startFrom,
+                                      final Predicate<Message<?>> stopCondition) {
         return delegate.consumeAll(startFrom, stopCondition);
     }
 

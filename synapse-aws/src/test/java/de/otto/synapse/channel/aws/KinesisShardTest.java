@@ -1,6 +1,6 @@
 package de.otto.synapse.channel.aws;
 
-import de.otto.synapse.channel.ShardResponse;
+import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.channel.Status;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.util.function.Predicate;
 
+import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
 import static java.time.Duration.ofMillis;
 import static org.hamcrest.core.Is.is;
@@ -130,15 +131,15 @@ public class KinesisShardTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
 
         // when
-        final ShardResponse shardResponse = kinesisShard.consumeShard("0", (message) -> true, consumer);
+        final ChannelResponse channelResponse = kinesisShard.consumeShard(fromHorizon(), (message) -> true, consumer);
 
         // then
         verify(consumer).accept(kinesisMessage(ofMillis(1234L), record1));
         verify(consumer).accept(kinesisMessage(ofMillis(1234L), record2));
         verifyNoMoreInteractions(consumer);
 
-        assertThat(shardResponse.getStatus(), is(Status.STOPPED));
-        assertThat(shardResponse.getShardPosition().getSequenceNumber(), is("2"));
+        assertThat(channelResponse.getStatus(), is(Status.STOPPED));
+        assertThat(channelResponse.getChannelPosition().positionOf("someShard"), is("2"));
     }
 
     @Test
@@ -159,10 +160,10 @@ public class KinesisShardTest {
         when(mockStopCondition.test(any())).thenReturn(true);
 
         // when
-        final ShardResponse shardResponse = kinesisShard.consumeShard("0", mockStopCondition, consumer);
+        final ChannelResponse channelResponse = kinesisShard.consumeShard(fromHorizon(), mockStopCondition, consumer);
 
         // then
-        assertThat(shardResponse.getStatus(), is(Status.STOPPED));
+        assertThat(channelResponse.getStatus(), is(Status.STOPPED));
         verify(mockStopCondition).test(
                 kinesisMessage(ofMillis(1234L), record)
         );
@@ -179,10 +180,10 @@ public class KinesisShardTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
 
         // when
-        final ShardResponse shardResponse = kinesisShard.consumeShard("0", mockStopCondition, consumer);
+        final ChannelResponse channelResponse = kinesisShard.consumeShard(fromHorizon(), mockStopCondition, consumer);
 
         // then
-        assertThat(shardResponse.getStatus(), is(Status.OK));
+        assertThat(channelResponse.getStatus(), is(Status.OK));
     }
 
     @Test(expected = RuntimeException.class)
@@ -191,7 +192,7 @@ public class KinesisShardTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenThrow(RuntimeException.class);
 
         // when
-        kinesisShard.consumeShard("0", mockStopCondition, consumer);
+        kinesisShard.consumeShard(fromHorizon(), mockStopCondition, consumer);
 
         // then
         // exception is thrown
@@ -219,7 +220,7 @@ public class KinesisShardTest {
         doThrow(new RuntimeException("forced exception for test")).when(consumer).accept(kinesisMessage);
 
         // when
-        kinesisShard.consumeShard("0", (message) -> true, consumer);
+        kinesisShard.consumeShard(fromHorizon(), (message) -> true, consumer);
 
         //then
         verify(consumer).accept(kinesisMessage(ofMillis(1234L), record1));

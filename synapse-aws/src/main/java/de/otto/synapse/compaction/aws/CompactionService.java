@@ -1,7 +1,7 @@
 package de.otto.synapse.compaction.aws;
 
 import de.otto.synapse.aws.s3.SnapshotWriteService;
-import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.DefaultMessageConsumer;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
@@ -44,7 +44,7 @@ public class CompactionService {
         );
 
         try {
-            final StreamPosition currentPosition = compactingKinesisEventSource.consumeAll(stopCondition());
+            final ChannelPosition currentPosition = compactingKinesisEventSource.consumeAll(stopCondition());
 
             LOG.info("Finished updating snapshot data. StateRepository now holds {} entries.", stateRepository.size());
 

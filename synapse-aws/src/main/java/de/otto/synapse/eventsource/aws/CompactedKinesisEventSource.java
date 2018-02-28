@@ -1,6 +1,6 @@
 package de.otto.synapse.eventsource.aws;
 
-import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.eventsource.EventSource;
@@ -64,10 +64,10 @@ public class CompactedKinesisEventSource implements EventSource {
     }
 
     @Override
-    public StreamPosition consumeAll(StreamPosition startFrom, Predicate<Message<?>> stopCondition) {
+    public ChannelPosition consumeAll(ChannelPosition startFrom, Predicate<Message<?>> stopCondition) {
         Predicate<Message<?>> neverStop = e -> false;
-        final StreamPosition streamPosition = snapshotEventSource.consumeAll(neverStop);
-        return kinesisEventSource.consumeAll(streamPosition, stopCondition);
+        final ChannelPosition channelPosition = snapshotEventSource.consumeAll(neverStop);
+        return kinesisEventSource.consumeAll(channelPosition, stopCondition);
     }
 
     @Override

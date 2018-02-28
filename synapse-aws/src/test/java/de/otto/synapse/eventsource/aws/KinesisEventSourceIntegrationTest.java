@@ -2,7 +2,7 @@ package de.otto.synapse.eventsource.aws;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.aws.KinesisMessageLog;
 import de.otto.synapse.channel.aws.KinesisStreamSetupUtils;
 import de.otto.synapse.consumer.MessageConsumer;
@@ -85,7 +85,7 @@ public class KinesisEventSourceIntegrationTest {
     @Test
     public void consumeDataFromKinesisStream() {
         // when
-        StreamPosition startFrom = writeToStream("users_small1.txt").getFirstReadPosition();
+        ChannelPosition startFrom = writeToStream("users_small1.txt").getFirstReadPosition();
 
         // then
         eventSource.consumeAll(
@@ -100,11 +100,11 @@ public class KinesisEventSourceIntegrationTest {
     @Test
     public void shouldStopEventSource() throws InterruptedException, ExecutionException {
         // when
-        StreamPosition startFrom = writeToStream("users_small1.txt").getFirstReadPosition();
+        ChannelPosition startFrom = writeToStream("users_small1.txt").getFirstReadPosition();
 
         // then
         ExecutorService exec = Executors.newSingleThreadExecutor();
-        final CompletableFuture<StreamPosition> completableFuture = CompletableFuture.supplyAsync(() -> eventSource.consumeAll(
+        final CompletableFuture<ChannelPosition> completableFuture = CompletableFuture.supplyAsync(() -> eventSource.consumeAll(
                 startFrom,
                 (message) -> false), exec);
 
@@ -117,7 +117,7 @@ public class KinesisEventSourceIntegrationTest {
     @Test
     public void consumeDeleteMessagesFromKinesisStream() {
         // given
-        StreamPosition startFrom = writeToStream("users_small1.txt").getLastStreamPosition();
+        ChannelPosition startFrom = writeToStream("users_small1.txt").getLastStreamPosition();
         kinesisClient.putRecord(PutRecordRequest.builder().streamName(STREAM_NAME).partitionKey("deleteEvent").data(EMPTY_BYTE_BUFFER).build());
         // when
         eventSource.consumeAll(
@@ -134,14 +134,14 @@ public class KinesisEventSourceIntegrationTest {
     public void consumerShouldReadNoMoreAfterStartingPoint() {
         // when
         writeToStream("users_small1.txt");
-        StreamPosition startFrom = writeToStream("users_small2.txt").getFirstReadPosition();
+        ChannelPosition startFrom = writeToStream("users_small2.txt").getFirstReadPosition();
 
         // then
-        StreamPosition nextStreamPosition = eventSource.consumeAll(
+        ChannelPosition nextChannelPosition = eventSource.consumeAll(
                 startFrom,
                 stopAfter(10));
 
-        assertThat(nextStreamPosition.shards(), hasSize(EXPECTED_NUMBER_OF_SHARDS));
+        assertThat(nextChannelPosition.shards(), hasSize(EXPECTED_NUMBER_OF_SHARDS));
         assertThat(messages, hasSize(EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET));
         assertThat(messages.stream().map(Message::getKey).sorted().collect(Collectors.toList()), is(expectedListOfKeys()));
     }
@@ -149,11 +149,11 @@ public class KinesisEventSourceIntegrationTest {
     @Test
     public void consumerShouldResumeAtStartingPoint() {
         // when
-        StreamPosition startFrom = writeToStream("users_small1.txt").getLastStreamPosition();
+        ChannelPosition startFrom = writeToStream("users_small1.txt").getLastStreamPosition();
         writeToStream("users_small2.txt");
 
         // then
-        StreamPosition next = eventSource.consumeAll(
+        ChannelPosition next = eventSource.consumeAll(
                 startFrom,
                 (message) -> true);
 

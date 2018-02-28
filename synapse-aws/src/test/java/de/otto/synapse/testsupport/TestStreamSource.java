@@ -2,7 +2,7 @@ package de.otto.synapse.testsupport;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.channel.ChannelPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.core.exception.SdkClientException;
@@ -67,12 +67,12 @@ public class TestStreamSource {
         }
     }
 
-    public StreamPosition getLastStreamPosition() {
-        return StreamPosition.of(mapShardIdToLastWrittenSequence);
+    public ChannelPosition getLastStreamPosition() {
+        return ChannelPosition.of(mapShardIdToLastWrittenSequence);
     }
 
-    public StreamPosition getFirstReadPosition() {
-        return StreamPosition.of(mapShardIdToFirstWrittenSequence);
+    public ChannelPosition getFirstReadPosition() {
+        return ChannelPosition.of(mapShardIdToFirstWrittenSequence);
     }
 
     /**

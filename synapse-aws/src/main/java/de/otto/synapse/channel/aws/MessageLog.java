@@ -1,7 +1,7 @@
 package de.otto.synapse.channel.aws;
 
-import de.otto.synapse.channel.StreamPosition;
-import de.otto.synapse.channel.StreamResponse;
+import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
 
@@ -11,7 +11,7 @@ public interface MessageLog {
 
     String getStreamName();
 
-    StreamResponse consumeStream(StreamPosition startFrom,
-                                 Predicate<Message<?>> stopCondition,
-                                 MessageConsumer<String> consumer);
+    ChannelResponse consumeStream(ChannelPosition startFrom,
+                                  Predicate<Message<?>> stopCondition,
+                                  MessageConsumer<String> consumer);
 }

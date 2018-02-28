@@ -1,7 +1,7 @@
 package de.otto.synapse.aws.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.consumer.MessageConsumer;
 import org.junit.Before;
@@ -85,7 +85,7 @@ public class SnapshotEventSourceTest {
                 .withEventSourceName("snapshotEventSource")
                 .withStreamName(STREAM_NAME)
                 .withStatus(EventSourceNotification.Status.FAILED)
-                .withStreamPosition(SnapshotStreamPosition.of())
+                .withStreamPosition(SnapshotChannelPosition.of())
                 .withMessage("Failed to load snapshot from S3: boom - simulate exception while loading from S3 (Service: null; Status Code: 0; Request ID: null)")
                 .build();
 
@@ -126,7 +126,7 @@ public class SnapshotEventSourceTest {
                 .withStreamName(STREAM_NAME)
                 .withStatus(EventSourceNotification.Status.STARTED)
                 .withMessage("Loading snapshot from S3.")
-                .withStreamPosition(StreamPosition.of())
+                .withStreamPosition(ChannelPosition.fromHorizon())
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedStartEvent);
 
@@ -135,7 +135,7 @@ public class SnapshotEventSourceTest {
                 .withStreamName(STREAM_NAME)
                 .withStatus(EventSourceNotification.Status.FINISHED)
                 .withMessage("Finished to load snapshot from S3.")
-                .withStreamPosition(SnapshotStreamPosition.of())
+                .withStreamPosition(SnapshotChannelPosition.of())
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedFinishedEvent);
     }

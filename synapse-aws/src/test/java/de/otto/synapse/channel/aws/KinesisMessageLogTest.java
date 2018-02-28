@@ -2,9 +2,9 @@ package de.otto.synapse.channel.aws;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.channel.Status;
-import de.otto.synapse.channel.StreamPosition;
-import de.otto.synapse.channel.StreamResponse;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
 import org.junit.Before;
@@ -138,7 +138,7 @@ public class KinesisMessageLogTest {
     @Test
     public void shouldConsumeAllEventsFromKinesis() {
         // given
-        StreamPosition initialPositions = StreamPosition.of(ImmutableMap.of("shard1", "xyz"));
+        ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
 
         describeStreamResponse(
                 ImmutableList.of(
@@ -148,9 +148,9 @@ public class KinesisMessageLogTest {
         KinesisMessageLog kinesisMessageLog = new KinesisMessageLog(kinesisClient, "testStream");
 
         // when
-        StreamResponse response = StreamResponse.of(OK, initialPositions);
+        ChannelResponse response = ChannelResponse.of(OK, initialPositions);
         do {
-            response = kinesisMessageLog.consumeStream(response.getStreamPosition(), this::stopIfGreenForString, messageConsumer);
+            response = kinesisMessageLog.consumeStream(response.getChannelPosition(), this::stopIfGreenForString, messageConsumer);
         } while(response.getStatus() != Status.STOPPED);
 
         // then

@@ -1,8 +1,8 @@
 package de.otto.synapse.eventsource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.InMemoryChannel;
-import de.otto.synapse.channel.StreamPosition;
 import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
@@ -63,12 +63,12 @@ public class InMemoryEventSourceTest {
 
         EventSourceNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
         assertThat(startedEvent.getStatus(), is(EventSourceNotification.Status.STARTED));
-        assertThat(startedEvent.getStreamPosition(), is(StreamPosition.of()));
+        assertThat(startedEvent.getChannelPosition(), is(ChannelPosition.fromHorizon()));
         assertThat(startedEvent.getStreamName(), is("some-stream"));
 
         EventSourceNotification finishedEvent = notificationArgumentCaptor.getAllValues().get(1);
         assertThat(finishedEvent.getStatus(), is(EventSourceNotification.Status.FINISHED));
-        assertThat(finishedEvent.getStreamPosition(), is(nullValue()));
+        assertThat(finishedEvent.getChannelPosition(), is(nullValue()));
         assertThat(finishedEvent.getStreamName(), is("some-stream"));
     }
     

@@ -1,7 +1,7 @@
 package de.otto.synapse.eventsource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.channel.StreamPosition;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.consumer.MessageConsumer;
@@ -67,16 +67,16 @@ public abstract class AbstractEventSource implements EventSource {
         return dispatchingMessageConsumer;
     }
 
-    protected void publishEvent(StreamPosition streamPosition, EventSourceNotification.Status status) {
-        publishEvent(streamPosition, status, "");
+    protected void publishEvent(ChannelPosition channelPosition, EventSourceNotification.Status status) {
+        publishEvent(channelPosition, status, "");
     }
 
-    protected void publishEvent(StreamPosition streamPosition, EventSourceNotification.Status status, String message) {
+    protected void publishEvent(ChannelPosition channelPosition, EventSourceNotification.Status status, String message) {
         if (eventPublisher != null) {
             EventSourceNotification notification = EventSourceNotification.builder()
                     .withEventSourceName(name)
                     .withStreamName(getStreamName())
-                    .withStreamPosition(streamPosition)
+                    .withStreamPosition(channelPosition)
                     .withStatus(status)
                     .withMessage(message)
                     .build();
