@@ -19,6 +19,7 @@ import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.List;
 
 import static de.otto.synapse.channel.Status.OK;
@@ -224,6 +225,7 @@ public class KinesisMessageLogTest {
         String json = "{\"data\":\"" + data + "\"}";
         return Record.builder()
                 .partitionKey(String.valueOf(nextKey++))
+                .approximateArrivalTimestamp(Instant.now())
                 .data(ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8)))
                 .sequenceNumber("sequence-" + data)
                 .build();
@@ -232,6 +234,7 @@ public class KinesisMessageLogTest {
     private Record createEmptyRecord() {
         return Record.builder()
                 .partitionKey(String.valueOf(nextKey++))
+                .approximateArrivalTimestamp(Instant.now())
                 .data(ByteBuffer.allocateDirect(0))
                 .sequenceNumber("sequence-" + "empty")
                 .build();

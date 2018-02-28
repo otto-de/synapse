@@ -7,6 +7,7 @@ import org.junit.Test;
 import java.time.Duration;
 import java.time.Instant;
 
+import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.consumer.TestMessageConsumer.testEventConsumer;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
@@ -36,7 +37,7 @@ public class DispatchingMessageConsumerTest {
         // when
         Message<String> someMessage = message(
                 "someKey",
-                responseHeader("0", Instant.now(), Duration.ZERO),
+                responseHeader(fromHorizon(), Instant.now(), Duration.ZERO),
                 "{}"
         );
         dispatchingMessageConsumer.accept(someMessage);
@@ -59,8 +60,9 @@ public class DispatchingMessageConsumerTest {
         DispatchingMessageConsumer dispatchingMessageConsumer = new DispatchingMessageConsumer(OBJECT_MAPPER, asList(eventConsumerApple, eventConsumerBanana, eventConsumerCherry));
 
         // when
-        Message<String> someAppleMessage = message("apple.123", responseHeader("0", Instant.now(), Duration.ZERO),"{}");
-        Message<String> someBananaMessage = message("banana.456", responseHeader("0", Instant.now(), Duration.ZERO), "{}");
+        final Instant now = Instant.now();
+        Message<String> someAppleMessage = message("apple.123", responseHeader(fromHorizon(), now, Duration.ZERO),"{}");
+        Message<String> someBananaMessage = message("banana.456", responseHeader(fromHorizon(), now, Duration.ZERO), "{}");
         dispatchingMessageConsumer.accept(someAppleMessage);
         dispatchingMessageConsumer.accept(someBananaMessage);
 
@@ -68,12 +70,12 @@ public class DispatchingMessageConsumerTest {
         verify(eventConsumerApple).accept(
                 message(
                         someAppleMessage.getKey(),
-                        responseHeader(someAppleMessage.getHeader().getSequenceNumber(), someAppleMessage.getHeader().getArrivalTimestamp(), someAppleMessage.getHeader().getDurationBehind().get()),
+                        responseHeader(fromHorizon(), now, Duration.ZERO),
                         new Apple()));
         verify(eventConsumerBanana).accept(
                 message(
                         someBananaMessage.getKey(),
-                        responseHeader(someBananaMessage.getHeader().getSequenceNumber(), someBananaMessage.getHeader().getArrivalTimestamp(), someBananaMessage.getHeader().getDurationBehind().get()),
+                        responseHeader(fromHorizon(), now, Duration.ZERO),
                         new Banana()));
         verify(eventConsumerCherry, never()).accept(any(Message.class));
     }

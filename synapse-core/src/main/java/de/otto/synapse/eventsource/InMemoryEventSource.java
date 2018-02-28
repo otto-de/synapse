@@ -7,11 +7,11 @@ import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.message.Message;
 import org.springframework.context.ApplicationEventPublisher;
 
-import java.time.Instant;
 import java.util.function.Predicate;
 
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
+import static java.time.Instant.now;
 
 public class InMemoryEventSource extends AbstractEventSource {
 
@@ -46,7 +46,7 @@ public class InMemoryEventSource extends AbstractEventSource {
                 return null;
             }
 
-            final Message<String> messageWithHeaders = message(receivedMessage.getKey(), responseHeader("0", Instant.now()), receivedMessage.getPayload());
+            final Message<String> messageWithHeaders = message(receivedMessage.getKey(), responseHeader(null, now()), receivedMessage.getPayload());
             dispatchingMessageConsumer().accept(messageWithHeaders);
             shouldStop = stopCondition.test(receivedMessage);
         } while (!shouldStop);

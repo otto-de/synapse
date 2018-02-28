@@ -80,7 +80,7 @@ public class SnapshotConsumerService {
                 final String key = parser.getValueAsString();
                 final Message<String> message = message(
                         key,
-                        responseHeader(sequenceNumber, arrivalTimestamp, null),
+                        responseHeader(null /*TODO: sequenceNumber*/, arrivalTimestamp, null),
                         parser.nextTextValue()
                 );
                 dispatchingMessageConsumer.accept(message);

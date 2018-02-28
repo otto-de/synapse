@@ -1,9 +1,14 @@
 package de.otto.synapse.message;
 
+import de.otto.synapse.channel.ChannelPosition;
+
+import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * The Header of a {@link Message}.
@@ -16,47 +21,45 @@ import java.util.Optional;
 public class Header  {
     // TODO: Header extends ImmutableMultimap<String, Object>
 
-    private static final Header EMPTY_HEADER = new Header("", Instant.MIN, null);
-
     public static Header emptyHeader() {
-        return EMPTY_HEADER;
+        return new Header(null, Instant.now(), null);
     }
 
-    public static Header responseHeader(final String sequenceNumber,
-                                        final Instant approximateArrivalTimestamp,
+    public static Header responseHeader(final ChannelPosition channelPosition,
+                                        final Instant arrivalTimestamp,
                                         final Duration durationBehind) {
         return new Header(
-                sequenceNumber,
-                approximateArrivalTimestamp,
+                channelPosition,
+                arrivalTimestamp,
                 durationBehind);
     }
 
-    public static Header responseHeader(final String sequenceNumber,
-                                        final Instant approximateArrivalTimestamp) {
+    public static Header responseHeader(final ChannelPosition channelPosition,
+                                        final Instant arrivalTimestamp) {
         return new Header(
-                sequenceNumber,
-                approximateArrivalTimestamp,
+                channelPosition,
+                arrivalTimestamp,
                 null);
     }
 
-    // TODO sequenceNumber -> StreamPosition
-    private final String sequenceNumber;
+    private final ChannelPosition channelPosition;
     private final Instant arrivalTimestamp;
     private final Duration durationBehind;
 
-
-    private Header(final String sequenceNumber,
+    private Header(final ChannelPosition channelPosition,
                    final Instant approximateArrivalTimestamp,
                    final Duration durationBehind) {
-        this.sequenceNumber = sequenceNumber;
-        this.arrivalTimestamp = approximateArrivalTimestamp;
+        this.channelPosition = channelPosition;
+        this.arrivalTimestamp = requireNonNull(approximateArrivalTimestamp);
         this.durationBehind = durationBehind;
     }
 
-    public String getSequenceNumber() {
-        return sequenceNumber;
+    @Nonnull
+    public Optional<ChannelPosition> getChannelPosition() {
+        return Optional.ofNullable(channelPosition);
     }
 
+    @Nonnull
     public Instant getArrivalTimestamp() {
         return arrivalTimestamp;
     }
@@ -66,6 +69,7 @@ public class Header  {
      *
      * @return Duration
      */
+    @Nonnull
     public Optional<Duration> getDurationBehind() {
         return Optional.ofNullable(durationBehind);
     }
@@ -75,20 +79,20 @@ public class Header  {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Header header = (Header) o;
-        return Objects.equals(sequenceNumber, header.sequenceNumber) &&
+        return Objects.equals(channelPosition, header.channelPosition) &&
                 Objects.equals(arrivalTimestamp, header.arrivalTimestamp) &&
                 Objects.equals(durationBehind, header.durationBehind);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(sequenceNumber, arrivalTimestamp, durationBehind);
+        return Objects.hash(channelPosition, arrivalTimestamp, durationBehind);
     }
 
     @Override
     public String toString() {
         return "Header{" +
-                "sequenceNumber='" + sequenceNumber + '\'' +
+                "channelPosition='" + channelPosition + '\'' +
                 ", arrivalTimestamp=" + arrivalTimestamp +
                 ", durationBehind=" + durationBehind +
                 '}';

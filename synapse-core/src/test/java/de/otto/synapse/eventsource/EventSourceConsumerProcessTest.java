@@ -61,7 +61,7 @@ public class EventSourceConsumerProcessTest {
         public ChannelPosition consumeAll(ChannelPosition startFrom, Predicate<Message<?>> stopCondition) {
             final Message<String> message = message(
                     "someKey",
-                    responseHeader("0", Instant.now(), Duration.ZERO),
+                    responseHeader(null, Instant.now(), Duration.ZERO),
                     "{}"
             );
             dispatchingMessageConsumer().accept(message);

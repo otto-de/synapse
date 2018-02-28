@@ -13,11 +13,13 @@ import org.mockito.stubbing.Answer;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
+import java.time.Instant;
 import java.util.function.Predicate;
 
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
 import static java.time.Duration.ofMillis;
+import static java.time.Instant.now;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -114,16 +116,19 @@ public class KinesisShardTest {
     @Test
     @SuppressWarnings("unchecked")
     public void shouldConsumeSingleRecordSetForStopAlwaysCondition() {
+        final Instant now = now();
         // given
-        Record record1 = Record.builder()
+        final Record record1 = Record.builder()
                 .sequenceNumber("1")
+                .approximateArrivalTimestamp(now)
                 .partitionKey("first")
                 .build();
-        Record record2 = Record.builder()
+        final Record record2 = Record.builder()
                 .sequenceNumber("2")
+                .approximateArrivalTimestamp(now)
                 .partitionKey("second")
                 .build();
-        GetRecordsResponse response = GetRecordsResponse.builder()
+        final GetRecordsResponse response = GetRecordsResponse.builder()
                 .records(record1, record2)
                 .nextShardIterator("nextShardIterator")
                 .millisBehindLatest(1234L)
@@ -134,8 +139,8 @@ public class KinesisShardTest {
         final ChannelResponse channelResponse = kinesisShard.consumeShard(fromHorizon(), (message) -> true, consumer);
 
         // then
-        verify(consumer).accept(kinesisMessage(ofMillis(1234L), record1));
-        verify(consumer).accept(kinesisMessage(ofMillis(1234L), record2));
+        verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record1));
+        verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record2));
         verifyNoMoreInteractions(consumer);
 
         assertThat(channelResponse.getStatus(), is(Status.STOPPED));
@@ -145,8 +150,10 @@ public class KinesisShardTest {
     @Test
     public void shouldPassMillisBehindLatestWithRecordToStopCondition() throws Exception {
         // given
+        final Instant now = now();
         final Record record = Record.builder()
                 .partitionKey("first")
+                .approximateArrivalTimestamp(now)
                 .sequenceNumber("1")
                 .build();
         final GetRecordsResponse response = GetRecordsResponse.builder()
@@ -165,7 +172,7 @@ public class KinesisShardTest {
         // then
         assertThat(channelResponse.getStatus(), is(Status.STOPPED));
         verify(mockStopCondition).test(
-                kinesisMessage(ofMillis(1234L), record)
+                kinesisMessage("someShard", ofMillis(1234L), record)
         );
     }
 
@@ -201,29 +208,32 @@ public class KinesisShardTest {
     @Test
     public void shouldCatchExceptionInConsumerAndCarryOn() {
         // given
-        Record record1 = Record.builder()
+        final Instant now = now();
+        final Record record1 = Record.builder()
                 .partitionKey("first")
+                .approximateArrivalTimestamp(now)
                 .sequenceNumber("1")
                 .build();
-        Record record2 = Record.builder()
+        final Record record2 = Record.builder()
                 .partitionKey("second")
+                .approximateArrivalTimestamp(now)
                 .sequenceNumber("2")
                 .build();
-        GetRecordsResponse response = GetRecordsResponse.builder()
+        final GetRecordsResponse response = GetRecordsResponse.builder()
                 .records(record1, record2)
                 .nextShardIterator("nextShardIterator")
                 .millisBehindLatest(1234L)
                 .build();
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
 
-        final Message<String> kinesisMessage = kinesisMessage(ofMillis(1234L), record1);
+        final Message<String> kinesisMessage = kinesisMessage("someShard", ofMillis(1234L), record1);
         doThrow(new RuntimeException("forced exception for test")).when(consumer).accept(kinesisMessage);
 
         // when
         kinesisShard.consumeShard(fromHorizon(), (message) -> true, consumer);
 
         //then
-        verify(consumer).accept(kinesisMessage(ofMillis(1234L), record1));
-        verify(consumer).accept(kinesisMessage(ofMillis(1234L), record2));
+        verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record1));
+        verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record2));
     }
 }

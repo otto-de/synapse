@@ -54,7 +54,7 @@ public class KinesisShard {
             if (!isEmptyStream(recordsResponse)) {
                 for (final Record record : recordsResponse.records()) {
                     try {
-                        final Message<String> kinesisMessage = kinesisMessage(durationBehind, record);
+                        final Message<String> kinesisMessage = kinesisMessage(shardId, durationBehind, record);
                         consumer.accept(kinesisMessage);
                         stopRetrieval = stopRetrieval || stopCondition.test(kinesisMessage);
                     } catch (Exception e) {

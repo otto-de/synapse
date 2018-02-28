@@ -1,11 +1,14 @@
 package de.otto.synapse.message.aws;
 
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
 import java.nio.ByteBuffer;
+import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
 
 import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -24,11 +27,13 @@ public class KinesisMessageTest {
                 .sequenceNumber("00001")
                 .build();
         final Message<String> message = kinesisMessage(
-                record,
-                (bb) -> UTF_8.decode(bb).toString());
+                "some-shard",
+                Duration.ofMillis(42L),
+                record);
         assertThat(message.getKey(), is("42"));
         assertThat(message.getPayload(), is("ßome dätä"));
         assertThat(message.getHeader().getArrivalTimestamp(), is(now));
-        assertThat(message.getHeader().getSequenceNumber(), is("00001"));
+        assertThat(message.getHeader().getDurationBehind(), is(Optional.of(Duration.ofMillis(42L))));
+        assertThat(message.getHeader().getChannelPosition(), is(Optional.of(ChannelPosition.of("some-shard", "00001"))));
     }
 }

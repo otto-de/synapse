@@ -12,6 +12,7 @@ import org.junit.Test;
 import java.time.Instant;
 import java.util.Optional;
 
+import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.message.Header.responseHeader;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -83,7 +84,7 @@ public class ExampleConsumerTest {
     private <T> Message<T> testEvent(String key, T payload) {
         return Message.message(
                 key,
-                responseHeader("0", Instant.now(), null),
+                responseHeader(fromHorizon(), Instant.now(), null),
                 payload
         );
     }

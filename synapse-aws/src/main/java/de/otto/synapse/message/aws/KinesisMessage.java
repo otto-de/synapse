@@ -7,12 +7,14 @@ import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.function.Function;
 
+import static de.otto.synapse.channel.ChannelPosition.of;
 import static de.otto.synapse.message.Header.responseHeader;
+import static java.nio.ByteBuffer.allocateDirect;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class KinesisMessage<T> extends Message<T> {
 
-    private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.allocateDirect(0);
+    private static final ByteBuffer EMPTY_BYTE_BUFFER = allocateDirect(0);
 
     private static final Function<ByteBuffer, String> BYTE_BUFFER_STRING = byteBuffer -> {
         if (byteBuffer == null || byteBuffer.equals(EMPTY_BYTE_BUFFER)) {
@@ -23,35 +25,20 @@ public class KinesisMessage<T> extends Message<T> {
 
     };
 
-    public static Message<String> kinesisMessage(final Duration durationBehind,
+    public static Message<String> kinesisMessage(final String shard,
+                                                 final Duration durationBehind,
                                                  final Record record) {
-        return new KinesisMessage<>(record, durationBehind, BYTE_BUFFER_STRING);
+        return new KinesisMessage<>(shard, durationBehind, record, BYTE_BUFFER_STRING);
     }
 
-    public static <T> Message<T> kinesisMessage(final Record record,
-                                                final Function<ByteBuffer, T> decoder) {
-        return new KinesisMessage<>(
-                record,
-                null,
-                decoder);
-    }
-
-    public static <T> Message<T> kinesisMessage(final Duration durationBehind,
-                                                final Record record,
-                                                final Function<ByteBuffer, T> decoder) {
-        return new KinesisMessage<>(
-                record,
-                durationBehind,
-                decoder);
-    }
-
-    private KinesisMessage(final Record record,
+    private KinesisMessage(final String shard,
                            final Duration durationBehind,
+                           final Record record,
                            final Function<ByteBuffer, T> decoder) {
         super(
                 record.partitionKey(),
                 responseHeader(
-                        record.sequenceNumber(),
+                        of(shard, record.sequenceNumber()),
                         record.approximateArrivalTimestamp(),
                         durationBehind
                 ),
