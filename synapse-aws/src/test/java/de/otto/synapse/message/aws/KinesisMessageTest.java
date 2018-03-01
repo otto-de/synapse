@@ -12,8 +12,10 @@ import java.util.Optional;
 
 import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Optional.empty;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 
 public class KinesisMessageTest {
 
@@ -34,6 +36,20 @@ public class KinesisMessageTest {
         assertThat(message.getPayload(), is("ßome dätä"));
         assertThat(message.getHeader().getArrivalTimestamp(), is(now));
         assertThat(message.getHeader().getDurationBehind(), is(Optional.of(Duration.ofMillis(42L))));
-        assertThat(message.getHeader().getChannelPosition(), is(Optional.of(ChannelPosition.of("some-shard", "00001"))));
+        assertThat(message.getHeader().getChannelPosition(), is(Optional.of(ChannelPosition.shardPosition("some-shard", "00001"))));
+    }
+
+    @Test
+    public void shouldBuildKinesisMessageWithNullRecord() {
+        final Instant now = Instant.now();
+        final Message<String> message = kinesisMessage(
+                "some-shard",
+                Duration.ofMillis(42L),
+                null);
+        assertThat(message.getKey(), is("42"));
+        assertThat(message.getPayload(), is(nullValue()));
+        assertThat(message.getHeader().getArrivalTimestamp(), is(now));
+        assertThat(message.getHeader().getDurationBehind(), is(empty()));
+        assertThat(message.getHeader().getChannelPosition(), is(empty()));
     }
 }

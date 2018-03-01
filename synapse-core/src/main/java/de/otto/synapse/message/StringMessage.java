@@ -1,10 +1,5 @@
 package de.otto.synapse.message;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import static de.otto.synapse.message.Header.emptyHeader;
-
 /**
  * A Message is an atomic packet of data that can be transmitted on a channel.
  *
@@ -23,25 +18,6 @@ import static de.otto.synapse.message.Header.emptyHeader;
  *
  * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/Message.html">EIP - Message</a>
  */
-public class StringMessage extends Message<String> {
-
-    public static StringMessage stringMessage(@Nonnull final String key,
-                                              @Nullable final String payload) {
-        return new StringMessage(
-                key, emptyHeader(), payload);
-    }
-
-    public static StringMessage stringMessage(@Nonnull final String key,
-                                              @Nonnull final Header header,
-                                              @Nullable final String payload) {
-        return new StringMessage(
-                key, header, payload);
-    }
-
-    private StringMessage(final @Nonnull String key,
-                          final @Nonnull Header header,
-                          final @Nullable String payload) {
-        super(key, header, payload);
-    }
+public final class StringMessage {
 
 }

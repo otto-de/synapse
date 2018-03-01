@@ -6,7 +6,7 @@ import de.otto.synapse.message.Message;
 
 import javax.annotation.Nonnull;
 
-import static de.otto.synapse.message.StringMessage.stringMessage;
+import static de.otto.synapse.message.Messages.stringMessage;
 
 /**
  * A MessageTranslator that converts messages into messages with String JSON payloads.

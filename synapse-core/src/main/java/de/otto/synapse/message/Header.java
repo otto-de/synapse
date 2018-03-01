@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.google.common.collect.Iterables.getFirst;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -49,6 +50,9 @@ public class Header  {
     private Header(final ChannelPosition channelPosition,
                    final Instant approximateArrivalTimestamp,
                    final Duration durationBehind) {
+        if (channelPosition != null && channelPosition.shards().size() > 1) {
+            throw new IllegalArgumentException("ChannelPosition must not have more than one shard");
+        }
         this.channelPosition = channelPosition;
         this.arrivalTimestamp = requireNonNull(approximateArrivalTimestamp);
         this.durationBehind = durationBehind;
@@ -57,6 +61,21 @@ public class Header  {
     @Nonnull
     public Optional<ChannelPosition> getChannelPosition() {
         return Optional.ofNullable(channelPosition);
+    }
+
+    @Nonnull
+    public String getShardPosition() {
+        return channelPosition.positionOf(getShardName());
+    }
+
+    @Nonnull
+    public String getShardName() {
+        if (channelPosition != null && channelPosition.shards().size() == 1) {
+            //noinspection ConstantConditions
+            return getFirst(channelPosition.shards(), "");
+        } else {
+            return "";
+        }
     }
 
     @Nonnull

@@ -1,19 +1,22 @@
 package de.otto.synapse.message.aws;
 
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Message;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.function.Function;
 
-import static de.otto.synapse.channel.ChannelPosition.of;
 import static de.otto.synapse.message.Header.responseHeader;
+import static de.otto.synapse.message.Message.message;
 import static java.nio.ByteBuffer.allocateDirect;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class KinesisMessage<T> extends Message<T> {
+public class KinesisMessage {
 
     private static final ByteBuffer EMPTY_BYTE_BUFFER = allocateDirect(0);
 
@@ -26,41 +29,17 @@ public class KinesisMessage<T> extends Message<T> {
 
     };
 
-    public static Message<String> kinesisMessage(final String shard,
-                                                 final Duration durationBehind,
-                                                 final Record record) {
-        if (record == null) {
-            return new KinesisMessage<>(shard, durationBehind, BYTE_BUFFER_STRING);
-        } else {
-            return new KinesisMessage<>(shard, durationBehind, record, BYTE_BUFFER_STRING);
-        }
-    }
-
-    private KinesisMessage(final String shard,
-                           final Duration durationBehind,
-                           final Record record,
-                           final Function<ByteBuffer, T> decoder) {
-        super(
+    public static Message<String> kinesisMessage(final @Nonnull String shard,
+                                                 final @Nonnull Duration durationBehind,
+                                                 final @Nonnull Record record) {
+        return message(
                 record.partitionKey(),
                 responseHeader(
-                        of(shard, record.sequenceNumber()),
+                        ChannelPosition.shardPosition(shard, record.sequenceNumber()),
                         record.approximateArrivalTimestamp(),
                         durationBehind
                 ),
-                decoder.apply(record.data()));
-    }
-
-    private KinesisMessage(final String shard,
-                           final Duration durationBehind,
-                           final Function<ByteBuffer, T> decoder) {
-        super(
-                "no_key",
-                responseHeader(
-                        of(shard, "unknown"),
-                        Instant.MIN,
-                        durationBehind
-                ),
-                decoder.apply(ByteBuffer.wrap(new byte[0])));
+                BYTE_BUFFER_STRING.apply(record.data()));
     }
 
 }

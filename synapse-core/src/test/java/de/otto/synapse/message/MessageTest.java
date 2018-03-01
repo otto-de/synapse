@@ -1,10 +1,10 @@
 package de.otto.synapse.message;
 
+import de.otto.synapse.channel.ChannelPosition;
 import org.junit.Test;
 
 import java.time.Instant;
 
-import static de.otto.synapse.channel.ChannelPosition.of;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.time.Duration.ofMillis;
@@ -18,7 +18,7 @@ public class MessageTest {
         final Instant now = Instant.now();
         final Message<String> message = message(
                 "42",
-                responseHeader(of("some-channel", "00001"), now, ofMillis(42L)),
+                responseHeader(ChannelPosition.shardPosition("some-channel", "00001"), now, ofMillis(42L)),
                 "ßome dätä"
         );
         assertThat(message.getKey(), is("42"));

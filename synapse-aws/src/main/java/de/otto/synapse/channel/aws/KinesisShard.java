@@ -3,6 +3,7 @@ package de.otto.synapse.channel.aws;
 import com.google.common.annotations.VisibleForTesting;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,8 +11,10 @@ import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.function.Predicate;
 
+import static de.otto.synapse.channel.ChannelPosition.shardPosition;
 import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
@@ -68,7 +71,9 @@ public class KinesisShard {
                         }
                     }
                 } else {
-                    Message kinesisMessage = kinesisMessage(shardId, durationBehind, lastRecord);
+                    Message kinesisMessage = lastRecord != null
+                            ? kinesisMessage(shardId, durationBehind, lastRecord)
+                            : dirtyHackToStopThreadMessage(durationBehind);
                     stopRetrieval = stopCondition.test(kinesisMessage);
                 }
 
@@ -79,11 +84,15 @@ public class KinesisShard {
                 }
             } while (!stopRetrieval);
             LOG.info("Done consuming from shard '{}' of stream '{}'.", streamName, shardId);
-            return ChannelPosition.of(shardId, lastSequenceNumber);
+            return shardPosition(shardId, lastSequenceNumber);
         } catch (Exception e) {
             LOG.error(String.format("kinesis consumer died unexpectedly. shard '%s', stream '%s'", streamName, shardId), e);
             throw e;
         }
+    }
+
+    private Message<Header> dirtyHackToStopThreadMessage(final Duration durationBehind) {
+        return Message.message("no_key", Header.responseHeader(ChannelPosition.fromHorizon(), Instant.now(), durationBehind));
     }
 
     @VisibleForTesting

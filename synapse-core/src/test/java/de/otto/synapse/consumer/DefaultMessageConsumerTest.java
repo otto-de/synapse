@@ -1,5 +1,6 @@
 package de.otto.synapse.consumer;
 
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.state.StateRepository;
 import org.junit.Test;
@@ -9,7 +10,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import java.time.Instant;
 
-import static de.otto.synapse.channel.ChannelPosition.of;
 import static de.otto.synapse.message.Header.responseHeader;
 import static org.mockito.Mockito.verify;
 
@@ -27,7 +27,7 @@ public class DefaultMessageConsumerTest {
         //when
         consumer.accept(Message.message(
                 "someKey",
-                responseHeader(of("some-shard", "someSeqNumber"), Instant.now(), null),
+                responseHeader(ChannelPosition.shardPosition("some-shard", "someSeqNumber"), Instant.now(), null),
                 "12345"
         ));
 
@@ -43,7 +43,7 @@ public class DefaultMessageConsumerTest {
         //when
         consumer.accept(Message.message(
                 "someKey",
-                responseHeader(of("some-shard", "someSeqNumber"), Instant.now(), null),
+                responseHeader(ChannelPosition.shardPosition("some-shard", "someSeqNumber"), Instant.now(), null),
                 null
         ));
 

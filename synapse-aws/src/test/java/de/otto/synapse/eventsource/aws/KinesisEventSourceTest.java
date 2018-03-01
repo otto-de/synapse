@@ -72,7 +72,7 @@ public class KinesisEventSourceTest {
     @Test
     public void shouldConsumeAllEventsWithRegisteredConsumers() {
         // given
-        ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
+        ChannelPosition initialPositions = ChannelPosition.shardPosition(ImmutableMap.of("shard1", "xyz"));
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisMessageLog, eventPublisher, objectMapper);
         eventSource.register(testDataConsumer);
@@ -88,7 +88,7 @@ public class KinesisEventSourceTest {
     @Test
     public void shouldFinishConsumptionOnStopCondition() {
         // given
-        ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
+        ChannelPosition initialPositions = ChannelPosition.shardPosition(ImmutableMap.of("shard1", "xyz"));
         when(kinesisMessageLog.consumeStream(any(ChannelPosition.class), any(Predicate.class), any(MessageConsumer.class)))
                 .thenReturn(ChannelPosition.of(singletonMap("shard1", "4711")));
 
@@ -101,13 +101,13 @@ public class KinesisEventSourceTest {
 
         // then
         assertThat(eventSource.isStopping(), is(false));
-        assertThat(channelPosition, is(ChannelPosition.of(singletonMap("shard1", "4711"))));
+        assertThat(channelPosition, is(ChannelPosition.shardPosition(singletonMap("shard1", "4711"))));
     }
 
     @Test
     public void shouldFinishConsumptionOnStop() {
         // given
-        ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
+        ChannelPosition initialPositions = ChannelPosition.shardPosition(ImmutableMap.of("shard1", "xyz"));
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisMessageLog, eventPublisher, objectMapper);
         eventSource.register(testDataConsumer);
@@ -123,7 +123,7 @@ public class KinesisEventSourceTest {
     @Test
     public void shouldPublishStartedAndFinishedEvents() {
         // given
-        ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
+        ChannelPosition initialPositions = ChannelPosition.shardPosition(ImmutableMap.of("shard1", "xyz"));
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisMessageLog, eventPublisher, objectMapper);
         eventSource.stop();
@@ -150,7 +150,7 @@ public class KinesisEventSourceTest {
     @Test
     public void shouldPublishStartedAndFailedEvents() {
         // given
-        ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
+        ChannelPosition initialPositions = ChannelPosition.shardPosition(ImmutableMap.of("shard1", "xyz"));
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisMessageLog, eventPublisher, objectMapper);
         when(kinesisMessageLog.consumeStream(any(ChannelPosition.class), any(Predicate.class), any(MessageConsumer.class))).thenThrow(new RuntimeException("Error Message"));

@@ -7,7 +7,7 @@ import de.otto.synapse.message.Message;
 import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 
-import static de.otto.synapse.message.ByteBufferMessage.byteBufferMessage;
+import static de.otto.synapse.message.Messages.byteBufferMessage;
 import static java.nio.ByteBuffer.wrap;
 
 /**

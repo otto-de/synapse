@@ -80,7 +80,7 @@ public class SnapshotWriteServiceTest {
         stateRepository.put("testKey2", "{\"testValue2\": \"value2\"}");
 
         //when
-        ChannelPosition channelPosition = ChannelPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
+        ChannelPosition channelPosition = ChannelPosition.shardPosition(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
         File snapshot = testee.createSnapshot(STREAM_NAME, channelPosition, stateRepository);
 
         //then
@@ -109,7 +109,7 @@ public class SnapshotWriteServiceTest {
         stateRepository.put("testKey", "testValue1");
         stateRepository.put("testKey2", "testValue2");
 
-        ChannelPosition channelPosition = ChannelPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
+        ChannelPosition channelPosition = ChannelPosition.shardPosition(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
 
         // when
         try {
@@ -129,7 +129,7 @@ public class SnapshotWriteServiceTest {
         StateRepository<String> stateRepository = mock(StateRepository.class);
         when(stateRepository.get(any())).thenThrow(new RuntimeException("forced test exception"));
 
-        ChannelPosition channelPosition = ChannelPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
+        ChannelPosition channelPosition = ChannelPosition.shardPosition(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
 
         // when
         try {

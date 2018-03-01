@@ -68,11 +68,11 @@ public class TestStreamSource {
     }
 
     public ChannelPosition getLastStreamPosition() {
-        return ChannelPosition.of(mapShardIdToLastWrittenSequence);
+        return ChannelPosition.shardPosition(mapShardIdToLastWrittenSequence);
     }
 
     public ChannelPosition getFirstReadPosition() {
-        return ChannelPosition.of(mapShardIdToFirstWrittenSequence);
+        return ChannelPosition.shardPosition(mapShardIdToFirstWrittenSequence);
     }
 
     /**
