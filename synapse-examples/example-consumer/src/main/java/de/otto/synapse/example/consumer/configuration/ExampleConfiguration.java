@@ -9,6 +9,8 @@ import de.otto.synapse.message.Message;
 import de.otto.synapse.sender.MessageSender;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;
 import de.otto.synapse.state.StateRepository;
+import de.otto.synapse.state.concurrent.ConcurrentHashMapConcurrentMapStateRepository;
+import de.otto.synapse.state.concurrent.ConcurrentMapStateRepository;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -26,7 +28,12 @@ public class ExampleConfiguration {
 
     @Bean
     public StateRepository<BananaProduct> bananaProductStateRepository() {
-        return new ConcurrentHashMapStateRepository<>();
+        return new ConcurrentHashMapStateRepository();
+    }
+
+    @Bean
+    public ConcurrentMapStateRepository<BananaProduct> bananaProductConcurrentStateRepository() {
+        return new ConcurrentHashMapConcurrentMapStateRepository<>();
     }
 
     @Bean
@@ -57,5 +64,4 @@ public class ExampleConfiguration {
             }
         };
     }
-
 }
