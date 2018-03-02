@@ -17,20 +17,29 @@ public abstract class AbstractEventSource implements EventSource {
     private static final Logger LOG = getLogger(AbstractEventSource.class);
 
     private final String name;
+    private final String streamName;
     private final ApplicationEventPublisher eventPublisher;
     private final DispatchingMessageConsumer dispatchingMessageConsumer;
     private final AtomicBoolean stopping = new AtomicBoolean(false);
 
     public AbstractEventSource(final String name,
+                               final String streamName,
                                final ApplicationEventPublisher eventPublisher,
                                final ObjectMapper objectMapper) {
         this.name = name;
+        this.streamName = streamName;
         this.eventPublisher = eventPublisher;
         this.dispatchingMessageConsumer = new DispatchingMessageConsumer(objectMapper);
     }
 
+    @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String getStreamName() {
+        return streamName;
     }
 
     @Override

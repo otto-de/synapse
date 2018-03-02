@@ -16,10 +16,7 @@ import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class EventSourceConsumerProcessTest {
 
@@ -49,12 +46,7 @@ public class EventSourceConsumerProcessTest {
     class TestEventSource extends AbstractEventSource {
 
         public TestEventSource() {
-            super("testEventSource", mock(ApplicationEventPublisher.class),  new ObjectMapper());
-        }
-
-        @Override
-        public String getStreamName() {
-            return TEST_STREAM_NAME;
+            super("testEventSource", TEST_STREAM_NAME, mock(ApplicationEventPublisher.class),  new ObjectMapper());
         }
 
         @Override

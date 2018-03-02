@@ -19,7 +19,6 @@ public class SnapshotEventSource extends AbstractEventSource {
     private static final Logger LOG = getLogger(SnapshotEventSource.class);
 
     private final SnapshotReadService snapshotReadService;
-    private final String streamName;
     private final SnapshotConsumerService snapshotConsumerService;
 
     public SnapshotEventSource(final String name,
@@ -28,24 +27,9 @@ public class SnapshotEventSource extends AbstractEventSource {
                                final SnapshotConsumerService snapshotConsumerService,
                                final ApplicationEventPublisher eventPublisher,
                                final ObjectMapper objectMapper) {
-        super(name, eventPublisher, objectMapper);
-        this.streamName = streamName;
+        super(name, streamName, eventPublisher, objectMapper);
         this.snapshotReadService = snapshotReadService;
         this.snapshotConsumerService = snapshotConsumerService;
-    }
-
-    public String getStreamName() {
-        return streamName;
-    }
-
-    @Override
-    public SnapshotChannelPosition consumeAll() {
-        return consumeAll(ChannelPosition.fromHorizon(), event -> false);
-    }
-
-    @Override
-    public SnapshotChannelPosition consumeAll(ChannelPosition startFrom) {
-        return consumeAll(ChannelPosition.fromHorizon());
     }
 
     @Override
@@ -56,9 +40,9 @@ public class SnapshotEventSource extends AbstractEventSource {
         try {
             publishEvent(startFrom, EventSourceNotification.Status.STARTED, "Loading snapshot from S3.");
 
-            Optional<File> snapshotFile = snapshotReadService.retrieveLatestSnapshot(streamName);
+            Optional<File> snapshotFile = snapshotReadService.retrieveLatestSnapshot(getStreamName());
             if (snapshotFile.isPresent()) {
-                ChannelPosition channelPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), streamName, stopCondition, dispatchingMessageConsumer());
+                ChannelPosition channelPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), getStreamName(), stopCondition, dispatchingMessageConsumer());
                 snapshotStreamPosition = SnapshotChannelPosition.of(channelPosition, SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName()));
             } else {
                 snapshotStreamPosition = SnapshotChannelPosition.of();
@@ -68,7 +52,7 @@ public class SnapshotEventSource extends AbstractEventSource {
             throw e;
         } finally {
             LOG.info("Finished reading snapshot into Memory");
-            snapshotReadService.deleteOlderSnapshots(streamName);
+            snapshotReadService.deleteOlderSnapshots(getStreamName());
         }
         publishEvent(snapshotStreamPosition, EventSourceNotification.Status.FINISHED, "Finished to load snapshot from S3.");
         return snapshotStreamPosition;

@@ -20,13 +20,8 @@ public class KinesisEventSource extends AbstractEventSource {
                               final MessageLog messageLog,
                               final ApplicationEventPublisher eventPublisher,
                               final ObjectMapper objectMapper) {
-        super(name, eventPublisher, objectMapper);
+        super(name, messageLog.getStreamName(), eventPublisher, objectMapper);
         this.messageLog = messageLog;
-    }
-
-    @Override
-    public String getStreamName() {
-        return messageLog.getStreamName();
     }
 
     @Override
