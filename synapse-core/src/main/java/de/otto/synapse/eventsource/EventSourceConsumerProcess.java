@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -21,7 +20,6 @@ public class EventSourceConsumerProcess implements SmartLifecycle {
     private static final Logger LOG = getLogger(EventSourceConsumerProcess.class);
     private static final String THREAD_NAME_PREFIX = "synapse-consumer-";
 
-    private final AtomicBoolean stopThread = new AtomicBoolean(false);
     private final List<EventSource> eventSources;
 
     private volatile ExecutorService executorService;
@@ -62,7 +60,7 @@ public class EventSourceConsumerProcess implements SmartLifecycle {
             eventSources.forEach(eventSource -> executorService.submit(() -> {
                 try {
                     LOG.info("Starting {}...", eventSource.getStreamName());
-                    eventSource.consumeAll(ignore -> stopThread.get());
+                    eventSource.consumeAll();
                 } catch (Exception e) {
                     LOG.error("Starting failed: " + e.getMessage(), e);
                     eventSource.stop();
@@ -77,7 +75,6 @@ public class EventSourceConsumerProcess implements SmartLifecycle {
     @Override
     public void stop() {
         LOG.info("Shutting down...");
-        this.stopThread.set(true);
         if (executorService != null) {
             try {
                 eventSources.forEach(EventSource::stop);
