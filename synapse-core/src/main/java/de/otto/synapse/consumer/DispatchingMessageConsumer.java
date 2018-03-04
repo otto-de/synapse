@@ -106,7 +106,8 @@ public class DispatchingMessageConsumer implements MessageConsumer<String> {
                 });
     }
 
-    private boolean matchesKeyPattern(final Message<String> message, final Pattern keyPattern) {
+    private boolean matchesKeyPattern(final Message<String> message,
+                                      final Pattern keyPattern) {
         return keyPattern.matcher(message.getKey()).matches();
     }
 

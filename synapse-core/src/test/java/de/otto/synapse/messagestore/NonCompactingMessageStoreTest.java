@@ -1,43 +1,46 @@
 package de.otto.synapse.messagestore;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
-import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ChannelPosition.shardPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
 import static java.time.Instant.now;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 
-public class InMemoryMessageStoreTest {
+@RunWith(Parameterized.class)
 
-    @Test
-    public void shouldAddMessagesWithoutHeaders() {
-        final InMemoryMessageStore messageStore = new InMemoryMessageStore();
-        for (int i=0; i<10; ++i) {
-            messageStore.add(message(valueOf(i), "some payload"));
-        }
-        assertThat(messageStore.getLatestChannelPosition(), is(fromHorizon()));
-        final AtomicInteger expectedKey = new AtomicInteger(0);
-        messageStore.stream().forEach(message -> {
-            assertThat(message.getKey(), is(valueOf(expectedKey.get())));
-            expectedKey.incrementAndGet();
-        });
-        assertThat(messageStore.size(), is(10));
+/**
+ * Tests specific for all non-compacting MessageStore implementations
+ */
+public class NonCompactingMessageStoreTest {
+
+    @Parameterized.Parameters
+    public static Iterable<? extends Supplier<MessageStore>> messageStores() {
+        return asList(
+                InMemoryMessageStore::new
+        );
     }
 
+    @Parameter
+    public Supplier<MessageStore> messageStoreBuilder;
+
     @Test
-    public void shouldCalculateChannelPosition() {
-        final InMemoryMessageStore messageStore = new InMemoryMessageStore();
+    public void shouldCalculateUncompactedChannelPositions() {
+        final MessageStore messageStore = messageStoreBuilder.get();
         final ExecutorService executorService = newFixedThreadPool(10);
         final CompletableFuture[] completion = new CompletableFuture[5];
         for (int shard=0; shard<5; ++shard) {

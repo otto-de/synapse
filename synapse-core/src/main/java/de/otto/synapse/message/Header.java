@@ -3,6 +3,7 @@ package de.otto.synapse.message;
 import de.otto.synapse.channel.ChannelPosition;
 
 import javax.annotation.Nonnull;
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
@@ -19,7 +20,7 @@ import static java.util.Objects.requireNonNull;
  * </p>
  *
  */
-public class Header  {
+public class Header implements Serializable {
     // TODO: Header extends ImmutableMultimap<String, Object>
 
     public static Header emptyHeader() {

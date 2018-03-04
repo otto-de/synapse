@@ -120,7 +120,7 @@ public class SnapshotConsumerService {
                     break;
             }
         }
-        return ChannelPosition.shardPosition(shardPositions);
+        return ChannelPosition.of(shardPositions);
     }
 
 

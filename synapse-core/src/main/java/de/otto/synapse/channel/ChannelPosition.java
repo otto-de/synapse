@@ -1,12 +1,13 @@
 package de.otto.synapse.channel;
 
+import java.io.Serializable;
 import java.util.*;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 
-public class ChannelPosition {
+public class ChannelPosition implements Serializable {
     private final Map<String, String> shardPositions;
 
     protected ChannelPosition(final Map<String, String> shardPositions) {
@@ -14,7 +15,7 @@ public class ChannelPosition {
     }
 
     public static ChannelPosition fromHorizon() {
-        return shardPosition(emptyMap());
+        return of(emptyMap());
     }
 
     public static ChannelPosition merge(final ChannelPosition... channelPositions) {
@@ -29,20 +30,19 @@ public class ChannelPosition {
             throw new IllegalArgumentException("Parameter channelPositions must contain at least one element");
         }
         final Map<String,String> shardPositions = new LinkedHashMap<>();
-        channelPositions
-                .forEach(streamPosition -> {
-                    streamPosition
-                            .shards()
-                            .forEach(shardId -> shardPositions.put(shardId, streamPosition.positionOf(shardId)));
-                });
+        channelPositions.forEach(streamPosition -> streamPosition
+                .shards()
+                .forEach(shardId ->
+                        shardPositions.put(shardId, streamPosition.positionOf(shardId)))
+        );
         return new ChannelPosition(shardPositions);
     }
 
     public static ChannelPosition shardPosition(final String shardId, final String position) {
-        return shardPosition(singletonMap(shardId, position));
+        return of(singletonMap(shardId, position));
     }
 
-    public static ChannelPosition shardPosition(final Map<String, String> shardPositions) {
+    public static ChannelPosition of(final Map<String, String> shardPositions) {
         return new ChannelPosition(shardPositions);
     }
 

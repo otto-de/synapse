@@ -19,11 +19,11 @@ import static de.otto.synapse.channel.ChannelPosition.merge;
 @ThreadSafe
 public class InMemoryMessageStore implements MessageStore {
 
-    private final Deque<Message<?>> messages = new ConcurrentLinkedDeque<>();
+    private final Deque<Message<String>> messages = new ConcurrentLinkedDeque<>();
     private final AtomicReference<ChannelPosition> latestChannelPosition = new AtomicReference<>(fromHorizon());
 
     @Override
-    public void add(final Message<?> message) {
+    public void add(final Message<String> message) {
         messages.add(message);
         latestChannelPosition.updateAndGet(previous -> {
             final Optional<ChannelPosition> optionalChannelPosition = message.getHeader().getChannelPosition();
@@ -39,7 +39,7 @@ public class InMemoryMessageStore implements MessageStore {
     }
 
     @Override
-    public Stream<Message<?>> stream() {
+    public Stream<Message<String>> stream() {
         return messages.stream();
     }
 

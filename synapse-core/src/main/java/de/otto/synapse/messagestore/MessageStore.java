@@ -31,12 +31,14 @@ import java.util.stream.Stream;
  */
 public interface MessageStore {
 
+    /* TODO: MessageStore speichert nur Message<String>. Fühlt sich noch falsch an.
+
     /**
      * Adds a Message to the MessageStore.
      *
      * @param message the message to add
      */
-    void add(Message<?> message);
+    void add(Message<String> message);
 
     /**
      * Returns the latest {@link ChannelPosition} of the MessageStore.
@@ -60,7 +62,7 @@ public interface MessageStore {
      *
      * @return Stream of messages
      */
-    Stream<Message<?>> stream();
+    Stream<Message<String>> stream();
 
     /**
      * Returns the number of messages contained in the MessageStore.

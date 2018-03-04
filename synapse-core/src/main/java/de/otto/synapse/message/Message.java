@@ -2,6 +2,7 @@ package de.otto.synapse.message;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.Objects;
 
 import static de.otto.synapse.message.Header.emptyHeader;
@@ -25,7 +26,7 @@ import static de.otto.synapse.message.Header.emptyHeader;
  * @param <T> The type of the Message payload
  * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/Message.html">EIP - Message</a>
  */
-public class Message<T> {
+public class Message<T> implements Serializable {
 
     public static <T> Message<T> message(final @Nonnull String key,
                                          final @Nullable T payload) {

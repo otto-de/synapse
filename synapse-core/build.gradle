@@ -14,6 +14,7 @@ dependencies {
     implementation "org.aspectj:aspectjweaver:1.8.13"
 
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.3"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.3"
 
     implementation("net.openhft:chronicle-map:3.14.1") {
         exclude group: "com.intellij", module: "annotations"

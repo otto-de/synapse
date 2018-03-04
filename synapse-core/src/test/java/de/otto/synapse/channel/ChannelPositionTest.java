@@ -38,7 +38,7 @@ public class ChannelPositionTest {
             put("foo", "42");
             put("bar", "0815");
         }};
-        final ChannelPosition channelPosition = ChannelPosition.shardPosition(shardPositions);
+        final ChannelPosition channelPosition = ChannelPosition.of(shardPositions);
         assertThat(channelPosition.shards(), containsInAnyOrder("foo", "bar"));
         assertThat(channelPosition.positionOf("foo"), is("42"));
         assertThat(channelPosition.positionOf("bar"), is("0815"));
