@@ -30,7 +30,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class KinesisMessageLogTest {
+public class KinesisMessageLogReceiverEndpointTest {
 
     @Mock
     private KinesisClient kinesisClient;
@@ -40,12 +40,12 @@ public class KinesisMessageLogTest {
     @Mock
     private MessageConsumer<String> messageConsumer;
 
-    private KinesisMessageLog kinesisMessageLog;
+    private KinesisMessageLogReceiverEndpoint kinesisMessageLog;
     private int nextKey = 0;
 
     @Before
-    public void setUp() {
-        kinesisMessageLog = new KinesisMessageLog(kinesisClient, "streamName");
+    public void setUp() throws Exception {
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, "streamName");
     }
 
     @Test
@@ -141,10 +141,10 @@ public class KinesisMessageLogTest {
                         someShard("shard1", true)));
         describeRecordsForShard();
 
-        KinesisMessageLog kinesisMessageLog = new KinesisMessageLog(kinesisClient, "testStream");
+        KinesisMessageLogReceiverEndpoint kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, "testStream");
 
         // when
-        ChannelPosition finalChannelPosition = kinesisMessageLog.consumeStream(ChannelPosition.fromHorizon(), this::stopIfGreenForString, messageConsumer);
+        ChannelPosition finalChannelPosition = kinesisMessageLog.consume(ChannelPosition.fromHorizon(), this::stopIfGreenForString, messageConsumer);
 
         // then
         verify(messageConsumer, times(3)).accept(messageArgumentCaptor.capture());

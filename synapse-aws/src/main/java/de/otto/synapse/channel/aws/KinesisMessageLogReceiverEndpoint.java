@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.endpoint.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,32 +25,30 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.stream.Collectors.toList;
 
-//TODO: KinesisMessageLogReaderEndpoint?
+public class KinesisMessageLogReceiverEndpoint implements MessageLogReceiverEndpoint {
 
-public class KinesisMessageLog implements MessageLog {
-
-    private static final Logger LOG = LoggerFactory.getLogger(KinesisMessageLog.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KinesisMessageLogReceiverEndpoint.class);
 
     private final String streamName;
     private final KinesisClient kinesisClient;
     private List<CompletableFuture<ChannelPosition>> futureShardPositions;
     private volatile boolean stopping;
 
-    public KinesisMessageLog(final KinesisClient kinesisClient,
-                             final String streamName) {
+    public KinesisMessageLogReceiverEndpoint(final KinesisClient kinesisClient,
+                                             final String streamName) {
         this.streamName = streamName;
         this.kinesisClient = kinesisClient;
     }
 
     @Override
-    public String getStreamName() {
+    public String getChannelName() {
         return streamName;
     }
 
     @Override
-    public ChannelPosition consumeStream(final ChannelPosition startFrom,
-                                         final Predicate<Message<?>> stopCondition,
-                                         final MessageConsumer<String> consumer) {
+    public ChannelPosition consume(final ChannelPosition startFrom,
+                                   final Predicate<Message<?>> stopCondition,
+                                   final MessageConsumer<String> consumer) {
         final List<KinesisShard> kinesisShards = retrieveAllOpenShards();
         if (stopping) {
             return startFrom;

@@ -2,8 +2,10 @@ package de.otto.synapse.eventsource.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.aws.MessageLog;
+import de.otto.synapse.channel.ChannelResponse;
+import de.otto.synapse.channel.Status;
 import de.otto.synapse.consumer.EventSourceNotification;
+import de.otto.synapse.endpoint.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.AbstractEventSource;
 import de.otto.synapse.message.Message;
 import org.springframework.context.ApplicationEventPublisher;
@@ -14,13 +16,13 @@ import static de.otto.synapse.consumer.EventSourceNotification.Status.FINISHED;
 
 public class KinesisEventSource extends AbstractEventSource {
 
-    private final MessageLog messageLog;
+    private final MessageLogReceiverEndpoint messageLog;
 
     public KinesisEventSource(final String name,
-                              final MessageLog messageLog,
+                              final MessageLogReceiverEndpoint messageLog,
                               final ApplicationEventPublisher eventPublisher,
                               final ObjectMapper objectMapper) {
-        super(name, messageLog.getStreamName(), eventPublisher, objectMapper);
+        super(name, messageLog.getChannelName(), eventPublisher, objectMapper);
         this.messageLog = messageLog;
     }
 
@@ -35,7 +37,7 @@ public class KinesisEventSource extends AbstractEventSource {
                                       final Predicate<Message<?>> stopCondition) {
         publishEvent(startFrom, EventSourceNotification.Status.STARTED, "Consuming messages from Kinesis.");
         try {
-            ChannelPosition currentPosition = messageLog.consumeStream(startFrom, stopCondition, dispatchingMessageConsumer());
+            ChannelPosition currentPosition = messageLog.consume(startFrom, stopCondition, dispatchingMessageConsumer());
             publishEvent(currentPosition, FINISHED, "Stopped consuming messages from Kinesis.");
             return currentPosition;
         } catch (final RuntimeException e) {

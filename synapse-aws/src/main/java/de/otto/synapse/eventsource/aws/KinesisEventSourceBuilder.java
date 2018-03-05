@@ -1,8 +1,9 @@
 package de.otto.synapse.eventsource.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.channel.aws.KinesisMessageLog;
-import de.otto.synapse.channel.aws.MessageLog;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import de.otto.synapse.channel.aws.KinesisMessageLogReceiverEndpoint;
+import de.otto.synapse.endpoint.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
 import org.slf4j.Logger;
@@ -33,7 +34,7 @@ public class KinesisEventSourceBuilder implements EventSourceBuilder {
     public EventSource buildEventSource(final String name, final String streamName) {
         Objects.requireNonNull(streamName, "stream name must not be null");
         LOG.info("Building '{}' as KinesisEventSource", streamName);
-        final MessageLog messageLog = new KinesisMessageLog(kinesisClient, streamName);
+        final MessageLogReceiverEndpoint messageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, streamName);
         return new KinesisEventSource(name, messageLog, eventPublisher, objectMapper);
     }
 

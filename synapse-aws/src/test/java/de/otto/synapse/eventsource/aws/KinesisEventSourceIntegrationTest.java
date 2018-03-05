@@ -3,7 +3,7 @@ package de.otto.synapse.eventsource.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.aws.KinesisMessageLog;
+import de.otto.synapse.channel.aws.KinesisMessageLogReceiverEndpoint;
 import de.otto.synapse.channel.aws.KinesisShardIterator;
 import de.otto.synapse.channel.aws.KinesisStreamSetupUtils;
 import de.otto.synapse.consumer.MessageConsumer;
@@ -80,7 +80,7 @@ public class KinesisEventSourceIntegrationTest {
     @PostConstruct
     public void setup() {
         KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, STREAM_NAME, EXPECTED_NUMBER_OF_SHARDS);
-        KinesisMessageLog kinesisMessageLog = new KinesisMessageLog(kinesisClient, STREAM_NAME);
+        KinesisMessageLogReceiverEndpoint kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, STREAM_NAME);
         this.eventSource = new KinesisEventSource("kinesisEventSource", kinesisMessageLog, eventPublisher, objectMapper);
         this.eventSource.register(MessageConsumer.of(".*", String.class, (message) -> messages.add(message)));
     }

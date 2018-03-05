@@ -4,7 +4,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.aws.KinesisMessageLog;
+import de.otto.synapse.channel.ChannelResponse;
+import de.otto.synapse.channel.Status;
+import de.otto.synapse.channel.aws.KinesisMessageLogReceiverEndpoint;
+import de.otto.synapse.channel.aws.KinesisShard;
 import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
@@ -36,7 +39,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 public class KinesisEventSourceTest {
 
     @Mock
-    private KinesisMessageLog kinesisMessageLog;
+    private KinesisMessageLogReceiverEndpoint kinesisMessageLog;
 
     @Mock
     private MessageConsumer<TestData> testDataConsumer;
@@ -52,8 +55,8 @@ public class KinesisEventSourceTest {
     @Before
     public void setUp() {
         initMocks(this);
-        when(kinesisMessageLog.getStreamName()).thenReturn("test");
-        when(kinesisMessageLog.consumeStream(any(ChannelPosition.class), any(Predicate.class), any(MessageConsumer.class)))
+        when(kinesisMessageLog.getChannelName()).thenReturn("test");
+        when(kinesisMessageLog.consume(any(ChannelPosition.class), any(Predicate.class), any(MessageConsumer.class)))
                 .thenReturn(ChannelPosition.of(singletonMap("shard1", "4711")));
     }
 
@@ -82,14 +85,14 @@ public class KinesisEventSourceTest {
         eventSource.consumeAll(initialPositions, this::stopIfGreenForString);
 
         // then
-        verify(kinesisMessageLog).consumeStream(eq(initialPositions), any(Predicate.class), eq(eventSource.dispatchingMessageConsumer()));
+        verify(kinesisMessageLog).consume(eq(initialPositions), any(Predicate.class), eq(eventSource.dispatchingMessageConsumer()));
     }
 
     @Test
     public void shouldFinishConsumptionOnStopCondition() {
         // given
         ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
-        when(kinesisMessageLog.consumeStream(any(ChannelPosition.class), any(Predicate.class), any(MessageConsumer.class)))
+        when(kinesisMessageLog.consume(any(ChannelPosition.class), any(Predicate.class), any(MessageConsumer.class)))
                 .thenReturn(ChannelPosition.of(singletonMap("shard1", "4711")));
 
 
@@ -153,7 +156,7 @@ public class KinesisEventSourceTest {
         ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisMessageLog, eventPublisher, objectMapper);
-        when(kinesisMessageLog.consumeStream(any(ChannelPosition.class), any(Predicate.class), any(MessageConsumer.class))).thenThrow(new RuntimeException("Error Message"));
+        when(kinesisMessageLog.consume(any(ChannelPosition.class), any(Predicate.class), any(MessageConsumer.class))).thenThrow(new RuntimeException("Error Message"));
 
         // when
         try {
