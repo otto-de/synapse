@@ -7,7 +7,7 @@ import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.aws.s3.SnapshotWriteService;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.aws.KinesisStreamSetupUtils;
-import de.otto.synapse.state.concurrent.ConcurrentMapStateRepository;
+import de.otto.synapse.state.ConcurrentStateRepository;
 import de.otto.synapse.testsupport.TestStreamSource;
 import net.minidev.json.JSONArray;
 import org.junit.After;
@@ -73,7 +73,7 @@ public class CompactionAcceptanceTest {
     private CompactionService compactionService;
 
     @Autowired
-    private ConcurrentMapStateRepository<String> stateRepository;
+    private ConcurrentStateRepository<String> stateRepository;
 
     @Before
     public void setup() throws IOException {

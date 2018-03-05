@@ -3,10 +3,8 @@ package de.otto.synapse.configuration.aws;
 import de.otto.synapse.aws.s3.SnapshotWriteService;
 import de.otto.synapse.compaction.aws.CompactionService;
 import de.otto.synapse.eventsource.EventSourceBuilder;
-import de.otto.synapse.state.ConcurrentHashMapStateRepository;
-import de.otto.synapse.state.StateRepository;
-import de.otto.synapse.state.concurrent.ConcurrentHashMapConcurrentMapStateRepository;
-import de.otto.synapse.state.concurrent.ConcurrentMapStateRepository;
+import de.otto.synapse.state.ConcurrentHashMapConcurrentStateRepository;
+import de.otto.synapse.state.ConcurrentStateRepository;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -21,21 +19,15 @@ public class CompactionAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(name = "compactionStateRepository")
-    public StateRepository<String> compactionStateRepository() {
-        return new ConcurrentHashMapStateRepository<>();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(name = "compactionConcurrentStateRepository")
-    public ConcurrentMapStateRepository<String> compactionConcurrentStateRepository() {
-        return new ConcurrentHashMapConcurrentMapStateRepository<>();
+    public ConcurrentStateRepository<String> compactionStateRepository() {
+        return new ConcurrentHashMapConcurrentStateRepository<>();
     }
 
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "synapse.compaction", name = "enabled", havingValue = "true")
     public CompactionService compactionService(final SnapshotWriteService snapshotWriteService,
-                                               final ConcurrentMapStateRepository<String> compactionStateRepository,
+                                               final ConcurrentStateRepository<String> compactionStateRepository,
                                                final EventSourceBuilder defaultEventSourceBuilder) {
         return new CompactionService(snapshotWriteService, compactionStateRepository, defaultEventSourceBuilder);
     }

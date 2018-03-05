@@ -7,9 +7,7 @@ import com.google.common.annotations.VisibleForTesting;
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.configuration.aws.SnapshotProperties;
-import de.otto.synapse.state.ConcurrentHashMapStateRepository;
-import de.otto.synapse.state.StateRepository;
-import de.otto.synapse.state.concurrent.ConcurrentMapStateRepository;
+import de.otto.synapse.state.ConcurrentStateRepository;
 import org.slf4j.Logger;
 
 import java.io.*;
@@ -50,7 +48,7 @@ public class SnapshotWriteService {
 
     public String writeSnapshot(final String streamName,
                                 final ChannelPosition position,
-                                final ConcurrentMapStateRepository<String> stateRepository) throws IOException {
+                                final ConcurrentStateRepository<String> stateRepository) throws IOException {
         File snapshotFile = null;
         try {
             LOG.info("Start creating new snapshot");
@@ -70,7 +68,7 @@ public class SnapshotWriteService {
     @VisibleForTesting
     File createSnapshot(final String streamName,
                         final ChannelPosition currentChannelPosition,
-                        final ConcurrentMapStateRepository<String> stateRepository) throws IOException {
+                        final ConcurrentStateRepository<String> stateRepository) throws IOException {
         File snapshotFile = createSnapshotFile(streamName);
 
         try (FileOutputStream fos = new FileOutputStream(snapshotFile);

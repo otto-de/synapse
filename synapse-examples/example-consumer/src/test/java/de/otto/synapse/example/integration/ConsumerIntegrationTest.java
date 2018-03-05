@@ -7,8 +7,7 @@ import de.otto.synapse.example.consumer.payload.BananaPayload;
 import de.otto.synapse.example.consumer.state.BananaProduct;
 import de.otto.synapse.sender.MessageSender;
 import de.otto.synapse.sender.MessageSenderFactory;
-import de.otto.synapse.state.StateRepository;
-import de.otto.synapse.state.concurrent.ConcurrentMapStateRepository;
+import de.otto.synapse.state.ConcurrentStateRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,7 +28,7 @@ import static org.junit.Assert.assertThat;
 public class ConsumerIntegrationTest {
 
     @Autowired
-    ConcurrentMapStateRepository<BananaProduct> bananaProductStateRepository;
+    ConcurrentStateRepository<BananaProduct> bananaProductStateRepository;
 
     @Autowired
     MessageSenderFactory messageSenderFactory;

@@ -5,7 +5,7 @@ import de.otto.synapse.example.consumer.payload.BananaPayload;
 import de.otto.synapse.example.consumer.payload.ProductPayload;
 import de.otto.synapse.example.consumer.state.BananaProduct;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.state.concurrent.ConcurrentMapStateRepository;
+import de.otto.synapse.state.ConcurrentStateRepository;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -19,11 +19,11 @@ public class ExampleConsumer {
 
     private static final Logger LOG = getLogger(ExampleConsumer.class);
 
-    private final ConcurrentMapStateRepository<BananaProduct> concurrentMapStateRepository;
+    private final ConcurrentStateRepository<BananaProduct> concurrentStateRepository;
 
     @Autowired
-    public ExampleConsumer(ConcurrentMapStateRepository<BananaProduct> concurrentMapStateRepository) {
-        this.concurrentMapStateRepository = concurrentMapStateRepository;
+    public ExampleConsumer(ConcurrentStateRepository<BananaProduct> concurrentStateRepository) {
+        this.concurrentStateRepository = concurrentStateRepository;
     }
 
     @EventSourceConsumer(
@@ -31,7 +31,7 @@ public class ExampleConsumer {
             payloadType = BananaPayload.class
     )
     public void consumeBananas(final Message<BananaPayload> message) {
-        concurrentMapStateRepository.compute(message.getKey(), (id, bananaProduct) -> {
+        concurrentStateRepository.compute(message.getKey(), (id, bananaProduct) -> {
             final BananaProduct.Builder builder = bananaProduct.isPresent()
                     ? bananaProductBuilder(bananaProduct.get())
                     : bananaProductBuilder();
@@ -40,7 +40,7 @@ public class ExampleConsumer {
                     .withColor(message.getPayload().getColor())
                     .build();
         });
-        LOG.info("Updated StateRepository using BananaPayload: " + valueOf(concurrentMapStateRepository.get(message.getKey()).orElse(null)));
+        LOG.info("Updated StateRepository using BananaPayload: " + valueOf(concurrentStateRepository.get(message.getKey()).orElse(null)));
     }
 
     @EventSourceConsumer(
@@ -48,7 +48,7 @@ public class ExampleConsumer {
             payloadType = ProductPayload.class
     )
     public void consumeProducts(final Message<ProductPayload> message) {
-        concurrentMapStateRepository.compute(message.getKey(), (s, bananaProduct) -> {
+        concurrentStateRepository.compute(message.getKey(), (s, bananaProduct) -> {
             final BananaProduct.Builder builder = bananaProduct.isPresent()
                     ? bananaProductBuilder(bananaProduct.get())
                     : bananaProductBuilder();
@@ -57,6 +57,6 @@ public class ExampleConsumer {
                     .withPrice(message.getPayload().getPrice())
                     .build();
         });
-        LOG.info("Updated StateRepository using ProductPayload: " + valueOf(concurrentMapStateRepository.get(message.getKey()).orElse(null)));
+        LOG.info("Updated StateRepository using ProductPayload: " + valueOf(concurrentStateRepository.get(message.getKey()).orElse(null)));
     }
 }

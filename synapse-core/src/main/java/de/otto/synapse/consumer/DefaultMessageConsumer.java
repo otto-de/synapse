@@ -1,7 +1,7 @@
 package de.otto.synapse.consumer;
 
 import de.otto.synapse.message.Message;
-import de.otto.synapse.state.concurrent.ConcurrentMapStateRepository;
+import de.otto.synapse.state.ConcurrentStateRepository;
 
 import javax.annotation.Nonnull;
 import java.util.regex.Pattern;
@@ -9,12 +9,12 @@ import java.util.regex.Pattern;
 public class DefaultMessageConsumer<T> implements MessageConsumer<T> {
 
     private final Pattern keyPattern;
-    private final ConcurrentMapStateRepository<T> stateRepository;
+    private final ConcurrentStateRepository<T> stateRepository;
     private final Class<T> payloadType;
 
     public DefaultMessageConsumer(final String keyPattern,
                                   final Class<T> payloadType,
-                                  final ConcurrentMapStateRepository<T> stateRepository) {
+                                  final ConcurrentStateRepository<T> stateRepository) {
         this.keyPattern = Pattern.compile(keyPattern);
         this.payloadType = payloadType;
         this.stateRepository = stateRepository;
