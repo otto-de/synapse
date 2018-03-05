@@ -43,7 +43,7 @@ public class KinesisShard {
         String lastSequenceNumber = channelPosition.positionOf(shardId);
         boolean stopRetrieval = false;
         try {
-            LOG.info("Reading from stream {}, shard {} with starting sequence number {}",
+            LOG.debug("Reading from stream {}, shard {} with starting sequence number {}",
                     streamName,
                     shardId,
                     lastSequenceNumber);
