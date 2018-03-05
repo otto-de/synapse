@@ -4,10 +4,10 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiFunction;
 
-public class ConcurrentStateRepository<V> {
+public class StateRepository<V> {
     protected ConcurrentMap<String, V> concurrentMap;
 
-    public ConcurrentStateRepository(ConcurrentMap<String, V> concurrentMap) {
+    public StateRepository(ConcurrentMap<String, V> concurrentMap) {
         this.concurrentMap = concurrentMap;
     }
 

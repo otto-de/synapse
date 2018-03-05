@@ -1,7 +1,7 @@
 package de.otto.synapse.consumer;
 
 import de.otto.synapse.message.Message;
-import de.otto.synapse.state.ConcurrentStateRepository;
+import de.otto.synapse.state.StateRepository;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -17,7 +17,7 @@ import static org.mockito.Mockito.verify;
 public class DefaultMessageConsumerTest {
 
     @Mock
-    private ConcurrentStateRepository<String> stateRepository;
+    private StateRepository<String> stateRepository;
 
     @Test
     public void shouldStoreEventInStateRepositoryOnAccept() {

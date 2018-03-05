@@ -3,8 +3,8 @@ package de.otto.synapse.configuration.aws;
 import de.otto.synapse.aws.s3.SnapshotWriteService;
 import de.otto.synapse.compaction.aws.CompactionService;
 import de.otto.synapse.eventsource.EventSourceBuilder;
-import de.otto.synapse.state.ConcurrentHashMapConcurrentStateRepository;
-import de.otto.synapse.state.ConcurrentStateRepository;
+import de.otto.synapse.state.ConcurrentHashMapStateRepository;
+import de.otto.synapse.state.StateRepository;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -19,15 +19,15 @@ public class CompactionAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(name = "compactionStateRepository")
-    public ConcurrentStateRepository<String> compactionStateRepository() {
-        return new ConcurrentHashMapConcurrentStateRepository<>();
+    public StateRepository<String> compactionStateRepository() {
+        return new ConcurrentHashMapStateRepository<>();
     }
 
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "synapse.compaction", name = "enabled", havingValue = "true")
     public CompactionService compactionService(final SnapshotWriteService snapshotWriteService,
-                                               final ConcurrentStateRepository<String> compactionStateRepository,
+                                               final StateRepository<String> compactionStateRepository,
                                                final EventSourceBuilder defaultEventSourceBuilder) {
         return new CompactionService(snapshotWriteService, compactionStateRepository, defaultEventSourceBuilder);
     }

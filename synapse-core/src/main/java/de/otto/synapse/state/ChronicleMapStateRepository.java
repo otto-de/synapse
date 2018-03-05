@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.openhft.chronicle.map.ChronicleMap;
 import net.openhft.chronicle.map.ChronicleMapBuilder;
 
-public class ChronicleMapConcurrentStateRepository<V> extends ConcurrentStateRepository<V> {
+public class ChronicleMapStateRepository<V> extends StateRepository<V> {
     private static final int DEFAULT_KEY_SIZE_BYTES = 128;
     private static final double DEFAULT_VALUE_SIZE_BYTES = 512;
     private static final long DEFAULT_ENTRY_COUNT = 1_000_00;
@@ -12,7 +12,7 @@ public class ChronicleMapConcurrentStateRepository<V> extends ConcurrentStateRep
     private final Class<V> clazz;
     private final ObjectMapper objectMapper;
 
-    private ChronicleMapConcurrentStateRepository(Builder builder) {
+    private ChronicleMapStateRepository(Builder builder) {
         super(builder.concurrentMap);
         clazz = builder.clazz;
         objectMapper = builder.objectMapper;
@@ -38,7 +38,7 @@ public class ChronicleMapConcurrentStateRepository<V> extends ConcurrentStateRep
             return this;
         }
 
-        public ChronicleMapConcurrentStateRepository build() {
+        public ChronicleMapStateRepository build() {
             if (concurrentMap == null) {
                 concurrentMap = ChronicleMapBuilder.of(String.class, clazz)
                         .valueMarshaller(new ChronicleMapBytesMarshaller<>(objectMapper, clazz))
@@ -47,7 +47,7 @@ public class ChronicleMapConcurrentStateRepository<V> extends ConcurrentStateRep
                         .entries(DEFAULT_ENTRY_COUNT)
                         .create();
             }
-            return new ChronicleMapConcurrentStateRepository(this);
+            return new ChronicleMapStateRepository(this);
         }
     }
 }

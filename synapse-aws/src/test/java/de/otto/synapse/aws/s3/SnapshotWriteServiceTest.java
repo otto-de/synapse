@@ -6,8 +6,8 @@ import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.consumer.MessageConsumer;
-import de.otto.synapse.state.ConcurrentHashMapConcurrentStateRepository;
-import de.otto.synapse.state.ConcurrentStateRepository;
+import de.otto.synapse.state.ConcurrentHashMapStateRepository;
+import de.otto.synapse.state.StateRepository;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,7 +56,7 @@ public class SnapshotWriteServiceTest {
 
     @Test
     public void shouldUploadSnapshotFile() throws Exception {
-        ConcurrentStateRepository<String> stateRepository = new ConcurrentHashMapConcurrentStateRepository<>();
+        StateRepository<String> stateRepository = new ConcurrentHashMapStateRepository<>();
         stateRepository.put("testKey", "{\"content\":\"testValue1\"}");
 
         //when
@@ -75,7 +75,7 @@ public class SnapshotWriteServiceTest {
 
     @Test
     public void shouldCreateCorrectSnapshotFile() throws Exception {
-        ConcurrentStateRepository<String> stateRepository = new ConcurrentHashMapConcurrentStateRepository<>();
+        StateRepository<String> stateRepository = new ConcurrentHashMapStateRepository<>();
         stateRepository.put("testKey", "{\"testValue1\": \"value1\"}");
         stateRepository.put("testKey2", "{\"testValue2\": \"value2\"}");
 //        stateRepository.put("testKey2", "testValue2");
@@ -109,7 +109,7 @@ public class SnapshotWriteServiceTest {
     public void shouldDeleteSnapshotEvenIfUploadFails() throws Exception {
         // given
         doThrow(new RuntimeException("forced test exception")).when(s3Service).upload(any(), any());
-        ConcurrentStateRepository<String> stateRepository = new ConcurrentHashMapConcurrentStateRepository<>();
+        StateRepository<String> stateRepository = new ConcurrentHashMapStateRepository<>();
         stateRepository.put("testKey", "testValue1");
         stateRepository.put("testKey2", "testValue2");
 
@@ -130,7 +130,7 @@ public class SnapshotWriteServiceTest {
     @Test
     public void shouldDeleteSnapshotWhenCreatingSnapshotFails() throws Exception {
         // given
-        ConcurrentStateRepository<String> stateRepository = mock(ConcurrentStateRepository.class);
+        StateRepository<String> stateRepository = mock(StateRepository.class);
         when(stateRepository.get(any())).thenThrow(new RuntimeException("forced test exception"));
 
         ChannelPosition channelPosition = ChannelPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));

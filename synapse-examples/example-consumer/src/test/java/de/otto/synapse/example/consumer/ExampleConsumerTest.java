@@ -4,8 +4,8 @@ import de.otto.synapse.example.consumer.payload.BananaPayload;
 import de.otto.synapse.example.consumer.payload.ProductPayload;
 import de.otto.synapse.example.consumer.state.BananaProduct;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.state.ConcurrentHashMapConcurrentStateRepository;
-import de.otto.synapse.state.ConcurrentStateRepository;
+import de.otto.synapse.state.ConcurrentHashMapStateRepository;
+import de.otto.synapse.state.StateRepository;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,11 +20,11 @@ import static org.junit.Assert.assertThat;
 public class ExampleConsumerTest {
 
     private ExampleConsumer exampleConsumer;
-    private ConcurrentStateRepository<BananaProduct> stateRepository;
+    private StateRepository<BananaProduct> stateRepository;
 
     @Before
     public void setUp() throws Exception {
-        stateRepository = new ConcurrentHashMapConcurrentStateRepository<>();
+        stateRepository = new ConcurrentHashMapStateRepository<>();
         exampleConsumer = new ExampleConsumer(stateRepository);
     }
 

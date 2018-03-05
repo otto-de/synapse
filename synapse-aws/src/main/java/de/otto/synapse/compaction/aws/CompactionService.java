@@ -6,7 +6,7 @@ import de.otto.synapse.consumer.DefaultMessageConsumer;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.state.ConcurrentStateRepository;
+import de.otto.synapse.state.StateRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,16 +19,16 @@ public class CompactionService {
 
     private static final Logger LOG = LoggerFactory.getLogger(CompactionService.class);
 
-    private final ConcurrentStateRepository<String> stateRepository;
+    private final StateRepository<String> stateRepository;
     private final SnapshotWriteService snapshotWriteService;
     private final EventSourceBuilder eventSourceBuilder;
 
     public CompactionService(final SnapshotWriteService snapshotWriteService,
-                             final ConcurrentStateRepository<String> concurrentStateRepository,
+                             final StateRepository<String> stateRepository,
                              final EventSourceBuilder eventSourceBuilder)
     {
         this.snapshotWriteService = snapshotWriteService;
-        this.stateRepository = concurrentStateRepository;
+        this.stateRepository = stateRepository;
         this.eventSourceBuilder = eventSourceBuilder;
     }
 
