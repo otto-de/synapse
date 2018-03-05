@@ -38,8 +38,4 @@ public class ConcurrentStateRepository<V> {
     public long size() {
         return concurrentMap.size();
     }
-
-    public String getStats() {
-        return "nothing";
-    }
 }

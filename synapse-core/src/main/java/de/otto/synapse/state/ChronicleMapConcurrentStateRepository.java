@@ -22,13 +22,6 @@ public class ChronicleMapConcurrentStateRepository<V> extends ConcurrentStateRep
         return new Builder(clazz);
     }
 
-    /**
-     * only use in tests
-     */
-    void close() {
-        ((ChronicleMap) concurrentMap).close();
-    }
-
     public static final class Builder<V> {
 
         private final static ObjectMapper objectMapper = new ObjectMapper();
