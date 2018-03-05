@@ -3,7 +3,6 @@ package de.otto.synapse.eventsource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.InMemoryChannel;
-import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
@@ -17,9 +16,7 @@ import static de.otto.synapse.message.Message.message;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class InMemoryEventSourceTest {
 

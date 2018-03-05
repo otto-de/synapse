@@ -2,8 +2,8 @@ package de.otto.synapse.aws.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.eventsource.AbstractEventSource;
+import de.otto.synapse.eventsource.EventSourceNotification;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;

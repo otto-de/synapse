@@ -3,7 +3,7 @@ package de.otto.synapse.edison.statusdetail;
 import de.otto.edison.status.domain.Status;
 import de.otto.edison.status.domain.StatusDetail;
 import de.otto.edison.status.indicator.StatusDetailIndicator;
-import de.otto.synapse.consumer.EventSourceNotification;
+import de.otto.synapse.eventsource.EventSourceNotification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;

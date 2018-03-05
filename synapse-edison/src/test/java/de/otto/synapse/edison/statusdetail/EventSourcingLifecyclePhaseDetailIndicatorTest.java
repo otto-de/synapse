@@ -3,14 +3,14 @@ package de.otto.synapse.edison.statusdetail;
 import de.otto.edison.status.domain.Status;
 import de.otto.edison.status.domain.StatusDetail;
 import de.otto.edison.testsupport.util.TestClock;
-import de.otto.synapse.consumer.EventSourceNotification;
+import de.otto.synapse.eventsource.EventSourceNotification;
 import org.junit.Test;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-import static de.otto.synapse.consumer.EventSourceNotification.Status.FINISHED;
-import static de.otto.synapse.consumer.EventSourceNotification.Status.STARTED;
+import static de.otto.synapse.eventsource.EventSourceNotification.Status.FINISHED;
+import static de.otto.synapse.eventsource.EventSourceNotification.Status.STARTED;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 

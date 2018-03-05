@@ -1,7 +1,7 @@
 package de.otto.synapse.edison.health;
 
-import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.eventsource.EventSource;
+import de.otto.synapse.eventsource.EventSourceNotification;
 import org.junit.Test;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;

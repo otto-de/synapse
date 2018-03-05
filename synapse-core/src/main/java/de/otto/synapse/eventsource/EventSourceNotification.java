@@ -1,4 +1,4 @@
-package de.otto.synapse.consumer;
+package de.otto.synapse.eventsource;
 
 import de.otto.synapse.channel.ChannelPosition;
 

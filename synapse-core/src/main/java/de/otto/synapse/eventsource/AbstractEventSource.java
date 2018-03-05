@@ -3,7 +3,6 @@ package de.otto.synapse.eventsource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.DispatchingMessageConsumer;
-import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.consumer.MessageConsumer;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;

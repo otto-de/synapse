@@ -2,8 +2,8 @@ package de.otto.synapse.aws.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.eventsource.EventSourceNotification;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,9 +20,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SnapshotEventSourceTest {

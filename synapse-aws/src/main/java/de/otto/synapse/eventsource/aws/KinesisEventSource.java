@@ -2,17 +2,15 @@ package de.otto.synapse.eventsource.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.ChannelResponse;
-import de.otto.synapse.channel.Status;
-import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.endpoint.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.AbstractEventSource;
+import de.otto.synapse.eventsource.EventSourceNotification;
 import de.otto.synapse.message.Message;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.function.Predicate;
 
-import static de.otto.synapse.consumer.EventSourceNotification.Status.FINISHED;
+import static de.otto.synapse.eventsource.EventSourceNotification.Status.FINISHED;
 
 public class KinesisEventSource extends AbstractEventSource {
 
