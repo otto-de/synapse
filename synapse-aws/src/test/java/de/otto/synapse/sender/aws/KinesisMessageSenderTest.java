@@ -30,9 +30,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KinesisMessageSenderTest {
@@ -139,7 +137,7 @@ public class KinesisMessageSenderTest {
                 .build());
 
         //when
-        kinesisMessageSender.send("someKey", null);
+        kinesisMessageSender.send(message("someKey", null));
 
         //then
         verify(kinesisClient).putRecords(putRecordsRequestCaptor.capture());

@@ -40,7 +40,7 @@ public class SampleProducer {
                 sampleBananaMessage("5"),
                 sampleBananaMessage("6")
         );
-        bananaMessageSender.sendBatch(bananaMessages);
+        bananaMessageSender.sendBatch(bananaMessages.stream());
     }
 
     protected void produceProductsSampleData() {
@@ -52,7 +52,7 @@ public class SampleProducer {
                 sampleProductMessage("5"),
                 sampleProductMessage("6")
                 );
-        productMessageSender.sendBatch(productMessages);
+        productMessageSender.sendBatch(productMessages.stream());
     }
 
     private Message<BananaPayload> sampleBananaMessage(final String id) {

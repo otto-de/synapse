@@ -1,12 +1,11 @@
 package de.otto.synapse.example.producer;
 
-import de.otto.synapse.example.producer.payload.ProductPayload;
+import de.otto.synapse.message.Message;
 import de.otto.synapse.sender.MessageSender;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -30,7 +29,7 @@ public class ExampleProducerTest {
         testee.produceSampleData();
 
         //then
-        verify(sender).send(anyString(), any(ProductPayload.class));
+        verify(sender).send(any(Message.class));
     }
 
 

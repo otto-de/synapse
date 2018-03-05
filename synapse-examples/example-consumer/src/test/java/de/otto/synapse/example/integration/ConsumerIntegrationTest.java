@@ -19,6 +19,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import static de.otto.synapse.message.Message.message;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
@@ -51,7 +52,7 @@ public class ConsumerIntegrationTest {
         bananaPayload.setColor("yellow");
 
         // when
-        bananaSender.send("banana_id", bananaPayload);
+        bananaSender.send(message("banana_id", bananaPayload));
 
         // then
         Awaitility.await()

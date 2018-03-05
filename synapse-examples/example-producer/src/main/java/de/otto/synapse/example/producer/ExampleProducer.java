@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 
+import static de.otto.synapse.message.Message.message;
+
 @Component
 @EnableConfigurationProperties(MyServiceProperties.class)
 public class ExampleProducer {
@@ -29,7 +31,7 @@ public class ExampleProducer {
     public void produceSampleData() {
         try {
             ProductPayload productPayload = generatePayload();
-            messageSender.send(productPayload.getId(), productPayload);
+            messageSender.send(message(productPayload.getId(), productPayload));
         } catch (Exception e) {
             LOG.error("error occurred while sending an event", e);
         }
