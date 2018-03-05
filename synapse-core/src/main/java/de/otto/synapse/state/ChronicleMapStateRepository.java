@@ -1,7 +1,6 @@
 package de.otto.synapse.state;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.openhft.chronicle.map.ChronicleMap;
 import net.openhft.chronicle.map.ChronicleMapBuilder;
 
 public class ChronicleMapStateRepository<V> extends StateRepository<V> {
@@ -13,7 +12,7 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
     private final ObjectMapper objectMapper;
 
     private ChronicleMapStateRepository(Builder builder) {
-        super(builder.concurrentMap);
+        super(builder.chronicleMapBuilder.create());
         clazz = builder.clazz;
         objectMapper = builder.objectMapper;
     }
@@ -27,26 +26,27 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
         private final static ObjectMapper objectMapper = new ObjectMapper();
 
         private final Class<V> clazz;
-        private ChronicleMap<String, V> concurrentMap;
+        private ChronicleMapBuilder<String, V> chronicleMapBuilder;
 
         private Builder(Class<V> clazz) {
             this.clazz = clazz;
         }
 
-        public Builder<V> withStore(ChronicleMap<String, V> val) {
-            concurrentMap = val;
+        public Builder<V> withMapBuilder(ChronicleMapBuilder<String, V> val) {
+            chronicleMapBuilder = val;
             return this;
         }
 
         public ChronicleMapStateRepository build() {
-            if (concurrentMap == null) {
-                concurrentMap = ChronicleMapBuilder.of(String.class, clazz)
-                        .valueMarshaller(new ChronicleMapBytesMarshaller<>(objectMapper, clazz))
+            if (chronicleMapBuilder == null) {
+                chronicleMapBuilder = ChronicleMapBuilder.of(String.class, clazz)
                         .averageKeySize(DEFAULT_KEY_SIZE_BYTES)
                         .averageValueSize(DEFAULT_VALUE_SIZE_BYTES)
-                        .entries(DEFAULT_ENTRY_COUNT)
-                        .create();
+                        .entries(DEFAULT_ENTRY_COUNT);
             }
+
+            chronicleMapBuilder.valueMarshaller(new ChronicleMapBytesMarshaller<>(objectMapper, clazz));
+
             return new ChronicleMapStateRepository(this);
         }
     }
