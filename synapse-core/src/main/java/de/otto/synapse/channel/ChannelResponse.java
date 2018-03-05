@@ -21,11 +21,11 @@ public final class ChannelResponse {
         return new ChannelResponse(status, channelPosition);
     }
 
-    public static ChannelResponse of(final List<ChannelResponse> channelRespons) {
-        final boolean stopped = channelRespons
+    public static ChannelResponse of(final List<ChannelResponse> channelResponse) {
+        final boolean stopped = channelResponse
                 .stream()
                 .anyMatch(streamResponse -> streamResponse.getStatus() == Status.STOPPED);
-        final List<ChannelPosition> channelPositions = channelRespons
+        final List<ChannelPosition> channelPositions = channelResponse
                 .stream()
                 .map(ChannelResponse::getChannelPosition)
                 .collect(toList());
