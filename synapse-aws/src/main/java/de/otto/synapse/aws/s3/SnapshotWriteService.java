@@ -83,7 +83,7 @@ public class SnapshotWriteService {
             writeSequenceNumbers(currentChannelPosition, jGenerator);
             // write to data file
             jGenerator.writeArrayFieldStart(DATA_FIELD_NAME);
-            stateRepository.getKeySetIterable().forEach((key) -> {
+            stateRepository.keySet().forEach((key) -> {
                 try {
                     String entry = stateRepository.get(key).get();
                     if (!("".equals(entry))) {
