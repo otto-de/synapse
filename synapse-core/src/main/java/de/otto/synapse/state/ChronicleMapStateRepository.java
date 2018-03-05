@@ -23,7 +23,7 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
 
     public static final class Builder<V> {
 
-        private final static ObjectMapper objectMapper = new ObjectMapper();
+        private ObjectMapper objectMapper;
 
         private final Class<V> clazz;
         private ChronicleMapBuilder<String, V> chronicleMapBuilder;
@@ -32,12 +32,21 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
             this.clazz = clazz;
         }
 
+        public Builder<V> withObjectMapper(ObjectMapper val) {
+            objectMapper = val;
+            return this;
+        }
+
         public Builder<V> withMapBuilder(ChronicleMapBuilder<String, V> val) {
             chronicleMapBuilder = val;
             return this;
         }
 
         public ChronicleMapStateRepository build() {
+            if (objectMapper == null)  {
+                objectMapper = new ObjectMapper();
+            }
+
             if (chronicleMapBuilder == null) {
                 chronicleMapBuilder = ChronicleMapBuilder.of(String.class, clazz)
                         .averageKeySize(DEFAULT_KEY_SIZE_BYTES)
