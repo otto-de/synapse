@@ -23,7 +23,7 @@ subprojects {
     apply plugin: 'idea'
     apply plugin: 'eclipse'
 
-    version = '0.5.6-SNAPSHOT'
+    version = '0.6.0-SNAPSHOT'
     group = 'de.otto.synapse'
 
     repositories {
