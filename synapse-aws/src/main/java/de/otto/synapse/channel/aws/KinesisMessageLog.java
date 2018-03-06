@@ -1,5 +1,6 @@
 package de.otto.synapse.channel.aws;
 
+import com.google.common.annotations.VisibleForTesting;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.consumer.MessageConsumer;
@@ -19,7 +20,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static java.lang.Math.min;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.stream.Collectors.toList;
@@ -29,15 +29,25 @@ import static java.util.stream.Collectors.toList;
 public class KinesisMessageLog implements MessageLog {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisMessageLog.class);
-    private static final int MAX_NUMBER_OF_THREADS = 10;
+
 
     private final String streamName;
     private final KinesisClient kinesisClient;
+    private final ExecutorService executorService;
+
+    private List<KinesisShard> kinesisShards;
 
     public KinesisMessageLog(final KinesisClient kinesisClient,
                              final String streamName) {
+        this(kinesisClient, streamName, newFixedThreadPool(1));
+    }
+
+    public KinesisMessageLog(final KinesisClient kinesisClient,
+                             final String streamName,
+                             final ExecutorService executorService) {
         this.streamName = streamName;
         this.kinesisClient = kinesisClient;
+        this.executorService = executorService;
     }
 
     @Override
@@ -50,7 +60,6 @@ public class KinesisMessageLog implements MessageLog {
                                          final Predicate<Message<?>> stopCondition,
                                          final MessageConsumer<String> consumer) {
         final List<KinesisShard> kinesisShards = retrieveAllOpenShards();
-        final ExecutorService executorService = newFixedThreadPool(min(kinesisShards.size(), MAX_NUMBER_OF_THREADS));
         try {
             final List<CompletableFuture<ChannelResponse>> futureShardPositions = kinesisShards
                     .stream()
@@ -86,13 +95,15 @@ public class KinesisMessageLog implements MessageLog {
         }
     }
 
+    @VisibleForTesting
     List<KinesisShard> retrieveAllOpenShards() {
-        List<Shard> shardList = retrieveAllShards();
-
-        return shardList.stream()
-                .filter(this::isShardOpen)
-                .map(shard -> new KinesisShard(shard.shardId(), streamName, kinesisClient))
-                .collect(toImmutableList());
+        if (kinesisShards == null) {
+            kinesisShards = retrieveAllShards().stream()
+                    .filter(this::isShardOpen)
+                    .map(shard -> new KinesisShard(shard.shardId(), streamName, kinesisClient))
+                    .collect(toImmutableList());
+        }
+        return kinesisShards;
     }
 
     private List<Shard> retrieveAllShards() {
