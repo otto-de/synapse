@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 
+import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -54,6 +55,16 @@ public class InterceptorChainTest {
         assertThat(chain.intercept(someMessage("foo")).getKey(), is("bar"));
     }
 
+    @Test
+    public void shouldConstructDifferentInterceptorChains() {
+        final MessageInterceptor first = mock(MessageInterceptor.class);
+        final MessageInterceptor second = mock(MessageInterceptor.class);
+        final InterceptorChain ofSingleInterceptors = InterceptorChain.of(first, second);
+        final InterceptorChain ofInterceptorList = InterceptorChain.of(asList(first, second));
+        final InterceptorChain ofImmutableInterceptorList = InterceptorChain.of(ImmutableList.of(first, second));
+        assertThat(ofSingleInterceptors, is(ofInterceptorList));
+        assertThat(ofInterceptorList, is(ofImmutableInterceptorList));
+    }
     @SuppressWarnings("unchecked")
     private Message<String> someMessage(final String key) {
         return Message.message(key, null);

@@ -9,6 +9,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.List;
+import java.util.Objects;
 
 import static com.google.common.collect.ImmutableList.copyOf;
 import static com.google.common.collect.Lists.asList;
@@ -109,5 +110,19 @@ public final class InterceptorChain implements MessageInterceptor {
             }
         }
         return m;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InterceptorChain chain = (InterceptorChain) o;
+        return Objects.equals(interceptors, chain.interceptors);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(interceptors);
     }
 }

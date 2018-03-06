@@ -75,6 +75,28 @@ public class AbstractMessageSenderEndpointTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    public void shouldTranslateAndSendMessagesWithoutInterceptors() {
+        // given
+        final MessageTranslator<String> messageTranslator = (m) -> message(m.getKey(), "translated");
+
+        final AtomicReference<Message<String>> sentMessage = new AtomicReference<>(null);
+        final AbstractMessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("foo-channel", messageTranslator) {
+            @Override
+            protected void doSend(@Nonnull Message<String> message) {
+                sentMessage.set(message);
+            }
+        };
+
+        // when
+        senderEndpoint.send(message("foo", ""));
+
+        // then
+        assertThat(sentMessage.get().getKey(), is("foo"));
+        assertThat(sentMessage.get().getPayload(), is("translated"));
+    }
+
+    @Test
     public void shouldSendTranslatedAndInterceptedMessage() {
         // given
         final MessageTranslator<String> messageTranslator = (m) -> message(m.getKey(), "translated ");

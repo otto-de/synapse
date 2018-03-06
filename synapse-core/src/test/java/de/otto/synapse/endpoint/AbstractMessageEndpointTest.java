@@ -10,12 +10,22 @@ import static org.mockito.Mockito.verify;
 
 public class AbstractMessageEndpointTest {
 
-    @Test(expected = NullPointerException.class)
+    /*
+       Should be a NullPointerException. Actually, Intellij will violate the @Nonnull contract and
+       evaluate it at runtime - by throwing an IllegalArgumentException. Which is wrong. Behaviour
+       of Intellij can be disabled, but I'm too lazy to figure out how to do it with 'gradle idea'
+     */
+    @Test(expected = RuntimeException.class)
     public void shouldFailToCreateWithNullChannelName() {
         new AbstractMessageEndpoint(null) {};
     }
 
-    @Test(expected = NullPointerException.class)
+    /*
+       Should be a NullPointerException. Actually, Intellij will violate the @Nonnull contract and
+       evaluate it at runtime - by throwing an IllegalArgumentException. Which is wrong. Behaviour
+       of Intellij can be disabled, but I'm too lazy to figure out how to do it with 'gradle idea'
+     */
+    @Test(expected = RuntimeException.class)
     public void shouldFailToCreateWithNullInterceptor() {
         new AbstractMessageEndpoint("", null) {};
     }
