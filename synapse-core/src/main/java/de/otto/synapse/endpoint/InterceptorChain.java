@@ -19,7 +19,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * <p>
  *     Just like any other {@link MessageInterceptor}, the InterceptorChain is used to process
  *     a message before it is consumed by {@link de.otto.synapse.consumer.MessageConsumer message consumers}
- *     on the receiver-side, or before it is sent by a {@link de.otto.synapse.sender.MessageSender message sender}
+ *     on the receiver-side, or before it is sent by a {@link MessageSenderEndpoint message sender}
  *     to the channel infrastructure.
  * </p>
  * <p>

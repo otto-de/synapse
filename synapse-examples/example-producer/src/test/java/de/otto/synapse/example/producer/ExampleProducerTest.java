@@ -1,7 +1,7 @@
 package de.otto.synapse.example.producer;
 
+import de.otto.synapse.endpoint.MessageSenderEndpoint;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.sender.MessageSender;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -12,16 +12,17 @@ import static org.mockito.Mockito.verify;
 
 public class ExampleProducerTest {
 
-    ExampleProducer testee;
-    MessageSender sender;
+    private ExampleProducer testee;
+    private MessageSenderEndpoint sender;
 
     @Before
     public void setUp() throws Exception {
-        sender = mock(MessageSender.class);
+        sender = mock(MessageSenderEndpoint.class);
         testee = new ExampleProducer(sender);
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void shouldProduceEvent() throws Exception {
         // given
 

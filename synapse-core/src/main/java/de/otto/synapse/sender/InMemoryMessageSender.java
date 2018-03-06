@@ -8,7 +8,7 @@ import de.otto.synapse.translator.MessageTranslator;
 
 import javax.annotation.Nonnull;
 
-public class InMemoryMessageSender extends AbstractMessageSenderEndpoint implements MessageSender {
+public class InMemoryMessageSender extends AbstractMessageSenderEndpoint {
 
     private final InMemoryChannel channel;
 

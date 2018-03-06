@@ -2,11 +2,11 @@ package de.otto.synapse.example.consumer.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.annotation.EnableEventSource;
+import de.otto.synapse.endpoint.MessageSenderEndpoint;
 import de.otto.synapse.eventsource.EventSourceBuilder;
 import de.otto.synapse.eventsource.InMemoryEventSource;
 import de.otto.synapse.example.consumer.state.BananaProduct;
 import de.otto.synapse.sender.InMemoryMessageSender;
-import de.otto.synapse.sender.MessageSender;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
@@ -36,19 +36,19 @@ public class ExampleConfiguration {
     }
 
     @Bean
-    public MessageSender bananaMessageSender(final MyServiceProperties properties,
-                                             final ObjectMapper objectMapper) {
+    public MessageSenderEndpoint bananaMessageSender(final MyServiceProperties properties,
+                                                     final ObjectMapper objectMapper) {
         return buildMessageSender(properties.getBananaChannel(), objectMapper);
     }
 
     @Bean
-    public MessageSender productMessageSender(final MyServiceProperties properties,
-                                              final ObjectMapper objectMapper) {
+    public MessageSenderEndpoint productMessageSender(final MyServiceProperties properties,
+                                                      final ObjectMapper objectMapper) {
         return buildMessageSender(properties.getProductChannel(), objectMapper);
     }
 
-    private MessageSender buildMessageSender(final String channelName,
-                                             final ObjectMapper objectMapper) {
+    private MessageSenderEndpoint buildMessageSender(final String channelName,
+                                                     final ObjectMapper objectMapper) {
         MessageTranslator<String> translator = new JsonStringMessageTranslator(objectMapper);
         return new InMemoryMessageSender(translator, getChannel(channelName));
     }

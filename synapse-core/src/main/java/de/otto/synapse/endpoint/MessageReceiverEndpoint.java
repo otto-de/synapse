@@ -3,6 +3,12 @@ package de.otto.synapse.endpoint;
 import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.consumer.MessageConsumer;
 
+/*+
+ * Receiver-side {@code MessageEndpoint endpoint} of a Message Channel
+ * <p>
+ *     <img src="http://www.enterpriseintegrationpatterns.com/img/MessageEndpointSolution.gif" alt="Message Endpoint">
+ * </p>
+ */
 public interface MessageReceiverEndpoint extends MessageEndpoint {
 
     /**

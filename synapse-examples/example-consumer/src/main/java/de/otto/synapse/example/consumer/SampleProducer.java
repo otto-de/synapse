@@ -1,10 +1,10 @@
 package de.otto.synapse.example.consumer;
 
+import de.otto.synapse.endpoint.MessageSenderEndpoint;
 import de.otto.synapse.example.consumer.configuration.MyServiceProperties;
 import de.otto.synapse.example.consumer.payload.BananaPayload;
 import de.otto.synapse.example.consumer.payload.ProductPayload;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.sender.MessageSender;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Profile;
@@ -21,9 +21,9 @@ import static java.util.Arrays.asList;
 public class SampleProducer {
 
     @Autowired
-    private MessageSender bananaMessageSender;
+    private MessageSenderEndpoint bananaMessageSender;
     @Autowired
-    private MessageSender productMessageSender;
+    private MessageSenderEndpoint productMessageSender;
 
     @PostConstruct
     public void produceSampleData() {

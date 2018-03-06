@@ -1,11 +1,11 @@
 package de.otto.synapse.example.integration;
 
 import com.jayway.awaitility.Awaitility;
+import de.otto.synapse.endpoint.MessageSenderEndpoint;
 import de.otto.synapse.example.consumer.Server;
 import de.otto.synapse.example.consumer.configuration.MyServiceProperties;
 import de.otto.synapse.example.consumer.payload.BananaPayload;
 import de.otto.synapse.example.consumer.state.BananaProduct;
-import de.otto.synapse.sender.MessageSender;
 import de.otto.synapse.sender.MessageSenderFactory;
 import de.otto.synapse.state.StateRepository;
 import org.junit.Before;
@@ -37,7 +37,7 @@ public class ConsumerIntegrationTest {
     @Autowired
     MyServiceProperties properties;
 
-    private MessageSender bananaSender;
+    private MessageSenderEndpoint bananaSender;
 
     @Before
     public void setUp() throws Exception {

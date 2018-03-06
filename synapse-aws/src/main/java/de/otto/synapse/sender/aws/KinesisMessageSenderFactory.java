@@ -1,7 +1,7 @@
 package de.otto.synapse.sender.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.sender.MessageSender;
+import de.otto.synapse.endpoint.MessageSenderEndpoint;
 import de.otto.synapse.sender.MessageSenderFactory;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
@@ -18,7 +18,7 @@ public class KinesisMessageSenderFactory implements MessageSenderFactory {
         this.kinesisClient = kinesisClient;
     }
 
-    public MessageSender createSenderForStream(final String streamName) {
+    public MessageSenderEndpoint createSenderForStream(final String streamName) {
         return new KinesisMessageSender(streamName, messageTranslator, kinesisClient);
     }
 

@@ -21,8 +21,9 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class MessageSenderConfiguration {
 
     private static final Logger LOG = getLogger(MessageSenderConfiguration.class);
+
     public static final MessageInterceptor LOGGING_INTERCEPTOR = (message) -> {
-        LOG.debug("Sending message {}", message);
+        LOG.info("Sending message {}", message);
         return message;
     };
 

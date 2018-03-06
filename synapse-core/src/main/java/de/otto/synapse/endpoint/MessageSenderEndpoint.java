@@ -5,8 +5,13 @@ import de.otto.synapse.message.Message;
 import java.util.stream.Stream;
 
 /**
- * A message-sending {@code MessageEndpoint endpoint} of a Message Channel
+ * Sender-side {@code MessageEndpoint endpoint} of a Message Channel
  *
+ * <p>
+ *     <img src="http://www.enterpriseintegrationpatterns.com/img/MessageEndpointSolution.gif" alt="Message Endpoint">
+ * </p>
+ *
+ * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageEndpoint.html">EIP: Message Endpoint</a>
  * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageChannel.html">EIP: Message Channel</a>
  */
 public interface MessageSenderEndpoint extends MessageEndpoint {

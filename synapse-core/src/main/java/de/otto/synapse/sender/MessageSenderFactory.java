@@ -1,6 +1,8 @@
 package de.otto.synapse.sender;
 
+import de.otto.synapse.endpoint.MessageSenderEndpoint;
+
 public interface MessageSenderFactory {
 
-    MessageSender createSenderForStream(String streamName);
+    MessageSenderEndpoint createSenderForStream(String streamName);
 }
