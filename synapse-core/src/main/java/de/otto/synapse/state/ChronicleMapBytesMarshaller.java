@@ -24,9 +24,8 @@ public final class ChronicleMapBytesMarshaller<V> implements
 
     @Override
     public V read(Bytes in, V using) {
-        String json = new String(in.toByteArray());
         try {
-            return objectMapper.readValue(json, clazz);
+            return objectMapper.readValue(in.toByteArray(), clazz);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
