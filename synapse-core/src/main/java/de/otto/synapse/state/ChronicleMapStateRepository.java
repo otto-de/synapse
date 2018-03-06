@@ -1,7 +1,10 @@
 package de.otto.synapse.state;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.openhft.chronicle.hash.ChronicleHashClosedException;
 import net.openhft.chronicle.map.ChronicleMapBuilder;
+
+import java.util.Optional;
 
 public class ChronicleMapStateRepository<V> extends StateRepository<V> {
     private static final int DEFAULT_KEY_SIZE_BYTES = 128;
@@ -15,6 +18,28 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
         super(builder.chronicleMapBuilder.create());
         clazz = builder.clazz;
         objectMapper = builder.objectMapper;
+    }
+
+    @Override
+    public V put(String key, V value) {
+        V result = null;
+        try {
+            result = super.put(key, value);
+        } catch (ChronicleHashClosedException ignore) {
+            // TODO: fixme
+        }
+        return result;
+    }
+
+    @Override
+    public Optional<V> get(String key) {
+        Optional<V> result = Optional.empty();
+        try {
+            result = super.get(key);
+        } catch (ChronicleHashClosedException ignore) {
+            // TODO: fixme
+        }
+        return result;
     }
 
     public static <V> Builder chronicleMapConcurrentMapStateRepositoryBuilder(Class<V> clazz) {
