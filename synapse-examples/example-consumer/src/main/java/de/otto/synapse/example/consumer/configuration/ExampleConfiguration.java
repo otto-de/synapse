@@ -2,11 +2,11 @@ package de.otto.synapse.example.consumer.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.annotation.EnableEventSource;
-import de.otto.synapse.endpoint.MessageSenderEndpoint;
+import de.otto.synapse.endpoint.sender.InMemoryMessageSender;
+import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.eventsource.EventSourceBuilder;
 import de.otto.synapse.eventsource.InMemoryEventSource;
 import de.otto.synapse.example.consumer.state.BananaProduct;
-import de.otto.synapse.sender.InMemoryMessageSender;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.translator.JsonStringMessageTranslator;

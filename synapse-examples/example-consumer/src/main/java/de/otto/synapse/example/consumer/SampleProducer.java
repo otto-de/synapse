@@ -1,6 +1,6 @@
 package de.otto.synapse.example.consumer;
 
-import de.otto.synapse.endpoint.MessageSenderEndpoint;
+import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.example.consumer.configuration.MyServiceProperties;
 import de.otto.synapse.example.consumer.payload.BananaPayload;
 import de.otto.synapse.example.consumer.payload.ProductPayload;

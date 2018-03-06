@@ -1,4 +1,4 @@
-package de.otto.synapse.endpoint;
+package de.otto.synapse.endpoint.receiver;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ChannelResponse;

@@ -1,6 +1,6 @@
 package de.otto.synapse.example.producer;
 
-import de.otto.synapse.endpoint.MessageSenderEndpoint;
+import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.example.producer.configuration.MyServiceProperties;
 import de.otto.synapse.example.producer.payload.ProductPayload;
 import org.slf4j.Logger;

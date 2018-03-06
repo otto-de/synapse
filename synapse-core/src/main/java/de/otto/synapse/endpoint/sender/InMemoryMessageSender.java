@@ -1,7 +1,6 @@
-package de.otto.synapse.sender;
+package de.otto.synapse.endpoint.sender;
 
 import de.otto.synapse.channel.InMemoryChannel;
-import de.otto.synapse.endpoint.AbstractMessageSenderEndpoint;
 import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;

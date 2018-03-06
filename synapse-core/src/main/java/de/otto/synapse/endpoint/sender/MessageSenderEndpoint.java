@@ -1,5 +1,6 @@
-package de.otto.synapse.endpoint;
+package de.otto.synapse.endpoint.sender;
 
+import de.otto.synapse.endpoint.MessageEndpoint;
 import de.otto.synapse.message.Message;
 
 import java.util.stream.Stream;

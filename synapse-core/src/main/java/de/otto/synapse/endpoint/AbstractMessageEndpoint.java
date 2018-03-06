@@ -1,5 +1,7 @@
 package de.otto.synapse.endpoint;
 
+import de.otto.synapse.endpoint.receiver.MessageReceiverEndpoint;
+import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 
 import javax.annotation.Nonnull;

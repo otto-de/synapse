@@ -3,7 +3,7 @@ package de.otto.synapse.eventsource.aws;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.otto.synapse.channel.aws.KinesisMessageLogReceiverEndpoint;
-import de.otto.synapse.endpoint.MessageLogReceiverEndpoint;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
 import org.slf4j.Logger;

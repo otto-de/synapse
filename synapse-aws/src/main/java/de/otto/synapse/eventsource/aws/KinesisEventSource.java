@@ -2,7 +2,9 @@ package de.otto.synapse.eventsource.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.endpoint.MessageLogReceiverEndpoint;
+import de.otto.synapse.channel.ChannelResponse;
+import de.otto.synapse.channel.Status;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.AbstractEventSource;
 import de.otto.synapse.eventsource.EventSourceNotification;
 import de.otto.synapse.message.Message;

@@ -1,6 +1,6 @@
 package de.otto.synapse.example.producer;
 
-import de.otto.synapse.endpoint.MessageSenderEndpoint;
+import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 import org.junit.Before;
 import org.junit.Test;

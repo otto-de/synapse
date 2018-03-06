@@ -1,6 +1,4 @@
-package de.otto.synapse.sender;
-
-import de.otto.synapse.endpoint.MessageSenderEndpoint;
+package de.otto.synapse.endpoint.sender;
 
 public interface MessageSenderFactory {
 

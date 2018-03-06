@@ -1,6 +1,7 @@
 package de.otto.synapse.endpoint;
 
 import com.google.common.collect.ImmutableList;
+import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 

@@ -1,4 +1,4 @@
-package de.otto.synapse.sender.aws;
+package de.otto.synapse.endpoint.sender.aws;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;

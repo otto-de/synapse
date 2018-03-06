@@ -1,7 +1,8 @@
-package de.otto.synapse.endpoint;
+package de.otto.synapse.endpoint.receiver;
 
 import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.endpoint.MessageEndpoint;
 
 /*+
  * Receiver-side {@code MessageEndpoint endpoint} of a Message Channel

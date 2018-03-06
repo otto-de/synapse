@@ -1,6 +1,8 @@
 package de.otto.synapse.message;
 
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.endpoint.receiver.MessageReceiverEndpoint;
+import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 
 import javax.annotation.Nonnull;
 import java.io.Serializable;
@@ -16,8 +18,8 @@ import static java.util.Objects.requireNonNull;
  * The Header of a {@link Message}.
  * <p>
  *     Headers contain metadata about a message which may only be available on one side of a
- *     channel: {@link de.otto.synapse.endpoint.MessageReceiverEndpoint} and
- *     {@link de.otto.synapse.endpoint.MessageSenderEndpoint} might add different information to
+ *     channel: {@link MessageReceiverEndpoint} and
+ *     {@link MessageSenderEndpoint} might add different information to
  *     the message header.
  * </p>
  * <p>
