@@ -14,13 +14,19 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * The Header of a {@link Message}.
- *
  * <p>
- * <img src="http://www.enterpriseintegrationpatterns.com/img/MessageSolution.gif" alt="Message">
+ *     Headers contain metadata about a message which may only be available on one side of a
+ *     channel: {@link de.otto.synapse.endpoint.MessageReceiverEndpoint} and
+ *     {@link de.otto.synapse.endpoint.MessageSenderEndpoint} might add different information to
+ *     the message header.
  * </p>
- *
+ * <p>
+ *     <img src="http://www.enterpriseintegrationpatterns.com/img/MessageSolution.gif" alt="Message">
+ * </p>
+ * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/Message.html">EIP: Message</a>
  */
 public class Header implements Serializable {
+
     // TODO: Header extends ImmutableMultimap<String, Object>
 
     public static Header emptyHeader() {

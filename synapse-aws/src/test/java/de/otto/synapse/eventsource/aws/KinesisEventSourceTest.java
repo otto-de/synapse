@@ -7,7 +7,6 @@ import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.channel.Status;
 import de.otto.synapse.channel.aws.KinesisMessageLogReceiverEndpoint;
-import de.otto.synapse.channel.aws.KinesisShard;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.eventsource.EventSourceNotification;
 import de.otto.synapse.message.Message;
@@ -20,8 +19,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.function.Predicate;
 
@@ -49,10 +46,8 @@ public class KinesisEventSourceTest {
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    private int nextKey = 0;
-
-
     @Before
+    @SuppressWarnings("unchecked")
     public void setUp() {
         initMocks(this);
         when(kinesisMessageLog.getChannelName()).thenReturn("test");
@@ -73,6 +68,7 @@ public class KinesisEventSourceTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void shouldConsumeAllEventsWithRegisteredConsumers() {
         // given
         ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
@@ -89,6 +85,7 @@ public class KinesisEventSourceTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void shouldFinishConsumptionOnStopCondition() {
         // given
         ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
@@ -151,6 +148,7 @@ public class KinesisEventSourceTest {
 
 
     @Test
+    @SuppressWarnings("unchecked")
     public void shouldPublishStartedAndFailedEvents() {
         // given
         ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
@@ -182,38 +180,10 @@ public class KinesisEventSourceTest {
 
 
     private boolean stopIfGreenForString(Message<?> message) {
-        if (message.getPayload() == null) {
-            return false;
-        }
-        return message.getPayload().toString().contains("green");
-    }
-
-    private Record createRecord(String data) {
-        String json = "{\"data\":\"" + data + "\"}";
-        return Record.builder()
-                .partitionKey(String.valueOf(nextKey++))
-                .data(ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8)))
-                .sequenceNumber("sequence-" + data)
-                .build();
-    }
-
-    private Record createEmptyRecord() {
-        return Record.builder()
-                .partitionKey(String.valueOf(nextKey++))
-                .data(ByteBuffer.allocateDirect(0))
-                .sequenceNumber("sequence-" + "empty")
-                .build();
+        return message.getPayload() != null && message.getPayload().toString().contains("green");
     }
 
     public static class TestData {
-
-        TestData() {
-
-        }
-
-        public TestData(String data) {
-            this.data = data;
-        }
 
         @JsonProperty
         public String data;

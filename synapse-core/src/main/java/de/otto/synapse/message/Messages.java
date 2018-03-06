@@ -25,7 +25,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * sender to the receiver) until it succeeds.
  * </p>
  *
- * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/Message.html">EIP - Message</a>
+ * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/Message.html">EIP: Message</a>
  */
 public final class Messages {
 

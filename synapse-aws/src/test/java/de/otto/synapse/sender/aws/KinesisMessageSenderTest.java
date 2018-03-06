@@ -1,11 +1,10 @@
 package de.otto.synapse.sender.aws;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.translator.JsonByteBufferMessageTranslator;
+import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,7 +19,6 @@ import software.amazon.awssdk.services.kinesis.model.PutRecordsRequestEntry;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsResponse;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -42,10 +40,10 @@ public class KinesisMessageSenderTest {
     @Captor
     private ArgumentCaptor<PutRecordsRequest> putRecordsRequestCaptor;
     private ObjectMapper objectMapper = new ObjectMapper();
-    private MessageTranslator<ByteBuffer> messageTranslator = new JsonByteBufferMessageTranslator(objectMapper);
+    private MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator(objectMapper);
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         kinesisMessageSender = new KinesisMessageSender("test", messageTranslator, kinesisClient);
     }
 
@@ -115,7 +113,7 @@ public class KinesisMessageSenderTest {
     }
 
     @Test
-    public void shouldBatchEventsWhenTooManyShouldBeSent() throws Exception {
+    public void shouldBatchEventsWhenTooManyShouldBeSent() {
         // given
         PutRecordsResponse putRecordsResponse = PutRecordsResponse.builder()
                 .failedRecordCount(0)
@@ -130,7 +128,7 @@ public class KinesisMessageSenderTest {
     }
 
     @Test
-    public void shouldSendDeleteEventWithEmptyByteBuffer() throws JsonProcessingException {
+    public void shouldSendDeleteEventWithEmptyByteBuffer() {
         // given
         when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(PutRecordsResponse.builder()
                 .failedRecordCount(0)
@@ -145,9 +143,9 @@ public class KinesisMessageSenderTest {
         assertThat(putRecordsRequestCaptor.getValue().records().get(0).data(), is(ByteBuffer.allocateDirect(0)));
     }
 
-    private Stream<Message<ByteBuffer>> someEvents(int n) {
+    private Stream<Message<String>> someEvents(int n) {
         return IntStream.range(0, n)
-                .mapToObj(i -> message(valueOf(i), ByteBuffer.wrap(Integer.toString(i).getBytes(StandardCharsets.UTF_8))));
+                .mapToObj(i -> message(valueOf(i), Integer.toString(i)));
     }
 
     private static class ExampleJsonObject {
@@ -157,7 +155,7 @@ public class KinesisMessageSenderTest {
         public ExampleJsonObject() {
         }
 
-        public ExampleJsonObject(String value) {
+        ExampleJsonObject(String value) {
             this.value = value;
         }
 

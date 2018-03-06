@@ -27,7 +27,7 @@ import java.util.stream.Stream;
  *     but just a few key fields that are required for later analysis, such as a message ID, or the channel on
  *     which the message was sent and a timestamp.
  * </p>
- * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageStore.html">EIP Message Store</a>
+ * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageStore.html">EIP: Message Store</a>
  */
 public interface MessageStore {
 

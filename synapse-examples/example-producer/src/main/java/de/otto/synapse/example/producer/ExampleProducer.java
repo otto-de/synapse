@@ -1,8 +1,8 @@
 package de.otto.synapse.example.producer;
 
+import de.otto.synapse.endpoint.MessageSenderEndpoint;
 import de.otto.synapse.example.producer.configuration.MyServiceProperties;
 import de.otto.synapse.example.producer.payload.ProductPayload;
-import de.otto.synapse.sender.MessageSender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +20,10 @@ public class ExampleProducer {
 
     private final static Logger LOG = LoggerFactory.getLogger(ExampleProducer.class);
 
-    private MessageSender messageSender;
+    private final MessageSenderEndpoint messageSender;
 
     @Autowired
-    public ExampleProducer(MessageSender productMessageSender) {
+    public ExampleProducer(final MessageSenderEndpoint productMessageSender) {
         this.messageSender = productMessageSender;
     }
 

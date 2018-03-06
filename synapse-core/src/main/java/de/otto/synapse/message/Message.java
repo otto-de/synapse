@@ -24,7 +24,7 @@ import static de.otto.synapse.message.Header.emptyHeader;
  * </p>
  *
  * @param <T> The type of the Message payload
- * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/Message.html">EIP - Message</a>
+ * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/Message.html">EIP: Message</a>
  */
 public class Message<T> implements Serializable {
 

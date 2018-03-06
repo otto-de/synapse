@@ -5,7 +5,7 @@ import de.otto.synapse.annotation.EnableEventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
 import de.otto.synapse.eventsource.InMemoryEventSource;
 import de.otto.synapse.example.consumer.state.BananaProduct;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.sender.InMemoryMessageSender;
 import de.otto.synapse.sender.MessageSender;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;
 import de.otto.synapse.state.StateRepository;
@@ -50,11 +50,6 @@ public class ExampleConfiguration {
     private MessageSender buildMessageSender(final String channelName,
                                              final ObjectMapper objectMapper) {
         MessageTranslator<String> translator = new JsonStringMessageTranslator(objectMapper);
-        return new MessageSender() {
-            @Override
-            public <T> void send(Message<T> message) {
-                getChannel(channelName).send(translator.translate(message));
-            }
-        };
+        return new InMemoryMessageSender(translator, getChannel(channelName));
     }
 }

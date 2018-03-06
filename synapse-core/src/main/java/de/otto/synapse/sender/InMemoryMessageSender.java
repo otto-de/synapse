@@ -1,24 +1,33 @@
 package de.otto.synapse.sender;
 
 import de.otto.synapse.channel.InMemoryChannel;
+import de.otto.synapse.endpoint.AbstractMessageSenderEndpoint;
+import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
 
-public class InMemoryMessageSender implements MessageSender {
+import javax.annotation.Nonnull;
 
-    private final MessageTranslator<String> messageTranslator;
+public class InMemoryMessageSender extends AbstractMessageSenderEndpoint implements MessageSender {
+
     private final InMemoryChannel channel;
 
     public InMemoryMessageSender(final MessageTranslator<String> messageTranslator,
                                  final InMemoryChannel channel) {
-        this.messageTranslator = messageTranslator;
+        super(channel.getChannelName(), messageTranslator);
+        this.channel = channel;
+    }
+
+    public InMemoryMessageSender(final MessageTranslator<String> messageTranslator,
+                                 final InMemoryChannel channel,
+                                 final MessageInterceptor messageInterceptor) {
+        super(channel.getChannelName(), messageTranslator, messageInterceptor);
         this.channel = channel;
     }
 
     @Override
-    public <T> void send(final Message<T> message) {
-        channel.send(
-                messageTranslator.translate(message)
-        );
+    protected void doSend(@Nonnull Message<String> message) {
+        channel.send(message);
     }
+
 }

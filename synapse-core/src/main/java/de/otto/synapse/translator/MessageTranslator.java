@@ -14,6 +14,7 @@ import javax.annotation.Nonnull;
  *     <img src="http://www.enterpriseintegrationpatterns.com/img/MessageTranslator.gif" alt="MessageTranslator">
  * </p>
  * @param <P> The type of the translated message's payload
+ * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageTranslator.html">EIP: Message Translator</a>
  */
 @FunctionalInterface
 public interface MessageTranslator<P> {
