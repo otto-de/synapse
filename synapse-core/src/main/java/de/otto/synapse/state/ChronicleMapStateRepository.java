@@ -7,7 +7,7 @@ import net.openhft.chronicle.map.ChronicleMapBuilder;
 import java.util.Optional;
 
 public class ChronicleMapStateRepository<V> extends StateRepository<V> {
-    
+
     private static final int DEFAULT_KEY_SIZE_BYTES = 128;
     private static final double DEFAULT_VALUE_SIZE_BYTES = 512;
     private static final long DEFAULT_ENTRY_COUNT = 1_000_00;
@@ -36,6 +36,16 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
             // TODO: fixme
         }
         return result;
+    }
+
+    @Override
+    public long size() {
+        try {
+            return super.size();
+        } catch (ChronicleHashClosedException ignore) {
+            // TODO: fixme
+            return 0;
+        }
     }
 
     public static <V> Builder chronicleMapConcurrentMapStateRepositoryBuilder(Class<V> clazz) {
