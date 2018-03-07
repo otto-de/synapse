@@ -16,29 +16,35 @@ import static java.util.regex.Pattern.compile;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
- * A MessageConsumer that is acting as a MessageDispatcher for multiple MessageConsumers.
+ * A MessageConsumer that is acting as a Message Dispatcher for multiple {@link MessageConsumer message consumers}.
  * <p>
  *     <img src="http://www.enterpriseintegrationpatterns.com/img/MessageDispatcher.gif" alt="MessageDispatcher">
  * </p>
  * <p>
- *     Messages are translated to the format expected by the registered consumers.
+ *     As it is implementing the MessageConsumer interface, the MessageDispatcher is an implementation
+ *     of the GoF Composite Pattern.
  * </p>
+ * <p>
+ *     Messages are translated by the dispatcher using to the format expected by the registered consumers.
+ * </p>
+ * @see  <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageDispatcher.html">EIP: Message Dispatcher</a>
+ * @see <a href="https://en.wikipedia.org/wiki/Composite_pattern">Composite Pattern</a>
  */
-public class DispatchingMessageConsumer implements MessageConsumer<String> {
+public class MessageDispatcher implements MessageConsumer<String> {
 
-    private static final Logger LOG = getLogger(DispatchingMessageConsumer.class);
+    private static final Logger LOG = getLogger(MessageDispatcher.class);
     private static final Pattern ACCEPT_ALL = compile(".*");
 
     private final List<MessageConsumer<?>> messageConsumers;
     private final ObjectMapper objectMapper;
 
-    public DispatchingMessageConsumer(final ObjectMapper objectMapper) {
+    public MessageDispatcher(final ObjectMapper objectMapper) {
         this.messageConsumers = synchronizedList(new ArrayList<>());
         this.objectMapper = objectMapper;
     }
 
-    public DispatchingMessageConsumer(final ObjectMapper objectMapper,
-                                      final List<MessageConsumer<?>> messageConsumers) {
+    public MessageDispatcher(final ObjectMapper objectMapper,
+                             final List<MessageConsumer<?>> messageConsumers) {
         this.messageConsumers = synchronizedList(new ArrayList<>(messageConsumers));
         this.objectMapper = objectMapper;
     }

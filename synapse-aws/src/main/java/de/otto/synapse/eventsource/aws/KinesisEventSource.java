@@ -37,7 +37,7 @@ public class KinesisEventSource extends AbstractEventSource {
                                       final Predicate<Message<?>> stopCondition) {
         publishEvent(startFrom, EventSourceNotification.Status.STARTED, "Consuming messages from Kinesis.");
         try {
-            ChannelPosition currentPosition = messageLog.consume(startFrom, stopCondition, dispatchingMessageConsumer());
+            ChannelPosition currentPosition = messageLog.consume(startFrom, stopCondition, getMessageDispatcher());
             publishEvent(currentPosition, FINISHED, "Stopped consuming messages from Kinesis.");
             return currentPosition;
         } catch (final RuntimeException e) {

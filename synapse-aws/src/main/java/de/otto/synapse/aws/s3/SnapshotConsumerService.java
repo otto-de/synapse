@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.consumer.DispatchingMessageConsumer;
+import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +27,7 @@ public class SnapshotConsumerService {
     public <T> ChannelPosition consumeSnapshot(final File latestSnapshot,
                                                final String streamName,
                                                final Predicate<Message<?>> stopCondition,
-                                               final DispatchingMessageConsumer dispatchingMessageConsumer) {
+                                               final MessageConsumer<String> messageConsumer) {
 
         try (
                 FileInputStream fileInputStream = new FileInputStream(latestSnapshot);
@@ -53,7 +53,7 @@ public class SnapshotConsumerService {
 
                                     shardPositions.positionOf(streamName),
                                     stopCondition,
-                                    dispatchingMessageConsumer);
+                                    messageConsumer);
                             break;
                         default:
                             break;
@@ -70,7 +70,7 @@ public class SnapshotConsumerService {
     private <T> void processSnapshotData(final JsonParser parser,
                                          final String sequenceNumber,
                                          final Predicate<Message<?>> stopCondition,
-                                         final DispatchingMessageConsumer dispatchingMessageConsumer) throws IOException {
+                                         final MessageConsumer<String> messageConsumer) throws IOException {
         // TODO: Would be better to store event meta data together with key+value:
         final Instant arrivalTimestamp = Instant.EPOCH;
         boolean abort = false;
@@ -83,7 +83,7 @@ public class SnapshotConsumerService {
                         responseHeader(null /*TODO: sequenceNumber*/, arrivalTimestamp, null),
                         parser.nextTextValue()
                 );
-                dispatchingMessageConsumer.accept(message);
+                messageConsumer.accept(message);
                 abort = stopCondition.test(message);
             }
         }

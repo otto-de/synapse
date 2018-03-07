@@ -1,8 +1,8 @@
 package de.otto.synapse.eventsource;
 
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Message;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -60,8 +60,8 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
      * @return EventConsumers
      */
     @Override
-    public DispatchingMessageConsumer dispatchingMessageConsumer() {
-        return delegate.dispatchingMessageConsumer();
+    public MessageDispatcher getMessageDispatcher() {
+        return delegate.getMessageDispatcher();
     }
 
     /**

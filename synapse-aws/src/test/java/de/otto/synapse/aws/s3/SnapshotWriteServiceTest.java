@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import org.junit.After;
@@ -93,7 +93,7 @@ public class SnapshotWriteServiceTest {
         ChannelPosition actualChannelPosition = new SnapshotConsumerService().consumeSnapshot(snapshot,
                 STREAM_NAME,
                 (event) -> false,
-                new DispatchingMessageConsumer(OBJECT_MAPPER, singletonList(messageConsumer)));
+                new MessageDispatcher(OBJECT_MAPPER, singletonList(messageConsumer)));
 
         assertThat(actualChannelPosition, is(channelPosition));
         assertThat(data.get("testKey"), is(ImmutableMap.of("testValue1", "value1")));

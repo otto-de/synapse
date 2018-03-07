@@ -49,7 +49,7 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
         }
     }
 
-    public static <V> Builder chronicleMapConcurrentMapStateRepositoryBuilder(Class<V> clazz) {
+    public static <V> Builder<V> chronicleMapConcurrentMapStateRepositoryBuilder(Class<V> clazz) {
         return new Builder<>(clazz);
     }
 

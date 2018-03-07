@@ -56,7 +56,7 @@ public class EventSourceConsumerProcessTest {
                     responseHeader(null, Instant.now(), Duration.ZERO),
                     "{}"
             );
-            dispatchingMessageConsumer().accept(message);
+            getMessageDispatcher().accept(message);
             return ChannelPosition.fromHorizon();
         }
     }

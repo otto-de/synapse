@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.receiver;
 
-import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageEndpoint;
 
@@ -30,7 +29,7 @@ public interface MessageReceiverEndpoint extends MessageEndpoint {
      *
      * @return EventConsumers
      */
-    DispatchingMessageConsumer dispatchingMessageConsumer();
+    MessageConsumer messageConsumer();
 
     /**
      * Takes zero or more messages from the channel, calls the interceptor-chain for all messages, and notifies

@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
@@ -25,24 +26,19 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.stream.Collectors.toList;
 
-public class KinesisMessageLogReceiverEndpoint implements MessageLogReceiverEndpoint {
+public class KinesisMessageLogReceiverEndpoint extends AbstractMessageReceiverEndpoint implements MessageLogReceiverEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisMessageLogReceiverEndpoint.class);
 
-    private final String streamName;
+
     private final KinesisClient kinesisClient;
     private List<CompletableFuture<ChannelPosition>> futureShardPositions;
     private volatile boolean stopping;
 
     public KinesisMessageLogReceiverEndpoint(final KinesisClient kinesisClient,
-                                             final String streamName) {
-        this.streamName = streamName;
+                                             final String channelName) {
+        super(channelName);
         this.kinesisClient = kinesisClient;
-    }
-
-    @Override
-    public String getChannelName() {
-        return streamName;
     }
 
     @Override
@@ -77,14 +73,14 @@ public class KinesisMessageLogReceiverEndpoint implements MessageLogReceiverEndp
 
             return ChannelPosition.merge(shardPositions);
         } catch (final RuntimeException e) {
-            LOG.error("Failed to consume from Kinesis stream {}: {}", streamName, e.getMessage());
+            LOG.error("Failed to consume from Kinesis stream {}: {}", getChannelName(), e.getMessage());
             // When an exception occurs in a completable future's thread, other threads continue running.
             // Stop all before proceeding.
             executorService.shutdownNow();
             try {
                 boolean allThreadsSafelyTerminated = executorService.awaitTermination(30, TimeUnit.SECONDS);
                 if (!allThreadsSafelyTerminated) {
-                    LOG.error("Kinesis Thread for stream {} is still running", streamName);
+                    LOG.error("Kinesis Thread for stream {} is still running", getChannelName());
                 }
 
             } catch (InterruptedException ie) {
@@ -103,7 +99,7 @@ public class KinesisMessageLogReceiverEndpoint implements MessageLogReceiverEndp
     List<KinesisShard> retrieveAllOpenShards() {
         return retrieveAllShards().stream()
                 .filter(this::isShardOpen)
-                .map(shard -> new KinesisShard(shard.shardId(), streamName, kinesisClient))
+                .map(shard -> new KinesisShard(shard.shardId(), getChannelName(), kinesisClient))
                 .collect(toImmutableList());
     }
 
@@ -120,7 +116,7 @@ public class KinesisMessageLogReceiverEndpoint implements MessageLogReceiverEndp
     private boolean retrieveAndAppendNextBatchOfShards(List<Shard> shardList) {
         DescribeStreamRequest describeStreamRequest = DescribeStreamRequest
                 .builder()
-                .streamName(streamName)
+                .streamName(getChannelName())
                 .exclusiveStartShardId(getLastSeenShardId(shardList))
                 .limit(10)
                 .build();

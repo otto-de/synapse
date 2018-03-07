@@ -13,11 +13,9 @@ import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.util.Arrays.asList;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
-public class DispatchingMessageConsumerTest {
+public class MessageDispatcherTest {
 
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -29,10 +27,10 @@ public class DispatchingMessageConsumerTest {
         TestMessageConsumer<Object> eventConsumerB = spy(testEventConsumer(".*", Object.class));
         TestMessageConsumer<Object> eventConsumerC = spy(testEventConsumer(".*", Object.class));
 
-        DispatchingMessageConsumer dispatchingMessageConsumer = new DispatchingMessageConsumer(OBJECT_MAPPER);
-        dispatchingMessageConsumer.add(eventConsumerA);
-        dispatchingMessageConsumer.add(eventConsumerB);
-        dispatchingMessageConsumer.add(eventConsumerC);
+        MessageDispatcher messageDispatcher = new MessageDispatcher(OBJECT_MAPPER);
+        messageDispatcher.add(eventConsumerA);
+        messageDispatcher.add(eventConsumerB);
+        messageDispatcher.add(eventConsumerC);
 
         // when
         Message<String> someMessage = message(
@@ -40,7 +38,7 @@ public class DispatchingMessageConsumerTest {
                 responseHeader(fromHorizon(), Instant.now(), Duration.ZERO),
                 "{}"
         );
-        dispatchingMessageConsumer.accept(someMessage);
+        messageDispatcher.accept(someMessage);
 
         // then
         verify(eventConsumerA).accept(any(Message.class));
@@ -57,14 +55,14 @@ public class DispatchingMessageConsumerTest {
         TestMessageConsumer<Banana> eventConsumerBanana = spy(testEventConsumer("banana.*", Banana.class));
         TestMessageConsumer<Cherry> eventConsumerCherry = spy(testEventConsumer("cherry.*", Cherry.class));
 
-        DispatchingMessageConsumer dispatchingMessageConsumer = new DispatchingMessageConsumer(OBJECT_MAPPER, asList(eventConsumerApple, eventConsumerBanana, eventConsumerCherry));
+        MessageDispatcher messageDispatcher = new MessageDispatcher(OBJECT_MAPPER, asList(eventConsumerApple, eventConsumerBanana, eventConsumerCherry));
 
         // when
         final Instant now = Instant.now();
         Message<String> someAppleMessage = message("apple.123", responseHeader(fromHorizon(), now, Duration.ZERO),"{}");
         Message<String> someBananaMessage = message("banana.456", responseHeader(fromHorizon(), now, Duration.ZERO), "{}");
-        dispatchingMessageConsumer.accept(someAppleMessage);
-        dispatchingMessageConsumer.accept(someBananaMessage);
+        messageDispatcher.accept(someAppleMessage);
+        messageDispatcher.accept(someBananaMessage);
 
         // then
         verify(eventConsumerApple).accept(

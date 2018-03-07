@@ -3,8 +3,8 @@ package de.otto.synapse.aws.s3;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.consumer.MessageDispatcher;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,7 +40,7 @@ public class SnapshotConsumerServiceTest {
                 file,
                 "test",
                 (event) -> false,
-                new DispatchingMessageConsumer(OBJECT_MAPPER, Collections.singletonList(messageConsumer)));
+                new MessageDispatcher(OBJECT_MAPPER, Collections.singletonList(messageConsumer)));
         //then
         assertThat(shardPositions.shards().size(), is(2));
         assertThat(shardPositions.positionOf("shardId-000000000000"), is("0"));

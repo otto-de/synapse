@@ -48,7 +48,6 @@ public abstract class AbstractMessageEndpoint implements MessageEndpoint {
      * @return name of the channel
      */
     @Override
-    @Nonnull
     public final String getChannelName() {
         return channelName;
     }

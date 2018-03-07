@@ -2,8 +2,8 @@ package de.otto.synapse.eventsource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.consumer.MessageDispatcher;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -18,7 +18,7 @@ public abstract class AbstractEventSource implements EventSource {
     private final String name;
     private final String streamName;
     private final ApplicationEventPublisher eventPublisher;
-    private final DispatchingMessageConsumer dispatchingMessageConsumer;
+    private final MessageDispatcher messageConsumer;
     private final AtomicBoolean stopping = new AtomicBoolean(false);
 
     public AbstractEventSource(final String name,
@@ -28,7 +28,7 @@ public abstract class AbstractEventSource implements EventSource {
         this.name = name;
         this.streamName = streamName;
         this.eventPublisher = eventPublisher;
-        this.dispatchingMessageConsumer = new DispatchingMessageConsumer(objectMapper);
+        this.messageConsumer = new MessageDispatcher(objectMapper);
     }
 
     @Override
@@ -62,17 +62,16 @@ public abstract class AbstractEventSource implements EventSource {
      */
     @Override
     public void register(final MessageConsumer<?> messageConsumer) {
-        dispatchingMessageConsumer.add(messageConsumer);
+        this.messageConsumer.add(messageConsumer);
     }
 
     /**
-     * Returns the list of registered EventConsumers.
+     * Returns the MessageDispatcher used to register {@link MessageConsumer consumers} at the EventSource.
      *
-     * @return list of registered EventConsumers
+     * @return MessageDispatcher
      */
-    @Override
-    public DispatchingMessageConsumer dispatchingMessageConsumer() {
-        return dispatchingMessageConsumer;
+    public MessageDispatcher getMessageDispatcher() {
+        return messageConsumer;
     }
 
     protected void publishEvent(ChannelPosition channelPosition, EventSourceNotification.Status status) {

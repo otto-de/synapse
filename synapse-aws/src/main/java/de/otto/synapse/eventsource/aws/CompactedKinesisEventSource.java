@@ -1,8 +1,8 @@
 package de.otto.synapse.eventsource.aws;
 
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.message.Message;
 
@@ -54,8 +54,8 @@ public class CompactedKinesisEventSource implements EventSource {
      * @return list of registered EventConsumers
      */
     @Override
-    public DispatchingMessageConsumer dispatchingMessageConsumer() {
-        return snapshotEventSource.dispatchingMessageConsumer();
+    public MessageDispatcher getMessageDispatcher() {
+        return snapshotEventSource.getMessageDispatcher();
     }
 
     @Override

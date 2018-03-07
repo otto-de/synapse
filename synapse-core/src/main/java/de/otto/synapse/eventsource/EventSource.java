@@ -1,8 +1,8 @@
 package de.otto.synapse.eventsource;
 
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.consumer.DispatchingMessageConsumer;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Message;
 
 import java.util.function.Consumer;
@@ -34,11 +34,12 @@ public interface EventSource {
     void register(MessageConsumer<?> messageConsumer);
 
     /**
-     * Returns registered EventConsumers.
+     * Returns the MessageDispatcher used by the EventSource to translate and sent incoming messages to the
+     * registered {@link MessageConsumer message consumers}.
      *
-     * @return EventConsumers
+     * @return MessageDispatcher
      */
-    DispatchingMessageConsumer dispatchingMessageConsumer();
+    MessageDispatcher getMessageDispatcher();
 
     /**
      * Returns the name of the EventSource.
