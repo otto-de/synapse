@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static com.google.common.collect.ImmutableMap.copyOf;
+import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 
 /**
  * This class is a data source for supplying input to the Amazon Kinesis stream. It reads lines from the
@@ -68,11 +70,11 @@ public class TestStreamSource {
     }
 
     public ChannelPosition getLastStreamPosition() {
-        return ChannelPosition.of(mapShardIdToLastWrittenSequence);
+        return channelPosition(copyOf(mapShardIdToLastWrittenSequence));
     }
 
     public ChannelPosition getFirstReadPosition() {
-        return ChannelPosition.of(mapShardIdToFirstWrittenSequence);
+        return channelPosition(copyOf(mapShardIdToFirstWrittenSequence));
     }
 
     /**

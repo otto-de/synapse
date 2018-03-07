@@ -22,6 +22,8 @@ import software.amazon.awssdk.services.kinesis.model.Record;
 import java.util.Objects;
 import java.util.function.Predicate;
 
+import static com.google.common.collect.ImmutableMap.of;
+import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static java.util.Collections.singletonMap;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
@@ -52,7 +54,7 @@ public class KinesisEventSourceTest {
         initMocks(this);
         when(receiverEndpoint.getChannelName()).thenReturn("test");
         when(receiverEndpoint.consume(any(ChannelPosition.class), any(Predicate.class), any(MessageConsumer.class)))
-                .thenReturn(ChannelPosition.of(singletonMap("shard1", "4711")));
+                .thenReturn(ChannelPosition.channelPosition(ImmutableMap.of("shard1", "4711")));
     }
 
     @Test
@@ -71,7 +73,7 @@ public class KinesisEventSourceTest {
     @SuppressWarnings("unchecked")
     public void shouldConsumeAllEventsWithRegisteredConsumers() {
         // given
-        ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
+        ChannelPosition initialPositions = channelPosition(of("shard1", "xyz"));
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher, objectMapper);
         eventSource.register(testDataConsumer);
@@ -88,9 +90,9 @@ public class KinesisEventSourceTest {
     @SuppressWarnings("unchecked")
     public void shouldFinishConsumptionOnStopCondition() {
         // given
-        ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
+        ChannelPosition initialPositions = channelPosition(of("shard1", "xyz"));
         when(receiverEndpoint.consume(any(ChannelPosition.class), any(Predicate.class), any(MessageConsumer.class)))
-                .thenReturn(ChannelPosition.of(singletonMap("shard1", "4711")));
+                .thenReturn(ChannelPosition.shardPosition("shard1", "4711"));
 
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher, objectMapper);
@@ -101,13 +103,13 @@ public class KinesisEventSourceTest {
 
         // then
         assertThat(eventSource.isStopping(), is(false));
-        assertThat(channelPosition, is(ChannelPosition.of(singletonMap("shard1", "4711"))));
+        assertThat(channelPosition, is(channelPosition(of("shard1", "4711"))));
     }
 
     @Test
     public void shouldFinishConsumptionOnStop() {
         // given
-        ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
+        ChannelPosition initialPositions = channelPosition(of("shard1", "xyz"));
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher, objectMapper);
         eventSource.register(testDataConsumer);
@@ -123,7 +125,7 @@ public class KinesisEventSourceTest {
     @Test
     public void shouldPublishStartedAndFinishedEvents() {
         // given
-        ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
+        ChannelPosition initialPositions = channelPosition(of("shard1", "xyz"));
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher, objectMapper);
         eventSource.stop();
@@ -151,7 +153,7 @@ public class KinesisEventSourceTest {
     @SuppressWarnings("unchecked")
     public void shouldPublishStartedAndFailedEvents() {
         // given
-        ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
+        ChannelPosition initialPositions = channelPosition(of("shard1", "xyz"));
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher, objectMapper);
         when(receiverEndpoint.consume(any(ChannelPosition.class), any(Predicate.class), any(MessageConsumer.class))).thenThrow(new RuntimeException("Error Message"));

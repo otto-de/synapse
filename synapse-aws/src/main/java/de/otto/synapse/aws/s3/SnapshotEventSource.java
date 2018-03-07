@@ -33,22 +33,22 @@ public class SnapshotEventSource extends AbstractEventSource {
     }
 
     @Override
-    public SnapshotChannelPosition consumeAll(final ChannelPosition startFrom,
-                                              final Predicate<Message<?>> stopCondition) {
-        SnapshotChannelPosition snapshotStreamPosition;
+    public ChannelPosition consumeAll(final ChannelPosition startFrom,
+                                      final Predicate<Message<?>> stopCondition) {
+        ChannelPosition snapshotStreamPosition;
 
         try {
             publishEvent(startFrom, EventSourceNotification.Status.STARTED, "Loading snapshot from S3.");
 
             Optional<File> snapshotFile = snapshotReadService.retrieveLatestSnapshot(getStreamName());
             if (snapshotFile.isPresent()) {
-                ChannelPosition channelPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), getStreamName(), stopCondition, getMessageDispatcher());
-                snapshotStreamPosition = SnapshotChannelPosition.of(channelPosition, SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName()));
+                //Instant snapshotTimestamp = SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName());
+                snapshotStreamPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), getStreamName(), stopCondition, getMessageDispatcher());
             } else {
-                snapshotStreamPosition = SnapshotChannelPosition.of();
+                snapshotStreamPosition = ChannelPosition.fromHorizon();
             }
         } catch (RuntimeException e) {
-            publishEvent(SnapshotChannelPosition.of(), EventSourceNotification.Status.FAILED, "Failed to load snapshot from S3: " + e.getMessage());
+            publishEvent(ChannelPosition.fromHorizon(), EventSourceNotification.Status.FAILED, "Failed to load snapshot from S3: " + e.getMessage());
             throw e;
         } finally {
             LOG.info("Finished reading snapshot into Memory");

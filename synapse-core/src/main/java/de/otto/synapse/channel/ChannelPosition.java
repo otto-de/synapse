@@ -1,21 +1,19 @@
 package de.otto.synapse.channel;
 
+import com.google.common.collect.ImmutableMap;
+
 import java.io.Serializable;
 import java.util.*;
 
+import static com.google.common.collect.ImmutableMap.copyOf;
+import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonMap;
 
-public class ChannelPosition implements Serializable {
-    private final Map<String, String> shardPositions;
-
-    protected ChannelPosition(final Map<String, String> shardPositions) {
-        this.shardPositions = shardPositions;
-    }
+public final class ChannelPosition implements Serializable {
+    private final ImmutableMap<String, String> shardPositions;
 
     public static ChannelPosition fromHorizon() {
-        return of(emptyMap());
+        return channelPosition(ImmutableMap.of());
     }
 
     public static ChannelPosition merge(final ChannelPosition... channelPositions) {
@@ -35,15 +33,19 @@ public class ChannelPosition implements Serializable {
                 .forEach(shardId ->
                         shardPositions.put(shardId, streamPosition.positionOf(shardId)))
         );
-        return new ChannelPosition(shardPositions);
+        return new ChannelPosition(copyOf(shardPositions));
     }
 
     public static ChannelPosition shardPosition(final String shardId, final String position) {
-        return of(singletonMap(shardId, position));
+        return new ChannelPosition(of(shardId, position));
     }
 
-    public static ChannelPosition of(final Map<String, String> shardPositions) {
+    public static ChannelPosition channelPosition(final ImmutableMap<String, String> shardPositions) {
         return new ChannelPosition(shardPositions);
+    }
+
+    protected ChannelPosition(final ImmutableMap<String, String> shardPositions) {
+        this.shardPositions = shardPositions;
     }
 
     public Set<String> shards() {

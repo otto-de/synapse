@@ -1,7 +1,6 @@
 package de.otto.synapse.aws.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.eventsource.EventSourceNotification;
 import org.junit.Before;
@@ -16,6 +15,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import java.io.File;
 import java.util.Optional;
 
+import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -83,7 +83,7 @@ public class SnapshotEventSourceTest {
                 .withEventSourceName("snapshotEventSource")
                 .withStreamName(STREAM_NAME)
                 .withStatus(EventSourceNotification.Status.FAILED)
-                .withStreamPosition(SnapshotChannelPosition.of())
+                .withStreamPosition(fromHorizon())
                 .withMessage("Failed to load snapshot from S3: boom - simulate exception while loading from S3 (Service: null; Status Code: 0; Request ID: null)")
                 .build();
 
@@ -124,7 +124,7 @@ public class SnapshotEventSourceTest {
                 .withStreamName(STREAM_NAME)
                 .withStatus(EventSourceNotification.Status.STARTED)
                 .withMessage("Loading snapshot from S3.")
-                .withStreamPosition(ChannelPosition.fromHorizon())
+                .withStreamPosition(fromHorizon())
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedStartEvent);
 
@@ -133,7 +133,7 @@ public class SnapshotEventSourceTest {
                 .withStreamName(STREAM_NAME)
                 .withStatus(EventSourceNotification.Status.FINISHED)
                 .withMessage("Finished to load snapshot from S3.")
-                .withStreamPosition(SnapshotChannelPosition.of())
+                .withStreamPosition(fromHorizon())
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedFinishedEvent);
     }

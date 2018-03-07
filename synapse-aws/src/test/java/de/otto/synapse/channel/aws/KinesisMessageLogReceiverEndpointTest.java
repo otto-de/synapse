@@ -19,6 +19,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 
+import static com.google.common.collect.ImmutableMap.of;
+import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsNull.nullValue;

@@ -1,7 +1,6 @@
 package de.otto.synapse.aws.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
@@ -24,7 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static de.otto.synapse.aws.s3.SnapshotServiceTestUtils.snapshotProperties;
+import static de.otto.synapse.channel.ChannelPosition.channelPosition;
+import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
@@ -60,7 +62,7 @@ public class SnapshotWriteServiceTest {
         stateRepository.put("testKey", "{\"content\":\"testValue1\"}");
 
         //when
-        String fileName = testee.writeSnapshot(STREAM_NAME, ChannelPosition.fromHorizon(), stateRepository);
+        String fileName = testee.writeSnapshot(STREAM_NAME, fromHorizon(), stateRepository);
 
         //then
         ArgumentCaptor<File> fileArgumentCaptor = ArgumentCaptor.forClass(File.class);
@@ -80,7 +82,7 @@ public class SnapshotWriteServiceTest {
         stateRepository.put("testKey2", "{\"testValue2\": \"value2\"}");
 
         //when
-        ChannelPosition channelPosition = ChannelPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
+        ChannelPosition channelPosition = channelPosition(of("shard1", "1234", "shard2", "abcde"));
         File snapshot = testee.createSnapshot(STREAM_NAME, channelPosition, stateRepository);
 
         //then
@@ -96,8 +98,8 @@ public class SnapshotWriteServiceTest {
                 new MessageDispatcher(OBJECT_MAPPER, singletonList(messageConsumer)));
 
         assertThat(actualChannelPosition, is(channelPosition));
-        assertThat(data.get("testKey"), is(ImmutableMap.of("testValue1", "value1")));
-        assertThat(data.get("testKey2"), is(ImmutableMap.of("testValue2", "value2")));
+        assertThat(data.get("testKey"), is(of("testValue1", "value1")));
+        assertThat(data.get("testKey2"), is(of("testValue2", "value2")));
         assertThat(data.size(), is(2));
     }
 
@@ -109,7 +111,7 @@ public class SnapshotWriteServiceTest {
         stateRepository.put("testKey", "testValue1");
         stateRepository.put("testKey2", "testValue2");
 
-        ChannelPosition channelPosition = ChannelPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
+        ChannelPosition channelPosition = channelPosition(of("shard1", "1234", "shard2", "abcde"));
 
         // when
         try {
@@ -129,7 +131,7 @@ public class SnapshotWriteServiceTest {
         StateRepository<String> stateRepository = mock(StateRepository.class);
         when(stateRepository.get(any())).thenThrow(new RuntimeException("forced test exception"));
 
-        ChannelPosition channelPosition = ChannelPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
+        ChannelPosition channelPosition = channelPosition(of("shard1", "1234", "shard2", "abcde"));
 
         // when
         try {

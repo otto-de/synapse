@@ -141,7 +141,7 @@ public class CompactingMessageStoreTest {
             messageStore.add(message(valueOf(i), responseHeader(shardPosition("foo", valueOf(20 + i)), now), null));
             messageStore.add(message(valueOf(i), responseHeader(shardPosition("bar", valueOf(42 + i)), now), null));
         }
-        assertThat(messageStore.getLatestChannelPosition(), is(ChannelPosition.of(ImmutableMap.of("foo", "29", "bar", "51"))));
+        assertThat(messageStore.getLatestChannelPosition(), is(ChannelPosition.channelPosition(ImmutableMap.of("foo", "29", "bar", "51"))));
         assertThat(messageStore.size(), is(0));
         assertThat(messageStore.stream().count(), is(0L));
     }

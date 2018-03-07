@@ -3,6 +3,7 @@ package de.otto.synapse.aws.s3;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
@@ -10,11 +11,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Predicate;
 import java.util.zip.ZipInputStream;
 
+import static com.google.common.collect.ImmutableMap.builder;
+import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
@@ -90,7 +91,7 @@ public class SnapshotConsumerService {
     }
 
     private ChannelPosition processSequenceNumbers(final JsonParser parser) throws IOException {
-        final Map<String, String> shardPositions = new HashMap<>();
+        final ImmutableMap.Builder<String, String> shardPositions = builder();
 
         String shardId = null;
         String sequenceNumber = null;
@@ -120,7 +121,7 @@ public class SnapshotConsumerService {
                     break;
             }
         }
-        return ChannelPosition.of(shardPositions);
+        return channelPosition(shardPositions.build());
     }
 
 
