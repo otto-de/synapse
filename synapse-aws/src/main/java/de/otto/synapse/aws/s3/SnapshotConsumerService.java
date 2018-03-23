@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
 import org.springframework.stereotype.Service;
@@ -52,7 +53,7 @@ public class SnapshotConsumerService {
 
                                     /* TODO: Hier wird der StreamName als ShardName verwendet. Damit wird der Message _keine_ sinnvolle Position im Header mitgegeben! */
 
-                                    shardPositions.positionOf(streamName),
+                                    null, /*shardPositions.shard(streamName).position(),*/
                                     stopCondition,
                                     messageConsumer);
                             break;
@@ -91,9 +92,9 @@ public class SnapshotConsumerService {
     }
 
     private ChannelPosition processSequenceNumbers(final JsonParser parser) throws IOException {
-        final ImmutableMap.Builder<String, String> shardPositions = builder();
+        final ImmutableMap.Builder<String, ShardPosition> shardPositions = builder();
 
-        String shardId = null;
+        String shardName = null;
         String sequenceNumber = null;
         while (parser.nextToken() != JsonToken.END_ARRAY) {
             JsonToken currentToken = parser.currentToken();
@@ -102,7 +103,7 @@ public class SnapshotConsumerService {
                     switch (parser.getValueAsString()) {
                         case "shard":
                             parser.nextToken();
-                            shardId = parser.getValueAsString();
+                            shardName = parser.getValueAsString();
                             break;
                         case "sequenceNumber":
                             parser.nextToken();
@@ -113,15 +114,21 @@ public class SnapshotConsumerService {
                     }
                     break;
                 case END_OBJECT:
-                    shardPositions.put(shardId, sequenceNumber);
-                    shardId = null;
+                    if (shardName != null) {
+                        // TODO: "0" kann entfernt werden, wenn keine Snapshots mit "0" für HORIZON mehr exisiteren.
+                        final ShardPosition shardPosition = sequenceNumber != null && !sequenceNumber.equals("0")
+                                ? ShardPosition.fromPosition(shardName, sequenceNumber)
+                                : ShardPosition.fromHorizon(shardName);
+                        shardPositions.put(shardName, shardPosition);
+                    }
+                    shardName = null;
                     sequenceNumber = null;
                     break;
                 default:
                     break;
             }
         }
-        return channelPosition(shardPositions.build());
+        return channelPosition(shardPositions.build().values());
     }
 
 

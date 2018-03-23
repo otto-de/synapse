@@ -1,6 +1,6 @@
 package de.otto.synapse.message;
 
-import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.endpoint.receiver.MessageReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 
@@ -11,7 +11,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.google.common.collect.Iterables.getFirst;
+import static java.time.Instant.now;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -32,59 +32,41 @@ public class Header implements Serializable {
     // TODO: Header extends ImmutableMultimap<String, Object>
 
     public static Header emptyHeader() {
-        return new Header(null, Instant.now(), null);
+        return new Header(null, now(), null);
     }
 
-    public static Header responseHeader(final ChannelPosition channelPosition,
+    public static Header responseHeader(final ShardPosition shardPosition,
                                         final Instant arrivalTimestamp,
                                         final Duration durationBehind) {
         return new Header(
-                channelPosition,
+                shardPosition,
                 arrivalTimestamp,
                 durationBehind);
     }
 
-    public static Header responseHeader(final ChannelPosition channelPosition,
+    public static Header responseHeader(final ShardPosition shardPosition,
                                         final Instant arrivalTimestamp) {
         return new Header(
-                channelPosition,
+                shardPosition,
                 arrivalTimestamp,
                 null);
     }
 
-    private final ChannelPosition channelPosition;
+    private final ShardPosition shardPosition;
     private final Instant arrivalTimestamp;
     private final Duration durationBehind;
 
-    private Header(final ChannelPosition channelPosition,
+    private Header(final ShardPosition shardPosition,
                    final Instant approximateArrivalTimestamp,
                    final Duration durationBehind) {
-        if (channelPosition != null && channelPosition.shards().size() > 1) {
-            throw new IllegalArgumentException("ChannelPosition must not have more than one shard");
-        }
-        this.channelPosition = channelPosition;
+        this.shardPosition = shardPosition;
         this.arrivalTimestamp = requireNonNull(approximateArrivalTimestamp);
         this.durationBehind = durationBehind;
     }
 
     @Nonnull
-    public Optional<ChannelPosition> getChannelPosition() {
-        return Optional.ofNullable(channelPosition);
-    }
-
-    @Nonnull
-    public String getShardPosition() {
-        return channelPosition.positionOf(getShardName());
-    }
-
-    @Nonnull
-    public String getShardName() {
-        if (channelPosition != null && channelPosition.shards().size() == 1) {
-            //noinspection ConstantConditions
-            return getFirst(channelPosition.shards(), "");
-        } else {
-            return "";
-        }
+    public Optional<ShardPosition> getShardPosition() {
+        return Optional.ofNullable(shardPosition);
     }
 
     @Nonnull
@@ -107,20 +89,21 @@ public class Header implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Header header = (Header) o;
-        return Objects.equals(channelPosition, header.channelPosition) &&
+        return Objects.equals(shardPosition, header.shardPosition) &&
                 Objects.equals(arrivalTimestamp, header.arrivalTimestamp) &&
                 Objects.equals(durationBehind, header.durationBehind);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(channelPosition, arrivalTimestamp, durationBehind);
+
+        return Objects.hash(shardPosition, arrivalTimestamp, durationBehind);
     }
 
     @Override
     public String toString() {
         return "Header{" +
-                "channelPosition='" + channelPosition + '\'' +
+                "shardPosition=" + shardPosition +
                 ", arrivalTimestamp=" + arrivalTimestamp +
                 ", durationBehind=" + durationBehind +
                 '}';

@@ -1,10 +1,10 @@
 package de.otto.synapse.message;
 
-import de.otto.synapse.channel.ChannelPosition;
 import org.junit.Test;
 
 import java.time.Instant;
 
+import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.time.Duration.ofMillis;
@@ -18,13 +18,14 @@ public class MessageTest {
         final Instant now = Instant.now();
         final Message<String> message = message(
                 "42",
-                responseHeader(ChannelPosition.shardPosition("some-channel", "00001"), now, ofMillis(42L)),
+                responseHeader(fromPosition("some-channel", "00001"), now, ofMillis(42L)),
                 "ßome dätä"
         );
         assertThat(message.getKey(), is("42"));
         assertThat(message.getPayload(), is("ßome dätä"));
         assertThat(message.getHeader().getArrivalTimestamp(), is(now));
-        assertThat(message.getHeader().getChannelPosition().get().positionOf("some-channel"), is("00001"));
+        assertThat(message.getHeader().getShardPosition().get().shardName(), is("some-channel"));
+        assertThat(message.getHeader().getShardPosition().get().position(), is("00001"));
         assertThat(message.getHeader().getDurationBehind().get(), is(ofMillis(42L)));
     }
 
@@ -39,6 +40,6 @@ public class MessageTest {
         assertThat(message.getPayload(), is("ßome dätä"));
         assertThat(message.getHeader().getArrivalTimestamp().isBefore(now), is(false));
         assertThat(message.getHeader().getDurationBehind().isPresent(), is(false));
-        assertThat(message.getHeader().getChannelPosition().isPresent(), is(false));
+        assertThat(message.getHeader().getShardPosition().isPresent(), is(false));
     }
 }

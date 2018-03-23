@@ -1,7 +1,5 @@
 package de.otto.synapse.messagestore;
 
-import com.google.common.collect.ImmutableMap;
-import de.otto.synapse.channel.ChannelPosition;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -13,8 +11,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
+import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
-import static de.otto.synapse.channel.ChannelPosition.shardPosition;
+import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
@@ -62,18 +61,18 @@ public class CompactingMessageStoreWithoutDeletionsTest {
         for (int i=0; i<10; ++i) {
             messageStore.add(message(
                     valueOf(i),
-                    responseHeader(shardPosition("foo", valueOf(i)), yesterday, ofMillis(42)),
+                    responseHeader(fromPosition("foo", valueOf(i)), yesterday, ofMillis(42)),
                     "some foo payload"));
             messageStore.add(message(
                     valueOf(i),
-                    responseHeader(shardPosition("bar", valueOf(i)), yesterday, ofMillis(44)),
+                    responseHeader(fromPosition("bar", valueOf(i)), yesterday, ofMillis(44)),
                     "some bar payload"));
         }
         for (int i=0; i<10; ++i) {
-            messageStore.add(message(valueOf(i), responseHeader(shardPosition("foo", valueOf(20 + i)), now), null));
-            messageStore.add(message(valueOf(i), responseHeader(shardPosition("bar", valueOf(42 + i)), now), null));
+            messageStore.add(message(valueOf(i), responseHeader(fromPosition("foo", valueOf(20 + i)), now), null));
+            messageStore.add(message(valueOf(i), responseHeader(fromPosition("bar", valueOf(42 + i)), now), null));
         }
-        assertThat(messageStore.getLatestChannelPosition(), is(ChannelPosition.channelPosition(ImmutableMap.of("foo", "29", "bar", "51"))));
+        assertThat(messageStore.getLatestChannelPosition(), is(channelPosition(fromPosition("foo", "29"), fromPosition("bar", "51"))));
         assertThat(messageStore.size(), is(20));
         assertThat(messageStore.stream().count(), is(20L));
     }

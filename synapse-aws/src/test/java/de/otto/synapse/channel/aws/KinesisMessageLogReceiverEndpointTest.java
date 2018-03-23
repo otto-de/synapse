@@ -19,16 +19,10 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 
-import static com.google.common.collect.ImmutableMap.of;
-import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsNull.nullValue;
-import static de.otto.synapse.channel.Status.OK;
-import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -155,7 +149,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         assertThat(messages.get(0).getPayload(), is("{\"data\":\"blue\"}"));
         assertThat(messages.get(1).getPayload(), is(nullValue()));
         assertThat(messages.get(2).getPayload(), is("{\"data\":\"green\"}"));
-        assertThat(finalChannelPosition.positionOf("shard1"), is("sequence-green"));
+        assertThat(finalChannelPosition.shard("shard1").position(), is("sequence-green"));
     }
 
     private Shard someShard(String shardId, boolean open) {

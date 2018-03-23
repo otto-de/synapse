@@ -16,6 +16,8 @@ import java.time.Instant;
 import java.util.function.Predicate;
 
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
+import static de.otto.synapse.channel.ShardPosition.fromHorizon;
+import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
 import static java.time.Duration.ofMillis;
 import static java.time.Instant.now;
@@ -53,7 +55,7 @@ public class KinesisShardTest {
     @Test
     public void shouldReturnTrimHorizonShardIteratorWhenStartPositionIsZero() {
         // when
-        KinesisShardIterator iterator = kinesisShard.retrieveIterator("0");
+        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromHorizon("someShard"));
 
         // then
         assertThat(iterator.getId(), is("someShardIterator"));
@@ -79,7 +81,7 @@ public class KinesisShardTest {
                             .build();
                 });
 
-        KinesisShardIterator iterator = kinesisShard.retrieveIterator("4711");
+        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromPosition("someShard", "4711"));
 
         // then
         assertThat(iterator.getId(), is("someShardIterator"));
@@ -95,7 +97,7 @@ public class KinesisShardTest {
     @Test
     public void shouldReturnAfterSequenceNumberIterator() {
         // when
-        KinesisShardIterator iterator = kinesisShard.retrieveIterator("1");
+        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromPosition("someShard", "1"));
 
         // then
         assertThat(iterator.getId(), is("someShardIterator"));
@@ -139,7 +141,7 @@ public class KinesisShardTest {
         verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record2));
         verifyNoMoreInteractions(consumer);
 
-        assertThat(channelPosition.positionOf("someShard"), is("2"));
+        assertThat(channelPosition.shard("someShard").position(), is("2"));
     }
 
     @Test
@@ -166,7 +168,7 @@ public class KinesisShardTest {
 
         // then
         verify(mockStopCondition).test(kinesisMessage("someShard", ofMillis(1234L), record));
-        assertThat(channelPosition.positionOf("someShard"), is("1"));
+        assertThat(channelPosition.shard("someShard").position(), is("1"));
     }
 
     @Test
@@ -184,7 +186,7 @@ public class KinesisShardTest {
         ChannelPosition channelPosition = kinesisShard.consumeShard(fromHorizon(), mockStopCondition, consumer);
 
         // then
-        assertThat(channelPosition.positionOf("someShard"), is("0"));
+        assertThat(channelPosition.shard("someShard").position(), is(""));
     }
 
     @Test(expected = RuntimeException.class)

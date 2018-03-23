@@ -7,7 +7,7 @@ import org.junit.Test;
 import java.time.Duration;
 import java.time.Instant;
 
-import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
+import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.consumer.TestMessageConsumer.testEventConsumer;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
@@ -35,7 +35,7 @@ public class MessageDispatcherTest {
         // when
         Message<String> someMessage = message(
                 "someKey",
-                responseHeader(fromHorizon(), Instant.now(), Duration.ZERO),
+                responseHeader(fromHorizon("test"), Instant.now(), Duration.ZERO),
                 "{}"
         );
         messageDispatcher.accept(someMessage);
@@ -59,8 +59,8 @@ public class MessageDispatcherTest {
 
         // when
         final Instant now = Instant.now();
-        Message<String> someAppleMessage = message("apple.123", responseHeader(fromHorizon(), now, Duration.ZERO),"{}");
-        Message<String> someBananaMessage = message("banana.456", responseHeader(fromHorizon(), now, Duration.ZERO), "{}");
+        Message<String> someAppleMessage = message("apple.123", responseHeader(fromHorizon("test"), now, Duration.ZERO),"{}");
+        Message<String> someBananaMessage = message("banana.456", responseHeader(fromHorizon("test"), now, Duration.ZERO), "{}");
         messageDispatcher.accept(someAppleMessage);
         messageDispatcher.accept(someBananaMessage);
 
@@ -68,12 +68,12 @@ public class MessageDispatcherTest {
         verify(eventConsumerApple).accept(
                 message(
                         someAppleMessage.getKey(),
-                        responseHeader(fromHorizon(), now, Duration.ZERO),
+                        responseHeader(fromHorizon("test"), now, Duration.ZERO),
                         new Apple()));
         verify(eventConsumerBanana).accept(
                 message(
                         someBananaMessage.getKey(),
-                        responseHeader(fromHorizon(), now, Duration.ZERO),
+                        responseHeader(fromHorizon("test"), now, Duration.ZERO),
                         new Banana()));
         verify(eventConsumerCherry, never()).accept(any(Message.class));
     }

@@ -1,6 +1,5 @@
 package de.otto.synapse.message.aws;
 
-import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Message;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
@@ -11,6 +10,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.function.Function;
 
+import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.nio.ByteBuffer.allocateDirect;
@@ -35,7 +35,7 @@ public class KinesisMessage {
         return message(
                 record.partitionKey(),
                 responseHeader(
-                        ChannelPosition.shardPosition(shard, record.sequenceNumber()),
+                        fromPosition(shard, record.sequenceNumber()),
                         record.approximateArrivalTimestamp(),
                         durationBehind
                 ),

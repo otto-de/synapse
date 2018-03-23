@@ -3,6 +3,7 @@ package de.otto.synapse.aws.s3;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import org.junit.Before;
@@ -43,8 +44,10 @@ public class SnapshotConsumerServiceTest {
                 new MessageDispatcher(OBJECT_MAPPER, Collections.singletonList(messageConsumer)));
         //then
         assertThat(shardPositions.shards().size(), is(2));
-        assertThat(shardPositions.positionOf("shardId-000000000000"), is("0"));
-        assertThat(shardPositions.positionOf("shardId-000000000001"), is("0"));
+        assertThat(shardPositions.shard("shardId-000000000000").startFrom(), is(StartFrom.HORIZON));
+        assertThat(shardPositions.shard("shardId-000000000000").position(), is(""));
+        assertThat(shardPositions.shard("shardId-000000000001").startFrom(), is(StartFrom.HORIZON));
+        assertThat(shardPositions.shard("shardId-000000000001").position(), is(""));
         assertThat(allData.size(), is(5000));
         ImmutableMap.Builder<Object, Object> builder = ImmutableMap.builder();
         builder.put("userid", 401);

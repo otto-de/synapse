@@ -129,11 +129,11 @@ public class SnapshotWriteService {
 
     private void writeSequenceNumbers(ChannelPosition currentChannelPosition, JsonGenerator jGenerator) throws IOException {
         jGenerator.writeArrayFieldStart(START_SEQUENCE_NUMBERS_FIELD_NAME);
-        currentChannelPosition.shards().forEach(shardId -> {
+        currentChannelPosition.shards().forEach(shardName -> {
             try {
                 jGenerator.writeStartObject();
-                jGenerator.writeStringField(SHARD_FIELD_NAME, shardId);
-                jGenerator.writeStringField(SEQUENCE_NUMBER_FIELD_NAME, currentChannelPosition.positionOf(shardId));
+                jGenerator.writeStringField(SHARD_FIELD_NAME, shardName);
+                jGenerator.writeStringField(SEQUENCE_NUMBER_FIELD_NAME, currentChannelPosition.shard(shardName).position());
                 jGenerator.writeEndObject();
             } catch (IOException e) {
                 throw new RuntimeException(e);

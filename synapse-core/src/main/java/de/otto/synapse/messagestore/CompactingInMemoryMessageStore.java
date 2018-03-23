@@ -5,7 +5,6 @@ import de.otto.synapse.message.Message;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -37,16 +36,17 @@ public class CompactingInMemoryMessageStore implements MessageStore {
 
     @Override
     public void add(final Message<String> message) {
-        final String messageKey = message.getHeader().getShardName() + "- " + message.getKey();
+        final String messageKey = message.getHeader().getShardPosition().map(pos -> pos.shardName() + "-" + message.getKey()).orElse(message.getKey());
         if (message.getPayload() == null && removeNullPayloadMessages) {
             messages.remove(messageKey);
         } else {
             messages.put(messageKey, message);
         }
         latestChannelPosition.updateAndGet(previous -> {
-            final Optional<ChannelPosition> optionalChannelPosition = message.getHeader().getChannelPosition();
-            return optionalChannelPosition
-                    .map(messageChannelPosition -> merge(previous, messageChannelPosition))
+            return message
+                    .getHeader()
+                    .getShardPosition()
+                    .map(shardPosition -> merge(previous, shardPosition))
                     .orElse(previous);
         });
     }

@@ -1,6 +1,7 @@
 package de.otto.synapse.messagestore;
 
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.message.Message;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -10,8 +11,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
-import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
-import static de.otto.synapse.channel.ChannelPosition.merge;
+import static de.otto.synapse.channel.ChannelPosition.*;
 
 /**
  * Concurrent in-memory implementation of a MessageStore that is storing all messages in insertion order.
@@ -26,9 +26,9 @@ public class InMemoryMessageStore implements MessageStore {
     public void add(final Message<String> message) {
         messages.add(message);
         latestChannelPosition.updateAndGet(previous -> {
-            final Optional<ChannelPosition> optionalChannelPosition = message.getHeader().getChannelPosition();
-            return optionalChannelPosition
-                    .map(messageChannelPosition -> merge(previous, messageChannelPosition))
+            final Optional<ShardPosition> optionalMessagePosition = message.getHeader().getShardPosition();
+            return optionalMessagePosition
+                    .map(messagePosition -> merge(previous, channelPosition(messagePosition)))
                     .orElse(previous);
         });
     }

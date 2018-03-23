@@ -1,66 +1,83 @@
 package de.otto.synapse.channel;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
+import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.*;
 
-import static com.google.common.collect.ImmutableMap.copyOf;
-import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Arrays.asList;
 
 public final class ChannelPosition implements Serializable {
-    private final ImmutableMap<String, String> shardPositions;
+    private final ImmutableMap<String, ShardPosition> shardPositions;
 
     public static ChannelPosition fromHorizon() {
-        return channelPosition(ImmutableMap.of());
+        return channelPosition(ImmutableList.of());
     }
 
     public static ChannelPosition merge(final ChannelPosition... channelPositions) {
         if (channelPositions.length == 0) {
-            throw new IllegalArgumentException("Parameter channelPositions must contain at least one element");
+            return fromHorizon();
+        } else {
+            return merge(asList(channelPositions));
         }
-        return merge(asList(channelPositions));
+    }
+
+    public static ChannelPosition merge(final ChannelPosition channelPosition,
+                                        final ShardPosition shardPosition) {
+        return merge(channelPosition, channelPosition(shardPosition));
     }
 
     public static ChannelPosition merge(final List<ChannelPosition> channelPositions) {
         if (channelPositions.isEmpty()) {
             throw new IllegalArgumentException("Parameter channelPositions must contain at least one element");
         }
-        final Map<String,String> shardPositions = new LinkedHashMap<>();
+        final Map<String,ShardPosition> shardPositions = new LinkedHashMap<>();
         channelPositions.forEach(streamPosition -> streamPosition
                 .shards()
                 .forEach(shardId ->
-                        shardPositions.put(shardId, streamPosition.positionOf(shardId)))
+                        shardPositions.put(shardId, streamPosition.shard(shardId)))
         );
-        return new ChannelPosition(copyOf(shardPositions));
+        return new ChannelPosition(ImmutableList.copyOf(shardPositions.values()));
     }
 
-    public static ChannelPosition shardPosition(final String shardId, final String position) {
-        return new ChannelPosition(of(shardId, position));
+    public static ChannelPosition channelPosition(final ShardPosition... shardPositions) {
+        if (shardPositions.length == 0) {
+            return fromHorizon();
+        } else {
+            return new ChannelPosition(asList(shardPositions));
+        }
     }
 
-    public static ChannelPosition channelPosition(final ImmutableMap<String, String> shardPositions) {
+    public static ChannelPosition channelPosition(final Iterable<ShardPosition> shardPositions) {
         return new ChannelPosition(shardPositions);
     }
 
-    protected ChannelPosition(final ImmutableMap<String, String> shardPositions) {
-        this.shardPositions = shardPositions;
+    protected ChannelPosition(final Iterable<ShardPosition> shardPositions) {
+        this.shardPositions = Maps.uniqueIndex(shardPositions, ShardPosition::shardName);
     }
 
+    /**
+     * Returns a Set containing all shard names of this ChannelPosition.
+     *
+     * @return set of shard names
+     */
     public Set<String> shards() {
         return shardPositions.keySet();
     }
 
     /**
-     * Returns the position of a single shard, or "0", if there is no information about the shard.
+     * Returns the position of a single shard, or {@link ShardPosition#fromHorizon(String)}, if there is no information
+     * about the shard.
      *
      * @param shard the shard id
-     * @return position or "0"
+     * @return ShardPosition
      */
-    public String positionOf(final String shard) {
-        // TODO: "0" used as magic value for "from horizon"
-        return shardPositions.getOrDefault(shard, "0");
+    @Nonnull
+    public ShardPosition shard(final String shard) {
+        return shardPositions.getOrDefault(shard, ShardPosition.fromHorizon(shard));
     }
 
     @Override

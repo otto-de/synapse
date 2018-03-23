@@ -1,6 +1,5 @@
 package de.otto.synapse.message.aws;
 
-import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 import software.amazon.awssdk.services.kinesis.model.Record;
@@ -10,6 +9,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 
+import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Optional.empty;
@@ -36,20 +36,7 @@ public class KinesisMessageTest {
         assertThat(message.getPayload(), is("ßome dätä"));
         assertThat(message.getHeader().getArrivalTimestamp(), is(now));
         assertThat(message.getHeader().getDurationBehind(), is(Optional.of(Duration.ofMillis(42L))));
-        assertThat(message.getHeader().getChannelPosition(), is(Optional.of(ChannelPosition.shardPosition("some-shard", "00001"))));
+        assertThat(message.getHeader().getShardPosition(), is(Optional.of(fromPosition("some-shard", "00001"))));
     }
 
-    @Test
-    public void shouldBuildKinesisMessageWithNullRecord() {
-        final Instant now = Instant.now();
-        final Message<String> message = kinesisMessage(
-                "some-shard",
-                Duration.ofMillis(42L),
-                null);
-        assertThat(message.getKey(), is("42"));
-        assertThat(message.getPayload(), is(nullValue()));
-        assertThat(message.getHeader().getArrivalTimestamp(), is(now));
-        assertThat(message.getHeader().getDurationBehind(), is(empty()));
-        assertThat(message.getHeader().getChannelPosition(), is(empty()));
-    }
 }

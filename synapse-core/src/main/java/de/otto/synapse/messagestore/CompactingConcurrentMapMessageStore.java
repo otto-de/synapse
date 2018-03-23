@@ -6,7 +6,6 @@ import net.openhft.chronicle.map.ChronicleMapBuilder;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.Serializable;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicReference;
@@ -58,7 +57,7 @@ public class CompactingConcurrentMapMessageStore implements MessageStore {
 
     @Override
     public void add(final Message<String> message) {
-        final String messageKey = message.getHeader().getShardName() + "-" + message.getKey();
+        final String messageKey = message.getHeader().getShardPosition().map(pos -> pos.shardName() + "-" + message.getKey()).orElse(message.getKey());
         if (message.getPayload() == null && removeNullPayloadMessages) {
             messages.remove(messageKey);
             compactedAndOrderedKeys.remove(messageKey);
@@ -67,8 +66,9 @@ public class CompactingConcurrentMapMessageStore implements MessageStore {
             compactedAndOrderedKeys.add(messageKey);
         }
         latestChannelPosition.updateAndGet(previous -> {
-            final Optional<ChannelPosition> optionalChannelPosition = message.getHeader().getChannelPosition();
-            return optionalChannelPosition
+            return message
+                    .getHeader()
+                    .getShardPosition()
                     .map(messageChannelPosition -> merge(previous, messageChannelPosition))
                     .orElse(previous);
         });

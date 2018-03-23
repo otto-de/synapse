@@ -27,6 +27,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static de.otto.synapse.aws.s3.SnapshotServiceTestUtils.snapshotProperties;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
+import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
@@ -82,7 +83,7 @@ public class SnapshotWriteServiceTest {
         stateRepository.put("testKey2", "{\"testValue2\": \"value2\"}");
 
         //when
-        ChannelPosition channelPosition = channelPosition(of("shard1", "1234", "shard2", "abcde"));
+        ChannelPosition channelPosition = channelPosition(fromPosition("shard1", "1234"), fromPosition("shard2", "abcde"));
         File snapshot = testee.createSnapshot(STREAM_NAME, channelPosition, stateRepository);
 
         //then
@@ -111,7 +112,7 @@ public class SnapshotWriteServiceTest {
         stateRepository.put("testKey", "testValue1");
         stateRepository.put("testKey2", "testValue2");
 
-        ChannelPosition channelPosition = channelPosition(of("shard1", "1234", "shard2", "abcde"));
+        ChannelPosition channelPosition = channelPosition(fromPosition("shard1", "1234"), fromPosition("shard2", "abcde"));
 
         // when
         try {
@@ -131,7 +132,7 @@ public class SnapshotWriteServiceTest {
         StateRepository<String> stateRepository = mock(StateRepository.class);
         when(stateRepository.get(any())).thenThrow(new RuntimeException("forced test exception"));
 
-        ChannelPosition channelPosition = channelPosition(of("shard1", "1234", "shard2", "abcde"));
+        ChannelPosition channelPosition = channelPosition(fromPosition("shard1", "1234"), fromPosition("shard2", "abcde"));
 
         // when
         try {

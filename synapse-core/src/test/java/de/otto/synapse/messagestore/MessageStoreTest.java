@@ -1,5 +1,6 @@
 package de.otto.synapse.messagestore;
 
+import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.message.Header;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,7 +16,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
-import static de.otto.synapse.channel.ChannelPosition.shardPosition;
+import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.channel.StartFrom.POSITION;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
@@ -69,8 +71,9 @@ public class MessageStoreTest {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 10000; ++pos) {
-                    messageStore.add(message(valueOf(pos), responseHeader(shardPosition("shard-" + shardId, valueOf(pos)), now()), "some payload"));
-                    assertThat(messageStore.getLatestChannelPosition().positionOf("shard-" + shardId), is(valueOf(pos)));
+                    messageStore.add(message(valueOf(pos), responseHeader(fromPosition("shard-" + shardId, valueOf(pos)), now()), "some payload"));
+                    assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).startFrom(), is(POSITION));
+                    assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }
 
             }, executorService);
@@ -79,9 +82,12 @@ public class MessageStoreTest {
         final Map<String, Integer> lastPositions = new HashMap<>();
         messageStore.stream().forEach(message -> {
             final Header header = message.getHeader();
-            final Integer shardPosition = Integer.valueOf(header.getShardPosition());
-            lastPositions.putIfAbsent(header.getShardName(), shardPosition);
-            assertThat(lastPositions.get(header.getShardName()), is(lessThanOrEqualTo(shardPosition)));
+            if (header.getShardPosition().isPresent()) {
+                final ShardPosition shard = header.getShardPosition().get();
+                final Integer pos = Integer.valueOf(shard.position());
+                lastPositions.putIfAbsent(shard.shardName(), pos);
+                assertThat(lastPositions.get(shard.shardName()), is(lessThanOrEqualTo(pos)));
+            }
         });
         assertThat(messageStore.size(), isOneOf(10000, 50000));
     }

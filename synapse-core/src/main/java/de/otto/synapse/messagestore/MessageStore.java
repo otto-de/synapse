@@ -44,7 +44,7 @@ public interface MessageStore {
      * Returns the latest {@link ChannelPosition} of the MessageStore.
      * <p>
      *     The position is calculated by {@link ChannelPosition#merge(ChannelPosition...) merging} the
-     *     {@link Header#getChannelPosition() optional positions} of the messages.
+     *     {@link Header#getShardPosition() optional positions} of the messages.
      * </p>
      * <p>
      *     Messages without positions will not change the latest ChannelPosition. If no message contains

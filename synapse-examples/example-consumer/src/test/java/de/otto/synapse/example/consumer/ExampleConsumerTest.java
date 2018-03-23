@@ -1,5 +1,6 @@
 package de.otto.synapse.example.consumer;
 
+import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.example.consumer.payload.BananaPayload;
 import de.otto.synapse.example.consumer.payload.ProductPayload;
 import de.otto.synapse.example.consumer.state.BananaProduct;
@@ -12,7 +13,6 @@ import org.junit.Test;
 import java.time.Instant;
 import java.util.Optional;
 
-import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.message.Header.responseHeader;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -84,7 +84,7 @@ public class ExampleConsumerTest {
     private <T> Message<T> testEvent(String key, T payload) {
         return Message.message(
                 key,
-                responseHeader(fromHorizon(), Instant.now(), null),
+                responseHeader(ShardPosition.fromHorizon(""), Instant.now(), null),
                 payload
         );
     }
