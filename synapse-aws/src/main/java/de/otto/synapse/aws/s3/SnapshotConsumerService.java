@@ -116,7 +116,7 @@ public class SnapshotConsumerService {
                 case END_OBJECT:
                     if (shardName != null) {
                         // TODO: "0" kann entfernt werden, wenn keine Snapshots mit "0" für HORIZON mehr exisiteren.
-                        final ShardPosition shardPosition = sequenceNumber != null && !sequenceNumber.equals("0")
+                        final ShardPosition shardPosition = sequenceNumber != null && !sequenceNumber.equals("0") && !sequenceNumber.equals("")
                                 ? ShardPosition.fromPosition(shardName, sequenceNumber)
                                 : ShardPosition.fromHorizon(shardName);
                         shardPositions.put(shardName, shardPosition);

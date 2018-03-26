@@ -12,7 +12,7 @@ import java.lang.annotation.*;
  *     beans is specified by {@link #name()}.
  * </p>
  * <p>
- *     The {@link EventSource#getStreamName()} is configured using {@link #streamName()}. If {@code streamName} is not set, the
+ *     The {@link EventSource#getChannelName()} is configured using {@link #streamName()}. If {@code streamName} is not set, the
  *     name of the {@link #name() bean} is used instead.
  * </p>
  */

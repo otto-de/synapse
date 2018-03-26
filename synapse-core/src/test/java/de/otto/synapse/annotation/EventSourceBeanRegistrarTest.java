@@ -58,8 +58,8 @@ public class EventSourceBeanRegistrarTest {
         context.register(InMemoryEventSourceConfiguration.class);
         context.refresh();
 
-        assertThat(context.getBean("firstEventSource", EventSource.class).getStreamName()).isEqualTo("some-stream");
-        assertThat(context.getBean("secondEventSource", EventSource.class).getStreamName()).isEqualTo("some-stream");
+        assertThat(context.getBean("firstEventSource", EventSource.class).getChannelName()).isEqualTo("some-stream");
+        assertThat(context.getBean("secondEventSource", EventSource.class).getChannelName()).isEqualTo("some-stream");
 
     }
 
@@ -76,6 +76,7 @@ public class EventSourceBeanRegistrarTest {
     @Test
     public void shouldRegisterEventSourceWithDefaultType() {
         context.register(EventSourcingAutoConfiguration.class);
+        context.register(InMemoryEventSourceConfiguration.class);
         context.register(TestDefaultEventSourceConfiguration.class);
         context.register(RepeatableMultiEventSourceTestConfig.class);
         context.refresh();
@@ -87,6 +88,7 @@ public class EventSourceBeanRegistrarTest {
     @Test
     public void shouldRegisterMultipleEventSources() {
         context.register(RepeatableMultiEventSourceTestConfig.class);
+        context.register(InMemoryEventSourceConfiguration.class);
         context.register(EventSourcingAutoConfiguration.class);
         context.register(TestDefaultEventSourceConfiguration.class);
         addEnvironment(this.context,
@@ -98,11 +100,11 @@ public class EventSourceBeanRegistrarTest {
         assertThat(context.containsBean("secondEventSource")).isTrue();
 
         final EventSource first = context.getBean("firstEventSource", DelegateEventSource.class).getDelegate();
-        assertThat(first.getStreamName()).isEqualTo("first-stream");
+        assertThat(first.getChannelName()).isEqualTo("first-stream");
         assertThat(first).isInstanceOf(TestDefaultEventSourceConfiguration.TestEventSource.class);
 
         final EventSource second = context.getBean("secondEventSource", DelegateEventSource.class).getDelegate();
-        assertThat(second.getStreamName()).isEqualTo("second-stream");
+        assertThat(second.getChannelName()).isEqualTo("second-stream");
         assertThat(second).isInstanceOf(TestDefaultEventSourceConfiguration.TestEventSource.class);
     }
 

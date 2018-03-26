@@ -37,6 +37,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static de.otto.synapse.channel.aws.KinesisStreamSetupUtils.createStreamIfNotExists;
 import static java.util.Collections.synchronizedList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.lessThan;
@@ -80,8 +81,8 @@ public class KinesisEventSourceIntegrationTest {
     @PostConstruct
     public void setup() {
         KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, STREAM_NAME, EXPECTED_NUMBER_OF_SHARDS);
-        KinesisMessageLogReceiverEndpoint kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, STREAM_NAME);
-        this.eventSource = new KinesisEventSource("kinesisEventSource", kinesisMessageLog, eventPublisher, objectMapper);
+        KinesisMessageLogReceiverEndpoint kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper, STREAM_NAME);
+        this.eventSource = new KinesisEventSource("kinesisEventSource", kinesisMessageLog, eventPublisher);
         this.eventSource.register(MessageConsumer.of(".*", String.class, (message) -> messages.add(message)));
     }
 
@@ -95,7 +96,7 @@ public class KinesisEventSourceIntegrationTest {
 
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
-        productStreamEventSource.consumeAll(ChannelPosition.fromHorizon(), stopAtDefinedInstant);
+        productStreamEventSource.consume(ChannelPosition.fromHorizon(), stopAtDefinedInstant);
         stopWatch.stop();
         System.out.println(stopWatch.prettyPrint());
     }
@@ -106,7 +107,7 @@ public class KinesisEventSourceIntegrationTest {
         ChannelPosition startFrom = writeToStream("users_small1.txt").getFirstReadPosition();
 
         // then
-        eventSource.consumeAll(
+        eventSource.consume(
                 startFrom,
                 stopAfter(10)
         );
@@ -126,7 +127,7 @@ public class KinesisEventSourceIntegrationTest {
             setStaticFinalField(KinesisShardIterator.class, "FETCH_RECORDS_LIMIT", 2);
 
             ExecutorService executorService = Executors.newSingleThreadExecutor();
-            final CompletableFuture<ChannelPosition> completableFuture = CompletableFuture.supplyAsync(() -> eventSource.consumeAll(
+            final CompletableFuture<ChannelPosition> completableFuture = CompletableFuture.supplyAsync(() -> eventSource.consume(
                     startFrom,
                     (message) -> false), executorService);
 
@@ -163,7 +164,7 @@ public class KinesisEventSourceIntegrationTest {
         ChannelPosition startFrom = writeToStream("users_small1.txt").getLastStreamPosition();
         kinesisClient.putRecord(PutRecordRequest.builder().streamName(STREAM_NAME).partitionKey("deleteEvent").data(EMPTY_BYTE_BUFFER).build());
         // when
-        eventSource.consumeAll(
+        eventSource.consume(
                 startFrom,
                 stopAfter(1)
         );
@@ -180,7 +181,7 @@ public class KinesisEventSourceIntegrationTest {
         ChannelPosition startFrom = writeToStream("users_small2.txt").getFirstReadPosition();
 
         // then
-        ChannelPosition nextChannelPosition = eventSource.consumeAll(
+        ChannelPosition nextChannelPosition = eventSource.consume(
                 startFrom,
                 stopAfter(10));
 
@@ -196,7 +197,7 @@ public class KinesisEventSourceIntegrationTest {
         writeToStream("users_small2.txt");
 
         // then
-        ChannelPosition next = eventSource.consumeAll(
+        ChannelPosition next = eventSource.consume(
                 startFrom,
                 (message) -> true);
 

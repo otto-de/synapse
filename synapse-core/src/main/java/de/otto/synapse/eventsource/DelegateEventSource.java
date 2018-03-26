@@ -8,6 +8,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
+import javax.annotation.Nonnull;
 import java.util.function.Predicate;
 
 public class DelegateEventSource implements EventSource, ApplicationContextAware {
@@ -60,6 +61,7 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
      * @return EventConsumers
      */
     @Override
+    @Nonnull
     public MessageDispatcher getMessageDispatcher() {
         return delegate.getMessageDispatcher();
     }
@@ -73,8 +75,9 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
      * @return name
      */
     @Override
-    public String getStreamName() {
-        return delegate.getStreamName();
+    @Nonnull
+    public String getChannelName() {
+        return delegate.getChannelName();
     }
 
     /**
@@ -90,9 +93,9 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
      * @return the new read position
      */
     @Override
-    public ChannelPosition consumeAll(final ChannelPosition startFrom,
-                                      final Predicate<Message<?>> stopCondition) {
-        return delegate.consumeAll(startFrom, stopCondition);
+    public ChannelPosition consume(final ChannelPosition startFrom,
+                                   final Predicate<Message<?>> stopCondition) {
+        return delegate.consume(startFrom, stopCondition);
     }
 
     @Override

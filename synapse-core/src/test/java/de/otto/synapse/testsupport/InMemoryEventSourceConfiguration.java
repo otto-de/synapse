@@ -10,13 +10,17 @@ import org.springframework.context.annotation.Bean;
 
 
 public class InMemoryEventSourceConfiguration {
+    @Bean
+    public InMemoryChannels inMemoryChannels(final ObjectMapper objectMapper) {
+        return new InMemoryChannels(objectMapper);
+    }
 
     @Bean
     public EventSourceBuilder inMemEventSourceBuilder(final ApplicationEventPublisher eventPublisher,
-                                                      final ObjectMapper objectMapper) {
-        return (name, streamName) -> {
-            final InMemoryChannel channel = InMemoryChannels.getChannel(streamName);
-            return new InMemoryEventSource(name, streamName, channel, eventPublisher, objectMapper);
+                                                      final InMemoryChannels inMemoryChannels) {
+        return (name, channelName) -> {
+            final InMemoryChannel channel = inMemoryChannels.getChannel(channelName);
+            return new InMemoryEventSource(name, channel, eventPublisher);
         };
     }
 

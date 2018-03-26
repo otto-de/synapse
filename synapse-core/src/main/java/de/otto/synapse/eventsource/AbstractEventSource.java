@@ -1,12 +1,13 @@
 package de.otto.synapse.eventsource;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
+import javax.annotation.Nonnull;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -16,19 +17,16 @@ public abstract class AbstractEventSource implements EventSource {
     private static final Logger LOG = getLogger(AbstractEventSource.class);
 
     private final String name;
-    private final String streamName;
+    private final MessageLogReceiverEndpoint messageLog;
     private final ApplicationEventPublisher eventPublisher;
-    private final MessageDispatcher messageConsumer;
     private final AtomicBoolean stopping = new AtomicBoolean(false);
 
     public AbstractEventSource(final String name,
-                               final String streamName,
-                               final ApplicationEventPublisher eventPublisher,
-                               final ObjectMapper objectMapper) {
+                               final MessageLogReceiverEndpoint messageLog,
+                               final ApplicationEventPublisher eventPublisher) {
         this.name = name;
-        this.streamName = streamName;
+        this.messageLog = messageLog;
         this.eventPublisher = eventPublisher;
-        this.messageConsumer = new MessageDispatcher(objectMapper);
     }
 
     @Override
@@ -37,8 +35,8 @@ public abstract class AbstractEventSource implements EventSource {
     }
 
     @Override
-    public String getStreamName() {
-        return streamName;
+    public String getChannelName() {
+        return messageLog.getChannelName();
     }
 
     @Override
@@ -62,7 +60,7 @@ public abstract class AbstractEventSource implements EventSource {
      */
     @Override
     public void register(final MessageConsumer<?> messageConsumer) {
-        this.messageConsumer.add(messageConsumer);
+        messageLog.register(messageConsumer);
     }
 
     /**
@@ -70,8 +68,9 @@ public abstract class AbstractEventSource implements EventSource {
      *
      * @return MessageDispatcher
      */
+    @Nonnull
     public MessageDispatcher getMessageDispatcher() {
-        return messageConsumer;
+        return messageLog.getMessageDispatcher();
     }
 
     protected void publishEvent(ChannelPosition channelPosition, EventSourceNotification.Status status) {
@@ -82,7 +81,7 @@ public abstract class AbstractEventSource implements EventSource {
         if (eventPublisher != null) {
             EventSourceNotification notification = EventSourceNotification.builder()
                     .withEventSourceName(name)
-                    .withStreamName(getStreamName())
+                    .withStreamName(this.getChannelName())
                     .withStreamPosition(channelPosition)
                     .withStatus(status)
                     .withMessage(message)

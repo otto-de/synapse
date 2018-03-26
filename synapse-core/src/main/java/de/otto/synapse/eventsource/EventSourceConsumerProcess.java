@@ -59,16 +59,17 @@ public class EventSourceConsumerProcess implements SmartLifecycle {
             executorService = newFixedThreadPool(eventSourceCount, threadFactory);
             eventSources.forEach(eventSource -> executorService.submit(() -> {
                 try {
-                    LOG.info("Starting {}...", eventSource.getStreamName());
-                    eventSource.consumeAll();
+                    LOG.info("Starting {}...", eventSource.getChannelName());
+                    eventSource.consume();
                 } catch (Exception e) {
                     LOG.error("Starting failed: " + e.getMessage(), e);
-                    eventSource.stop();
+                    stop();
                 }
             }));
         } else {
             LOG.warn("Did not find any EventSource instances to execute");
             executorService = null;
+            running = false;
         }
     }
 

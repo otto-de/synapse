@@ -6,6 +6,7 @@ import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.message.Message;
 
+import javax.annotation.Nonnull;
 import java.util.Objects;
 import java.util.function.Predicate;
 
@@ -19,14 +20,14 @@ public class CompactedKinesisEventSource implements EventSource {
                                        EventSource kinesisEventSource) {
         Objects.requireNonNull(snapshotEventSource, "snapshot event source must not be null");
         Objects.requireNonNull(kinesisEventSource, "kinesis event source must not be null");
-        if (!snapshotEventSource.getStreamName().equals(kinesisEventSource.getStreamName())) {
+        if (!snapshotEventSource.getChannelName().equals(kinesisEventSource.getChannelName())) {
             throw new IllegalArgumentException(String.format(
                     "given event sources must have same stream name, but was: '%s' and '%s'",
-                    snapshotEventSource.getStreamName(), kinesisEventSource.getStreamName()));
+                    snapshotEventSource.getChannelName(), kinesisEventSource.getChannelName()));
         }
         this.snapshotEventSource = snapshotEventSource;
         this.kinesisEventSource = kinesisEventSource;
-        this.streamName = kinesisEventSource.getStreamName();
+        this.streamName = kinesisEventSource.getChannelName();
     }
 
     /**
@@ -53,21 +54,22 @@ public class CompactedKinesisEventSource implements EventSource {
      *
      * @return list of registered EventConsumers
      */
+    @Nonnull
     @Override
     public MessageDispatcher getMessageDispatcher() {
         return snapshotEventSource.getMessageDispatcher();
     }
 
     @Override
-    public String getStreamName() {
+    public String getChannelName() {
         return streamName;
     }
 
     @Override
-    public ChannelPosition consumeAll(ChannelPosition startFrom, Predicate<Message<?>> stopCondition) {
+    public ChannelPosition consume(ChannelPosition startFrom, Predicate<Message<?>> stopCondition) {
         Predicate<Message<?>> neverStop = e -> false;
-        final ChannelPosition channelPosition = snapshotEventSource.consumeAll(neverStop);
-        return kinesisEventSource.consumeAll(channelPosition, stopCondition);
+        final ChannelPosition channelPosition = snapshotEventSource.consume(neverStop);
+        return kinesisEventSource.consume(channelPosition, stopCondition);
     }
 
     @Override

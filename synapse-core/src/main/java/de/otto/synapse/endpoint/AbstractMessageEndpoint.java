@@ -1,6 +1,6 @@
 package de.otto.synapse.endpoint;
 
-import de.otto.synapse.endpoint.receiver.MessageReceiverEndpoint;
+import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 
@@ -11,7 +11,7 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Abstract {@code MessageEndpoint} that can be used to implement {@link MessageSenderEndpoint message sender} or
- * {@link MessageReceiverEndpoint message receiver} endpoints.
+ * {@link MessageQueueReceiverEndpoint message receiver} endpoints.
  */
 public abstract class AbstractMessageEndpoint implements MessageEndpoint {
 
@@ -48,6 +48,7 @@ public abstract class AbstractMessageEndpoint implements MessageEndpoint {
      * @return name of the channel
      */
     @Override
+    @Nonnull
     public final String getChannelName() {
         return channelName;
     }
@@ -72,7 +73,7 @@ public abstract class AbstractMessageEndpoint implements MessageEndpoint {
      */
     @Override
     @Nullable
-    public Message<String> intercept(final Message<String> message) {
+    public final Message<String> intercept(final Message<String> message) {
         return messageInterceptor.intercept(message);
     }
 

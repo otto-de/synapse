@@ -1,9 +1,10 @@
 package de.otto.synapse.channel.aws;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
@@ -14,6 +15,7 @@ import software.amazon.awssdk.services.kinesis.model.DescribeStreamRequest;
 import software.amazon.awssdk.services.kinesis.model.DescribeStreamResponse;
 import software.amazon.awssdk.services.kinesis.model.Shard;
 
+import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -32,19 +34,19 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageReceiverEn
 
 
     private final KinesisClient kinesisClient;
-    private List<CompletableFuture<ChannelPosition>> futureShardPositions;
     private volatile boolean stopping;
 
     public KinesisMessageLogReceiverEndpoint(final KinesisClient kinesisClient,
+                                             final ObjectMapper objectMapper,
                                              final String channelName) {
-        super(channelName);
+        super(channelName, objectMapper);
         this.kinesisClient = kinesisClient;
     }
 
     @Override
-    public ChannelPosition consume(final ChannelPosition startFrom,
-                                   final Predicate<Message<?>> stopCondition,
-                                   final MessageConsumer<String> consumer) {
+    @Nonnull
+    public ChannelPosition consume(final @Nonnull ChannelPosition startFrom,
+                                   final @Nonnull Predicate<Message<?>> stopCondition) {
         final List<KinesisShard> kinesisShards = retrieveAllOpenShards();
         if (stopping) {
             return startFrom;
@@ -56,10 +58,10 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageReceiverEn
                 new ThreadFactoryBuilder().setNameFormat("kinesis-message-log-%d").build());
 
         try {
-            futureShardPositions = kinesisShards
+            List<CompletableFuture<ChannelPosition>> futureShardPositions = kinesisShards
                     .stream()
                     .map(shard -> supplyAsync(
-                            () -> shard.consumeShard(startFrom, wrappedStopCondition, consumer),
+                            () -> shard.consumeShard(startFrom, wrappedStopCondition, getMessageDispatcher()),
                             executorService))
                     .collect(toList());
 

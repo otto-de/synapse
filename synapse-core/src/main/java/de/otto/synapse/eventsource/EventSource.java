@@ -5,6 +5,7 @@ import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Message;
 
+import javax.annotation.Nonnull;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -39,6 +40,7 @@ public interface EventSource {
      *
      * @return MessageDispatcher
      */
+    @Nonnull
     MessageDispatcher getMessageDispatcher();
 
     /**
@@ -49,7 +51,7 @@ public interface EventSource {
      *
      * @return name
      */
-    String getStreamName();
+    String getChannelName();
 
     /**
      * Consumes all events from the EventSource, until the (current) end of the stream is reached.
@@ -60,8 +62,8 @@ public interface EventSource {
      *
      * @return the new read position
      */
-    default ChannelPosition consumeAll() {
-        return consumeAll(ChannelPosition.fromHorizon(), event -> false);
+    default ChannelPosition consume() {
+        return consume(ChannelPosition.fromHorizon(), event -> false);
     }
 
     /**
@@ -75,8 +77,8 @@ public interface EventSource {
      * @param startFrom the read position returned from earlier executions
      * @return the new read position
      */
-    default ChannelPosition consumeAll(ChannelPosition startFrom) {
-        return consumeAll(startFrom, event -> false);
+    default ChannelPosition consume(ChannelPosition startFrom) {
+        return consume(startFrom, event -> false);
     }
 
     /**
@@ -89,8 +91,8 @@ public interface EventSource {
      * @param stopCondition the predicate used as a stop condition
      * @return the new read position
      */
-    default ChannelPosition consumeAll(Predicate<Message<?>> stopCondition) {
-        return consumeAll(ChannelPosition.fromHorizon(), stopCondition);
+    default ChannelPosition consume(Predicate<Message<?>> stopCondition) {
+        return consume(ChannelPosition.fromHorizon(), stopCondition);
     }
 
     /**
@@ -105,8 +107,8 @@ public interface EventSource {
      * @param stopCondition the predicate used as a stop condition
      * @return the new read position
      */
-    ChannelPosition consumeAll(ChannelPosition startFrom,
-                               Predicate<Message<?>> stopCondition);
+    ChannelPosition consume(ChannelPosition startFrom,
+                            Predicate<Message<?>> stopCondition);
 
     void stop();
 

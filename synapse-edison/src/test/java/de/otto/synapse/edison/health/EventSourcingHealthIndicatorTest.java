@@ -32,7 +32,7 @@ public class EventSourcingHealthIndicatorTest {
         EventSourcingHealthIndicator healthCheck = new EventSourcingHealthIndicator();
 
         EventSource mockEventSource = mock(EventSource.class);
-        when(mockEventSource.getStreamName()).thenReturn("some-stream");
+        when(mockEventSource.getChannelName()).thenReturn("some-stream");
 
         EventSourceNotification eventSourceNotification = EventSourceNotification.builder()
                 .withStatus(EventSourceNotification.Status.FAILED)

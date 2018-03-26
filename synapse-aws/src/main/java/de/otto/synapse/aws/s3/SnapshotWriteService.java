@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.configuration.aws.SnapshotProperties;
 import de.otto.synapse.state.StateRepository;
 import org.slf4j.Logger;
@@ -133,7 +134,11 @@ public class SnapshotWriteService {
             try {
                 jGenerator.writeStartObject();
                 jGenerator.writeStringField(SHARD_FIELD_NAME, shardName);
-                jGenerator.writeStringField(SEQUENCE_NUMBER_FIELD_NAME, currentChannelPosition.shard(shardName).position());
+                if (currentChannelPosition.shard(shardName).startFrom() == StartFrom.HORIZON) {
+                    jGenerator.writeStringField(SEQUENCE_NUMBER_FIELD_NAME, "0");
+                } else {
+                    jGenerator.writeStringField(SEQUENCE_NUMBER_FIELD_NAME, currentChannelPosition.shard(shardName).position());
+                }
                 jGenerator.writeEndObject();
             } catch (IOException e) {
                 throw new RuntimeException(e);

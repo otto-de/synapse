@@ -1,6 +1,5 @@
 package de.otto.synapse.example.producer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.InMemoryChannel;
 import de.otto.synapse.channel.InMemoryChannels;
 import de.otto.synapse.eventsource.EventSourceBuilder;
@@ -18,9 +17,9 @@ public class TestEventConsumerConfiguration {
     @Bean
     public EventSourceBuilder defaultEventSourceBuilder(final MyServiceProperties properties,
                                                         final ApplicationEventPublisher eventPublisher,
-                                                        final ObjectMapper objectMapper) {
-        final InMemoryChannel productStream = InMemoryChannels.getChannel(properties.getProductStreamName());
-        return (name, streamName) -> new InMemoryEventSource(name, streamName, productStream, eventPublisher, objectMapper);
+                                                        final InMemoryChannels inMemoryChannels) {
+        final InMemoryChannel productStream = inMemoryChannels.getChannel(properties.getProductStreamName());
+        return (name, streamName) -> new InMemoryEventSource(name, productStream, eventPublisher);
     }
 
 }

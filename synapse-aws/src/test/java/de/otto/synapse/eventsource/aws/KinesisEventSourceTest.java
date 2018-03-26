@@ -24,7 +24,6 @@ import java.util.function.Predicate;
 
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
-import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -45,27 +44,25 @@ public class KinesisEventSourceTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
-
     @Before
     @SuppressWarnings("unchecked")
     public void setUp() {
         initMocks(this);
         when(receiverEndpoint.getChannelName()).thenReturn("test");
-        when(receiverEndpoint.consume(any(ChannelPosition.class), any(Predicate.class), any(MessageConsumer.class)))
+        when(receiverEndpoint.consume(any(ChannelPosition.class), any(Predicate.class)))
                 .thenReturn(channelPosition(fromPosition("shard1", "4711")));
     }
 
     @Test
     public void shouldRegisterConsumer() {
         // given
-        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher, objectMapper);
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher);
 
         // when
         eventSource.register(testDataConsumer);
 
         // then
-        assertThat(eventSource.getMessageDispatcher().getAll(), contains(testDataConsumer));
+        verify(receiverEndpoint).register(testDataConsumer);
     }
 
     @Test
@@ -74,15 +71,15 @@ public class KinesisEventSourceTest {
         // given
         ChannelPosition initialPositions = channelPosition(fromPosition("shard1", "xyz"));
 
-        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher, objectMapper);
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher);
         eventSource.register(testDataConsumer);
         eventSource.stop();
 
         // when
-        eventSource.consumeAll(initialPositions, this::stopIfGreenForString);
+        eventSource.consume(initialPositions, this::stopIfGreenForString);
 
         // then
-        verify(receiverEndpoint).consume(eq(initialPositions), any(Predicate.class), eq(eventSource.getMessageDispatcher()));
+        verify(receiverEndpoint).consume(eq(initialPositions), any(Predicate.class));
     }
 
     @Test
@@ -90,15 +87,15 @@ public class KinesisEventSourceTest {
     public void shouldFinishConsumptionOnStopCondition() {
         // given
         ChannelPosition initialPositions = channelPosition(fromPosition("shard1", "xyz"));
-        when(receiverEndpoint.consume(any(ChannelPosition.class), any(Predicate.class), any(MessageConsumer.class)))
+        when(receiverEndpoint.consume(any(ChannelPosition.class), any(Predicate.class)))
                 .thenReturn(ChannelPosition.channelPosition(fromPosition("shard1", "4711")));
 
 
-        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher, objectMapper);
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher);
         eventSource.register(testDataConsumer);
 
         // when
-        final ChannelPosition channelPosition = eventSource.consumeAll(initialPositions, (message) -> true);
+        final ChannelPosition channelPosition = eventSource.consume(initialPositions, (message) -> true);
 
         // then
         assertThat(eventSource.isStopping(), is(false));
@@ -110,12 +107,12 @@ public class KinesisEventSourceTest {
         // given
         ChannelPosition initialPositions = channelPosition(fromPosition("shard1", "xyz"));
 
-        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher, objectMapper);
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher);
         eventSource.register(testDataConsumer);
 
         // when
         eventSource.stop();
-        eventSource.consumeAll(initialPositions, (message) -> false);
+        eventSource.consume(initialPositions, (message) -> false);
 
         // then
         assertThat(eventSource.isStopping(), is(true));
@@ -126,11 +123,11 @@ public class KinesisEventSourceTest {
         // given
         ChannelPosition initialPositions = channelPosition(fromPosition("shard1", "xyz"));
 
-        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher, objectMapper);
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher);
         eventSource.stop();
 
         // when
-        ChannelPosition finalChannelPosition = eventSource.consumeAll(initialPositions, (message) -> false);
+        ChannelPosition finalChannelPosition = eventSource.consume(initialPositions, (message) -> false);
 
         // then
         ArgumentCaptor<EventSourceNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(EventSourceNotification.class);
@@ -154,12 +151,12 @@ public class KinesisEventSourceTest {
         // given
         ChannelPosition initialPositions = channelPosition(fromPosition("shard1", "xyz"));
 
-        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher, objectMapper);
-        when(receiverEndpoint.consume(any(ChannelPosition.class), any(Predicate.class), any(MessageConsumer.class))).thenThrow(new RuntimeException("Error Message"));
+        KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher);
+        when(receiverEndpoint.consume(any(ChannelPosition.class), any(Predicate.class))).thenThrow(new RuntimeException("Error Message"));
 
         // when
         try {
-            eventSource.consumeAll(initialPositions, this::stopIfGreenForString);
+            eventSource.consume(initialPositions, this::stopIfGreenForString);
             fail("expected RuntimeException");
         } catch (final RuntimeException e) {
             // then

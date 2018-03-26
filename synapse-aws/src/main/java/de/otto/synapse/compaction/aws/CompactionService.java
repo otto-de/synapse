@@ -44,7 +44,7 @@ public class CompactionService {
         );
 
         try {
-            final ChannelPosition currentPosition = compactingKinesisEventSource.consumeAll(stopCondition());
+            final ChannelPosition currentPosition = compactingKinesisEventSource.consume(stopCondition());
 
             LOG.info("Finished updating snapshot data. StateRepository now holds {} entries.", stateRepository.size());
 

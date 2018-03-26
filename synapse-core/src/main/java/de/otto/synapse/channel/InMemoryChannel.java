@@ -1,35 +1,75 @@
 package de.otto.synapse.channel;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
+import org.slf4j.Logger;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Predicate;
 
-public class InMemoryChannel {
+import static de.otto.synapse.channel.ChannelPosition.channelPosition;
+import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.message.Header.responseHeader;
+import static de.otto.synapse.message.Message.message;
+import static java.lang.Integer.valueOf;
+import static java.time.Instant.now;
+import static java.util.Collections.synchronizedList;
+import static org.slf4j.LoggerFactory.getLogger;
 
-    private final BlockingQueue<Message<String>> eventQueue;
-    private final String channelName;
+public class InMemoryChannel extends AbstractMessageReceiverEndpoint implements MessageLogReceiverEndpoint {
+
+    private static final Logger LOG = getLogger(InMemoryChannel.class);
+    private final List<Message<String>> eventQueue;
 
     public InMemoryChannel(final String channelName) {
-        this.channelName = channelName;
-        this.eventQueue = new LinkedBlockingQueue<>();
+        super(channelName, new ObjectMapper());
+        this.eventQueue = synchronizedList(new ArrayList<>());
     }
 
-    public String getChannelName() {
-        return channelName;
+    public InMemoryChannel(final String channelName,
+                           final ObjectMapper objectMapper) {
+        super(channelName, objectMapper);
+        this.eventQueue = synchronizedList(new ArrayList<>());
     }
 
     public void send(final Message<String> event) {
+        LOG.info("Sending {} to {}", event, getChannelName());
         eventQueue.add(event);
     }
 
-    public Message<String> receive() {
-        try {
-            return eventQueue.take();
-        } catch (InterruptedException e) {
-            // return null when shutting down
-            return null;
-        }
+    @Nonnull
+    @Override
+    public ChannelPosition consume(@Nonnull final ChannelPosition startFrom,
+                                   @Nonnull final Predicate<Message<?>> stopCondition) {
+        boolean shouldStop;
+        int pos = startFrom.shard(getChannelName()).startFrom() == StartFrom.HORIZON
+                ? -1
+                : valueOf(startFrom.shard(getChannelName()).position());
+        do {
+            if (hasMessageAfter(pos)) {
+                ++pos;
+                final Message<String> receivedMessage = eventQueue.get(pos);
+                getMessageDispatcher().accept(message(
+                        receivedMessage.getKey(),
+                        responseHeader(null, now()),
+                        receivedMessage.getPayload()));
+                shouldStop = stopCondition.test(receivedMessage);
+            } else {
+                return channelPosition(fromPosition(getChannelName(), String.valueOf(pos)));
+            }
+        } while (!shouldStop);
+        return channelPosition(fromPosition(getChannelName(), String.valueOf(pos)));
     }
 
+    @Override
+    public void stop() {
+    }
+
+    private boolean hasMessageAfter(final int pos) {
+        return eventQueue.size() > (pos+1);
+    }
 }

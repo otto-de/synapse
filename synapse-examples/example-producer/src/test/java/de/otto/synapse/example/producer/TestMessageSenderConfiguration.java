@@ -18,8 +18,9 @@ public class TestMessageSenderConfiguration {
 
     @Bean
     public MessageSenderFactory messageSenderFactory(final ObjectMapper objectMapper,
-                                                     final MyServiceProperties properties) {
-        final InMemoryChannel productStream = InMemoryChannels.getChannel(properties.getProductStreamName());
+                                                     final MyServiceProperties properties,
+                                                     final InMemoryChannels inMemoryChannels) {
+        final InMemoryChannel productStream = inMemoryChannels.getChannel(properties.getProductStreamName());
         final MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator(objectMapper);
         return streamName -> new InMemoryMessageSender(messageTranslator, productStream);
     }

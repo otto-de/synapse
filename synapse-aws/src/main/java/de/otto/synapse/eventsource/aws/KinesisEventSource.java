@@ -1,6 +1,5 @@
 package de.otto.synapse.eventsource.aws;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.channel.Status;
@@ -10,6 +9,7 @@ import de.otto.synapse.eventsource.EventSourceNotification;
 import de.otto.synapse.message.Message;
 import org.springframework.context.ApplicationEventPublisher;
 
+import javax.annotation.Nonnull;
 import java.util.function.Predicate;
 
 import static de.otto.synapse.eventsource.EventSourceNotification.Status.FINISHED;
@@ -20,9 +20,8 @@ public class KinesisEventSource extends AbstractEventSource {
 
     public KinesisEventSource(final String name,
                               final MessageLogReceiverEndpoint messageLog,
-                              final ApplicationEventPublisher eventPublisher,
-                              final ObjectMapper objectMapper) {
-        super(name, messageLog.getChannelName(), eventPublisher, objectMapper);
+                              final ApplicationEventPublisher eventPublisher) {
+        super(name, messageLog, eventPublisher);
         this.messageLog = messageLog;
     }
 
@@ -32,12 +31,13 @@ public class KinesisEventSource extends AbstractEventSource {
         messageLog.stop();
     }
 
+    @Nonnull
     @Override
-    public ChannelPosition consumeAll(final ChannelPosition startFrom,
-                                      final Predicate<Message<?>> stopCondition) {
+    public ChannelPosition consume(final ChannelPosition startFrom,
+                                   final Predicate<Message<?>> stopCondition) {
         publishEvent(startFrom, EventSourceNotification.Status.STARTED, "Consuming messages from Kinesis.");
         try {
-            ChannelPosition currentPosition = messageLog.consume(startFrom, stopCondition, getMessageDispatcher());
+            ChannelPosition currentPosition = messageLog.consume(startFrom, stopCondition);
             publishEvent(currentPosition, FINISHED, "Stopped consuming messages from Kinesis.");
             return currentPosition;
         } catch (final RuntimeException e) {

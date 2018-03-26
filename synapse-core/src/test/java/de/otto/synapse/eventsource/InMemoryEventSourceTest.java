@@ -3,6 +3,7 @@ package de.otto.synapse.eventsource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.InMemoryChannel;
+import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
@@ -14,7 +15,6 @@ import java.util.regex.Pattern;
 
 import static de.otto.synapse.message.Message.message;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -26,14 +26,15 @@ public class InMemoryEventSourceTest {
     @Test
     public void shouldSendEventInStreamToConsumer() {
         // given
-        InMemoryChannel inMemoryChannel = new InMemoryChannel("");
-        InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es","some-stream", inMemoryChannel, eventPublisher, objectMapper);
+        InMemoryChannel inMemoryChannel = new InMemoryChannel("some-stream", objectMapper);
+        InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es",inMemoryChannel, eventPublisher);
         StringMessageConsumer eventConsumer = new StringMessageConsumer();
         inMemoryEventSource.register(eventConsumer);
         inMemoryChannel.send(message("key", "payload"));
+        inMemoryEventSource.stop();
 
         // when
-        inMemoryEventSource.consumeAll(event -> true);
+        inMemoryEventSource.consume(event -> true);
 
 
         // then
@@ -44,14 +45,15 @@ public class InMemoryEventSourceTest {
     @Test
     public void shouldPublishStartedAndFinishedEvents() {
         // given
-        InMemoryChannel inMemoryChannel = new InMemoryChannel("");
-        InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es", "some-stream", inMemoryChannel, eventPublisher, objectMapper);
+        InMemoryChannel inMemoryChannel = new InMemoryChannel("some-stream", objectMapper);
+        InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es", inMemoryChannel, eventPublisher);
         StringMessageConsumer eventConsumer = new StringMessageConsumer();
         inMemoryEventSource.register(eventConsumer);
         inMemoryChannel.send(message("key", "payload"));
+        inMemoryEventSource.stop();
 
         // when
-        inMemoryEventSource.consumeAll(event -> true);
+        inMemoryEventSource.consume(event -> true);
 
 
         // then
@@ -65,7 +67,8 @@ public class InMemoryEventSourceTest {
 
         EventSourceNotification finishedEvent = notificationArgumentCaptor.getAllValues().get(1);
         assertThat(finishedEvent.getStatus(), is(EventSourceNotification.Status.FINISHED));
-        assertThat(finishedEvent.getChannelPosition(), is(nullValue()));
+        assertThat(finishedEvent.getChannelPosition().shard("some-stream").startFrom(), is(StartFrom.POSITION));
+        assertThat(finishedEvent.getChannelPosition().shard("some-stream").position(), is("0"));
         assertThat(finishedEvent.getStreamName(), is("some-stream"));
     }
     

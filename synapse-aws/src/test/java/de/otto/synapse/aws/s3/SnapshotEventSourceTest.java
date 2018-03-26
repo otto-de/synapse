@@ -58,7 +58,7 @@ public class SnapshotEventSourceTest {
         when(snapshotConsumerService.consumeSnapshot(any(),any(),any(),any())).thenThrow(new RuntimeException("boom - simulate exception while loading from S3"));
 
         // when
-        snapshotEventSource.consumeAll();
+        snapshotEventSource.consume();
 
         // then expect exception
     }
@@ -71,7 +71,7 @@ public class SnapshotEventSourceTest {
 
         // when
         try {
-            snapshotEventSource.consumeAll();
+            snapshotEventSource.consume();
 
             fail("should throw RuntimeException");
         } catch (RuntimeException ignored) {
@@ -101,7 +101,7 @@ public class SnapshotEventSourceTest {
 
         // when
         try {
-            snapshotEventSource.consumeAll();
+            snapshotEventSource.consume();
         } catch (Exception e) {
             // ignore exception
         }
@@ -116,7 +116,7 @@ public class SnapshotEventSourceTest {
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.empty());
 
         // when
-        snapshotEventSource.consumeAll();
+        snapshotEventSource.consume();
 
         // then
         EventSourceNotification expectedStartEvent = EventSourceNotification.builder()

@@ -1,5 +1,6 @@
 package de.otto.synapse.channel.aws;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
@@ -18,6 +19,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -27,6 +29,9 @@ import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KinesisMessageLogReceiverEndpointTest {
+
+    private static final Pattern MATCH_ALL = Pattern.compile(".*");
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock
     private KinesisClient kinesisClient;
@@ -41,7 +46,9 @@ public class KinesisMessageLogReceiverEndpointTest {
 
     @Before
     public void setUp() throws Exception {
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, "streamName");
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper,"streamName");
+        when(messageConsumer.keyPattern()).thenReturn(MATCH_ALL);
+        when(messageConsumer.payloadType()).thenReturn(String.class);
     }
 
     @Test
@@ -137,10 +144,11 @@ public class KinesisMessageLogReceiverEndpointTest {
                         someShard("shard1", true)));
         describeRecordsForShard();
 
-        KinesisMessageLogReceiverEndpoint kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, "testStream");
+        KinesisMessageLogReceiverEndpoint kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper, "testStream");
+        kinesisMessageLog.register(messageConsumer);
 
         // when
-        ChannelPosition finalChannelPosition = kinesisMessageLog.consume(ChannelPosition.fromHorizon(), this::stopIfGreenForString, messageConsumer);
+        ChannelPosition finalChannelPosition = kinesisMessageLog.consume(ChannelPosition.fromHorizon(), this::stopIfGreenForString);
 
         // then
         verify(messageConsumer, times(3)).accept(messageArgumentCaptor.capture());
@@ -231,10 +239,7 @@ public class KinesisMessageLogReceiverEndpointTest {
 
 
     private boolean stopIfGreenForString(Message<?> message) {
-        if (message.getPayload() == null) {
-            return false;
-        }
-        return message.getPayload().toString().contains("green");
+        return message.getPayload() != null && message.getPayload().toString().contains("green");
     }
 
 }

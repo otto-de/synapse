@@ -1,64 +1,107 @@
 package de.otto.synapse.eventsource;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.InMemoryChannel;
 import de.otto.synapse.consumer.TestMessageConsumer;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
-import org.springframework.context.ApplicationEventPublisher;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.function.Predicate;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static de.otto.synapse.consumer.TestMessageConsumer.testEventConsumer;
-import static de.otto.synapse.message.Header.responseHeader;
-import static de.otto.synapse.message.Message.message;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.mockito.ArgumentMatchers.any;
+import static org.awaitility.Awaitility.await;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.*;
 
 public class EventSourceConsumerProcessTest {
 
-    private static final String TEST_STREAM_NAME = "test-stream";
+    @Test
+    public void shouldStopEventSources() {
+        final EventSource eventSource = mock(EventSource.class);
+
+        final EventSourceConsumerProcess process = new EventSourceConsumerProcess(singletonList(eventSource));
+        process.start();
+        process.stop();
+
+        verify(eventSource).stop();
+    }
+
+    @Test
+    public void shouldConsumeEventSourcesInDifferentThreads() {
+        final Set<String> threads = Collections.synchronizedSet(new HashSet<>());
+        final EventSource first = mock(EventSource.class);
+        when(first.consume()).then(invocation -> {
+            threads.add(Thread.currentThread().getName());
+            return null;
+        });
+        final EventSource second = mock(EventSource.class);
+        when(second.consume()).then(invocation -> {
+            threads.add(Thread.currentThread().getName());
+            return null;
+        });
+
+        final EventSourceConsumerProcess process = new EventSourceConsumerProcess(asList(first, second));
+        process.start();
+        process.stop();
+        assertThat(threads.size(), is(2));
+        assertThat(threads, containsInAnyOrder("synapse-consumer-1", "synapse-consumer-2"));
+    }
+
+    @Test
+    public void shouldStopEventSourcesOnError() {
+        final EventSource eventSource = mock(EventSource.class);
+        when(eventSource.consume()).thenThrow(IllegalStateException.class);
+
+        final EventSourceConsumerProcess process = new EventSourceConsumerProcess(singletonList(eventSource));
+        process.start();
+
+        await()
+                .atMost(1, TimeUnit.SECONDS)
+                .until(() -> !process.isRunning());
+
+        verify(eventSource).stop();
+    }
 
     @Test
     @SuppressWarnings("unchecked")
-    public void shouldInvokeTwoConsumersForSameEventSource() {
-        EventSource eventSource = spy(new TestEventSource());
-        TestMessageConsumer eventConsumerA = spy(testEventConsumer(".*", MyPayload.class));
-        TestMessageConsumer eventConsumerB = spy(testEventConsumer(".*", MyPayload.class));
-        eventSource.register(eventConsumerA);
-        eventSource.register(eventConsumerB);
+    public void shouldCallConsumeOnEventSource() throws InterruptedException {
+        EventSource eventSource = mock(EventSource.class);
 
         EventSourceConsumerProcess process = new EventSourceConsumerProcess(singletonList(eventSource));
         process.start();
+        process.stop();
 
-        verify(eventSource, timeout(1000)).consumeAll(any(ChannelPosition.class), any(Predicate.class));
-        verify(eventConsumerA, timeout(1000)).accept(any());
-        verify(eventConsumerB, timeout(1000)).accept(any());
+        verify(eventSource, timeout(1000)).consume();
     }
 
-    static class MyPayload {
-        // dummy class for tests
-    }
+    @Test
+    @SuppressWarnings("unchecked")
+    public void shouldInvokeTwoConsumersForSameEventSource() throws InterruptedException {
+        final InMemoryChannel channel = new InMemoryChannel("test");
+        final EventSource eventSource = new InMemoryEventSource("test", channel, null);
 
-    class TestEventSource extends AbstractEventSource {
+        final TestMessageConsumer eventConsumerA = testEventConsumer(".*", String.class);
+        final TestMessageConsumer eventConsumerB = testEventConsumer(".*", String.class);
+        eventSource.register(eventConsumerA);
+        eventSource.register(eventConsumerB);
 
-        public TestEventSource() {
-            super("testEventSource", TEST_STREAM_NAME, mock(ApplicationEventPublisher.class),  new ObjectMapper());
-        }
+        channel.send(Message.message("test", "some payload"));
+        final EventSourceConsumerProcess process = new EventSourceConsumerProcess(singletonList(eventSource));
+        process.start();
+        process.stop();
 
-        @Override
-        public ChannelPosition consumeAll(ChannelPosition startFrom, Predicate<Message<?>> stopCondition) {
-            final Message<String> message = message(
-                    "someKey",
-                    responseHeader(null, Instant.now(), Duration.ZERO),
-                    "{}"
-            );
-            getMessageDispatcher().accept(message);
-            return ChannelPosition.fromHorizon();
-        }
+        await()
+                .atMost(1, TimeUnit.SECONDS)
+                .until(() -> eventConsumerA.getConsumedMessages().size() == 1);
+        await()
+                .atMost(1, TimeUnit.SECONDS)
+                .until(() -> eventConsumerB.getConsumedMessages().size() == 1);
     }
 
 }

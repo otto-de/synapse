@@ -7,6 +7,7 @@ import de.otto.synapse.eventsource.DelegateEventSource;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.InMemoryEventSourceConfiguration;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -20,7 +21,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class EventSourceConsumerBeanPostProcessorTest {
 
-    private AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+    private AnnotationConfigApplicationContext context;
+
+    @Before
+    public void init() {
+        context = new AnnotationConfigApplicationContext();
+    }
 
     @After
     public void close() {
