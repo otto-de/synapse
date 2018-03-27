@@ -74,7 +74,7 @@ public class SnapshotEventSource implements EventSource {
             Optional<File> snapshotFile = snapshotReadService.retrieveLatestSnapshot(this.getChannelName());
             if (snapshotFile.isPresent()) {
                 //Instant snapshotTimestamp = SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName());
-                snapshotStreamPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), this.getChannelName(), stopCondition, getMessageDispatcher());
+                snapshotStreamPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), stopCondition, getMessageDispatcher());
             } else {
                 snapshotStreamPosition = ChannelPosition.fromHorizon();
             }

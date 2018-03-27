@@ -26,10 +26,9 @@ public class SnapshotConsumerService {
 
     private final JsonFactory jsonFactory = new JsonFactory();
 
-    public <T> ChannelPosition consumeSnapshot(final File latestSnapshot,
-                                               final String streamName,
-                                               final Predicate<Message<?>> stopCondition,
-                                               final MessageConsumer<String> messageConsumer) {
+    public ChannelPosition consumeSnapshot(final File latestSnapshot,
+                                           final Predicate<Message<?>> stopCondition,
+                                           final MessageConsumer<String> messageConsumer) {
 
         try (
                 FileInputStream fileInputStream = new FileInputStream(latestSnapshot);

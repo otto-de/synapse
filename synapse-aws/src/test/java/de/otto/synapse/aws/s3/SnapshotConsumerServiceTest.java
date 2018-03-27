@@ -39,7 +39,6 @@ public class SnapshotConsumerServiceTest {
         });
         final ChannelPosition shardPositions = testee.consumeSnapshot(
                 file,
-                "test",
                 (event) -> false,
                 new MessageDispatcher(OBJECT_MAPPER, Collections.singletonList(messageConsumer)));
         //then
