@@ -28,14 +28,14 @@ public class KinesisShard {
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShard.class);
 
     private final String shardId;
-    private String streamName;
+    private final String channelName;
     private final KinesisClient kinesisClient;
 
     public KinesisShard(final String shardId,
-                        final String streamName,
+                        final String channelName,
                         final KinesisClient kinesisClient) {
         this.shardId = shardId;
-        this.streamName = streamName;
+        this.channelName = channelName;
         this.kinesisClient = kinesisClient;
     }
 
@@ -49,7 +49,7 @@ public class KinesisShard {
                                         final MessageConsumer<String> consumer) {
         try {
             LOG.info("Reading from stream {}, shard {} with starting sequence number {}",
-                    streamName,
+                    channelName,
                     shardId,
                     startPosition.shard(shardId));
 
@@ -82,16 +82,16 @@ public class KinesisShard {
                     stopRetrieval = stopCondition.test(kinesisMessage);
                 }
 
-                logInfo(streamName, recordsResponse, durationBehind);
+                logInfo(channelName, recordsResponse, durationBehind);
 
                 if (!stopRetrieval) {
                     stopRetrieval = waitABit();
                 }
             } while (!stopRetrieval);
-            LOG.info("Done consuming from shard '{}' of stream '{}'.", streamName, shardId);
+            LOG.info("Done consuming from shard '{}' of stream '{}'.", channelName, shardId);
             return channelPosition(shardPosition);
-        } catch (Exception e) {
-            LOG.error(String.format("kinesis consumer died unexpectedly. shard '%s', stream '%s'", streamName, shardId), e);
+        } catch (final Exception e) {
+            LOG.error(String.format("kinesis consumer died unexpectedly. shard '%s', stream '%s'", channelName, shardId), e);
             throw e;
         }
     }
@@ -106,8 +106,8 @@ public class KinesisShard {
         try {
             shardIteratorResponse = kinesisClient.getShardIterator(buildIteratorShardRequest(shardPosition));
         } catch (final InvalidArgumentException e) {
-            LOG.error(format("invalidShardSequenceNumber in Snapshot %s/%s - reading from HORIZON", streamName, shardId));
-            shardIteratorResponse = kinesisClient.getShardIterator(buildIteratorShardRequest(ShardPosition.fromHorizon(shardId)));
+            LOG.error(format("invalidShardSequenceNumber in Snapshot %s/%s - reading from HORIZON", channelName, shardId));
+            shardIteratorResponse = kinesisClient.getShardIterator(buildIteratorShardRequest(fromHorizon(shardId)));
         }
         return new KinesisShardIterator(kinesisClient, shardIteratorResponse.shardIterator());
     }
@@ -116,7 +116,7 @@ public class KinesisShard {
         GetShardIteratorRequest.Builder shardRequestBuilder = GetShardIteratorRequest
                 .builder()
                 .shardId(shardId)
-                .streamName(streamName);
+                .streamName(channelName);
 
         if (shardPosition == null || shardPosition.startFrom() == StartFrom.HORIZON) {
             shardRequestBuilder.shardIteratorType(ShardIteratorType.TRIM_HORIZON);
@@ -136,11 +136,11 @@ public class KinesisShard {
         }
     }
 
-    private void logInfo(String streamName, GetRecordsResponse recordsResponse, Duration durationBehind) {
+    private void logInfo(String channelName, GetRecordsResponse recordsResponse, Duration durationBehind) {
         final String durationString = format("%s days %s hrs %s min %s sec", durationBehind.toDays(), durationBehind.toHours() % 24, durationBehind.toMinutes() % 60, durationBehind.getSeconds() % 60);
         LOG.info("Got {} records from stream '{}' and shard '{}'; behind latest: {}",
                 recordsResponse.records().size(),
-                streamName,
+                channelName,
                 shardId,
                 durationString);
     }
