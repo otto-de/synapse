@@ -81,9 +81,9 @@ public class SnapshotEventSourceTest {
         // then
         EventSourceNotification expectedFailedEvent = EventSourceNotification.builder()
                 .withEventSourceName("snapshotEventSource")
-                .withStreamName(STREAM_NAME)
+                .withChannelName(STREAM_NAME)
                 .withStatus(EventSourceNotification.Status.FAILED)
-                .withStreamPosition(fromHorizon())
+                .withChannelPosition(fromHorizon())
                 .withMessage("Failed to load snapshot from S3: boom - simulate exception while loading from S3 (Service: null; Status Code: 0; Request ID: null)")
                 .build();
 
@@ -121,19 +121,19 @@ public class SnapshotEventSourceTest {
         // then
         EventSourceNotification expectedStartEvent = EventSourceNotification.builder()
                 .withEventSourceName("snapshotEventSource")
-                .withStreamName(STREAM_NAME)
+                .withChannelName(STREAM_NAME)
                 .withStatus(EventSourceNotification.Status.STARTED)
                 .withMessage("Loading snapshot from S3.")
-                .withStreamPosition(fromHorizon())
+                .withChannelPosition(fromHorizon())
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedStartEvent);
 
         EventSourceNotification expectedFinishedEvent = EventSourceNotification.builder()
                 .withEventSourceName("snapshotEventSource")
-                .withStreamName(STREAM_NAME)
+                .withChannelName(STREAM_NAME)
                 .withStatus(EventSourceNotification.Status.FINISHED)
                 .withMessage("Finished to load snapshot from S3.")
-                .withStreamPosition(fromHorizon())
+                .withChannelPosition(fromHorizon())
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedFinishedEvent);
     }

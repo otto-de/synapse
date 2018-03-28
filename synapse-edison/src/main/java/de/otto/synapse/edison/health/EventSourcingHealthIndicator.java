@@ -16,7 +16,7 @@ public class EventSourcingHealthIndicator implements HealthIndicator {
         if (eventSourceNotification.getStatus() == EventSourceNotification.Status.FAILED) {
             health = Health.down()
                     .withDetail("message", eventSourceNotification.getMessage())
-                    .withDetail("stream", eventSourceNotification.getStreamName())
+                    .withDetail("stream", eventSourceNotification.getChannelName())
                     .build();
         }
     }

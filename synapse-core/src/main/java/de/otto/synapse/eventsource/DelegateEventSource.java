@@ -14,15 +14,15 @@ import java.util.function.Predicate;
 public class DelegateEventSource implements EventSource, ApplicationContextAware {
 
     private final String name;
-    private final String streamName;
+    private final String channelName;
     private final String eventSourceBuilder;
     private EventSource delegate;
 
     public DelegateEventSource(final String name,
-                               final String streamName,
+                               final String channelName,
                                final String eventSourceBuilder) {
         this.name = name;
-        this.streamName = streamName;
+        this.channelName = channelName;
         this.eventSourceBuilder = eventSourceBuilder;
     }
 
@@ -39,7 +39,7 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
     public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
         delegate = applicationContext
                 .getBean(eventSourceBuilder, EventSourceBuilder.class)
-                .buildEventSource(name, streamName);
+                .buildEventSource(name, channelName);
     }
 
     /**
@@ -111,7 +111,7 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
     @Override
     public String toString() {
         return "DelegateEventSource{" +
-                "streamName='" + streamName + '\'' +
+                "channelName='" + channelName + '\'' +
                 ", eventSourceBuilder='" + eventSourceBuilder + '\'' +
                 ", delegate=" + delegate +
                 '}';

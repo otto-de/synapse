@@ -13,9 +13,9 @@ public interface EventSourceBuilder {
      *
      * @param name A name taken from the {@link EnableEventSource} annotation and used to connect event sources and
      *             consumers.
-     * @param streamName The name of the stream.
+     * @param channelName The name of the stream.
      * @return EventSource implementation for this specific technology
      */
-    EventSource buildEventSource(final String name, final String streamName);
+    EventSource buildEventSource(final String name, final String channelName);
 
 }

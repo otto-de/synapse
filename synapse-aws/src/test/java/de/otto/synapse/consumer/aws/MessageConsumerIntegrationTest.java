@@ -69,13 +69,13 @@ public class MessageConsumerIntegrationTest {
         assertThat(receivedAppleEventPayloads.get(1).appleId, is("2"));
         assertThat(events, hasSize(4));
         assertThat(events.get(0).getStatus(), is(EventSourceNotification.Status.STARTED));
-        assertThat(events.get(0).getStreamName(), is("test-stream"));
+        assertThat(events.get(0).getChannelName(), is("test-stream"));
         assertThat(events.get(1).getStatus(), is(EventSourceNotification.Status.FINISHED));
-        assertThat(events.get(1).getStreamName(), is("test-stream"));
+        assertThat(events.get(1).getChannelName(), is("test-stream"));
         assertThat(events.get(2).getStatus(), is(EventSourceNotification.Status.STARTED));
-        assertThat(events.get(2).getStreamName(), is("test-stream"));
+        assertThat(events.get(2).getChannelName(), is("test-stream"));
         assertThat(events.get(3).getStatus(), is(EventSourceNotification.Status.FAILED));
-        assertThat(events.get(3).getStreamName(), is("test-stream"));
+        assertThat(events.get(3).getChannelName(), is("test-stream"));
 
     }
 

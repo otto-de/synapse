@@ -30,10 +30,10 @@ public class KinesisEventSourceBuilder implements EventSourceBuilder {
     }
 
     @Override
-    public EventSource buildEventSource(final String name, final String streamName) {
-        Objects.requireNonNull(streamName, "stream name must not be null");
-        LOG.info("Building '{}' as KinesisEventSource", streamName);
-        final MessageLogReceiverEndpoint messageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper, streamName);
+    public EventSource buildEventSource(final String name, final String channelName) {
+        Objects.requireNonNull(channelName, "channel name must not be null");
+        LOG.info("Building '{}' as KinesisEventSource", channelName);
+        final MessageLogReceiverEndpoint messageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper, channelName);
         return new KinesisEventSource(name, messageLog, eventPublisher);
     }
 

@@ -47,13 +47,13 @@ public class SnapshotWriteService {
     }
 
 
-    public String writeSnapshot(final String streamName,
+    public String writeSnapshot(final String channelName,
                                 final ChannelPosition position,
                                 final StateRepository<String> stateRepository) throws IOException {
         File snapshotFile = null;
         try {
             LOG.info("Start creating new snapshot");
-            snapshotFile = createSnapshot(streamName, position, stateRepository);
+            snapshotFile = createSnapshot(channelName, position, stateRepository);
             LOG.info("Finished creating snapshot file: {}", snapshotFile.getAbsolutePath());
             uploadSnapshot(this.snapshotBucketName, snapshotFile);
             LOG.info("Finished uploading snapshot file to s3");
@@ -67,10 +67,10 @@ public class SnapshotWriteService {
     }
 
     @VisibleForTesting
-    File createSnapshot(final String streamName,
+    File createSnapshot(final String channelName,
                         final ChannelPosition currentChannelPosition,
                         final StateRepository<String> stateRepository) throws IOException {
-        File snapshotFile = createSnapshotFile(streamName);
+        File snapshotFile = createSnapshotFile(channelName);
 
         try (FileOutputStream fos = new FileOutputStream(snapshotFile);
              BufferedOutputStream bos = new BufferedOutputStream(fos);
@@ -120,8 +120,8 @@ public class SnapshotWriteService {
         }
     }
 
-    private static File createSnapshotFile(String streamName) throws IOException {
-        return File.createTempFile(String.format("%s%s-", getSnapshotFileNamePrefix(streamName), dateTimeFormatter.format(Instant.now())), COMPACTION_FILE_EXTENSION);
+    private static File createSnapshotFile(String channelName) throws IOException {
+        return File.createTempFile(String.format("%s%s-", getSnapshotFileNamePrefix(channelName), dateTimeFormatter.format(Instant.now())), COMPACTION_FILE_EXTENSION);
     }
 
     private void uploadSnapshot(String bucketName, final File snapshotFile) {

@@ -136,12 +136,12 @@ public class KinesisEventSourceTest {
         EventSourceNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
         assertThat(startedEvent.getStatus(), is(EventSourceNotification.Status.STARTED));
         assertThat(startedEvent.getChannelPosition(), is(initialPositions));
-        assertThat(startedEvent.getStreamName(), is("test"));
+        assertThat(startedEvent.getChannelName(), is("test"));
 
         EventSourceNotification finishedEvent = notificationArgumentCaptor.getAllValues().get(1);
         assertThat(finishedEvent.getStatus(), is(EventSourceNotification.Status.FINISHED));
         assertThat(finishedEvent.getChannelPosition(), is(finalChannelPosition));
-        assertThat(finishedEvent.getStreamName(), is("test"));
+        assertThat(finishedEvent.getChannelName(), is("test"));
     }
 
 
@@ -166,13 +166,13 @@ public class KinesisEventSourceTest {
             EventSourceNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
             assertThat(startedEvent.getStatus(), is(EventSourceNotification.Status.STARTED));
             assertThat(startedEvent.getChannelPosition(), is(initialPositions));
-            assertThat(startedEvent.getStreamName(), is("test"));
+            assertThat(startedEvent.getChannelName(), is("test"));
 
             EventSourceNotification failedEvent = notificationArgumentCaptor.getAllValues().get(1);
             assertThat(failedEvent.getStatus(), is(EventSourceNotification.Status.FAILED));
             assertThat(failedEvent.getMessage(), is("Error consuming messages from Kinesis: Error Message"));
             assertThat(failedEvent.getChannelPosition(), is(initialPositions));
-            assertThat(failedEvent.getStreamName(), is("test"));
+            assertThat(failedEvent.getChannelName(), is("test"));
         }
     }
 

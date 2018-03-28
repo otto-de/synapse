@@ -46,7 +46,7 @@ public class MessageSenderConfiguration {
     @Bean
     public MessageSenderEndpoint productMessageSender(final MessageSenderFactory messageSenderFactory,
                                                       final MyServiceProperties properties) {
-        return messageSenderFactory.createSenderForStream(properties.getProductStreamName());
+        return messageSenderFactory.createSenderForStream(properties.getProductChannelName());
 
     }
 }

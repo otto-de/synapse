@@ -21,12 +21,12 @@ public class CompactedKinesisEventSourceBuilder implements EventSourceBuilder {
         this.snapshotEventSourceBuilder = snapshotEventSourceBuilder;
     }
 
-    public EventSource buildEventSource(final String name, final String streamName) {
-        Objects.requireNonNull(streamName, "stream name must not be null");
-        LOG.info("Building '{}' as CompactingKinesisEventSource", streamName);
+    public EventSource buildEventSource(final String name, final String channelName) {
+        Objects.requireNonNull(channelName, "stream name must not be null");
+        LOG.info("Building '{}' as CompactingKinesisEventSource", channelName);
         return new CompactedKinesisEventSource(
-                snapshotEventSourceBuilder.buildEventSource(name, streamName),
-                kinesisEventSourceBuilder.buildEventSource(name, streamName)
+                snapshotEventSourceBuilder.buildEventSource(name, channelName),
+                kinesisEventSourceBuilder.buildEventSource(name, channelName)
         );
     }
 

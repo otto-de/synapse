@@ -7,7 +7,7 @@ service:
     salt: example
 
 exampleservice:
-  product-stream-name: synapse-example-products
+  product-channel-name: synapse-example-products
 
 logging:
     config: classpath:logback-console.xml

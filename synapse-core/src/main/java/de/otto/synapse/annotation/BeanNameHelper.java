@@ -1,11 +1,12 @@
 package de.otto.synapse.annotation;
 
-import com.google.common.base.CaseFormat;
+import static com.google.common.base.CaseFormat.LOWER_CAMEL;
+import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
 
 public class BeanNameHelper {
 
-    public static String beanNameForStream(final String streamName) {
-        return CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, streamName) + "EventSource";
+    public static String beanNameForStream(final String channelName) {
+        return LOWER_HYPHEN.to(LOWER_CAMEL, channelName) + "EventSource";
     }
 
 }

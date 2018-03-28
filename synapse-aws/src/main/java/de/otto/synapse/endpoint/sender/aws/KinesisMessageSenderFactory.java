@@ -18,8 +18,8 @@ public class KinesisMessageSenderFactory implements MessageSenderFactory {
         this.kinesisClient = kinesisClient;
     }
 
-    public MessageSenderEndpoint createSenderForStream(final String streamName) {
-        return new KinesisMessageSender(streamName, messageTranslator, kinesisClient);
+    public MessageSenderEndpoint createSenderForStream(final String channelName) {
+        return new KinesisMessageSender(channelName, messageTranslator, kinesisClient);
     }
 
 }

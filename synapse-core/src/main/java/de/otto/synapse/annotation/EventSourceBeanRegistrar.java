@@ -96,19 +96,19 @@ public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, 
 
     private void registerBeanDefinition(final BeanDefinitionRegistry registry,
                                         final String beanName,
-                                        final String streamName,
+                                        final String channelName,
                                         final String builderName) {
         registry.registerBeanDefinition(
                 beanName,
                 genericBeanDefinition(DelegateEventSource.class)
                         .addConstructorArgValue(beanName)
-                        .addConstructorArgValue(streamName)
+                        .addConstructorArgValue(channelName)
                         .addConstructorArgValue(builderName)
                         .setDependencyCheck(DEPENDENCY_CHECK_ALL)
                         .setAutowireMode(AUTOWIRE_BY_NAME)
                         .getBeanDefinition()
         );
-        LOG.info("Registered EventSource {} with for streamName {} using {}", beanName, streamName, builderName);
+        LOG.info("Registered EventSource {} with for streamName {} using {}", beanName, channelName, builderName);
     }
 
 }

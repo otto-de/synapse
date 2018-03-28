@@ -14,7 +14,7 @@ public class CompactedKinesisEventSource implements EventSource {
 
     private final EventSource snapshotEventSource;
     private final EventSource kinesisEventSource;
-    private final String streamName;
+    private final String channelName;
 
     public CompactedKinesisEventSource(EventSource snapshotEventSource,
                                        EventSource kinesisEventSource) {
@@ -27,7 +27,7 @@ public class CompactedKinesisEventSource implements EventSource {
         }
         this.snapshotEventSource = snapshotEventSource;
         this.kinesisEventSource = kinesisEventSource;
-        this.streamName = kinesisEventSource.getChannelName();
+        this.channelName = kinesisEventSource.getChannelName();
     }
 
     /**
@@ -62,7 +62,7 @@ public class CompactedKinesisEventSource implements EventSource {
 
     @Override
     public String getChannelName() {
-        return streamName;
+        return channelName;
     }
 
     @Override

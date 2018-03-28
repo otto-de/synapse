@@ -23,13 +23,13 @@ public class TestEventSourcingConfiguration {
                                                    final MyServiceProperties myServiceProperties,
                                                    final InMemoryChannels inMemoryChannels) {
         final MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator(objectMapper);
-        return streamName -> {
-            if (streamName.equals(myServiceProperties.getBananaChannel())) {
+        return channelName -> {
+            if (channelName.equals(myServiceProperties.getBananaChannel())) {
                 return new InMemoryMessageSender(messageTranslator, inMemoryChannels.getChannel(myServiceProperties.getBananaChannel()));
-            } else if (streamName.equals(myServiceProperties.getProductChannel())) {
+            } else if (channelName.equals(myServiceProperties.getProductChannel())) {
                 return new InMemoryMessageSender(messageTranslator, inMemoryChannels.getChannel(myServiceProperties.getProductChannel()));
             } else {
-                throw new IllegalArgumentException("no stream for name " + streamName + " available.");
+                throw new IllegalArgumentException("no channel for name " + channelName + " available.");
             }
         };
     }
@@ -39,13 +39,13 @@ public class TestEventSourcingConfiguration {
     public EventSourceBuilder defaultEventSourceBuilder(final MyServiceProperties myServiceProperties,
                                                         final ApplicationEventPublisher eventPublisher,
                                                         final InMemoryChannels inMemoryChannels) {
-        return (name, streamName) -> {
-            if (streamName.equals(myServiceProperties.getBananaChannel())) {
+        return (name, channelName) -> {
+            if (channelName.equals(myServiceProperties.getBananaChannel())) {
                 return new InMemoryEventSource(name, inMemoryChannels.getChannel(myServiceProperties.getBananaChannel()), eventPublisher);
-            } else if (streamName.equals(myServiceProperties.getProductChannel())) {
+            } else if (channelName.equals(myServiceProperties.getProductChannel())) {
                 return new InMemoryEventSource(name, inMemoryChannels.getChannel(myServiceProperties.getProductChannel()), eventPublisher);
             } else {
-                throw new IllegalArgumentException("no stream for name " + streamName + " available.");
+                throw new IllegalArgumentException("no channel for name " + channelName + " available.");
             }
         };
     }

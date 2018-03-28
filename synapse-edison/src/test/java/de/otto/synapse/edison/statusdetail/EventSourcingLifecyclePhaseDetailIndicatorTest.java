@@ -26,7 +26,7 @@ public class EventSourcingLifecyclePhaseDetailIndicatorTest {
     @Test
     public void shouldUpdateStatusDetailForSnapshotStarted() {
         //given
-        EventSourceNotification eventSourceNotification = createSnapshotEventSourceNotification("myStreamName", STARTED, "Loading snapshot");
+        EventSourceNotification eventSourceNotification = createSnapshotEventSourceNotification("myChannelName", STARTED, "Loading snapshot");
 
         //when
         eventSourcingStatusDetailIndicator.onEventSourceNotification(eventSourceNotification);
@@ -35,7 +35,7 @@ public class EventSourcingLifecyclePhaseDetailIndicatorTest {
         List<StatusDetail> statusDetail = eventSourcingStatusDetailIndicator.statusDetails();
 
         assertThat(statusDetail.get(0).getStatus(), is(Status.OK));
-        assertThat(statusDetail.get(0).getName(), is("myStreamName"));
+        assertThat(statusDetail.get(0).getName(), is("myChannelName"));
         assertThat(statusDetail.get(0).getMessage(), is("Loading snapshot"));
     }
 
@@ -43,8 +43,8 @@ public class EventSourcingLifecyclePhaseDetailIndicatorTest {
     @Test
     public void shouldUpdateStatusDetailFor2ndSnapshotStarted() {
         //given
-        EventSourceNotification firstEventSourceNotification = createSnapshotEventSourceNotification("myStreamName", STARTED, "Loading snapshot");
-        EventSourceNotification secondEventSourceNotification = createSnapshotEventSourceNotification("myStreamName2", STARTED, "Loading snapshot");
+        EventSourceNotification firstEventSourceNotification = createSnapshotEventSourceNotification("myChannelName", STARTED, "Loading snapshot");
+        EventSourceNotification secondEventSourceNotification = createSnapshotEventSourceNotification("myChannelName2", STARTED, "Loading snapshot");
 
         //when
         eventSourcingStatusDetailIndicator.onEventSourceNotification(firstEventSourceNotification);
@@ -54,10 +54,10 @@ public class EventSourcingLifecyclePhaseDetailIndicatorTest {
         List<StatusDetail> statusDetails = eventSourcingStatusDetailIndicator.statusDetails();
 
         assertThat(statusDetails.get(0).getStatus(), is(Status.OK));
-        assertThat(statusDetails.get(0).getName(), is("myStreamName"));
+        assertThat(statusDetails.get(0).getName(), is("myChannelName"));
         assertThat(statusDetails.get(0).getMessage(), is("Loading snapshot"));
         assertThat(statusDetails.get(1).getStatus(), is(Status.OK));
-        assertThat(statusDetails.get(1).getName(), is("myStreamName2"));
+        assertThat(statusDetails.get(1).getName(), is("myChannelName2"));
         assertThat(statusDetails.get(1).getMessage(), is("Loading snapshot"));
     }
 
@@ -66,32 +66,32 @@ public class EventSourcingLifecyclePhaseDetailIndicatorTest {
         //given
 
         //when
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myStreamName", STARTED, "Loading snapshot"));
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myChannelName", STARTED, "Loading snapshot"));
         testClock.proceed(2, ChronoUnit.SECONDS);
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myStreamName2", STARTED, "Loading snapshot"));
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myChannelName2", STARTED, "Loading snapshot"));
         testClock.proceed(2, ChronoUnit.SECONDS);
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myStreamName", FINISHED, "Done."));
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myChannelName", FINISHED, "Done."));
         testClock.proceed(3, ChronoUnit.SECONDS);
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myStreamName2", FINISHED, "Done."));
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myChannelName2", FINISHED, "Done."));
 
         //then
         List<StatusDetail> statusDetails = eventSourcingStatusDetailIndicator.statusDetails();
 
         assertThat(statusDetails.get(0).getStatus(), is(Status.OK));
-        assertThat(statusDetails.get(0).getName(), is("myStreamName"));
+        assertThat(statusDetails.get(0).getName(), is("myChannelName"));
         assertThat(statusDetails.get(0).getMessage(), is("Done. Finished consumption after 4 seconds."));
         assertThat(statusDetails.get(1).getStatus(), is(Status.OK));
-        assertThat(statusDetails.get(1).getName(), is("myStreamName2"));
+        assertThat(statusDetails.get(1).getName(), is("myChannelName2"));
         assertThat(statusDetails.get(1).getMessage(), is("Done. Finished consumption after 5 seconds."));
     }
 
-    private EventSourceNotification createSnapshotEventSourceNotification(final String streamName,
+    private EventSourceNotification createSnapshotEventSourceNotification(final String channelName,
                                                                           final EventSourceNotification.Status status,
                                                                           final String message) {
         return EventSourceNotification.builder()
                 .withStatus(status)
                 .withEventSourceName("snapshot")
-                .withStreamName(streamName)
+                .withChannelName(channelName)
                 .withMessage(message)
                 .build();
     }

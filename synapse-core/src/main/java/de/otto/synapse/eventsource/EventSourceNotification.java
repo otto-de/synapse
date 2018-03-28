@@ -14,14 +14,14 @@ public class EventSourceNotification {
 
     private String eventSourceName;
     private ChannelPosition channelPosition;
-    private String streamName;
+    private String channelName;
     private Status status;
     private String message;
 
     private EventSourceNotification(Builder builder) {
         eventSourceName = builder.eventSourceName;
         channelPosition = builder.channelPosition;
-        streamName = builder.streamName;
+        channelName = builder.channelName;
         status = builder.status;
         message = builder.message;
     }
@@ -34,8 +34,8 @@ public class EventSourceNotification {
         return channelPosition;
     }
 
-    public String getStreamName() {
-        return streamName;
+    public String getChannelName() {
+        return channelName;
     }
 
     public Status getStatus() {
@@ -53,22 +53,22 @@ public class EventSourceNotification {
         EventSourceNotification that = (EventSourceNotification) o;
         return Objects.equals(eventSourceName, that.eventSourceName) &&
                 Objects.equals(channelPosition, that.channelPosition) &&
-                Objects.equals(streamName, that.streamName) &&
+                Objects.equals(channelName, that.channelName) &&
                 status == that.status &&
                 Objects.equals(message, that.message);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(eventSourceName, channelPosition, streamName, status, message);
+        return Objects.hash(eventSourceName, channelPosition, channelName, status, message);
     }
 
     @Override
     public String toString() {
         return "EventSourceNotification{" +
                 "eventSourceName='" + eventSourceName + '\'' +
-                ", streamPosition=" + channelPosition +
-                ", streamName='" + streamName + '\'' +
+                ", channelPosition=" + channelPosition +
+                ", channelName='" + channelName + '\'' +
                 ", status=" + status +
                 ", message='" + message + '\'' +
                 '}';
@@ -81,7 +81,7 @@ public class EventSourceNotification {
     public static Builder builder(EventSourceNotification copy) {
         Builder builder = new Builder();
         builder.channelPosition = copy.getChannelPosition();
-        builder.streamName = copy.getStreamName();
+        builder.channelName = copy.getChannelName();
         builder.status = copy.getStatus();
         return builder;
     }
@@ -89,7 +89,7 @@ public class EventSourceNotification {
     public static final class Builder {
         private String eventSourceName;
         private ChannelPosition channelPosition;
-        private String streamName;
+        private String channelName;
         private Status status;
         private String message;
 
@@ -101,13 +101,13 @@ public class EventSourceNotification {
             return this;
         }
 
-        public Builder withStreamPosition(ChannelPosition val) {
+        public Builder withChannelPosition(ChannelPosition val) {
             channelPosition = val;
             return this;
         }
 
-        public Builder withStreamName(String val) {
-            streamName = val;
+        public Builder withChannelName(String val) {
+            channelName = val;
             return this;
         }
 

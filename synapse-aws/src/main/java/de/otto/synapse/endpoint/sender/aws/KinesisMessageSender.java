@@ -26,10 +26,10 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
 
     private final RetryPutRecordsKinesisClient retryPutRecordsKinesisClient;
 
-    public KinesisMessageSender(final String streamName,
+    public KinesisMessageSender(final String channelName,
                                 final MessageTranslator<String> messageTranslator,
                                 final KinesisClient kinesisClient) {
-        super(streamName, messageTranslator);
+        super(channelName, messageTranslator);
         this.retryPutRecordsKinesisClient = new RetryPutRecordsKinesisClient(kinesisClient);
     }
 

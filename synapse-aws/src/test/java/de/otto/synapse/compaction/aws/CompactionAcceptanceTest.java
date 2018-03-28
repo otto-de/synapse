@@ -40,10 +40,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
@@ -162,8 +159,8 @@ public class CompactionAcceptanceTest {
         assertThat(jsonArray.isEmpty(), is(true));
     }
 
-    private TestStreamSource writeToStream(String streamName, String fileName) {
-        TestStreamSource streamSource = new TestStreamSource(kinesisClient, streamName, fileName);
+    private TestStreamSource writeToStream(String channelName, String fileName) {
+        TestStreamSource streamSource = new TestStreamSource(kinesisClient, channelName, fileName);
         streamSource.writeToStream();
         return streamSource;
     }

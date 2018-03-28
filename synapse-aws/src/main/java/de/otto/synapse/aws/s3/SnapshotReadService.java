@@ -61,7 +61,7 @@ public class SnapshotReadService {
         this.forcedSnapshotFile = file;
     }
 
-    public Optional<File> retrieveLatestSnapshot(String streamName) {
+    public Optional<File> retrieveLatestSnapshot(String channelName) {
         if (forcedSnapshotFile != null) {
             LOG.info("Use local Snapshot file: {}", forcedSnapshotFile);
             return Optional.of(forcedSnapshotFile);
@@ -70,7 +70,7 @@ public class SnapshotReadService {
         LOG.info("Start downloading snapshot from S3");
         infoDiskUsage();
 
-        Optional<File> latestSnapshot = getLatestSnapshot(streamName);
+        Optional<File> latestSnapshot = getLatestSnapshot(channelName);
         if (latestSnapshot.isPresent()) {
             LOG.info("Finished downloading snapshot {}", latestSnapshot.get().getName());
             infoDiskUsage();
@@ -80,8 +80,8 @@ public class SnapshotReadService {
         return latestSnapshot;
     }
 
-    Optional<File> getLatestSnapshot(final String streamName) {
-        Optional<S3Object> s3Object = fetchSnapshotMetadataFromS3(snapshotBucketName, streamName);
+    Optional<File> getLatestSnapshot(final String channelName) {
+        Optional<S3Object> s3Object = fetchSnapshotMetadataFromS3(snapshotBucketName, channelName);
         if (s3Object.isPresent()) {
             String latestSnapshotKey = s3Object.get().key();
             Path snapshotFile = tempFileHelper.getTempFile(latestSnapshotKey);
@@ -104,10 +104,10 @@ public class SnapshotReadService {
     }
 
 
-    Optional<S3Object> fetchSnapshotMetadataFromS3(String bucketName, String streamName) {
+    Optional<S3Object> fetchSnapshotMetadataFromS3(String bucketName, String channelName) {
         return s3Service.listAll(bucketName)
                 .stream()
-                .filter(o -> o.key().startsWith(getSnapshotFileNamePrefix(streamName)))
+                .filter(o -> o.key().startsWith(getSnapshotFileNamePrefix(channelName)))
                 .filter(o -> o.key().endsWith(COMPACTION_FILE_EXTENSION))
                 .sorted(comparing(S3Object::lastModified, reverseOrder()))
                 .findFirst();
@@ -142,13 +142,13 @@ public class SnapshotReadService {
         }
     }
 
-    public void deleteOlderSnapshots(String streamName) {
+    public void deleteOlderSnapshots(String channelName) {
         if (forcedSnapshotFile != null) {
             LOG.info("Skip deleting local Snapshot file: {}", forcedSnapshotFile);
             return;
         }
 
-        String snapshotFileNamePrefix = getSnapshotFileNamePrefix(streamName);
+        String snapshotFileNamePrefix = getSnapshotFileNamePrefix(channelName);
         String snapshotFileSuffix = ".json.zip";
         List<File> oldestFiles;
         try {

@@ -32,13 +32,13 @@ public class CompactionService {
         this.eventSourceBuilder = eventSourceBuilder;
     }
 
-    public String compact(final String streamName) {
-        LOG.info("Start compacting stream {}", streamName);
+    public String compact(final String channelName) {
+        LOG.info("Start compacting channel {}", channelName);
         stateRepository.clear();
 
         LOG.info("Start loading entries into inMemoryCache from snapshot");
 
-        final EventSource compactingKinesisEventSource = eventSourceBuilder.buildEventSource("compactionSource", streamName);
+        final EventSource compactingKinesisEventSource = eventSourceBuilder.buildEventSource("compactionSource", channelName);
         compactingKinesisEventSource.register(
                 new DefaultMessageConsumer<>(".*", String.class, stateRepository)
         );
@@ -48,7 +48,7 @@ public class CompactionService {
 
             LOG.info("Finished updating snapshot data. StateRepository now holds {} entries.", stateRepository.size());
 
-            return snapshotWriteService.writeSnapshot(streamName, currentPosition, stateRepository);
+            return snapshotWriteService.writeSnapshot(channelName, currentPosition, stateRepository);
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {

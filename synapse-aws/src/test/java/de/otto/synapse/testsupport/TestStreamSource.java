@@ -33,7 +33,7 @@ public class TestStreamSource {
 
     private static final Logger LOG = LoggerFactory.getLogger(TestStreamSource.class);
 
-    private final String streamName;
+    private final String channelName;
     private final KinesisClient kinesisClient;
     private final String inputFile;
     private final ObjectMapper objectMapper;
@@ -46,11 +46,11 @@ public class TestStreamSource {
      *
      * @param inputFile File containing record data to emit on each line
      */
-    public TestStreamSource(KinesisClient kinesisClient, String streamName, String inputFile) {
+    public TestStreamSource(KinesisClient kinesisClient, String channelName, String inputFile) {
         this.kinesisClient = kinesisClient;
         this.inputFile = inputFile;
         this.objectMapper = new ObjectMapper();
-        this.streamName = streamName;
+        this.channelName = channelName;
     }
 
     public void writeToStream() {
@@ -62,8 +62,8 @@ public class TestStreamSource {
             throw new IllegalStateException("Could not find input file: " + inputFile);
         }
         try {
-            putRecords(streamName, createFakeRecords());
-            processInputStream(streamName, inputStream);
+            putRecords(channelName, createFakeRecords());
+            processInputStream(channelName, inputStream);
         } catch (IOException e) {
             LOG.error("Encountered exception while putting data in source stream.", e);
         }
@@ -95,7 +95,7 @@ public class TestStreamSource {
      * @param inputStream the input stream to process
      * @throws IOException throw exception if error processing inputStream.
      */
-    protected void processInputStream(String streamName, InputStream inputStream) throws IOException {
+    protected void processInputStream(String channelName, InputStream inputStream) throws IOException {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
             int lines = 0;
@@ -109,21 +109,21 @@ public class TestStreamSource {
                         .build());
                 lines++;
                 if (lines % 100 == 0) {
-                    putRecords(streamName, records);
+                    putRecords(channelName, records);
                     LOG.info("writing data; lines: {}", lines);
                     records.clear();
                 }
             }
 
             if (!records.isEmpty()) {
-                putRecords(streamName, records);
+                putRecords(channelName, records);
             }
             LOG.info("Added {} records to stream source.", lines);
         }
     }
 
     private List<PutRecordsRequestEntry> createFakeRecords() {
-        Map<String, String> hashKeysForShards = getStartHashKeysForShards(streamName);
+        Map<String, String> hashKeysForShards = getStartHashKeysForShards(channelName);
         return hashKeysForShards.entrySet().stream()
                 .map(entry -> PutRecordsRequestEntry.builder()
                         .data(ByteBuffer.wrap("{}".getBytes(Charsets.UTF_8)))
@@ -133,13 +133,13 @@ public class TestStreamSource {
                 .collect(toImmutableList());
     }
 
-    public void putRecords(String streamName, List<PutRecordsRequestEntry> records) {
+    public void putRecords(String channelName, List<PutRecordsRequestEntry> records) {
         if (records.isEmpty()) {
             throw new IllegalArgumentException("records must not be empty");
         }
 
         PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder()
-                .streamName(streamName)
+                .streamName(channelName)
                 .records(records)
                 .build();
         List<PutRecordsResultEntry> writtenRecords = kinesisClient.putRecords(putRecordsRequest).records();
@@ -153,9 +153,9 @@ public class TestStreamSource {
         });
     }
 
-    private Map<String, String> getStartHashKeysForShards(String streamName) {
+    private Map<String, String> getStartHashKeysForShards(String channelName) {
         DescribeStreamRequest describeStreamRequest = DescribeStreamRequest.builder()
-                .streamName(streamName)
+                .streamName(channelName)
                 .build();
         try {
             return kinesisClient.describeStream(describeStreamRequest).streamDescription()

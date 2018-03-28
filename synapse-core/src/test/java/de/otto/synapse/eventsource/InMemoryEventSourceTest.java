@@ -63,13 +63,13 @@ public class InMemoryEventSourceTest {
         EventSourceNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
         assertThat(startedEvent.getStatus(), is(EventSourceNotification.Status.STARTED));
         assertThat(startedEvent.getChannelPosition(), is(ChannelPosition.fromHorizon()));
-        assertThat(startedEvent.getStreamName(), is("some-stream"));
+        assertThat(startedEvent.getChannelName(), is("some-stream"));
 
         EventSourceNotification finishedEvent = notificationArgumentCaptor.getAllValues().get(1);
         assertThat(finishedEvent.getStatus(), is(EventSourceNotification.Status.FINISHED));
         assertThat(finishedEvent.getChannelPosition().shard("some-stream").startFrom(), is(StartFrom.POSITION));
         assertThat(finishedEvent.getChannelPosition().shard("some-stream").position(), is("0"));
-        assertThat(finishedEvent.getStreamName(), is("some-stream"));
+        assertThat(finishedEvent.getChannelName(), is("some-stream"));
     }
     
     private static class StringMessageConsumer implements MessageConsumer<String> {

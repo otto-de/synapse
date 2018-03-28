@@ -18,7 +18,7 @@ public class TestEventConsumerConfiguration {
     public EventSourceBuilder defaultEventSourceBuilder(final MyServiceProperties properties,
                                                         final ApplicationEventPublisher eventPublisher,
                                                         final InMemoryChannels inMemoryChannels) {
-        final InMemoryChannel productStream = inMemoryChannels.getChannel(properties.getProductStreamName());
+        final InMemoryChannel productStream = inMemoryChannels.getChannel(properties.getProductChannelName());
         return (name, streamName) -> new InMemoryEventSource(name, productStream, eventPublisher);
     }
 

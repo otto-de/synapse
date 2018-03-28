@@ -81,8 +81,8 @@ public abstract class AbstractEventSource implements EventSource {
         if (eventPublisher != null) {
             EventSourceNotification notification = EventSourceNotification.builder()
                     .withEventSourceName(name)
-                    .withStreamName(this.getChannelName())
-                    .withStreamPosition(channelPosition)
+                    .withChannelName(this.getChannelName())
+                    .withChannelPosition(channelPosition)
                     .withStatus(status)
                     .withMessage(message)
                     .build();
