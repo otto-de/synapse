@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.util.Collections.synchronizedList;
-import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
@@ -76,7 +75,7 @@ public class KinesisEventSourceIntegrationTest {
     @PostConstruct
     public void setup() {
         KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, STREAM_NAME, EXPECTED_NUMBER_OF_SHARDS);
-        KinesisMessageLog kinesisMessageLog = new KinesisMessageLog(kinesisClient, STREAM_NAME, newFixedThreadPool(2));
+        KinesisMessageLog kinesisMessageLog = new KinesisMessageLog(kinesisClient, STREAM_NAME);
         this.eventSource = new KinesisEventSource("kinesisEventSource", kinesisMessageLog, eventPublisher, objectMapper);
         this.eventSource.register(MessageConsumer.of(".*", String.class, (message) -> messages.add(message)));
     }

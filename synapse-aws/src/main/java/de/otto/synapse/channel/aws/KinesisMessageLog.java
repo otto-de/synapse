@@ -1,6 +1,7 @@
 package de.otto.synapse.channel.aws;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
@@ -31,19 +32,11 @@ public class KinesisMessageLog implements MessageLog {
 
     private final String streamName;
     private final KinesisClient kinesisClient;
-    private final ExecutorService executorService;
 
     public KinesisMessageLog(final KinesisClient kinesisClient,
                              final String streamName) {
-        this(kinesisClient, streamName, newFixedThreadPool(1));
-    }
-
-    public KinesisMessageLog(final KinesisClient kinesisClient,
-                             final String streamName,
-                             final ExecutorService executorService) {
         this.streamName = streamName;
         this.kinesisClient = kinesisClient;
-        this.executorService = executorService;
     }
 
     @Override
@@ -56,6 +49,10 @@ public class KinesisMessageLog implements MessageLog {
                                          final Predicate<Message<?>> stopCondition,
                                          final MessageConsumer<String> consumer) {
         final List<KinesisShard> kinesisShards = retrieveAllOpenShards();
+
+        ExecutorService executorService = newFixedThreadPool(kinesisShards.size(),
+                new ThreadFactoryBuilder().setNameFormat("kinesis-message-log-%d").build());
+
         try {
             final List<CompletableFuture<ChannelPosition>> futureShardPositions = kinesisShards
                     .stream()
