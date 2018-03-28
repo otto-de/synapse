@@ -1,6 +1,6 @@
 package de.otto.synapse.configuration.aws;
 
-import de.otto.synapse.client.aws.LocalS3Client;
+import de.otto.synapse.testsupport.LocalS3Client;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.services.s3.S3Client;

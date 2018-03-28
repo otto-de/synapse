@@ -1,4 +1,4 @@
-package de.otto.synapse.client.aws;
+package de.otto.synapse.testsupport;
 
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.google.common.io.ByteStreams.toByteArray;
-import static de.otto.synapse.client.aws.BucketItem.bucketItemBuilder;
+import static de.otto.synapse.testsupport.BucketItem.bucketItemBuilder;
 
 public class LocalS3Client implements S3Client {
 

@@ -1,4 +1,4 @@
-package de.otto.synapse.client.aws;
+package de.otto.synapse.testsupport;
 
 import java.time.Instant;
 import java.util.Arrays;

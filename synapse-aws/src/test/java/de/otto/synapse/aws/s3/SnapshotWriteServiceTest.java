@@ -78,7 +78,6 @@ public class SnapshotWriteServiceTest {
         StateRepository<String> stateRepository = new ConcurrentHashMapStateRepository<>();
         stateRepository.put("testKey", "{\"testValue1\": \"value1\"}");
         stateRepository.put("testKey2", "{\"testValue2\": \"value2\"}");
-//        stateRepository.put("testKey2", "testValue2");
 
         //when
         ChannelPosition channelPosition = ChannelPosition.of(ImmutableMap.of("shard1", "1234", "shard2", "abcde"));
@@ -87,15 +86,12 @@ public class SnapshotWriteServiceTest {
         //then
         Map<String, Map> data = new HashMap<>();
 
-        SnapshotConsumerService snapshotConsumerService = new SnapshotConsumerService();
 
         final MessageConsumer<Map> messageConsumer = MessageConsumer.of(".*", Map.class,
-                (event) -> {
-                    System.out.println(event);
-                    data.put(event.getKey(), event.getPayload());
-                });
-        ChannelPosition actualChannelPosition = snapshotConsumerService.consumeSnapshot(snapshot,
-                "test",
+                (event) -> data.put(event.getKey(), event.getPayload()));
+
+        ChannelPosition actualChannelPosition = new SnapshotConsumerService().consumeSnapshot(snapshot,
+                STREAM_NAME,
                 (event) -> false,
                 new DispatchingMessageConsumer(OBJECT_MAPPER, singletonList(messageConsumer)));
 

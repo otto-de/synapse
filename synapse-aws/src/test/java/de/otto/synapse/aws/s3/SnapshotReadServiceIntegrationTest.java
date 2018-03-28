@@ -37,13 +37,13 @@ public class SnapshotReadServiceIntegrationTest {
     private SnapshotReadService snapshotService;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         s3Service.createBucket(S3_UTILS_TEST_BUCKET);
         s3Service.deleteAllObjectsInBucket(S3_UTILS_TEST_BUCKET);
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         s3Service.deleteAllObjectsInBucket(S3_UTILS_TEST_BUCKET);
     }
 
@@ -65,7 +65,7 @@ public class SnapshotReadServiceIntegrationTest {
     }
 
     @Test
-    public void shouldReturnOptionalEmptyWhenNoFileInBucket() throws Exception {
+    public void shouldReturnOptionalEmptyWhenNoFileInBucket() {
         //when
         Optional<S3Object> s3Object = snapshotService.fetchSnapshotMetadataFromS3(S3_UTILS_TEST_BUCKET, "DOES_NOT_EXIST");
 

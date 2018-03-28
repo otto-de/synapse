@@ -1,5 +1,6 @@
 package de.otto.synapse.client.aws;
 
+import de.otto.synapse.testsupport.LocalS3Client;
 import org.junit.Before;
 import org.junit.Test;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -23,13 +24,13 @@ public class LocalS3ClientTest {
     private LocalS3Client testee;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         testee = new LocalS3Client();
         testee.createBucket(CreateBucketRequest.builder().bucket("someBucket").build());
     }
 
     @Test
-    public void shouldListObjectsInBucket() throws Exception {
+    public void shouldListObjectsInBucket() {
         // given
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket("someBucket")
@@ -49,7 +50,7 @@ public class LocalS3ClientTest {
     }
 
     @Test
-    public void deleteShouldRemoveItemsFromBucket() throws Exception {
+    public void deleteShouldRemoveItemsFromBucket() {
         // given
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket("someBucket")
@@ -71,7 +72,7 @@ public class LocalS3ClientTest {
     }
 
     @Test
-    public void listBucketsShouldReturnSingleBucket() throws Exception {
+    public void listBucketsShouldReturnSingleBucket() {
         assertEquals(testee.listBuckets()
                         .buckets()
                         .stream()
@@ -81,7 +82,7 @@ public class LocalS3ClientTest {
     }
 
     @Test
-    public void listBucketsShouldReturnsSecondBucketSingleBucket() throws Exception {
+    public void listBucketsShouldReturnsSecondBucketSingleBucket() {
         // when
         testee.createBucket(CreateBucketRequest.builder().bucket("newBucket").build());
 
