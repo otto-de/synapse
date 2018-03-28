@@ -14,7 +14,7 @@ import org.springframework.util.MultiValueMap;
 import java.util.Objects;
 
 import static com.google.common.base.Strings.emptyToNull;
-import static de.otto.synapse.annotation.BeanNameHelper.beanNameForStream;
+import static de.otto.synapse.annotation.BeanNameHelper.beanNameForChannel;
 import static java.lang.String.format;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.beans.factory.support.AbstractBeanDefinition.AUTOWIRE_BY_NAME;
@@ -63,13 +63,13 @@ public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, 
     private void registerMultipleEventSources(final BeanDefinitionRegistry registry,
                                               final AnnotationAttributes[] annotationAttributesArr) {
         for (final AnnotationAttributes annotationAttributes : annotationAttributesArr) {
-            final String streamName = environment.resolvePlaceholders(annotationAttributes.getString("channelName"));
+            final String channelName = environment.resolvePlaceholders(annotationAttributes.getString("channelName"));
             final String beanName = Objects.toString(
                     emptyToNull(annotationAttributes.getString("name")),
-                    beanNameForStream(streamName));
+                    beanNameForChannel(channelName));
             final String builderName = annotationAttributes.getString("builder");
             if (!registry.containsBeanDefinition(beanName)) {
-                registerBeanDefinition(registry, beanName, streamName.isEmpty() ? beanName : streamName, builderName);
+                registerBeanDefinition(registry, beanName, channelName.isEmpty() ? beanName : channelName, builderName);
             } else {
                 throw new BeanCreationException(beanName, format("EventSource %s is already registered.", beanName));
             }
@@ -83,7 +83,7 @@ public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, 
                     eventSourceAttr.getFirst("channelName").toString());
             final String beanName = Objects.toString(
                     emptyToNull(eventSourceAttr.getFirst("name").toString()),
-                    beanNameForStream(streamName));
+                    beanNameForChannel(streamName));
             final String builderName = eventSourceAttr.getFirst("builder").toString();
 
             if (!registry.containsBeanDefinition(beanName)) {
