@@ -2,9 +2,6 @@ management:
     context-path: /internal
 
 synapse:
-  snapshot:
-    enabled: true
-    bucket-name: synapse-example-snapshot-bucket
   consumer-process:
     enabled: true
 
