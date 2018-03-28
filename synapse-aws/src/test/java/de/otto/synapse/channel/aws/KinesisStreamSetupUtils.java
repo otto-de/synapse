@@ -36,8 +36,9 @@ public class KinesisStreamSetupUtils {
                 describeStreamResponse = kinesisClient.describeStream(DescribeStreamRequest.builder()
                         .streamName(streamName)
                         .build());
+                
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }

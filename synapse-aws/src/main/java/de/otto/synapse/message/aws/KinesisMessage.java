@@ -5,6 +5,7 @@ import software.amazon.awssdk.services.kinesis.model.Record;
 
 import java.nio.ByteBuffer;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.function.Function;
 
 import static de.otto.synapse.channel.ChannelPosition.of;
@@ -28,7 +29,11 @@ public class KinesisMessage<T> extends Message<T> {
     public static Message<String> kinesisMessage(final String shard,
                                                  final Duration durationBehind,
                                                  final Record record) {
-        return new KinesisMessage<>(shard, durationBehind, record, BYTE_BUFFER_STRING);
+        if (record == null) {
+            return new KinesisMessage<>(shard, durationBehind, BYTE_BUFFER_STRING);
+        } else {
+            return new KinesisMessage<>(shard, durationBehind, record, BYTE_BUFFER_STRING);
+        }
     }
 
     private KinesisMessage(final String shard,
@@ -43,6 +48,19 @@ public class KinesisMessage<T> extends Message<T> {
                         durationBehind
                 ),
                 decoder.apply(record.data()));
+    }
+
+    private KinesisMessage(final String shard,
+                           final Duration durationBehind,
+                           final Function<ByteBuffer, T> decoder) {
+        super(
+                "no_key",
+                responseHeader(
+                        of(shard, "unknown"),
+                        Instant.MIN,
+                        durationBehind
+                ),
+                decoder.apply(ByteBuffer.wrap(new byte[0])));
     }
 
 }

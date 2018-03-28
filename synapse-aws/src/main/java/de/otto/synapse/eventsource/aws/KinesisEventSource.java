@@ -2,24 +2,17 @@ package de.otto.synapse.eventsource.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.ChannelResponse;
-import de.otto.synapse.channel.Status;
 import de.otto.synapse.channel.aws.MessageLog;
 import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.eventsource.AbstractEventSource;
 import de.otto.synapse.message.Message;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.function.Predicate;
 
 import static de.otto.synapse.consumer.EventSourceNotification.Status.FINISHED;
-import static java.lang.Thread.sleep;
 
 public class KinesisEventSource extends AbstractEventSource {
-
-    private static final Logger LOG = LoggerFactory.getLogger(KinesisEventSource.class);
 
     private final MessageLog messageLog;
 
@@ -44,42 +37,16 @@ public class KinesisEventSource extends AbstractEventSource {
     @Override
     public ChannelPosition consumeAll(final ChannelPosition startFrom,
                                       final Predicate<Message<?>> stopCondition) {
-        ChannelPosition currentPosition = startFrom;
         publishEvent(startFrom, EventSourceNotification.Status.STARTED, "Consuming messages from Kinesis.");
         try {
-            ChannelResponse channelResponse;
-            boolean consumeMore;
-            do {
-                channelResponse = messageLog.consumeStream(currentPosition, stopCondition, dispatchingMessageConsumer());
-                currentPosition = channelResponse.getChannelPosition();
-                consumeMore = channelResponse.getStatus() != Status.STOPPED && !isStopping();
-                if (consumeMore) {
-                    consumeMore = waitABit();
-                }
-            } while (consumeMore);
+            ChannelPosition currentPosition = messageLog.consumeStream(startFrom, stopCondition, dispatchingMessageConsumer());
             publishEvent(currentPosition, FINISHED, "Stopped consuming messages from Kinesis.");
             return currentPosition;
         } catch (final RuntimeException e) {
-            publishEvent(currentPosition, EventSourceNotification.Status.FAILED, "Error consuming messages from Kinesis: " + e.getMessage());
+            publishEvent(startFrom, EventSourceNotification.Status.FAILED, "Error consuming messages from Kinesis: " + e.getMessage());
             throw e;
         }
 
-    }
-
-    /**
-     * Waits one second before the next page of records is requested from Kinesis.
-     *
-     * @return false, if waiting was interrupted, true otherwise.
-     */
-    private boolean waitABit() {
-        try {
-            /* See DECISIONS.md - Question #1 */
-            sleep(1000);
-        } catch (InterruptedException e) {
-            LOG.warn("Thread got interrupted");
-            return false;
-        }
-        return true;
     }
 
 }

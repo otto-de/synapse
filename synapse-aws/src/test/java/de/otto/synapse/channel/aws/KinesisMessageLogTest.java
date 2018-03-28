@@ -1,10 +1,7 @@
 package de.otto.synapse.channel.aws;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.ChannelResponse;
-import de.otto.synapse.channel.Status;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
 import org.junit.Before;
@@ -22,15 +19,11 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 
-import static de.otto.synapse.channel.Status.OK;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KinesisMessageLogTest {
@@ -47,12 +40,12 @@ public class KinesisMessageLogTest {
     private int nextKey = 0;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         kinesisMessageLog = new KinesisMessageLog(kinesisClient, "streamName");
     }
 
     @Test
-    public void shouldRetrieveEmptyListOfShards() throws Exception {
+    public void shouldRetrieveEmptyListOfShards() {
         // given
         describeStreamResponse(ImmutableList.of());
 
@@ -64,7 +57,7 @@ public class KinesisMessageLogTest {
     }
 
     @Test
-    public void shouldRetrieveSingleOpenShard() throws Exception {
+    public void shouldRetrieveSingleOpenShard() {
         // given
         describeStreamResponse(ImmutableList.of(someShard("shard1", true)));
 
@@ -77,7 +70,7 @@ public class KinesisMessageLogTest {
     }
 
     @Test
-    public void shouldRetrieveOnlyOpenShards() throws Exception {
+    public void shouldRetrieveOnlyOpenShards() {
         // given
         describeStreamResponse(
                 ImmutableList.of(
@@ -95,7 +88,7 @@ public class KinesisMessageLogTest {
     }
 
     @Test
-    public void shouldRetrieveShardsOfMultipleResponses() throws Exception {
+    public void shouldRetrieveShardsOfMultipleResponses() {
         // given
         describeStreamResponse(
                 ImmutableList.of(
@@ -117,7 +110,7 @@ public class KinesisMessageLogTest {
     }
 
     @Test
-    public void shouldRetrieveShardsOfMultipleResponsesWithFirstAllClosed() throws Exception {
+    public void shouldRetrieveShardsOfMultipleResponsesWithFirstAllClosed() {
         // given
         describeStreamResponse(
                 ImmutableList.of(
@@ -139,8 +132,6 @@ public class KinesisMessageLogTest {
     @Test
     public void shouldConsumeAllEventsFromKinesis() {
         // given
-        ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
-
         describeStreamResponse(
                 ImmutableList.of(
                         someShard("shard1", true)));
@@ -149,10 +140,7 @@ public class KinesisMessageLogTest {
         KinesisMessageLog kinesisMessageLog = new KinesisMessageLog(kinesisClient, "testStream");
 
         // when
-        ChannelResponse response = ChannelResponse.of(OK, initialPositions);
-        do {
-            response = kinesisMessageLog.consumeStream(response.getChannelPosition(), this::stopIfGreenForString, messageConsumer);
-        } while(response.getStatus() != Status.STOPPED);
+        ChannelPosition finalChannelPosition = kinesisMessageLog.consumeStream(ChannelPosition.fromHorizon(), this::stopIfGreenForString, messageConsumer);
 
         // then
         verify(messageConsumer, times(3)).accept(messageArgumentCaptor.capture());
@@ -161,6 +149,7 @@ public class KinesisMessageLogTest {
         assertThat(messages.get(0).getPayload(), is("{\"data\":\"blue\"}"));
         assertThat(messages.get(1).getPayload(), is(nullValue()));
         assertThat(messages.get(2).getPayload(), is("{\"data\":\"green\"}"));
+        assertThat(finalChannelPosition.positionOf("shard1"), is("sequence-green"));
     }
 
     private Shard someShard(String shardId, boolean open) {

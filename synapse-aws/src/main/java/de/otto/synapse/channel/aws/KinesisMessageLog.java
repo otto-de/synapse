@@ -2,7 +2,6 @@ package de.otto.synapse.channel.aws;
 
 import com.google.common.annotations.VisibleForTesting;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
@@ -30,12 +29,9 @@ public class KinesisMessageLog implements MessageLog {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisMessageLog.class);
 
-
     private final String streamName;
     private final KinesisClient kinesisClient;
     private final ExecutorService executorService;
-
-    private List<KinesisShard> kinesisShards;
 
     public KinesisMessageLog(final KinesisClient kinesisClient,
                              final String streamName) {
@@ -56,27 +52,27 @@ public class KinesisMessageLog implements MessageLog {
     }
 
     @Override
-    public ChannelResponse consumeStream(final ChannelPosition startFrom,
+    public ChannelPosition consumeStream(final ChannelPosition startFrom,
                                          final Predicate<Message<?>> stopCondition,
                                          final MessageConsumer<String> consumer) {
         final List<KinesisShard> kinesisShards = retrieveAllOpenShards();
         try {
-            final List<CompletableFuture<ChannelResponse>> futureShardPositions = kinesisShards
+            final List<CompletableFuture<ChannelPosition>> futureShardPositions = kinesisShards
                     .stream()
                     .map(shard -> supplyAsync(
-                            () -> shard.consumeShard(startFrom, stopCondition, consumer),
+                            () -> shard.consumeRecords(startFrom, stopCondition, consumer),
                             executorService))
                     .collect(toList());
 
             // don't chain futureShardPositions with CompletableFuture::join as lazy execution will prevent threads from
             // running in parallel
 
-            return ChannelResponse.of(
-                    futureShardPositions
-                            .stream()
-                            .map(CompletableFuture::join)
-                            .collect(toList())
-            );
+            List<ChannelPosition> shardPositions = futureShardPositions
+                    .stream()
+                    .map(CompletableFuture::join)
+                    .collect(toList());
+
+            return ChannelPosition.merge(shardPositions);
         } catch (final RuntimeException e) {
             LOG.error("Failed to consume from Kinesis stream {}: {}", streamName, e.getMessage());
             // When an exception occurs in a completable future's thread, other threads continue running.
@@ -97,13 +93,10 @@ public class KinesisMessageLog implements MessageLog {
 
     @VisibleForTesting
     List<KinesisShard> retrieveAllOpenShards() {
-        if (kinesisShards == null) {
-            kinesisShards = retrieveAllShards().stream()
-                    .filter(this::isShardOpen)
-                    .map(shard -> new KinesisShard(shard.shardId(), streamName, kinesisClient))
-                    .collect(toImmutableList());
-        }
-        return kinesisShards;
+        return retrieveAllShards().stream()
+                .filter(this::isShardOpen)
+                .map(shard -> new KinesisShard(shard.shardId(), streamName, kinesisClient))
+                .collect(toImmutableList());
     }
 
     private List<Shard> retrieveAllShards() {

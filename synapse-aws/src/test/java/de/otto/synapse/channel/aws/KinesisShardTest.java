@@ -1,7 +1,6 @@
 package de.otto.synapse.channel.aws;
 
-import de.otto.synapse.channel.ChannelResponse;
-import de.otto.synapse.channel.Status;
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
 import org.junit.Before;
@@ -23,10 +22,7 @@ import static java.time.Instant.now;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static software.amazon.awssdk.services.kinesis.model.ShardIteratorType.TRIM_HORIZON;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -136,19 +132,18 @@ public class KinesisShardTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
 
         // when
-        final ChannelResponse channelResponse = kinesisShard.consumeShard(fromHorizon(), (message) -> true, consumer);
+        final ChannelPosition channelPosition = kinesisShard.consumeRecords(fromHorizon(), (message) -> true, consumer);
 
         // then
         verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record1));
         verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record2));
         verifyNoMoreInteractions(consumer);
 
-        assertThat(channelResponse.getStatus(), is(Status.STOPPED));
-        assertThat(channelResponse.getChannelPosition().positionOf("someShard"), is("2"));
+        assertThat(channelPosition.positionOf("someShard"), is("2"));
     }
 
     @Test
-    public void shouldPassMillisBehindLatestWithRecordToStopCondition() throws Exception {
+    public void shouldPassMillisBehindLatestWithRecordToStopCondition() {
         // given
         final Instant now = now();
         final Record record = Record.builder()
@@ -167,39 +162,38 @@ public class KinesisShardTest {
         when(mockStopCondition.test(any())).thenReturn(true);
 
         // when
-        final ChannelResponse channelResponse = kinesisShard.consumeShard(fromHorizon(), mockStopCondition, consumer);
+        ChannelPosition channelPosition = kinesisShard.consumeRecords(fromHorizon(), mockStopCondition, consumer);
 
         // then
-        assertThat(channelResponse.getStatus(), is(Status.STOPPED));
-        verify(mockStopCondition).test(
-                kinesisMessage("someShard", ofMillis(1234L), record)
-        );
+        verify(mockStopCondition).test(kinesisMessage("someShard", ofMillis(1234L), record));
+        assertThat(channelPosition.positionOf("someShard"), is("1"));
     }
 
     @Test
-    public void shouldReturnWithOkWhenThereAreNoRecords() throws Exception {
+    public void shouldReturnEmptyPositionWhenThereAreNoRecords() {
         // given
-        final GetRecordsResponse response = GetRecordsResponse.builder()
+        GetRecordsResponse response = GetRecordsResponse.builder()
                 .records()
                 .nextShardIterator("nextShardIterator")
                 .millisBehindLatest(1234L)
                 .build();
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
+        when(mockStopCondition.test(any())).thenReturn(true);
 
         // when
-        final ChannelResponse channelResponse = kinesisShard.consumeShard(fromHorizon(), mockStopCondition, consumer);
+        ChannelPosition channelPosition = kinesisShard.consumeRecords(fromHorizon(), mockStopCondition, consumer);
 
         // then
-        assertThat(channelResponse.getStatus(), is(Status.OK));
+        assertThat(channelPosition.positionOf("someShard"), is("0"));
     }
 
     @Test(expected = RuntimeException.class)
-    public void shouldPropagateException() throws Exception {
+    public void shouldPropagateException() {
         // given
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenThrow(RuntimeException.class);
 
         // when
-        kinesisShard.consumeShard(fromHorizon(), mockStopCondition, consumer);
+        kinesisShard.consumeRecords(fromHorizon(), mockStopCondition, consumer);
 
         // then
         // exception is thrown
@@ -230,7 +224,7 @@ public class KinesisShardTest {
         doThrow(new RuntimeException("forced exception for test")).when(consumer).accept(kinesisMessage);
 
         // when
-        kinesisShard.consumeShard(fromHorizon(), (message) -> true, consumer);
+        kinesisShard.consumeRecords(fromHorizon(), (message) -> message.getKey().equals("second"), consumer);
 
         //then
         verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record1));

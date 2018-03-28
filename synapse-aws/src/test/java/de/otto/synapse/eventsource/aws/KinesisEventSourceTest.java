@@ -4,10 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.ChannelResponse;
-import de.otto.synapse.channel.Status;
 import de.otto.synapse.channel.aws.KinesisMessageLog;
-import de.otto.synapse.channel.aws.KinesisShard;
 import de.otto.synapse.consumer.EventSourceNotification;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
@@ -15,11 +12,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationEventPublisher;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
 import java.nio.ByteBuffer;
@@ -34,9 +29,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -46,16 +39,7 @@ public class KinesisEventSourceTest {
     private KinesisMessageLog kinesisMessageLog;
 
     @Mock
-    private KinesisClient kinesisClient;
-
-    @Mock
     private MessageConsumer<TestData> testDataConsumer;
-
-    @Mock
-    private MessageConsumer<String> stringConsumer;
-
-    @Captor
-    private ArgumentCaptor<Message<String>> stringCaptor;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
@@ -68,10 +52,9 @@ public class KinesisEventSourceTest {
     @Before
     public void setUp() {
         initMocks(this);
-        KinesisShard shard1 = new KinesisShard("shard1", "test", kinesisClient);
         when(kinesisMessageLog.getStreamName()).thenReturn("test");
         when(kinesisMessageLog.consumeStream(any(ChannelPosition.class), any(Predicate.class), any(MessageConsumer.class)))
-                .thenReturn(ChannelResponse.of(Status.OK, ChannelPosition.of(singletonMap("shard1", "4711"))));
+                .thenReturn(ChannelPosition.of(singletonMap("shard1", "4711")));
     }
 
     @Test
@@ -108,7 +91,7 @@ public class KinesisEventSourceTest {
         // given
         ChannelPosition initialPositions = ChannelPosition.of(ImmutableMap.of("shard1", "xyz"));
         when(kinesisMessageLog.consumeStream(any(ChannelPosition.class), any(Predicate.class), any(MessageConsumer.class)))
-                .thenReturn(ChannelResponse.of(Status.STOPPED, ChannelPosition.of(singletonMap("shard1", "4711"))));
+                .thenReturn(ChannelPosition.of(singletonMap("shard1", "4711")));
 
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisMessageLog, eventPublisher, objectMapper);
