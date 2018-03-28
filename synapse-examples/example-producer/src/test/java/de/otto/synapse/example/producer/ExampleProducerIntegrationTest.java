@@ -42,7 +42,7 @@ public class ExampleProducerIntegrationTest {
                 .untilAtomic(testConsumer.count, greaterThanOrEqualTo(1));
     }
 
-    @EnableEventSource(name = "inMemoryStream", streamName = "someStreamName")
+    @EnableEventSource(name = "inMemoryStream", channelName = "someStreamName")
     @Configuration
     static class InMemoryTestConsumerConfiguration {
 

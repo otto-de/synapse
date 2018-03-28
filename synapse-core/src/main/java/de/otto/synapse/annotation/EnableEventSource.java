@@ -1,7 +1,9 @@
 package de.otto.synapse.annotation;
 
 import de.otto.synapse.eventsource.EventSource;
+import de.otto.synapse.eventsource.EventSourceBuilder;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.annotation.AliasFor;
 
 import java.lang.annotation.*;
 
@@ -9,11 +11,14 @@ import java.lang.annotation.*;
  * Enables auto-configuration of {@link EventSource event sources}.
  * <p>
  *     A Spring bean with type {@code EventSource} is registered at the ApplicationContext. The name of the
- *     beans is specified by {@link #name()}.
+ *     beans can be specified by {@link #name()}.
  * </p>
  * <p>
- *     The {@link EventSource#getChannelName()} is configured using {@link #streamName()}. If {@code streamName} is not set, the
- *     name of the {@link #name() bean} is used instead.
+ *     EventSources are created using one of the registered {@link EventSourceBuilder}.
+ *     The {@link #builder()} attribute is used to select the {@code EventSourceBuilder} instance.
+ * </p>
+ * <p>
+ *     The {@link EventSource#getChannelName()} is configured using {@link #channelName()}.
  * </p>
  */
 @Target(ElementType.TYPE)
@@ -26,24 +31,24 @@ public @interface EnableEventSource {
     /**
      * The name of the registered EventSource bean.
      * <p>
-     *     If {@link #name} is not set, the name of the bean is derived from the name of the stream.
+     *     If {@link #name} is not set, the name of the bean is derived from the name of the message channel.
      * </p>
      *
      * @return bean name
      */
-    String name();
+    String name() default "";
 
     /**
-     * The name of the event stream.
+     * The name of the message channel.
      * <p>
-     *     Resolving placeholders like "${my.stream.name}" is supported for this property.
+     *     Resolving placeholders like "${my.channel.name}" is supported for this property.
      * </p>
      * @return stream name
      */
-    String streamName();
+    String channelName();
 
     /**
-     * The optional name of the EventSourceBuilder bean used to construct the EventSource instance.
+     * The optional name of the {@link EventSourceBuilder} bean used to construct the {@link EventSource} instance.
      * <p>
      *     By default, the bean named 'defaultEventSourceBuilder' is used.
      * </p>

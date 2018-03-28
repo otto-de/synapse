@@ -114,7 +114,7 @@ public class MessageConsumerIntegrationTest {
         }
     }
 
-    @EnableEventSource(name = "test", streamName = "test-stream")
+    @EnableEventSource(name = "test", channelName = "test-stream")
     public static class TestConfiguration {
 
         @Bean

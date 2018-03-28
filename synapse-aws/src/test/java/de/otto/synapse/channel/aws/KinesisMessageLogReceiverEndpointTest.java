@@ -46,7 +46,7 @@ public class KinesisMessageLogReceiverEndpointTest {
 
     @Before
     public void setUp() throws Exception {
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper,"streamName");
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper,"channelName");
         when(messageConsumer.keyPattern()).thenReturn(MATCH_ALL);
         when(messageConsumer.payloadType()).thenReturn(String.class);
     }

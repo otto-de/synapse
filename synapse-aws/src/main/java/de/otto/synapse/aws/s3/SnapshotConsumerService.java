@@ -52,7 +52,7 @@ public class SnapshotConsumerService {
 
                                     /* TODO: Hier wird der StreamName als ShardName verwendet. Damit wird der Message _keine_ sinnvolle Position im Header mitgegeben! */
 
-                                    null, /*shardPositions.shard(streamName).position(),*/
+                                    null, /*shardPositions.shard(channelName).position(),*/
                                     stopCondition,
                                     messageConsumer);
                             break;

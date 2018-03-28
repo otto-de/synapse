@@ -20,8 +20,8 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableConfigurationProperties({MyServiceProperties.class})
-@EnableEventSource(name = "bananaSource",  streamName = "${exampleservice.banana-channel}")
-@EnableEventSource(name = "productSource", streamName = "${exampleservice.product-channel}")
+@EnableEventSource(name = "bananaSource",  channelName = "${exampleservice.banana-channel}")
+@EnableEventSource(name = "productSource", channelName = "${exampleservice.product-channel}")
 public class ExampleConfiguration {
 
     @Bean

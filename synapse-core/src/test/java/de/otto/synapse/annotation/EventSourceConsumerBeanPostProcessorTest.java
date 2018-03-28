@@ -108,8 +108,8 @@ public class EventSourceConsumerBeanPostProcessorTest {
         assertThat(pattern).containsExactlyInAnyOrder("apple.*", "banana.*");
     }
 
-    @EnableEventSource(name = "testEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
-    @EnableEventSource(name = "otherStreamTestSource", streamName = "other-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "testEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "otherStreamTestSource", channelName = "other-stream", builder = "inMemEventSourceBuilder")
     static class ThreeConsumersAtTwoEventSourcesConfiguration {
         @Bean
         public TestConsumer test() {
@@ -117,8 +117,8 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
-    @EnableEventSource(name = "someTestEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
-    @EnableEventSource(name = "otherTestEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "someTestEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "otherTestEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
     static class TwoEventSourcesWithSameStreamAndUnspecificConsumerConfiguration {
         @Bean
         public SingleUnspecificConsumer test() {
@@ -126,8 +126,8 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
-    @EnableEventSource(name = "someTestEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
-    @EnableEventSource(name = "otherTestEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "someTestEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "otherTestEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
     static class TwoEventSourcesWithSameStreamAndSecificConsumerConfiguration {
         @Bean
         public SingleSpecificConsumer test() {
@@ -135,7 +135,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
-    @EnableEventSource(name = "testEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "testEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
     static class TestConfigurationDifferentPayload {
         @Bean
         public TestConsumerWithSameStreamNameAndDifferentPayload test() {

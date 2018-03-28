@@ -63,7 +63,7 @@ public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, 
     private void registerMultipleEventSources(final BeanDefinitionRegistry registry,
                                               final AnnotationAttributes[] annotationAttributesArr) {
         for (final AnnotationAttributes annotationAttributes : annotationAttributesArr) {
-            final String streamName = environment.resolvePlaceholders(annotationAttributes.getString("streamName"));
+            final String streamName = environment.resolvePlaceholders(annotationAttributes.getString("channelName"));
             final String beanName = Objects.toString(
                     emptyToNull(annotationAttributes.getString("name")),
                     beanNameForStream(streamName));
@@ -80,7 +80,7 @@ public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, 
                                            final MultiValueMap<String, Object> eventSourceAttr) {
         if (eventSourceAttr != null) {
             final String streamName = environment.resolvePlaceholders(
-                    eventSourceAttr.getFirst("streamName").toString());
+                    eventSourceAttr.getFirst("channelName").toString());
             final String beanName = Objects.toString(
                     emptyToNull(eventSourceAttr.getFirst("name").toString()),
                     beanNameForStream(streamName));
@@ -108,7 +108,7 @@ public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, 
                         .setAutowireMode(AUTOWIRE_BY_NAME)
                         .getBeanDefinition()
         );
-        LOG.info("Registered EventSource {} with for streamName {} using {}", beanName, channelName, builderName);
+        LOG.info("Registered EventSource {} with for channelName {} using {}", beanName, channelName, builderName);
     }
 
 }

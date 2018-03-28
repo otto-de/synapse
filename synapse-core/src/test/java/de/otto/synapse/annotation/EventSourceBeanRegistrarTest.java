@@ -24,22 +24,22 @@ public class EventSourceBeanRegistrarTest {
         }
     }
 
-    @EnableEventSource(name = "testEventSource", streamName = "test-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "testEventSource", channelName = "test-stream", builder = "inMemEventSourceBuilder")
     static class SingleEventSourceTestConfig {
     }
 
-    @EnableEventSource(name = "brokenEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
-    @EnableEventSource(name = "brokenEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "brokenEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "brokenEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
     static class MultiEventSourceTestConfigWithSameNames {
     }
 
-    @EnableEventSource(name = "firstEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
-    @EnableEventSource(name = "secondEventSource", streamName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "firstEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "secondEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
     static class MultiEventSourceTestConfigWithDifferentNames {
     }
 
-    @EnableEventSource(name = "firstEventSource", streamName = "first-stream")
-    @EnableEventSource(name = "secondEventSource", streamName = "${test.stream-name}")
+    @EnableEventSource(name = "firstEventSource", channelName = "first-stream")
+    @EnableEventSource(name = "secondEventSource", channelName = "${test.stream-name}")
     static class RepeatableMultiEventSourceTestConfig {
     }
 
