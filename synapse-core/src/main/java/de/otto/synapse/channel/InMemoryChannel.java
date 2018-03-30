@@ -1,7 +1,6 @@
 package de.otto.synapse.channel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
@@ -20,7 +19,7 @@ import static java.time.Instant.now;
 import static java.util.Collections.synchronizedList;
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class InMemoryChannel extends AbstractMessageReceiverEndpoint implements MessageLogReceiverEndpoint {
+public class InMemoryChannel extends MessageLogReceiverEndpoint {
 
     private static final Logger LOG = getLogger(InMemoryChannel.class);
     private final List<Message<String>> eventQueue;

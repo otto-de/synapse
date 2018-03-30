@@ -1,8 +1,11 @@
 package de.otto.synapse.endpoint.receiver;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Message;
+
+import javax.annotation.Nonnull;
 
 /**
  * Receiver-side {@code MessageEndpoint endpoint} of a Message Channel with Queue or FIFO semantics.
@@ -11,7 +14,11 @@ import de.otto.synapse.message.Message;
  *     <img src="http://www.enterpriseintegrationpatterns.com/img/MessageEndpointSolution.gif" alt="Message Endpoint">
  * </p>
  */
-public interface MessageQueueReceiverEndpoint extends MessageReceiverEndpoint {
+public abstract class MessageQueueReceiverEndpoint extends MessageReceiverEndpoint {
+
+    public MessageQueueReceiverEndpoint(@Nonnull String channelName, @Nonnull ObjectMapper objectMapper) {
+        super(channelName, objectMapper);
+    }
 
     /**
      * Takes zero or more messages from the channel, calls {@link #intercept(Message)} for every message, and notifies
@@ -29,6 +36,6 @@ public interface MessageQueueReceiverEndpoint extends MessageReceiverEndpoint {
      * </p>
      *
      */
-    void consume();
+    public abstract void consume();
 
 }

@@ -10,9 +10,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static de.otto.synapse.message.Message.message;
+import static java.lang.String.valueOf;
 
 @Component
 @EnableConfigurationProperties(MyServiceProperties.class)
@@ -21,6 +22,7 @@ public class ExampleProducer {
     private final static Logger LOG = LoggerFactory.getLogger(ExampleProducer.class);
 
     private final MessageSenderEndpoint messageSender;
+    private final AtomicInteger counter = new AtomicInteger();
 
     @Autowired
     public ExampleProducer(final MessageSenderEndpoint productMessageSender) {
@@ -30,7 +32,7 @@ public class ExampleProducer {
     @Scheduled(fixedDelay = 3000L)
     public void produceSampleData() {
         try {
-            ProductPayload productPayload = generatePayload();
+            final ProductPayload productPayload = generatePayload();
             messageSender.send(message(productPayload.getId(), productPayload));
         } catch (Exception e) {
             LOG.error("error occurred while sending an event", e);
@@ -38,8 +40,8 @@ public class ExampleProducer {
     }
 
     private ProductPayload generatePayload() {
-        ProductPayload productPayload = new ProductPayload();
-        productPayload.setId("id_" + Instant.now().getEpochSecond());
+        final ProductPayload productPayload = new ProductPayload();
+        productPayload.setId(valueOf(counter.incrementAndGet()));
         productPayload.setPrice(1234L);
         return productPayload;
     }

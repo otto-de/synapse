@@ -1,8 +1,11 @@
 package de.otto.synapse.endpoint.receiver;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.MessageEndpoint;
+
+import javax.annotation.Nonnull;
 
 /**
  * Receiver-side {@code MessageEndpoint endpoint} of a Message Channel
@@ -10,7 +13,15 @@ import de.otto.synapse.endpoint.MessageEndpoint;
  *     <img src="http://www.enterpriseintegrationpatterns.com/img/MessageEndpointSolution.gif" alt="Message Endpoint">
  * </p>
  */
-public interface MessageReceiverEndpoint extends MessageEndpoint {
+public class MessageReceiverEndpoint extends MessageEndpoint {
+
+    private final MessageDispatcher messageDispatcher;
+
+    public MessageReceiverEndpoint(final @Nonnull String channelName,
+                                           final @Nonnull ObjectMapper objectMapper) {
+        super(channelName);
+        messageDispatcher = new MessageDispatcher(objectMapper);
+    }
 
     /**
      * Registers a MessageConsumer at the receiver endpoint.
@@ -20,13 +31,16 @@ public interface MessageReceiverEndpoint extends MessageEndpoint {
      *
      * @param messageConsumer registered EventConsumer
      */
-    void register(MessageConsumer<?> messageConsumer);
-    // TODO: <T> void register(MessageConsumer<TypeReference<T>> getMessageDispatcher, TypeReference<T> payloadType);
+    public final void register(MessageConsumer<?> messageConsumer) {
+        messageDispatcher.add(messageConsumer);
+    }
 
     /**
      * Returns the MessageDispatcher that is used to dispatch messages.
      *
      * @return MessageDispatcher
      */
-    MessageDispatcher getMessageDispatcher();
+    public final MessageDispatcher getMessageDispatcher() {
+        return messageDispatcher;
+    }
 }

@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint.receiver;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.consumer.MessageConsumer;
@@ -17,7 +18,12 @@ import java.util.function.Predicate;
  *     <img src="http://www.enterpriseintegrationpatterns.com/img/MessageEndpointSolution.gif" alt="Message Endpoint">
  * </p>
  */
-public interface MessageLogReceiverEndpoint extends MessageReceiverEndpoint {
+public abstract class MessageLogReceiverEndpoint extends MessageReceiverEndpoint {
+
+    public MessageLogReceiverEndpoint(final @Nonnull String channelName,
+                                      final @Nonnull ObjectMapper objectMapper) {
+        super(channelName, objectMapper);
+    }
 
     /**
      * Takes zero or more messages from the channel, calls {@link #intercept(Message)} for every message, and notifies
@@ -43,8 +49,8 @@ public interface MessageLogReceiverEndpoint extends MessageReceiverEndpoint {
      * @return ChannelResponse
      */
     @Nonnull
-    ChannelPosition consume(@Nonnull ChannelPosition startFrom,
-                            @Nonnull Predicate<Message<?>> stopCondition);
+    public abstract ChannelPosition consume(@Nonnull ChannelPosition startFrom,
+                                            @Nonnull Predicate<Message<?>> stopCondition);
 
-    public void stop();
+    public abstract void stop();
 }

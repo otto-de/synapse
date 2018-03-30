@@ -39,5 +39,4 @@ public interface MessageInterceptor {
      * @return intercepted version of the message, or null if the message should be dropped.
      */
     Message<String> intercept(final Message<String> message);
-
 }

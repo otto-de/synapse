@@ -2,11 +2,15 @@ package de.otto.synapse.endpoint.sender;
 
 import de.otto.synapse.endpoint.MessageEndpoint;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.translator.MessageTranslator;
 
+import javax.annotation.Nonnull;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
- * Sender-side {@code MessageEndpoint endpoint} of a Message Channel
+ * Sender-side {@code MessageEndpoint endpoint} of a Message Channel with support for {@link MessageTranslator message translation}.
+ * and {@link de.otto.synapse.endpoint.MessageInterceptor interception}.
  *
  * <p>
  *     <img src="http://www.enterpriseintegrationpatterns.com/img/MessageEndpointSolution.gif" alt="Message Endpoint">
@@ -15,7 +19,20 @@ import java.util.stream.Stream;
  * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageEndpoint.html">EIP: Message Endpoint</a>
  * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageChannel.html">EIP: Message Channel</a>
  */
-public interface MessageSenderEndpoint extends MessageEndpoint {
+public abstract class MessageSenderEndpoint extends MessageEndpoint {
+
+    private final MessageTranslator<String> messageTranslator;
+
+    /**
+     * Constructor used to create a new MessageEndpoint.
+     *
+     * @param channelName the name of the underlying channel / stream / queue / message log.
+     */
+    public MessageSenderEndpoint(final String channelName,
+                                 final MessageTranslator<String> messageTranslator) {
+        super(channelName);
+        this.messageTranslator = messageTranslator;
+    }
 
     /**
      * Sends a {@link Message} to the message channel.
@@ -23,17 +40,32 @@ public interface MessageSenderEndpoint extends MessageEndpoint {
      * @param message the message to send
      * @param <T> type of the message's payload
      */
-    <T> void send(Message<T> message);
+    public final <T> void send(final Message<T> message) {
+        final Message<String> translatedMessage = messageTranslator.translate(message);
+        final Message<String> interceptedMessage = intercept(translatedMessage);
+        if (interceptedMessage != null) {
+            doSend(interceptedMessage);
+        }
+    }
 
     /**
      * Sends a stream of messages to the message channel as one or more batches, if
      * batches are supported by the infrastructure. If not, the messages are send one by one.
      *
-     * @param messageStream the message stream
+     * @param batch a stream of messages that is sent in batched mode, if supported
      * @param <T> the type of the message payload
      */
-    default <T> void sendBatch(final Stream<Message<T>> messageStream) {
-        messageStream.forEach(this::send);
+    public final <T> void sendBatch(final Stream<Message<T>> batch) {
+        doSendBatch(batch
+                .map(messageTranslator::translate)
+                .map(this::intercept)
+                .filter(Objects::nonNull));
     }
+
+    protected void doSendBatch(final @Nonnull Stream<Message<String>> batch) {
+        batch.forEach(this::doSend);
+    }
+
+    protected abstract void doSend(final @Nonnull Message<String> message);
 
 }

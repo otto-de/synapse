@@ -2,22 +2,29 @@ package de.otto.synapse.example.producer;
 
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.translator.MessageTranslator;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import javax.annotation.Nonnull;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
 
 public class ExampleProducerTest {
 
     private ExampleProducer testee;
-    private MessageSenderEndpoint sender;
-
+    private Message<String> sentMessage = null;
     @Before
-    public void setUp() throws Exception {
-        sender = mock(MessageSenderEndpoint.class);
+    public void setUp() {
+        final MessageTranslator<String> translator = MessageTranslator.of((payload -> "received"));
+
+        final MessageSenderEndpoint sender = new MessageSenderEndpoint("test", translator) {
+            protected void doSend(@Nonnull Message<String> message) {
+                sentMessage = message;
+            }
+        };
         testee = new ExampleProducer(sender);
     }
 
@@ -30,8 +37,8 @@ public class ExampleProducerTest {
         testee.produceSampleData();
 
         //then
-        verify(sender).send(any(Message.class));
+        assertThat(sentMessage.getKey(), is("1"));
+        assertThat(sentMessage.getPayload(), is("received"));
     }
-
 
 }

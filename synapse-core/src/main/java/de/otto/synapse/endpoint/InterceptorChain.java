@@ -1,18 +1,15 @@
 package de.otto.synapse.endpoint;
 
-import com.google.common.collect.ImmutableList;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-import static com.google.common.collect.ImmutableList.copyOf;
-import static com.google.common.collect.Lists.asList;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -39,46 +36,19 @@ public final class InterceptorChain implements MessageInterceptor {
 
     private static final Logger LOG = getLogger(InterceptorChain.class);
 
-    /**
-     * Creates an empty InterceptorChain without any {@link MessageInterceptor interceptors}.
-     *
-     * @return empty InterceptorChain
-     */
-    @Nonnull
-    public static InterceptorChain emptyInterceptorChain() {
-        return new InterceptorChain(ImmutableList.of());
-    }
-
-    @Nonnull
-    public static InterceptorChain of(final MessageInterceptor interceptor,
-                                      final MessageInterceptor... more) {
-        if (more == null) {
-            return new InterceptorChain(ImmutableList.of(interceptor));
-        } else {
-            return new InterceptorChain(copyOf(asList(interceptor, more)));
-        }
-    }
-
-    @Nonnull
-    public static InterceptorChain of(final ImmutableList<MessageInterceptor> interceptors) {
-        return new InterceptorChain(interceptors);
-    }
-
-    @Nonnull
-    public static InterceptorChain of(final List<MessageInterceptor> interceptors) {
-        return new InterceptorChain(copyOf(interceptors));
-    }
+    private final List<MessageInterceptor> interceptors;
 
     /**
-     * Creates an InterceptorChain from a {@code ImmutableList} of message interceptors.
-     *
-     * @param interceptors the ordered list of interceptors.
+     * Creates an empty InterceptorChain.
      */
-    private InterceptorChain(final ImmutableList<MessageInterceptor> interceptors) {
-        this.interceptors = interceptors;
+    public InterceptorChain() {
+        this.interceptors = new CopyOnWriteArrayList<>();
     }
 
-    private final ImmutableList<MessageInterceptor> interceptors;
+    public void register(final MessageInterceptor messageInterceptor) {
+        // TODO: support ordering of interceptors via (org.springframework.core.annotation.Order)
+        interceptors.add(messageInterceptor);
+    }
 
     /**
      * Intercepts a message using all registered interceptors and returns the resulting message.
@@ -122,7 +92,6 @@ public final class InterceptorChain implements MessageInterceptor {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(interceptors);
     }
 }

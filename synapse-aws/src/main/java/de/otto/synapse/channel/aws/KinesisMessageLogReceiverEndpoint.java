@@ -5,7 +5,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ChannelResponse;
-import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
@@ -28,7 +27,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.stream.Collectors.toList;
 
-public class KinesisMessageLogReceiverEndpoint extends AbstractMessageReceiverEndpoint implements MessageLogReceiverEndpoint {
+public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisMessageLogReceiverEndpoint.class);
 

@@ -41,7 +41,7 @@ public class JsonStringMessageTranslator implements MessageTranslator<String> {
             final String payload = message.getPayload() != null
                     ? objectMapper.writeValueAsString(message.getPayload())
                     : null;
-            return stringMessage(message.getKey(), payload);
+            return stringMessage(message.getKey(), message.getHeader(), payload);
         } catch (JsonProcessingException e) {
             throw new IllegalStateException(e.getMessage(), e);
         }

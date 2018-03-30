@@ -36,10 +36,11 @@ public class MessageSenderConfiguration {
                                                      final ObjectMapper objectMapper) {
         final MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator(objectMapper);
         return channelName -> {
-            return new InMemoryMessageSender(
+            final InMemoryMessageSender messageSender = new InMemoryMessageSender(
                     messageTranslator,
-                    inMemoryChannels.getChannel(channelName),
-                    LOGGING_INTERCEPTOR);
+                    inMemoryChannels.getChannel(channelName));
+            messageSender.register(LOGGING_INTERCEPTOR);
+            return messageSender;
         };
     }
 

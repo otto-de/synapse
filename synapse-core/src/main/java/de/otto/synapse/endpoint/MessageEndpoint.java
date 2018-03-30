@@ -1,15 +1,24 @@
 package de.otto.synapse.endpoint;
 
+import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
+import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Endpoint that is used by an application to access the messaging infrastructure to send or receive messages.
  *
  * <p>
  *     <img src="http://www.enterpriseintegrationpatterns.com/img/MessageEndpointSolution.gif" alt="Message Endpoint">
+ * </p>
+ * <p>
+ *     The {@code MessageEndpoint} class is intended to derive {@link MessageSenderEndpoint message sender},
+ *      {@link MessageQueueReceiverEndpoint message receiver} or
+ *      {@link de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint message-log receiver} endpoints.
  * </p>
  * <p>
  *     Message Endpoint code is custom to both the application and the messaging system’s client API.
@@ -25,7 +34,19 @@ import javax.annotation.Nullable;
  * </p>
  * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageEndpoint.html">EIP: Message Endpoint</a>
  */
-public interface MessageEndpoint {
+public class MessageEndpoint {
+
+    private final String channelName;
+    private final InterceptorChain interceptorChain = new InterceptorChain();
+
+    /**
+     * Constructor used to create a new AbstractMessageEndpoint.
+     *
+     * @param channelName the name of the underlying channel / stream / queue / message log.
+     */
+    public MessageEndpoint(final @Nonnull String channelName) {
+        this.channelName = requireNonNull(channelName, "ChannelName must not be null");
+    }
 
     /**
      * Returns the name of the channel.
@@ -36,12 +57,30 @@ public interface MessageEndpoint {
      * @return name of the channel
      */
     @Nonnull
-    String getChannelName();
+    public final String getChannelName() {
+        return channelName;
+    }
 
     /**
-     * Intercepts a message using all registered {@link MessageInterceptor interceptors} and returns the
-     * resulting message.
-     *
+     * Registers a new {@code MessageInterceptor} at the {@code MessageEndpoint}.
+     * <p>
+     *     The registered interceptors will be used to intercept {@link Message messages} processed by the endpoint.
+     * </p>
+     * @param messageInterceptor The registered MessageInterceptor
+     */
+    public final void register(final @Nonnull MessageInterceptor messageInterceptor) {
+        interceptorChain.register(
+                requireNonNull(messageInterceptor, "MessageInterceptor must not be null")
+        );
+    }
+
+    /**
+     * Intercepts a message using all registered interceptors and returns the resulting message.
+     * <p>
+     *     The interceptors are called in order. The result of one interceptor is propagated to the
+     *     next interceptor in the chain, until the end of the chain is reached, or one interceptor
+     *     has returned null.
+     * </p>
      * <p>
      *     If {@code null} is returned, the message must be dropped by the {@link MessageEndpoint}.
      * </p>
@@ -54,8 +93,8 @@ public interface MessageEndpoint {
      * @return the (possibly modified) message, or null if the message should be dropped.
      */
     @Nullable
-    default Message<String> intercept(final Message<String> message) {
-        return message;
+    protected final Message<String> intercept(final @Nonnull Message<String> message) {
+        return interceptorChain.intercept(message);
     }
 
 }

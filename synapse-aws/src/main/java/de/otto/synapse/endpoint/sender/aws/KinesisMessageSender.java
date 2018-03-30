@@ -1,7 +1,7 @@
 package de.otto.synapse.endpoint.sender.aws;
 
 import de.otto.synapse.client.aws.RetryPutRecordsKinesisClient;
-import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
+import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
@@ -19,7 +19,7 @@ import static java.nio.ByteBuffer.wrap;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toCollection;
 
-public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
+public class KinesisMessageSender extends MessageSenderEndpoint {
 
     private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.allocateDirect(0);
     private static final int PUT_RECORDS_BATCH_SIZE = 500;
