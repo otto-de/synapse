@@ -4,11 +4,13 @@ package de.otto.synapse.eventsource.aws;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.aws.KinesisMessageLog;
+import de.otto.synapse.channel.aws.KinesisShardIterator;
 import de.otto.synapse.channel.aws.KinesisStreamSetupUtils;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.TestStreamSource;
+import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -25,6 +27,8 @@ import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordRequest;
 
 import javax.annotation.PostConstruct;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +39,7 @@ import java.util.stream.IntStream;
 
 import static java.util.Collections.synchronizedList;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.lessThan;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -111,21 +116,45 @@ public class KinesisEventSourceIntegrationTest {
     }
 
     @Test
-    @Ignore("needs to be fixed")
-    public void shouldStopEventSource() throws InterruptedException, ExecutionException {
-        // when
-        ChannelPosition startFrom = writeToStream("users_small1.txt").getFirstReadPosition();
+    public void shouldStopEventSource() throws InterruptedException, ExecutionException, TimeoutException {
+        try {
+            // given
+            ChannelPosition startFrom = writeToStream("users_small1.txt").getFirstReadPosition();
 
-        // then
-        ExecutorService exec = Executors.newSingleThreadExecutor();
-        final CompletableFuture<ChannelPosition> completableFuture = CompletableFuture.supplyAsync(() -> eventSource.consumeAll(
-                startFrom,
-                (message) -> false), exec);
+            // only fetch 2 records per iterator to be able to check against stop condition which is only evaluated after
+            // retrieving new iterator
+            setStaticFinalField(KinesisShardIterator.class, "FETCH_RECORDS_LIMIT", 2);
 
-        eventSource.stop();
-        exec.awaitTermination(2, TimeUnit.SECONDS);
-        assertThat(completableFuture.isDone(), is(true));
-        assertThat(completableFuture.get(), is(notNullValue()));
+            ExecutorService executorService = Executors.newSingleThreadExecutor();
+            final CompletableFuture<ChannelPosition> completableFuture = CompletableFuture.supplyAsync(() -> eventSource.consumeAll(
+                    startFrom,
+                    (message) -> false), executorService);
+
+            Awaitility.await().atMost(2, TimeUnit.SECONDS).until(() -> messages.size() > 0);
+
+            // when
+            eventSource.stop();
+
+            // then
+            assertThat(completableFuture.get(2L, TimeUnit.SECONDS), is(notNullValue()));
+            assertThat(completableFuture.isDone(), is(true));
+            assertThat(messages.size(), lessThan(10));
+        } finally {
+            setStaticFinalField(KinesisShardIterator.class, "FETCH_RECORDS_LIMIT", 10000);
+        }
+    }
+
+    private void setStaticFinalField(Class<?> clazz, String fieldName, Object value) {
+        try {
+            Field field = clazz.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            Field modifiers = Field.class.getDeclaredField("modifiers");
+            modifiers.setAccessible(true);
+            modifiers.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+            field.set(null, value);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test

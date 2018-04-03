@@ -32,6 +32,7 @@ public class KinesisEventSource extends AbstractEventSource {
     @Override
     public void stop() {
         super.stop();
+        messageLog.stop();
     }
 
     @Override

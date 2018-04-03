@@ -13,4 +13,6 @@ public interface MessageLog {
     ChannelPosition consumeStream(ChannelPosition startFrom,
                                   Predicate<Message<?>> stopCondition,
                                   MessageConsumer<String> consumer);
+
+    void stop();
 }

@@ -60,7 +60,6 @@ public class KinesisEventSourceTest {
     @Test
     public void shouldRegisterConsumer() {
         // given
-
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", kinesisMessageLog, eventPublisher, objectMapper);
 
         // when

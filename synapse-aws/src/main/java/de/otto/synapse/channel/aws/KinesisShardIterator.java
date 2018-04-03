@@ -19,7 +19,7 @@ public class KinesisShardIterator {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShardIterator.class);
 
-    static final int FETCH_RECORDS_LIMIT = 10000;
+    static final Integer FETCH_RECORDS_LIMIT = 10000;
     private static final int RETRY_MAX_ATTEMPTS = 16;
     private static final int RETRY_BACK_OFF_POLICY_INITIAL_INTERVAL = 1000;
     private static final int RETRY_BACK_OFF_POLICY_MAX_INTERVAL = 64000;

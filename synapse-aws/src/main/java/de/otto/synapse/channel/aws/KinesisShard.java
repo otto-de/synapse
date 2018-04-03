@@ -36,9 +36,9 @@ public class KinesisShard {
     }
 
     //TODO Refactor: Return a ShardPosition, not a ChannelPosition
-    public ChannelPosition consumeRecords(final ChannelPosition startPosition,
-                                          final Predicate<Message<?>> stopCondition,
-                                          final MessageConsumer<String> consumer) {
+    public ChannelPosition consumeShard(final ChannelPosition startPosition,
+                                        final Predicate<Message<?>> stopCondition,
+                                        final MessageConsumer<String> consumer) {
         try {
             LOG.info("Reading from stream {}, shard {} with starting sequence number {}",
                     streamName,
@@ -52,7 +52,6 @@ public class KinesisShard {
             do {
                 GetRecordsResponse recordsResponse = kinesisShardIterator.next();
                 Duration durationBehind = ofMillis(recordsResponse.millisBehindLatest());
-
                 if (!isEmptyStream(recordsResponse)) {
                     for (final Record record : recordsResponse.records()) {
                         Message<String> kinesisMessage = kinesisMessage(shardId, durationBehind, record);
@@ -61,6 +60,9 @@ public class KinesisShard {
                         lastRecord = record;
                         lastSequenceNumber = record.sequenceNumber();
 
+                        //consume all records of current iterator, even if stop condition is true
+                        // because durationBehind is only per iterator, not per record and we want to consume all
+                        // records
                         if (!stopRetrieval) {
                             stopRetrieval = stopCondition.test(kinesisMessage);
                         }
@@ -122,7 +124,7 @@ public class KinesisShard {
 
     private void logInfo(String streamName, GetRecordsResponse recordsResponse, Duration durationBehind) {
         final String durationString = format("%s days %s hrs %s min %s sec", durationBehind.toDays(), durationBehind.toHours() % 24, durationBehind.toMinutes() % 60, durationBehind.getSeconds() % 60);
-        LOG.info("Consumed {} records from stream '{}' shard '{}'; behind latest: {}",
+        LOG.info("Got {} records from stream '{}' and shard '{}'; behind latest: {}",
                 recordsResponse.records().size(),
                 streamName,
                 shardId,

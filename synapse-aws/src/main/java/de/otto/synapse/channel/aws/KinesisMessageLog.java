@@ -32,6 +32,8 @@ public class KinesisMessageLog implements MessageLog {
 
     private final String streamName;
     private final KinesisClient kinesisClient;
+    private List<CompletableFuture<ChannelPosition>> futureShardPositions;
+    private boolean stopping;
 
     public KinesisMessageLog(final KinesisClient kinesisClient,
                              final String streamName) {
@@ -49,15 +51,20 @@ public class KinesisMessageLog implements MessageLog {
                                          final Predicate<Message<?>> stopCondition,
                                          final MessageConsumer<String> consumer) {
         final List<KinesisShard> kinesisShards = retrieveAllOpenShards();
+        if (stopping) {
+            return startFrom;
+        }
+
+        Predicate<Message<?>> wrappedStopCondition = message -> stopping || stopCondition.test(message);
 
         ExecutorService executorService = newFixedThreadPool(kinesisShards.size(),
                 new ThreadFactoryBuilder().setNameFormat("kinesis-message-log-%d").build());
 
         try {
-            final List<CompletableFuture<ChannelPosition>> futureShardPositions = kinesisShards
+            futureShardPositions = kinesisShards
                     .stream()
                     .map(shard -> supplyAsync(
-                            () -> shard.consumeRecords(startFrom, stopCondition, consumer),
+                            () -> shard.consumeShard(startFrom, wrappedStopCondition, consumer),
                             executorService))
                     .collect(toList());
 
@@ -86,6 +93,11 @@ public class KinesisMessageLog implements MessageLog {
             }
             throw e;
         }
+    }
+
+    @Override
+    public void stop() {
+        this.stopping = true;
     }
 
     @VisibleForTesting
