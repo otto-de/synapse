@@ -15,7 +15,7 @@ import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
 import static java.time.Instant.now;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -31,8 +31,9 @@ public class NonCompactingMessageStoreTest {
 
     @Parameterized.Parameters
     public static Iterable<? extends Supplier<MessageStore>> messageStores() {
-        return singletonList(
-                InMemoryMessageStore::new
+        return asList(
+                InMemoryMessageStore::new,
+                () -> new InMemoryRingBufferMessageStore(50000)
         );
     }
 

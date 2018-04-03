@@ -39,6 +39,7 @@ public class MessageStoreTest {
     public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
                 InMemoryMessageStore::new,
+                () -> new InMemoryRingBufferMessageStore(10000),
                 CompactingInMemoryMessageStore::new,
                 CompactingConcurrentMapMessageStore::new
         );

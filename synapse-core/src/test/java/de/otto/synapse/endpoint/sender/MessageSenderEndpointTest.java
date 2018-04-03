@@ -44,10 +44,11 @@ public class MessageSenderEndpointTest {
     public void shouldTranslateMessages() {
         // given
         final MessageTranslator<String> messageTranslator = mock(MessageTranslator.class);
+        when(messageTranslator.translate(any(Message.class))).thenReturn(message("translated", null));
         final MessageInterceptor interceptor = (m) -> m;
         final MessageSenderEndpoint senderEndpoint = new MessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
-            protected void doSend(@Nonnull Message<String> message) { /* no-op */ }
+            protected void doSend(Message<String> message) { /* no-op */ }
         };
         senderEndpoint.register(interceptor);
         // when
