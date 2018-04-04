@@ -43,6 +43,7 @@ public abstract class AbstractEventSource implements EventSource {
     public void stop() {
         LOG.info("Stopping EventSource {}", name);
         stopping.set(true);
+        messageLog.stop();
     }
 
     @Override

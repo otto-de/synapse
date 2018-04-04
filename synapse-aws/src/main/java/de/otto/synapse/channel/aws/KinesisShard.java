@@ -20,9 +20,12 @@ import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.Status.OK;
 import static de.otto.synapse.channel.Status.STOPPED;
+import static de.otto.synapse.message.Header.responseHeader;
+import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
+import static java.time.Instant.*;
 
 public class KinesisShard {
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShard.class);
@@ -76,7 +79,7 @@ public class KinesisShard {
                         }
                     }
                 } else {
-                    Message kinesisMessage = lastRecord != null
+                    Message<String> kinesisMessage = lastRecord != null
                             ? kinesisMessage(shardId, durationBehind, lastRecord)
                             : dirtyHackToStopThreadMessage(durationBehind);
                     stopRetrieval = stopCondition.test(kinesisMessage);
@@ -96,8 +99,11 @@ public class KinesisShard {
         }
     }
 
-    private Message<Header> dirtyHackToStopThreadMessage(final Duration durationBehind) {
-        return Message.message("no_key", Header.responseHeader(ShardPosition.fromHorizon(shardId), Instant.now(), durationBehind));
+    private Message<String> dirtyHackToStopThreadMessage(final Duration durationBehind) {
+        return message(
+                "no_key",
+                responseHeader(fromHorizon(shardId), now(), durationBehind),
+                null);
     }
 
     @VisibleForTesting

@@ -27,6 +27,8 @@ public abstract class MessageSenderEndpoint extends MessageEndpoint {
      * Constructor used to create a new MessageEndpoint.
      *
      * @param channelName the name of the underlying channel / stream / queue / message log.
+     * @param messageTranslator the MessageTranslator used to translate message payloads as expected by the
+     * {@link de.otto.synapse.consumer.MessageConsumer consumers}.
      */
     public MessageSenderEndpoint(final String channelName,
                                  final MessageTranslator<String> messageTranslator) {

@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
@@ -23,6 +24,7 @@ public class InMemoryChannel extends MessageLogReceiverEndpoint {
 
     private static final Logger LOG = getLogger(InMemoryChannel.class);
     private final List<Message<String>> eventQueue;
+    private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
     public InMemoryChannel(final String channelName) {
         super(channelName, new ObjectMapper());
@@ -44,7 +46,7 @@ public class InMemoryChannel extends MessageLogReceiverEndpoint {
     @Override
     public ChannelPosition consume(@Nonnull final ChannelPosition startFrom,
                                    @Nonnull final Predicate<Message<?>> stopCondition) {
-        boolean shouldStop;
+        boolean shouldStop = false;
         int pos = startFrom.shard(getChannelName()).startFrom() == StartFrom.HORIZON
                 ? -1
                 : valueOf(startFrom.shard(getChannelName()).position());
@@ -58,14 +60,19 @@ public class InMemoryChannel extends MessageLogReceiverEndpoint {
                         receivedMessage.getPayload()));
                 shouldStop = stopCondition.test(receivedMessage);
             } else {
-                return channelPosition(fromPosition(getChannelName(), String.valueOf(pos)));
+                try {
+                    Thread.sleep(100);
+                } catch (final InterruptedException e) {
+                    /* ignore */
+                }
             }
-        } while (!shouldStop);
+        } while (!shouldStop && !stopSignal.get());
         return channelPosition(fromPosition(getChannelName(), String.valueOf(pos)));
     }
 
     @Override
     public void stop() {
+        stopSignal.set(true);
     }
 
     private boolean hasMessageAfter(final int pos) {
