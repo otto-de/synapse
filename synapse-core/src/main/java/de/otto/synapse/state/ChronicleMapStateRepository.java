@@ -2,6 +2,7 @@ package de.otto.synapse.state;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.openhft.chronicle.hash.ChronicleHashClosedException;
+import net.openhft.chronicle.map.ChronicleMap;
 import net.openhft.chronicle.map.ChronicleMapBuilder;
 
 import java.util.Optional;
@@ -12,8 +13,8 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
     private static final double DEFAULT_VALUE_SIZE_BYTES = 512;
     private static final long DEFAULT_ENTRY_COUNT = 1_000_00;
 
-    private ChronicleMapStateRepository(Builder builder) {
-        super(builder.chronicleMapBuilder.create());
+    private ChronicleMapStateRepository(ChronicleMap<String, V> chronicleMap) {
+        super(chronicleMap);
     }
 
     @Override
@@ -49,7 +50,7 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
     }
 
     public static <V> Builder chronicleMapConcurrentMapStateRepositoryBuilder(Class<V> clazz) {
-        return new Builder(clazz);
+        return new Builder<>(clazz);
     }
 
     public static final class Builder<V> {
@@ -73,7 +74,7 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
             return this;
         }
 
-        public ChronicleMapStateRepository build() {
+        public ChronicleMapStateRepository<V> build() {
             if (objectMapper == null)  {
                 objectMapper = new ObjectMapper();
             }
@@ -87,7 +88,7 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
 
             chronicleMapBuilder.valueMarshaller(new ChronicleMapBytesMarshaller<>(objectMapper, clazz));
 
-            return new ChronicleMapStateRepository(this);
+            return new ChronicleMapStateRepository<>(chronicleMapBuilder.create());
         }
     }
 }

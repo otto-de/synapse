@@ -33,7 +33,7 @@ public class KinesisMessageLog implements MessageLog {
     private final String streamName;
     private final KinesisClient kinesisClient;
     private List<CompletableFuture<ChannelPosition>> futureShardPositions;
-    private boolean stopping;
+    private volatile boolean stopping;
 
     public KinesisMessageLog(final KinesisClient kinesisClient,
                              final String streamName) {
