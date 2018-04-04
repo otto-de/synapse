@@ -27,8 +27,8 @@ import software.amazon.awssdk.services.kinesis.KinesisClient;
 public class AwsEventSourcingAutoConfiguration {
 
     @Bean
-    @ConditionalOnMissingBean(name = "streamingEventSourceBuilder")
-    public KinesisEventSourceBuilder streamingEventSourceBuilder(final KinesisClient kinesisClient,
+    @ConditionalOnMissingBean(name = "kinesisEventSourceBuilder")
+    public KinesisEventSourceBuilder kinesisEventSourceBuilder(final KinesisClient kinesisClient,
                                                                  final ApplicationEventPublisher eventPublisher,
                                                                  final ObjectMapper objectMapper) {
         return new KinesisEventSourceBuilder(objectMapper, eventPublisher, kinesisClient);
