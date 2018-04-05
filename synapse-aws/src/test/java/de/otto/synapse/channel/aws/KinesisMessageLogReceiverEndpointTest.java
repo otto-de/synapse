@@ -21,10 +21,13 @@ import java.time.Instant;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static de.otto.synapse.channel.ChannelPosition.channelPosition;
+import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -142,7 +145,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         describeStreamResponse(
                 ImmutableList.of(
                         someShard("shard1", true)));
-        describeRecordsForShard();
+        describeRecordsForShard("shard1", "iter1");
 
         KinesisMessageLogReceiverEndpoint kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper, "testStream");
         kinesisMessageLog.register(messageConsumer);
@@ -158,6 +161,43 @@ public class KinesisMessageLogReceiverEndpointTest {
         assertThat(messages.get(1).getPayload(), is(nullValue()));
         assertThat(messages.get(2).getPayload(), is("{\"data\":\"green\"}"));
         assertThat(finalChannelPosition.shard("shard1").position(), is("sequence-green"));
+    }
+
+    @Test
+    public void shouldShutdownOnStop() {
+        // given
+        describeStreamResponse(
+                ImmutableList.of(
+                        someShard("shard1", true)));
+        describeRecordsForShard("shard1", "iter1");
+
+        KinesisMessageLogReceiverEndpoint kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper, "testStream");
+        kinesisMessageLog.register(messageConsumer);
+
+        // when
+        kinesisMessageLog.stop();
+        ChannelPosition finalChannelPosition = kinesisMessageLog.consume(ChannelPosition.fromHorizon(), (m) -> false);
+
+        // then
+        assertThat(finalChannelPosition, is(channelPosition(fromHorizon("shard1"))));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void shouldShutdownOnException() {
+        // given
+        describeStreamResponse(
+                ImmutableList.of(
+                        someShard("shard1", true),
+                        someShard("failing-shard2", true))
+        );
+        describeRecordsForShard("shard1", "iter1");
+        describeRecordsForShard("failing-shard2", "failing-iter2");
+
+        KinesisMessageLogReceiverEndpoint kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper, "testStream");
+        kinesisMessageLog.register(messageConsumer);
+
+        // when
+        kinesisMessageLog.consume(ChannelPosition.fromHorizon(), (m) -> false);
     }
 
     private Shard someShard(String shardId, boolean open) {
@@ -183,9 +223,12 @@ public class KinesisMessageLogReceiverEndpointTest {
         when(kinesisClient.describeStream(any(DescribeStreamRequest.class))).thenReturn(firstResponse, secondResponse);
     }
 
-    private void describeRecordsForShard() {
-        when(kinesisClient.getShardIterator(any(GetShardIteratorRequest.class))).thenReturn(GetShardIteratorResponse.builder()
-                .shardIterator("someIterator")
+    private void describeRecordsForShard(String shardName, String iteratorName) {
+        when(kinesisClient.getShardIterator(argThat((GetShardIteratorRequest req) -> req != null && req.shardId().equals
+                (shardName))))
+                .thenReturn(
+                GetShardIteratorResponse.builder()
+                .shardIterator(iteratorName)
                 .build());
 
         GetRecordsResponse response0 = GetRecordsResponse.builder()
@@ -206,7 +249,12 @@ public class KinesisMessageLogReceiverEndpointTest {
                 .millisBehindLatest(2345L)
                 .nextShardIterator("yetAnotherIterator")
                 .build();
-        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response0, response1, response2);
+
+        when(kinesisClient.getRecords(argThat((GetRecordsRequest req) -> req != null && req.shardIterator().contains("failing"))))
+                .thenThrow(new RuntimeException("boo!"));
+
+        when(kinesisClient.getRecords(argThat((GetRecordsRequest req) -> req == null || !req.shardIterator().contains("failing"))))
+                .thenReturn(response0, response1, response2);
     }
 
     private DescribeStreamResponse createResponseForShards(List<Shard> shards, boolean hasMoreShards) {

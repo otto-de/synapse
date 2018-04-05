@@ -34,7 +34,7 @@ import static java.util.Objects.requireNonNull;
  * </p>
  * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageEndpoint.html">EIP: Message Endpoint</a>
  */
-public class MessageEndpoint {
+public abstract class MessageEndpoint {
 
     private final String channelName;
     private final InterceptorChain interceptorChain = new InterceptorChain();

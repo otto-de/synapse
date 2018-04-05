@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
@@ -33,6 +32,7 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
 
 
     private final KinesisClient kinesisClient;
+
     private volatile boolean stopping;
 
     public KinesisMessageLogReceiverEndpoint(final KinesisClient kinesisClient,
@@ -47,9 +47,6 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
     public ChannelPosition consume(final @Nonnull ChannelPosition startFrom,
                                    final @Nonnull Predicate<Message<?>> stopCondition) {
         final List<KinesisShard> kinesisShards = retrieveAllOpenShards();
-        if (stopping) {
-            return startFrom;
-        }
 
         Predicate<Message<?>> wrappedStopCondition = message -> stopping || stopCondition.test(message);
 
@@ -60,7 +57,7 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
             List<CompletableFuture<ChannelPosition>> futureShardPositions = kinesisShards
                     .stream()
                     .map(shard -> supplyAsync(
-                            () -> shard.consumeShard(startFrom, wrappedStopCondition, getMessageDispatcher()),
+                            () -> consumeShard(shard, startFrom, wrappedStopCondition),
                             executorService))
                     .collect(toList());
 
@@ -77,6 +74,7 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
             LOG.error("Failed to consume from Kinesis stream {}: {}", getChannelName(), e.getMessage());
             // When an exception occurs in a completable future's thread, other threads continue running.
             // Stop all before proceeding.
+            stop();
             executorService.shutdownNow();
             try {
                 boolean allThreadsSafelyTerminated = executorService.awaitTermination(30, TimeUnit.SECONDS);
@@ -87,6 +85,19 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
             } catch (InterruptedException ie) {
                 Thread.currentThread().interrupt();
             }
+            throw e;
+        }
+    }
+
+    private ChannelPosition consumeShard(final KinesisShard shard,
+                                         final ChannelPosition startFrom,
+                                         final Predicate<Message<?>> stopCondition) {
+        try {
+            return shard.consumeShard(startFrom, stopCondition, getMessageDispatcher());
+        } catch (final RuntimeException e) {
+            LOG.error("Failed to consume from Kinesis shard {}: {}", getChannelName(), shard.getShardId(), e.getMessage());
+            // Stop all shards and shutdown if this shard is failing:
+            stop();
             throw e;
         }
     }

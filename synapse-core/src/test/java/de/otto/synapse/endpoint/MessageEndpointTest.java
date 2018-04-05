@@ -22,7 +22,7 @@ public class MessageEndpointTest {
     }
     @Test
     public void shouldReturnChannelName() {
-        final MessageEndpoint endpoint = new MessageEndpoint("foo");
+        final MessageEndpoint endpoint = new MessageEndpoint("foo") {};
         assertThat(endpoint.getChannelName(), is("foo"));
     }
 
@@ -34,14 +34,14 @@ public class MessageEndpointTest {
      */
     @Test(expected = RuntimeException.class)
     public void shouldFailToRegisterNullInterceptor() {
-        MessageEndpoint messageEndpoint = new MessageEndpoint("foo");
+        MessageEndpoint messageEndpoint = new MessageEndpoint("foo") {};
         messageEndpoint.register(null);
     }
 
     @Test
     public void shouldInterceptMessages() {
         final MessageInterceptor interceptor = mock(MessageInterceptor.class);
-        final MessageEndpoint endpoint = new MessageEndpoint("foo");
+        final MessageEndpoint endpoint = new MessageEndpoint("foo") {};
         endpoint.register(interceptor);
         final Message<String> message = mock(Message.class);
         endpoint.intercept(message);
@@ -51,7 +51,7 @@ public class MessageEndpointTest {
     @Test
     @SuppressWarnings("unchecked")
     public void shouldReturnMessageWithoutInterceptor() {
-        final MessageEndpoint messageEndpoint = new MessageEndpoint("foo");
+        final MessageEndpoint messageEndpoint = new MessageEndpoint("foo") {};
         final Message<String> message = mock(Message.class);
         assertThat(messageEndpoint.intercept(message), is(message));
     }
