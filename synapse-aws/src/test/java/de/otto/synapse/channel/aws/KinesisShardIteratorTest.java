@@ -95,4 +95,35 @@ public class KinesisShardIteratorTest {
         assertThat(kinesisShardIterator.getId(), is("nextIteratorId"));
 
     }
+
+    @Test
+    public void shouldStopAfterSucessfulResponse() {
+        // given
+        GetRecordsResponse expectedResponse = GetRecordsResponse.builder()
+                .records()
+                .nextShardIterator("nextIteratorId")
+                .build();
+
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(expectedResponse);
+
+        // when
+        kinesisShardIterator.stop();
+        GetRecordsResponse returnedResponse = kinesisShardIterator.next();
+        // then
+        assertThat(returnedResponse, is(expectedResponse));
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void shouldThrowExceptionWhenStoppingInRetry() {
+        // given
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class)))
+                .thenThrow(new KinesisException("forced test exception"));
+
+        // when
+        kinesisShardIterator.stop();
+        kinesisShardIterator.next();
+
+        // then throw exception
+    }
+
 }

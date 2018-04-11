@@ -145,6 +145,41 @@ public class KinesisShardTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    public void shouldConsumeSingleRecordSetForStoppingThread() {
+        final Instant now = now();
+        // given
+        final Record record1 = Record.builder()
+                .sequenceNumber("1")
+                .approximateArrivalTimestamp(now)
+                .partitionKey("first")
+                .build();
+        final Record record2 = Record.builder()
+                .sequenceNumber("2")
+                .approximateArrivalTimestamp(now)
+                .partitionKey("second")
+                .build();
+        final GetRecordsResponse response = GetRecordsResponse.builder()
+                .records(record1, record2)
+                .nextShardIterator("nextShardIterator")
+                .millisBehindLatest(1234L)
+                .build();
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
+
+        // when
+        kinesisShard.stop();
+        final ChannelPosition channelPosition = kinesisShard.consumeShard(fromHorizon(), (message) -> false, consumer);
+
+        // then
+        verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record1));
+        verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record2));
+        verifyNoMoreInteractions(consumer);
+
+        assertThat(channelPosition.shard("someShard").position(), is("2"));
+        assertThat(kinesisShard.isStopping(), is(true));
+    }
+
+    @Test
     public void shouldPassMillisBehindLatestWithRecordToStopCondition() {
         // given
         final Instant now = now();

@@ -15,6 +15,8 @@ import software.amazon.awssdk.services.kinesis.model.GetRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 import software.amazon.awssdk.services.kinesis.model.KinesisException;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class KinesisShardIterator {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShardIterator.class);
@@ -28,6 +30,7 @@ public class KinesisShardIterator {
     private final KinesisClient kinesisClient;
     private String id;
     private final RetryTemplate retryTemplate;
+    private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
     public KinesisShardIterator(KinesisClient kinesisClient, String firstId) {
         this.kinesisClient = kinesisClient;
@@ -39,9 +42,18 @@ public class KinesisShardIterator {
         return this.id;
     }
 
+    public void stop() {
+        stopSignal.set(true);
+    }
+
     public GetRecordsResponse next() {
         try {
-            return retryTemplate.execute((RetryCallback<GetRecordsResponse, Throwable>) context -> tryNext());
+            return retryTemplate.execute((RetryCallback<GetRecordsResponse, Throwable>) context -> {
+                if (stopSignal.get()) {
+                    context.setExhaustedOnly();
+                }
+                return tryNext();
+            });
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }

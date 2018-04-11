@@ -24,6 +24,7 @@ import java.util.function.Predicate;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.Executors.newFixedThreadPool;
+import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.stream.Collectors.toList;
 
 public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoint {
@@ -33,38 +34,39 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
 
     private final KinesisClient kinesisClient;
 
-    private volatile boolean stopping;
+    private final List<KinesisShard> kinesisShards;
+    private final ExecutorService executorService;
 
     public KinesisMessageLogReceiverEndpoint(final KinesisClient kinesisClient,
                                              final ObjectMapper objectMapper,
                                              final String channelName) {
         super(channelName, objectMapper);
         this.kinesisClient = kinesisClient;
+        this.kinesisShards = retrieveAllOpenShards();
+        if (kinesisShards.isEmpty()) {
+            this.executorService = newSingleThreadExecutor();
+        } else {
+            this.executorService = newFixedThreadPool(kinesisShards.size(),
+                    new ThreadFactoryBuilder().setNameFormat("kinesis-message-log-%d").build());
+        }
     }
 
     @Override
     @Nonnull
     public ChannelPosition consume(final @Nonnull ChannelPosition startFrom,
                                    final @Nonnull Predicate<Message<?>> stopCondition) {
-        final List<KinesisShard> kinesisShards = retrieveAllOpenShards();
-
-        Predicate<Message<?>> wrappedStopCondition = message -> stopping || stopCondition.test(message);
-
-        ExecutorService executorService = newFixedThreadPool(kinesisShards.size(),
-                new ThreadFactoryBuilder().setNameFormat("kinesis-message-log-%d").build());
-
         try {
-            List<CompletableFuture<ChannelPosition>> futureShardPositions = kinesisShards
+            final List<CompletableFuture<ChannelPosition>> futureShardPositions = kinesisShards
                     .stream()
                     .map(shard -> supplyAsync(
-                            () -> consumeShard(shard, startFrom, wrappedStopCondition),
+                            () -> consumeShard(shard, startFrom, stopCondition),
                             executorService))
                     .collect(toList());
 
             // don't chain futureShardPositions with CompletableFuture::join as lazy execution will prevent threads from
             // running in parallel
 
-            List<ChannelPosition> shardPositions = futureShardPositions
+            final List<ChannelPosition> shardPositions = futureShardPositions
                     .stream()
                     .map(CompletableFuture::join)
                     .collect(toList());
@@ -104,11 +106,15 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
 
     @Override
     public void stop() {
-        this.stopping = true;
+        this.kinesisShards.forEach(KinesisShard::stop);
     }
 
     @VisibleForTesting
-    List<KinesisShard> retrieveAllOpenShards() {
+    List<KinesisShard> getCurrentKinesisShards() {
+        return kinesisShards;
+    }
+
+    private List<KinesisShard> retrieveAllOpenShards() {
         return retrieveAllShards().stream()
                 .filter(this::isShardOpen)
                 .map(shard -> new KinesisShard(shard.shardId(), getChannelName(), kinesisClient))

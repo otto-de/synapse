@@ -22,9 +22,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.DescribeStreamRequest;
 import software.amazon.awssdk.services.kinesis.model.DescribeStreamResponse;
+import software.amazon.awssdk.services.kinesis.model.StreamDescription;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -148,7 +150,13 @@ public class MessageConsumerIntegrationTest {
 
                 @Override
                 public DescribeStreamResponse describeStream(DescribeStreamRequest describeStreamRequest) {
-                    throw new UnsupportedOperationException("test kinesis client that throws exception on purpose");
+                    return DescribeStreamResponse.builder()
+                            .streamDescription(StreamDescription.builder()
+                                    .streamName(describeStreamRequest.streamName())
+                                    .shards(Collections.emptyList())
+                                    .hasMoreShards(Boolean.FALSE)
+                                    .build())
+                            .build();
                 }
             };
         }

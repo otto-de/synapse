@@ -4,22 +4,20 @@ import de.otto.synapse.channel.*;
 import com.google.common.annotations.VisibleForTesting;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
-import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
+import javax.annotation.concurrent.ThreadSafe;
 import java.time.Duration;
-import java.time.Instant;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
-import static de.otto.synapse.channel.Status.OK;
-import static de.otto.synapse.channel.Status.STOPPED;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
@@ -27,12 +25,14 @@ import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.time.Instant.*;
 
+@ThreadSafe
 public class KinesisShard {
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShard.class);
 
     private final String shardId;
     private final String channelName;
     private final KinesisClient kinesisClient;
+    private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
     public KinesisShard(final String shardId,
                         final String channelName,
@@ -87,9 +87,8 @@ public class KinesisShard {
 
                 logInfo(channelName, recordsResponse, durationBehind);
 
-                if (!stopRetrieval) {
-                    stopRetrieval = waitABit();
-                }
+                stopRetrieval = stopRetrieval || stopSignal.get() || waitABit();
+
             } while (!stopRetrieval);
             LOG.info("Done consuming from shard '{}' of stream '{}'.", channelName, shardId);
             return channelPosition(shardPosition);
@@ -162,8 +161,15 @@ public class KinesisShard {
         return false;
     }
 
-    private boolean isEmptyStream(GetRecordsResponse recordsResponse) {
+    private boolean isEmptyStream(final GetRecordsResponse recordsResponse) {
         return recordsResponse.records().isEmpty();
     }
 
+    public void stop() {
+        stopSignal.set(true);
+    }
+
+    public boolean isStopping() {
+        return stopSignal.get();
+    }
 }

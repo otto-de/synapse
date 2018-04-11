@@ -48,8 +48,7 @@ public class KinesisMessageLogReceiverEndpointTest {
     private int nextKey = 0;
 
     @Before
-    public void setUp() throws Exception {
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper,"channelName");
+    public void setUp() {
         when(messageConsumer.keyPattern()).thenReturn(MATCH_ALL);
         when(messageConsumer.payloadType()).thenReturn(String.class);
     }
@@ -58,9 +57,10 @@ public class KinesisMessageLogReceiverEndpointTest {
     public void shouldRetrieveEmptyListOfShards() {
         // given
         describeStreamResponse(ImmutableList.of());
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper,"channelName");
 
         // when
-        List<KinesisShard> shards = kinesisMessageLog.retrieveAllOpenShards();
+        List<KinesisShard> shards = kinesisMessageLog.getCurrentKinesisShards();
 
         // then
         assertThat(shards, hasSize(0));
@@ -70,9 +70,10 @@ public class KinesisMessageLogReceiverEndpointTest {
     public void shouldRetrieveSingleOpenShard() {
         // given
         describeStreamResponse(ImmutableList.of(someShard("shard1", true)));
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper,"channelName");
 
         // when
-        List<KinesisShard> shards = kinesisMessageLog.retrieveAllOpenShards();
+        List<KinesisShard> shards = kinesisMessageLog.getCurrentKinesisShards();
 
         // then
         assertThat(shards, hasSize(1));
@@ -87,9 +88,10 @@ public class KinesisMessageLogReceiverEndpointTest {
                         someShard("shard1", true),
                         someShard("shard2", false),
                         someShard("shard3", true)));
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper,"channelName");
 
         // when
-        List<KinesisShard> shards = kinesisMessageLog.retrieveAllOpenShards();
+        List<KinesisShard> shards = kinesisMessageLog.getCurrentKinesisShards();
 
         // then
         assertThat(shards, hasSize(2));
@@ -107,9 +109,10 @@ public class KinesisMessageLogReceiverEndpointTest {
                 ImmutableList.of(
                         someShard("shard3", true),
                         someShard("shard4", true)));
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper,"channelName");
 
         // when
-        List<KinesisShard> shards = kinesisMessageLog.retrieveAllOpenShards();
+        List<KinesisShard> shards = kinesisMessageLog.getCurrentKinesisShards();
 
         // then
         assertThat(shards, hasSize(4));
@@ -129,9 +132,10 @@ public class KinesisMessageLogReceiverEndpointTest {
                 ImmutableList.of(
                         someShard("shard3", true),
                         someShard("shard4", true)));
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper,"channelName");
 
         // when
-        List<KinesisShard> shards = kinesisMessageLog.retrieveAllOpenShards();
+        List<KinesisShard> shards = kinesisMessageLog.getCurrentKinesisShards();
 
         // then
         assertThat(shards, hasSize(2));
@@ -147,7 +151,7 @@ public class KinesisMessageLogReceiverEndpointTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", "iter1");
 
-        KinesisMessageLogReceiverEndpoint kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper, "testStream");
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper,"channelName");
         kinesisMessageLog.register(messageConsumer);
 
         // when
@@ -171,7 +175,7 @@ public class KinesisMessageLogReceiverEndpointTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", "iter1");
 
-        KinesisMessageLogReceiverEndpoint kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper, "testStream");
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper,"channelName");
         kinesisMessageLog.register(messageConsumer);
 
         // when
@@ -180,6 +184,26 @@ public class KinesisMessageLogReceiverEndpointTest {
 
         // then
         assertThat(finalChannelPosition, is(channelPosition(fromHorizon("shard1"))));
+    }
+
+    @Test
+    public void shouldStopShardsOnStop() {
+        // given
+        describeStreamResponse(
+                ImmutableList.of(
+                        someShard("shard1", true)));
+        describeRecordsForShard("shard1", "iter1");
+
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper,"channelName");
+        kinesisMessageLog.register(messageConsumer);
+
+        // when
+        kinesisMessageLog.stop();
+        kinesisMessageLog.consume(ChannelPosition.fromHorizon(), (m) -> false);
+
+        // then
+        assertThat(kinesisMessageLog.getCurrentKinesisShards().size(), is(1));
+        kinesisMessageLog.getCurrentKinesisShards().forEach(kinesisShard -> assertThat(kinesisShard.isStopping(), is(true)));
     }
 
     @Test(expected = RuntimeException.class)
@@ -192,8 +216,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         );
         describeRecordsForShard("shard1", "iter1");
         describeRecordsForShard("failing-shard2", "failing-iter2");
-
-        KinesisMessageLogReceiverEndpoint kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper, "testStream");
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper,"channelName");
         kinesisMessageLog.register(messageConsumer);
 
         // when
