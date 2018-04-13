@@ -4,10 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.openhft.chronicle.hash.ChronicleHashClosedException;
 import net.openhft.chronicle.map.ChronicleMap;
 import net.openhft.chronicle.map.ChronicleMapBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
 public class ChronicleMapStateRepository<V> extends StateRepository<V> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ChronicleMapStateRepository.class);
 
     private static final int DEFAULT_KEY_SIZE_BYTES = 128;
     private static final double DEFAULT_VALUE_SIZE_BYTES = 512;
@@ -22,8 +26,8 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
         V result = null;
         try {
             result = super.put(key, value);
-        } catch (ChronicleHashClosedException ignore) {
-            // TODO: fixme
+        } catch (ChronicleHashClosedException e) {
+            LOG.warn("could not put on closed state repository", e);
         }
         return result;
     }
@@ -33,8 +37,8 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
         Optional<V> result = Optional.empty();
         try {
             result = super.get(key);
-        } catch (ChronicleHashClosedException ignore) {
-            // TODO: fixme
+        } catch (ChronicleHashClosedException e) {
+            LOG.warn("could not get on closed state repository", e);
         }
         return result;
     }
@@ -43,8 +47,8 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
     public long size() {
         try {
             return super.size();
-        } catch (ChronicleHashClosedException ignore) {
-            // TODO: fixme
+        } catch (ChronicleHashClosedException e) {
+            LOG.warn("could not get size on closed state repository", e);
             return 0;
         }
     }
