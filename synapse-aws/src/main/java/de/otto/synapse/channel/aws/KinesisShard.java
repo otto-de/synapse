@@ -142,12 +142,16 @@ public class KinesisShard {
     }
 
     private void logInfo(String channelName, GetRecordsResponse recordsResponse, Duration durationBehind) {
-        final String durationString = format("%s days %s hrs %s min %s sec", durationBehind.toDays(), durationBehind.toHours() % 24, durationBehind.toMinutes() % 60, durationBehind.getSeconds() % 60);
-        LOG.info("Got {} records from stream '{}' and shard '{}'; behind latest: {}",
-                recordsResponse.records().size(),
-                channelName,
-                shardId,
-                durationString);
+        int recordCount = recordsResponse.records().size();
+        boolean isBehind = durationBehind.getSeconds() > 0;
+        if (recordCount > 0 || isBehind) {
+            final String durationString = format("%s days %s hrs %s min %s sec", durationBehind.toDays(), durationBehind.toHours() % 24, durationBehind.toMinutes() % 60, durationBehind.getSeconds() % 60);
+            LOG.info("Got {} records from stream '{}' and shard '{}'; behind latest: {}",
+                    recordCount,
+                    channelName,
+                    shardId,
+                    durationString);
+        }
     }
 
     private boolean waitABit() {
