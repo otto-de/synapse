@@ -1,6 +1,7 @@
 package de.otto.synapse.channel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
@@ -27,7 +28,7 @@ public class InMemoryChannel extends MessageLogReceiverEndpoint {
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
     public InMemoryChannel(final String channelName) {
-        super(channelName, new ObjectMapper());
+        super(channelName, new ObjectMapper().registerModule(new JavaTimeModule()));
         this.eventQueue = synchronizedList(new ArrayList<>());
     }
 
