@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.6.1
+* Introduce special SnapshotEventSourceNotification that additionally holds the timestamp of snapshot creation.
+
 ## 0.5.0 Major Refactoring
 * Renamed project to OTTO Synapse:
   * eventsourcing-core -> synapse-core
