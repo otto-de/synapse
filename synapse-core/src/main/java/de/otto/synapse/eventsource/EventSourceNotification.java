@@ -18,7 +18,7 @@ public class EventSourceNotification {
     private Status status;
     private String message;
 
-    private EventSourceNotification(Builder builder) {
+    protected EventSourceNotification(Builder builder) {
         eventSourceName = builder.eventSourceName;
         channelPosition = builder.channelPosition;
         channelName = builder.channelName;
@@ -86,14 +86,14 @@ public class EventSourceNotification {
         return builder;
     }
 
-    public static final class Builder {
+    public static class Builder {
         private String eventSourceName;
         private ChannelPosition channelPosition;
         private String channelName;
         private Status status;
         private String message;
 
-        private Builder() {
+        protected Builder() {
         }
 
         public Builder withEventSourceName(String val) {

@@ -6,12 +6,14 @@ import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceNotification;
+import de.otto.synapse.eventsource.aws.SnapshotEventSourceNotification;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.Nonnull;
 import java.io.File;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -67,25 +69,27 @@ public class SnapshotEventSource implements EventSource {
     public ChannelPosition consume(final ChannelPosition startFrom,
                                    final Predicate<Message<?>> stopCondition) {
         ChannelPosition snapshotStreamPosition;
+        Instant snapshotTimestamp = null;
 
         try {
-            publishEvent(startFrom, EventSourceNotification.Status.STARTED, "Loading snapshot from S3.");
+            publishEvent(startFrom, EventSourceNotification.Status.STARTED, "Loading snapshot from S3.", null);
 
             Optional<File> snapshotFile = snapshotReadService.retrieveLatestSnapshot(this.getChannelName());
             if (snapshotFile.isPresent()) {
-                //Instant snapshotTimestamp = SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName());
+                snapshotTimestamp = SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName());
                 snapshotStreamPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), stopCondition, getMessageDispatcher());
             } else {
                 snapshotStreamPosition = ChannelPosition.fromHorizon();
             }
         } catch (RuntimeException e) {
-            publishEvent(ChannelPosition.fromHorizon(), EventSourceNotification.Status.FAILED, "Failed to load snapshot from S3: " + e.getMessage());
+            publishEvent(ChannelPosition.fromHorizon(), EventSourceNotification.Status.FAILED, "Failed to load snapshot from S3: " + e.getMessage(), null);
             throw e;
         } finally {
             LOG.info("Finished reading snapshot into Memory");
             snapshotReadService.deleteOlderSnapshots(this.getChannelName());
         }
-        publishEvent(snapshotStreamPosition, EventSourceNotification.Status.FINISHED, "Finished to load snapshot from S3.");
+
+        publishEvent(snapshotStreamPosition, EventSourceNotification.Status.FINISHED, "Finished to load snapshot from S3.", snapshotTimestamp);
         return snapshotStreamPosition;
     }
 
@@ -99,9 +103,10 @@ public class SnapshotEventSource implements EventSource {
         return false;
     }
 
-    protected void publishEvent(ChannelPosition channelPosition, EventSourceNotification.Status status, String message) {
+    private void publishEvent(ChannelPosition channelPosition, EventSourceNotification.Status status, String message, Instant snapshotTimestamp) {
         if (eventPublisher != null) {
-            EventSourceNotification notification = EventSourceNotification.builder()
+            EventSourceNotification notification = SnapshotEventSourceNotification.builder()
+                    .withSnapshotTimestamp(snapshotTimestamp)
                     .withEventSourceName(name)
                     .withChannelName(this.getChannelName())
                     .withChannelPosition(channelPosition)

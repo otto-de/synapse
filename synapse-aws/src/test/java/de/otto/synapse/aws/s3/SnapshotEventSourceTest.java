@@ -3,6 +3,7 @@ package de.otto.synapse.aws.s3;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.eventsource.EventSourceNotification;
+import de.otto.synapse.eventsource.aws.SnapshotEventSourceNotification;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,7 +55,7 @@ public class SnapshotEventSourceTest {
     @Test(expected = RuntimeException.class)
     public void shouldThrowExceptionIfDownloadFails() {
         // given
-        when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.of(new File("someFilePath")));
+        when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.of(new File("someFileWithPattern-snapshot-2018-01-01T00-00Z-1234567890123456789.json.zip")));
         when(snapshotConsumerService.consumeSnapshot(any(),any(),any())).thenThrow(new RuntimeException("boom - simulate exception while loading from S3"));
 
         // when
@@ -79,7 +80,7 @@ public class SnapshotEventSourceTest {
         }
 
         // then
-        EventSourceNotification expectedFailedEvent = EventSourceNotification.builder()
+        EventSourceNotification expectedFailedEvent = SnapshotEventSourceNotification.builder()
                 .withEventSourceName("snapshotEventSource")
                 .withChannelName(STREAM_NAME)
                 .withStatus(EventSourceNotification.Status.FAILED)
@@ -119,7 +120,7 @@ public class SnapshotEventSourceTest {
         snapshotEventSource.consume();
 
         // then
-        EventSourceNotification expectedStartEvent = EventSourceNotification.builder()
+        EventSourceNotification expectedStartEvent = SnapshotEventSourceNotification.builder()
                 .withEventSourceName("snapshotEventSource")
                 .withChannelName(STREAM_NAME)
                 .withStatus(EventSourceNotification.Status.STARTED)
@@ -128,7 +129,7 @@ public class SnapshotEventSourceTest {
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedStartEvent);
 
-        EventSourceNotification expectedFinishedEvent = EventSourceNotification.builder()
+        EventSourceNotification expectedFinishedEvent = SnapshotEventSourceNotification.builder()
                 .withEventSourceName("snapshotEventSource")
                 .withChannelName(STREAM_NAME)
                 .withStatus(EventSourceNotification.Status.FINISHED)
