@@ -79,9 +79,6 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
         }
 
         public ChronicleMapStateRepository<V> build() {
-            if (objectMapper == null)  {
-                objectMapper = new ObjectMapper();
-            }
 
             if (chronicleMapBuilder == null) {
                 chronicleMapBuilder = ChronicleMapBuilder.of(String.class, clazz)
@@ -90,7 +87,13 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
                         .entries(DEFAULT_ENTRY_COUNT);
             }
 
-            chronicleMapBuilder.valueMarshaller(new ChronicleMapBytesMarshaller<>(objectMapper, clazz));
+            boolean doesClassNeedToBeSerialized = clazz != String.class;
+            if (doesClassNeedToBeSerialized) {
+                if (objectMapper == null) {
+                    objectMapper = new ObjectMapper();
+                }
+                chronicleMapBuilder.valueMarshaller(new ChronicleMapBytesMarshaller<>(objectMapper, clazz));
+            }
 
             return new ChronicleMapStateRepository<>(chronicleMapBuilder.create());
         }
