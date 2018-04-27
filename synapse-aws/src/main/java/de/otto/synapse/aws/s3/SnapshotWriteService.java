@@ -84,8 +84,11 @@ public class SnapshotWriteService {
             writeSequenceNumbers(currentChannelPosition, jGenerator);
             // write to data file
             jGenerator.writeArrayFieldStart(DATA_FIELD_NAME);
+
+            ProgressLogger processedLogger = new ProgressLogger(LOG, stateRepository.size());
             stateRepository.keySet().forEach((key) -> {
                 try {
+                    processedLogger.incrementAndLog();
                     String entry = stateRepository.get(key).get();
                     if (!("".equals(entry))) {
                         jGenerator.writeStartObject();
