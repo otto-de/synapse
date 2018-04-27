@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.6.2
+* Speedup snapshot creation and log progress
+
 ## 0.6.1
 * Introduce special SnapshotEventSourceNotification that additionally holds the timestamp of snapshot creation.
 
