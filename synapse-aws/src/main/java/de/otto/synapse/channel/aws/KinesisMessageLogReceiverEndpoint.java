@@ -2,6 +2,7 @@ package de.otto.synapse.channel.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
@@ -22,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static de.otto.synapse.aws.s3.LogHelper.info;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -56,6 +58,7 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
     public ChannelPosition consume(final @Nonnull ChannelPosition startFrom,
                                    final @Nonnull Predicate<Message<?>> stopCondition) {
         try {
+            final long t1 = System.currentTimeMillis();
             final List<CompletableFuture<ChannelPosition>> futureShardPositions = kinesisShards
                     .stream()
                     .map(shard -> supplyAsync(
@@ -70,7 +73,8 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
                     .stream()
                     .map(CompletableFuture::join)
                     .collect(toList());
-
+            final long t2 = System.currentTimeMillis();
+            info(LOG, ImmutableMap.of("runtime", (t2-t1)), "Consume events from Kinesis", null);
             return ChannelPosition.merge(shardPositions);
         } catch (final RuntimeException e) {
             LOG.error("Failed to consume from Kinesis stream {}: {}", getChannelName(), e.getMessage());
