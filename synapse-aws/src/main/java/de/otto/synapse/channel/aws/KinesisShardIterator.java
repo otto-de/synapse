@@ -17,6 +17,8 @@ import software.amazon.awssdk.services.kinesis.model.KinesisException;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static de.otto.synapse.aws.s3.LogHelper.warn;
+
 public class KinesisShardIterator {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShardIterator.class);
@@ -90,7 +92,8 @@ public class KinesisShardIterator {
     class LogRetryListener extends RetryListenerSupport {
         @Override
         public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable t) {
-            LOG.info("{}. fail to iterate on shard: {}", context.getRetryCount(), t.getMessage());
+
+            warn(LOG, ImmutableMap.of("retryCount", context.getRetryCount(), "errorMessage", t.getMessage()), "fail to iterate on shard", null);
         }
     }
 

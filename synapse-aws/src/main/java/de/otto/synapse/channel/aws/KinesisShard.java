@@ -1,5 +1,6 @@
 package de.otto.synapse.channel.aws;
 
+import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.*;
 import com.google.common.annotations.VisibleForTesting;
 import de.otto.synapse.channel.ChannelPosition;
@@ -7,6 +8,7 @@ import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
@@ -15,6 +17,8 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
+import static de.otto.synapse.aws.s3.LogHelper.error;
+import static de.otto.synapse.aws.s3.LogHelper.info;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
@@ -51,10 +55,9 @@ public class KinesisShard {
                                         final Predicate<Message<?>> stopCondition,
                                         final MessageConsumer<String> consumer) {
         try {
-            LOG.info("Reading from stream {}, shard {} with starting sequence number {}",
-                    channelName,
-                    shardId,
-                    startPosition.shard(shardId));
+            MDC.put("channelName", channelName);
+            MDC.put("shardId", shardId);
+            info(LOG, ImmutableMap.of("position", startPosition), "Reading from stream", null);
 
             ShardPosition shardPosition = startPosition.shard(shardId);
             KinesisShardIterator kinesisShardIterator = retrieveIterator(shardPosition);
@@ -63,6 +66,7 @@ public class KinesisShard {
             do {
                 GetRecordsResponse recordsResponse = kinesisShardIterator.next();
                 Duration durationBehind = ofMillis(recordsResponse.millisBehindLatest());
+                final long t1 = System.currentTimeMillis();
                 if (!isEmptyStream(recordsResponse)) {
                     for (final Record record : recordsResponse.records()) {
                         Message<String> kinesisMessage = kinesisMessage(shardId, durationBehind, record);
@@ -85,16 +89,20 @@ public class KinesisShard {
                     stopRetrieval = stopCondition.test(kinesisMessage);
                 }
 
-                logInfo(channelName, recordsResponse, durationBehind);
+                final long t2 = System.currentTimeMillis();
+                logInfo(channelName, recordsResponse, durationBehind, t2-t1);
 
                 stopRetrieval = stopRetrieval || stopSignal.get() || waitABit();
 
             } while (!stopRetrieval);
-            LOG.info("Done consuming from shard '{}' of stream '{}'.", channelName, shardId);
+            info(LOG, ImmutableMap.of( "position", lastRecord != null ? lastRecord.sequenceNumber() : ""), "Done consuming from shard.", null);
             return channelPosition(shardPosition);
         } catch (final Exception e) {
-            LOG.error(String.format("kinesis consumer died unexpectedly. shard '%s', stream '%s'", channelName, shardId), e);
+            error(LOG, ImmutableMap.of("channelName", channelName, "shardId", shardId),"kinesis consumer died unexpectedly", e);
             throw e;
+        } finally {
+            MDC.remove("channelName");
+            MDC.remove("shardId");
         }
     }
 
@@ -141,16 +149,13 @@ public class KinesisShard {
         }
     }
 
-    private void logInfo(String channelName, GetRecordsResponse recordsResponse, Duration durationBehind) {
+    private void logInfo(String channelName, GetRecordsResponse recordsResponse, Duration durationBehind, long runtime) {
         int recordCount = recordsResponse.records().size();
         boolean isBehind = durationBehind.getSeconds() > 0;
         if (recordCount > 0 || isBehind) {
             final String durationString = format("%s days %s hrs %s min %s sec", durationBehind.toDays(), durationBehind.toHours() % 24, durationBehind.toMinutes() % 60, durationBehind.getSeconds() % 60);
-            LOG.info("Got {} records from stream '{}' and shard '{}'; behind latest: {}",
-                    recordCount,
-                    channelName,
-                    shardId,
-                    durationString);
+            info(LOG, ImmutableMap.of("recordCount", recordCount, "durationBehind", durationBehind, "runtime", runtime), "Reading from stream", null);
+
         }
     }
 

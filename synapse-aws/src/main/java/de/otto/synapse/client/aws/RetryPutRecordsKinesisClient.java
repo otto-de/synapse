@@ -1,5 +1,6 @@
 package de.otto.synapse.client.aws;
 
+import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
@@ -10,6 +11,9 @@ import software.amazon.awssdk.services.kinesis.model.PutRecordsResultEntry;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import static de.otto.synapse.aws.s3.LogHelper.info;
 
 public class RetryPutRecordsKinesisClient {
 
@@ -32,8 +36,11 @@ public class RetryPutRecordsKinesisClient {
     public void putRecords(PutRecordsRequest putRecordsRequest) {
         int retryStep = 0;
         while (retryStep++ < MAX_RETRY_COUNT) {
+            final long t1 = System.currentTimeMillis();
             PutRecordsResponse response = kinesisClient.putRecords(putRecordsRequest);
-            if (response.failedRecordCount() == 0) {
+            final long t2 = System.currentTimeMillis();
+             if (response.failedRecordCount() == 0) {
+                info(LOG, ImmutableMap.of("runtime", (t2-t1)), "Write events to Kinesis", null);
                 return;
             } else {
                 LOG.info("Failed to write events to Kinesis: {}", response.toString());
