@@ -7,7 +7,7 @@ public class ProgressLogger {
     private long percentageCount = 0L;
     private long currentCount = 0L;
 
-    private Logger logger;
+    private final Logger logger;
     private final long expectedCount;
 
     ProgressLogger(Logger logger, long expectedCount) {
@@ -17,10 +17,10 @@ public class ProgressLogger {
 
     public void incrementAndLog() {
         currentCount++;
-        long percentage = (long) ((float) currentCount * 100 / expectedCount);
+        long percentage = currentCount * 100 / expectedCount;
         if (percentage > percentageCount) {
             percentageCount++;
-            logger.info("processed {} of entries", percentage);
+            logger.info("processed {}% of entries", percentage);
         }
     }
 

@@ -42,6 +42,6 @@ public class ProgressLoggerTest {
         progressLogger.incrementAndLog();
 
         // then
-        verify(logger, times(1)).info("processed {} of entries", 1L);
+        verify(logger, times(1)).info("processed {}% of entries", 1L);
     }
 }
