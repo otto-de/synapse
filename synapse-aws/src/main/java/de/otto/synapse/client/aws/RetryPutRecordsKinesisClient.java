@@ -43,7 +43,7 @@ public class RetryPutRecordsKinesisClient {
                 info(LOG, ImmutableMap.of("runtime", (t2-t1)), "Write events to Kinesis", null);
                 return;
             } else {
-                LOG.info("Failed to write events to Kinesis: {}", response.toString());
+                LOG.warn("Failed to write events to Kinesis: {}", response.toString());
                 List<PutRecordsRequestEntry> retryRecords = findFailedRecords(putRecordsRequest, response);
                 putRecordsRequest = PutRecordsRequest.builder()
                         .records(retryRecords)
