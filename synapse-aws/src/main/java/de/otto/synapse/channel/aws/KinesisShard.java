@@ -63,6 +63,7 @@ public class KinesisShard {
             KinesisShardIterator kinesisShardIterator = retrieveIterator(shardPosition);
             boolean stopRetrieval = false;
             Record lastRecord = null;
+            final long t0 = System.currentTimeMillis();
             do {
                 GetRecordsResponse recordsResponse = kinesisShardIterator.next();
                 Duration durationBehind = ofMillis(recordsResponse.millisBehindLatest());
@@ -95,7 +96,8 @@ public class KinesisShard {
                 stopRetrieval = stopRetrieval || stopSignal.get() || waitABit();
 
             } while (!stopRetrieval);
-            info(LOG, ImmutableMap.of( "position", lastRecord != null ? lastRecord.sequenceNumber() : ""), "Done consuming from shard.", null);
+            final long t3 = System.currentTimeMillis();
+            info(LOG, ImmutableMap.of( "position", lastRecord != null ? lastRecord.sequenceNumber() : "", "runtime", (t3-t0)), "Done consuming from shard.", null);
             return channelPosition(shardPosition);
         } catch (final Exception e) {
             error(LOG, ImmutableMap.of("channelName", channelName, "shardId", shardId),"kinesis consumer died unexpectedly", e);
