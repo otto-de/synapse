@@ -1,4 +1,4 @@
-package de.otto.synapse.aws.s3;
+package de.otto.synapse.logging;
 
 import org.slf4j.Logger;
 import org.slf4j.MDC;

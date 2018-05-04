@@ -17,7 +17,7 @@ import software.amazon.awssdk.services.kinesis.model.KinesisException;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static de.otto.synapse.aws.s3.LogHelper.warn;
+import static de.otto.synapse.logging.LogHelper.warn;
 
 public class KinesisShardIterator {
 

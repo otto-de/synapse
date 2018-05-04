@@ -1,5 +1,6 @@
-package de.otto.synapse.aws.s3;
+package de.otto.synapse.logging;
 
+import de.otto.synapse.logging.ProgressLogger;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;

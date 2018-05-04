@@ -1,4 +1,4 @@
-package de.otto.synapse.aws.s3;
+package de.otto.synapse.logging;
 
 import org.slf4j.Logger;
 
@@ -10,7 +10,8 @@ public class ProgressLogger {
     private final Logger logger;
     private final long expectedCount;
 
-    ProgressLogger(Logger logger, long expectedCount) {
+    public ProgressLogger(final Logger logger,
+                          final long expectedCount) {
         this.logger = logger;
         this.expectedCount = expectedCount;
     }

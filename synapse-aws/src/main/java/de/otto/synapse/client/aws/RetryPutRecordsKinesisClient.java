@@ -11,9 +11,8 @@ import software.amazon.awssdk.services.kinesis.model.PutRecordsResultEntry;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import static de.otto.synapse.aws.s3.LogHelper.info;
+import static de.otto.synapse.logging.LogHelper.info;
 
 public class RetryPutRecordsKinesisClient {
 

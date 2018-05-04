@@ -17,8 +17,8 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
-import static de.otto.synapse.aws.s3.LogHelper.error;
-import static de.otto.synapse.aws.s3.LogHelper.info;
+import static de.otto.synapse.logging.LogHelper.error;
+import static de.otto.synapse.logging.LogHelper.info;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;

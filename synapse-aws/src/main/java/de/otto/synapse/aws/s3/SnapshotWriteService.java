@@ -8,6 +8,7 @@ import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.configuration.aws.SnapshotProperties;
+import de.otto.synapse.logging.ProgressLogger;
 import de.otto.synapse.state.StateRepository;
 import org.slf4j.Logger;
 

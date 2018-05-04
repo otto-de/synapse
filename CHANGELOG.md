@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.6.3
+* Using key-value pairs in (some) log messages
+
 ## 0.6.2
 * Speedup snapshot creation and log progress
 
