@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.kinesis.model.Shard;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -24,6 +25,8 @@ import java.util.function.Predicate;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static de.otto.synapse.logging.LogHelper.info;
+import static java.util.Collections.emptyList;
+import static java.util.Objects.isNull;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -36,14 +39,18 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
 
     private final KinesisClient kinesisClient;
 
-    private final List<KinesisShard> kinesisShards;
-    private final ExecutorService executorService;
+    private List<KinesisShard> kinesisShards;
+    private ExecutorService executorService;
 
     public KinesisMessageLogReceiverEndpoint(final KinesisClient kinesisClient,
                                              final ObjectMapper objectMapper,
                                              final String channelName) {
         super(channelName, objectMapper);
         this.kinesisClient = kinesisClient;
+        createShardIteratorExecutorService();
+    }
+
+    private void createShardIteratorExecutorService() {
         this.kinesisShards = retrieveAllOpenShards();
         if (kinesisShards.isEmpty()) {
             this.executorService = newSingleThreadExecutor();
@@ -59,6 +66,9 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
                                    final @Nonnull Predicate<Message<?>> stopCondition) {
         try {
             final long t1 = System.currentTimeMillis();
+            if (isNull(executorService)) {
+               createShardIteratorExecutorService();
+            }
             final List<CompletableFuture<ChannelPosition>> futureShardPositions = kinesisShards
                     .stream()
                     .map(shard -> supplyAsync(
@@ -91,6 +101,7 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
             } catch (InterruptedException ie) {
                 Thread.currentThread().interrupt();
             }
+            executorService = null;
             throw e;
         }
     }

@@ -31,12 +31,21 @@ public class KinesisShardIterator {
 
     private final KinesisClient kinesisClient;
     private String id;
+    private final int fetchRecordLimit;
     private final RetryTemplate retryTemplate;
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
     public KinesisShardIterator(KinesisClient kinesisClient, String firstId) {
         this.kinesisClient = kinesisClient;
         this.id = firstId;
+        this.fetchRecordLimit = FETCH_RECORDS_LIMIT;
+        this.retryTemplate = createRetryTemplate();
+    }
+
+    public KinesisShardIterator(KinesisClient kinesisClient, String firstId, int fetchRecordLimit) {
+        this.kinesisClient = kinesisClient;
+        this.id = firstId;
+        this.fetchRecordLimit = fetchRecordLimit;
         this.retryTemplate = createRetryTemplate();
     }
 
@@ -64,7 +73,7 @@ public class KinesisShardIterator {
     private GetRecordsResponse tryNext() {
         GetRecordsResponse response = kinesisClient.getRecords(GetRecordsRequest.builder()
                 .shardIterator(id)
-                .limit(FETCH_RECORDS_LIMIT)
+                .limit(fetchRecordLimit)
                 .build());
         this.id = response.nextShardIterator();
         return response;

@@ -223,6 +223,34 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog.consume(ChannelPosition.fromHorizon(), (m) -> false);
     }
 
+    @Test
+    public void shouldConsumeMessagesAfterException() {
+        // given
+        describeStreamResponse(
+                ImmutableList.of(
+                        someShard("shard1", true),
+                        someShard("failing-shard2", true))
+        );
+        describeRecordsForShard("shard1", "iter1");
+        describeRecordsForShard("failing-shard2", "failing-iter2");
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper,"channelName");
+        kinesisMessageLog.register(messageConsumer);
+
+        // when
+        try {
+            kinesisMessageLog.consume(ChannelPosition.fromHorizon(), (m) -> false);
+        } catch (RuntimeException e) {
+
+        }
+        describeRecordsForShard("failing-shard2", "iter2");
+        ChannelPosition finalChannelPosition = kinesisMessageLog.consume(ChannelPosition.fromHorizon(), this::stopIfGreenForString);
+
+        // then
+        verify(messageConsumer, times(6)).accept(messageArgumentCaptor.capture());
+        List<Message<String>> messages = messageArgumentCaptor.getAllValues();
+
+    }
+
     private Shard someShard(String shardId, boolean open) {
         return Shard.builder()
                 .shardId(shardId)
