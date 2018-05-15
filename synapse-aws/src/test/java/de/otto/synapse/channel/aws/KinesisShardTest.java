@@ -2,6 +2,7 @@ package de.otto.synapse.channel.aws;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.message.Message;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,6 +19,8 @@ import java.util.function.Predicate;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.message.Header.responseHeader;
+import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
 import static java.time.Duration.ofMillis;
 import static java.time.Instant.now;
@@ -39,11 +42,13 @@ public class KinesisShardTest {
     @Mock
     private Predicate<Message<?>> mockStopCondition;
 
+    private InterceptorChain interceptorChain;
     private KinesisShard kinesisShard;
 
     @Before
     public void setUp() {
-        kinesisShard = new KinesisShard("someShard", "someStream", kinesisClient);
+        interceptorChain = new InterceptorChain();
+        kinesisShard = new KinesisShard("someShard", "someStream", kinesisClient, interceptorChain);
 
         GetShardIteratorResponse fakeResponse = GetShardIteratorResponse.builder()
                 .shardIterator("someShardIterator")
@@ -139,6 +144,77 @@ public class KinesisShardTest {
         // then
         verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record1));
         verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record2));
+        verifyNoMoreInteractions(consumer);
+
+        assertThat(channelPosition.shard("someShard").position(), is("2"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void shouldInterceptMessages() {
+        final Instant now = now();
+        // given
+        final Record record1 = Record.builder()
+                .sequenceNumber("1")
+                .approximateArrivalTimestamp(now)
+                .partitionKey("first")
+                .build();
+        final Record record2 = Record.builder()
+                .sequenceNumber("2")
+                .approximateArrivalTimestamp(now)
+                .partitionKey("second")
+                .build();
+        final GetRecordsResponse response = GetRecordsResponse.builder()
+                .records(record1, record2)
+                .nextShardIterator("nextShardIterator")
+                .millisBehindLatest(1234L)
+                .build();
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
+
+        // when
+        interceptorChain.register((m) -> message(m.getKey(), m.getHeader(), "intercepted"));
+        final ChannelPosition channelPosition = kinesisShard.consumeShard(fromHorizon(), (message) -> true, consumer);
+
+        // then
+        verify(consumer).accept(message("first", responseHeader(fromPosition("someShard", "1"), now, ofMillis(1234L)), "intercepted"));
+        verify(consumer).accept(message("second", responseHeader(fromPosition("someShard", "2"), now, ofMillis(1234L)), "intercepted"));
+        verifyNoMoreInteractions(consumer);
+
+        assertThat(channelPosition.shard("someShard").position(), is("2"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void shouldIgnoreMessagesDroppedByInterceptor() {
+        final Instant now = now();
+        // given
+        final Record record1 = Record.builder()
+                .sequenceNumber("1")
+                .approximateArrivalTimestamp(now)
+                .partitionKey("first")
+                .build();
+        final Record record2 = Record.builder()
+                .sequenceNumber("2")
+                .approximateArrivalTimestamp(now)
+                .partitionKey("second")
+                .build();
+        final GetRecordsResponse response = GetRecordsResponse.builder()
+                .records(record1, record2)
+                .nextShardIterator("nextShardIterator")
+                .millisBehindLatest(1234L)
+                .build();
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
+
+        // when
+        interceptorChain.register((m) ->
+                m.getKey().equals("first")
+                        ? null
+                        : message(m.getKey(), m.getHeader(), "intercepted")
+        );
+        final ChannelPosition channelPosition = kinesisShard.consumeShard(fromHorizon(), (message) -> true, consumer);
+
+        // then
+        verify(consumer).accept(message("second", responseHeader(fromPosition("someShard", "2"), now, ofMillis(1234L)), "intercepted"));
         verifyNoMoreInteractions(consumer);
 
         assertThat(channelPosition.shard("someShard").position(), is("2"));

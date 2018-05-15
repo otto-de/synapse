@@ -2,11 +2,7 @@ package de.otto.synapse.eventsource.aws;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.ChannelResponse;
-import de.otto.synapse.channel.Status;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.EventSourceNotification;
@@ -18,7 +14,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationEventPublisher;
-import software.amazon.awssdk.services.kinesis.model.Record;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;

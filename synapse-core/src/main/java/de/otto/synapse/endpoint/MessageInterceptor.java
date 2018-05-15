@@ -2,6 +2,9 @@ package de.otto.synapse.endpoint;
 
 import de.otto.synapse.message.Message;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * Message interceptors are used to intercept messages before they are sent or received by
  * {@link MessageEndpoint message endpoints}.
@@ -16,7 +19,7 @@ import de.otto.synapse.message.Message;
  *     <li>Logging</li>
  *     <li>Calculating Metrics</li>
  *     <li>Wire Taps</li>
- *     <li>Message Filters</li>
+ *     <li>{@link MessageFilter Message Filters}</li>
  * </ul>
  * <p>
  *     ...and many other.
@@ -38,5 +41,6 @@ public interface MessageInterceptor {
      * @param message the channel-layer message with payload-type beeing a String
      * @return intercepted version of the message, or null if the message should be dropped.
      */
-    Message<String> intercept(final Message<String> message);
+    @Nullable
+    Message<String> intercept(final @Nonnull Message<String> message);
 }

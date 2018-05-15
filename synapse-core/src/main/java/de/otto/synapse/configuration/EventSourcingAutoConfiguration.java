@@ -3,26 +3,34 @@ package de.otto.synapse.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.otto.synapse.annotation.EventSourceConsumerBeanPostProcessor;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceConsumerProcess;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
 
 import java.util.List;
+import java.util.Map;
 
+import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.beans.factory.config.BeanDefinition.ROLE_INFRASTRUCTURE;
 
 @Configuration
 @EnableConfigurationProperties(ConsumerProcessProperties.class)
 public class EventSourcingAutoConfiguration {
 
+    private static final Logger LOG = getLogger(EventSourcingAutoConfiguration.class);
+
     @Autowired(required = false)
     private List<EventSource> eventSources;
+    private MessageInterceptorRegistry registry;
 
     @Bean
     @ConditionalOnProperty(
@@ -38,6 +46,21 @@ public class EventSourcingAutoConfiguration {
     @ConditionalOnMissingBean(ObjectMapper.class)
     public ObjectMapper objectMapper() {
         return new ObjectMapper().registerModule(new JavaTimeModule());
+    }
+
+    @Bean
+    public MessageInterceptorRegistry messageInterceptorRegistry(final ApplicationContext applicationContext) {
+        if (registry == null) {
+            this.registry = new MessageInterceptorRegistry();
+            final Map<String, MessageEndpointConfigurer> configurers = applicationContext.getBeansOfType(MessageEndpointConfigurer.class);
+            if (configurers != null) {
+                configurers.forEach((beanName, bean) -> {
+                    LOG.info("Configuring MessageEndpointConfigurer '" + beanName + "'");
+                    bean.configureMessageInterceptors(registry);
+                });
+            }
+        }
+        return registry;
     }
 
     @Bean

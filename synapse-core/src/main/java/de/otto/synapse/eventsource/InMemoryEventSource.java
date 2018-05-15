@@ -1,9 +1,7 @@
 package de.otto.synapse.eventsource;
 
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.channel.InMemoryChannel;
-import de.otto.synapse.channel.Status;
 import de.otto.synapse.message.Message;
 import org.springframework.context.ApplicationEventPublisher;
 

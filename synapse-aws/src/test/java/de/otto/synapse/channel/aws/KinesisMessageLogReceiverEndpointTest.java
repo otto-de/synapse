@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.endpoint.MessageInterceptor;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,6 +25,7 @@ import java.util.regex.Pattern;
 
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
+import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingReceiverChannelsWith;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -158,6 +161,43 @@ public class KinesisMessageLogReceiverEndpointTest {
         ChannelPosition finalChannelPosition = kinesisMessageLog.consume(ChannelPosition.fromHorizon(), this::stopIfGreenForString);
 
         // then
+        verify(messageConsumer, times(3)).accept(messageArgumentCaptor.capture());
+        List<Message<String>> messages = messageArgumentCaptor.getAllValues();
+
+        assertThat(messages.get(0).getPayload(), is("{\"data\":\"blue\"}"));
+        assertThat(messages.get(1).getPayload(), is(nullValue()));
+        assertThat(messages.get(2).getPayload(), is("{\"data\":\"green\"}"));
+        assertThat(finalChannelPosition.shard("shard1").position(), is("sequence-green"));
+    }
+
+    @Test
+    public void shouldInterceptMessages() {
+        // given
+        describeStreamResponse(
+                ImmutableList.of(
+                        someShard("shard1", true)));
+        describeRecordsForShard("shard1", "iter1");
+
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper, "testStream");
+        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        // no lambda used in order to make Mockito happy...
+        final MessageInterceptor interceptor = spy(new MessageInterceptor() {
+            @Override
+            public Message<String> intercept(Message<String> message) {
+                return message;
+            }
+        });
+
+        registry.register(matchingReceiverChannelsWith("testStream", interceptor));
+        kinesisMessageLog.registerInterceptorsFrom(registry);
+        kinesisMessageLog.register(messageConsumer);
+
+        // when
+        final ChannelPosition finalChannelPosition = kinesisMessageLog.consume(ChannelPosition.fromHorizon(), this::stopIfGreenForString);
+
+        // then
+        verify(interceptor, times(3)).intercept(any(Message.class));
+
         verify(messageConsumer, times(3)).accept(messageArgumentCaptor.capture());
         List<Message<String>> messages = messageArgumentCaptor.getAllValues();
 

@@ -61,8 +61,6 @@ task stopLocalStack(type: Exec) {
 test.dependsOn(startLocalStack)
 test.finalizedBy(stopLocalStack)
 
-
-
 uploadArchives {
     repositories {
         mavenDeployer {

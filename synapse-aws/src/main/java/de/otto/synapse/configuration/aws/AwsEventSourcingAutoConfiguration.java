@@ -5,6 +5,7 @@ import de.otto.edison.aws.configuration.AwsConfiguration;
 import de.otto.edison.aws.s3.configuration.S3Configuration;
 import de.otto.synapse.aws.s3.SnapshotConsumerService;
 import de.otto.synapse.aws.s3.SnapshotReadService;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.eventsource.aws.CompactedKinesisEventSourceBuilder;
 import de.otto.synapse.eventsource.aws.KinesisEventSourceBuilder;
 import de.otto.synapse.eventsource.aws.SnapshotEventSourceBuilder;
@@ -29,9 +30,10 @@ public class AwsEventSourcingAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = "kinesisEventSourceBuilder")
     public KinesisEventSourceBuilder kinesisEventSourceBuilder(final KinesisClient kinesisClient,
-                                                                 final ApplicationEventPublisher eventPublisher,
-                                                                 final ObjectMapper objectMapper) {
-        return new KinesisEventSourceBuilder(objectMapper, eventPublisher, kinesisClient);
+                                                               final ApplicationEventPublisher eventPublisher,
+                                                               final ObjectMapper objectMapper,
+                                                               final MessageInterceptorRegistry registry) {
+        return new KinesisEventSourceBuilder(objectMapper, eventPublisher, kinesisClient, registry);
     }
 
     @Bean

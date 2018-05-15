@@ -1,15 +1,18 @@
 package de.otto.synapse.endpoint;
 
+import com.google.common.collect.ImmutableList;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static com.google.common.collect.ImmutableList.copyOf;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -45,6 +48,16 @@ public final class InterceptorChain implements MessageInterceptor {
         this.interceptors = new CopyOnWriteArrayList<>();
     }
 
+    /**
+     * Returns the immutable list of {@link #register(MessageInterceptor) registered}
+     * {@link MessageInterceptor message interceptors}.
+     *
+     * @return registered message interceptors
+     */
+    public ImmutableList<MessageInterceptor> getInterceptors() {
+        return copyOf(interceptors);
+    }
+
     public void register(final MessageInterceptor messageInterceptor) {
         // TODO: support ordering of interceptors via (org.springframework.core.annotation.Order)
         interceptors.add(messageInterceptor);
@@ -65,21 +78,24 @@ public final class InterceptorChain implements MessageInterceptor {
      *     logging, monitoring or other things.
      * </p>
      *
-     * @param message the message to intercept
+     * @param interceptedMessage the message to intercept
      * @return the (possibly modified) message, or null if the message should be dropped.
      */
     @Nullable
-    public Message<String> intercept(final Message<String> message) {
-        LOG.debug("Intercepting message '{}' using {} interceptors", message, interceptors.size());
-        Message<String> m = message;
+    public Message<String> intercept(final @Nonnull Message<String> interceptedMessage) {
+        Message<String> resultingMessage = interceptedMessage;
         for (final MessageInterceptor interceptor : interceptors) {
-            if (m != null) {
-                m = interceptor.intercept(m);
-            } else {
-                LOG.debug("Interceptor returned <null> - dropping message");
+            if (resultingMessage == null) {
+                break;
             }
+            resultingMessage = interceptor.intercept(resultingMessage);
         }
-        return m;
+        if (resultingMessage != null) {
+            LOG.debug("Intercepted message '{}' converted to {}", interceptedMessage, resultingMessage);
+        } else {
+            LOG.debug("Intercepted message '{}' converted to <null> - dropping message", interceptedMessage);
+        }
+        return resultingMessage;
     }
 
     @Override

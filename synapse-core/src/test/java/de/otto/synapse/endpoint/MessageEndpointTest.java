@@ -3,6 +3,8 @@ package de.otto.synapse.endpoint;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 
+import static de.otto.synapse.endpoint.EndpointType.SENDER;
+import static de.otto.synapse.endpoint.MessageInterceptorRegistration.senderChannelsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
@@ -18,11 +20,21 @@ public class MessageEndpointTest {
 
     @Test(expected = RuntimeException.class)
     public void shouldFailToCreateWithNullChannelName() {
-        new MessageEndpoint(null) {};
+        new MessageEndpoint(null) {
+            @Override
+            protected EndpointType getEndpointType() {
+                return SENDER;
+            }
+        };
     }
     @Test
     public void shouldReturnChannelName() {
-        final MessageEndpoint endpoint = new MessageEndpoint("foo") {};
+        final MessageEndpoint endpoint = new MessageEndpoint("foo") {
+            @Override
+            protected EndpointType getEndpointType() {
+                return SENDER;
+            }
+        };
         assertThat(endpoint.getChannelName(), is("foo"));
     }
 
@@ -33,16 +45,28 @@ public class MessageEndpointTest {
        of Intellij can be disabled, but I'm too lazy to figure out how to do it with 'gradle idea'
      */
     @Test(expected = RuntimeException.class)
-    public void shouldFailToRegisterNullInterceptor() {
-        MessageEndpoint messageEndpoint = new MessageEndpoint("foo") {};
-        messageEndpoint.register(null);
+    public void shouldFailToRegisterFromNullRegistry() {
+        MessageEndpoint messageEndpoint = new MessageEndpoint("foo") {
+            @Override
+            protected EndpointType getEndpointType() {
+                return SENDER;
+            }
+        };
+        messageEndpoint.registerInterceptorsFrom(null);
     }
 
     @Test
     public void shouldInterceptMessages() {
         final MessageInterceptor interceptor = mock(MessageInterceptor.class);
-        final MessageEndpoint endpoint = new MessageEndpoint("foo") {};
-        endpoint.register(interceptor);
+        final MessageEndpoint endpoint = new MessageEndpoint("foo") {
+            @Override
+            protected EndpointType getEndpointType() {
+                return SENDER;
+            }
+        };
+        MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        registry.register(senderChannelsWith(interceptor));
+        endpoint.registerInterceptorsFrom(registry);
         final Message<String> message = mock(Message.class);
         endpoint.intercept(message);
         verify(interceptor).intercept(message);
@@ -51,7 +75,12 @@ public class MessageEndpointTest {
     @Test
     @SuppressWarnings("unchecked")
     public void shouldReturnMessageWithoutInterceptor() {
-        final MessageEndpoint messageEndpoint = new MessageEndpoint("foo") {};
+        final MessageEndpoint messageEndpoint = new MessageEndpoint("foo") {
+            @Override
+            protected EndpointType getEndpointType() {
+                return SENDER;
+            }
+        };
         final Message<String> message = mock(Message.class);
         assertThat(messageEndpoint.intercept(message), is(message));
     }

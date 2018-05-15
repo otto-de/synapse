@@ -2,6 +2,7 @@ package de.otto.synapse.eventsource.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.aws.KinesisMessageLogReceiverEndpoint;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
@@ -20,13 +21,16 @@ public class KinesisEventSourceBuilder implements EventSourceBuilder {
     private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final KinesisClient kinesisClient;
+    private final MessageInterceptorRegistry interceptorRegistry;
 
     public KinesisEventSourceBuilder(final ObjectMapper objectMapper,
                                      final ApplicationEventPublisher eventPublisher,
-                                     final KinesisClient kinesisClient) {
+                                     final KinesisClient kinesisClient,
+                                     final MessageInterceptorRegistry interceptorRegistry) {
         this.objectMapper = objectMapper;
         this.eventPublisher = eventPublisher;
         this.kinesisClient = kinesisClient;
+        this.interceptorRegistry = interceptorRegistry;
     }
 
     @Override
@@ -34,6 +38,7 @@ public class KinesisEventSourceBuilder implements EventSourceBuilder {
         Objects.requireNonNull(channelName, "channel name must not be null");
         LOG.info("Building '{}' as KinesisEventSource", channelName);
         final MessageLogReceiverEndpoint messageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper, channelName);
+        messageLog.registerInterceptorsFrom(interceptorRegistry);
         return new KinesisEventSource(name, messageLog, eventPublisher);
     }
 

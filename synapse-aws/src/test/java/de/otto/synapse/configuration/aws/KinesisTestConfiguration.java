@@ -1,5 +1,7 @@
 package de.otto.synapse.configuration.aws;
 
+import de.otto.synapse.configuration.MessageEndpointConfigurer;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -12,13 +14,25 @@ import software.amazon.awssdk.services.kinesis.KinesisClient;
 
 import java.net.URI;
 
+import static de.otto.synapse.endpoint.MessageInterceptorRegistration.receiverChannelsWith;
 import static org.slf4j.LoggerFactory.getLogger;
 import static software.amazon.awssdk.services.kinesis.KinesisClient.builder;
 
 @Configuration
-public class KinesisTestConfiguration {
+public class KinesisTestConfiguration implements MessageEndpointConfigurer {
 
     private static final Logger LOG = getLogger(KinesisTestConfiguration.class);
+
+    @Override
+    public void configureMessageInterceptors(final MessageInterceptorRegistry registry) {
+        registry.register(receiverChannelsWith(testMessageInterceptor()));
+    }
+
+    @Bean
+    public TestMessageInterceptor testMessageInterceptor() {
+        return new TestMessageInterceptor();
+    }
+
 
     @Bean
     @Primary

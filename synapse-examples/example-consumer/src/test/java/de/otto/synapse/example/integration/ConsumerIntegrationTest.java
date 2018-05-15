@@ -41,7 +41,7 @@ public class ConsumerIntegrationTest {
 
     @Before
     public void setUp() throws Exception {
-        bananaSender = messageSenderFactory.createSenderForStream(properties.getBananaChannel());
+        bananaSender = messageSenderFactory.createSenderFor(properties.getBananaChannel());
     }
 
     @Test

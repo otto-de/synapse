@@ -42,7 +42,7 @@ public class ExampleProducerIntegrationTest {
                 .untilAtomic(testConsumer.count, greaterThanOrEqualTo(1));
     }
 
-    @EnableEventSource(name = "inMemoryStream", channelName = "someStreamName")
+    @EnableEventSource(name = "inMemorySource", channelName = "synapse-example-products")
     @Configuration
     static class InMemoryTestConsumerConfiguration {
 
@@ -54,7 +54,7 @@ public class ExampleProducerIntegrationTest {
         private AtomicInteger count = new AtomicInteger();
 
         @EventSourceConsumer(
-                eventSource = "inMemoryStream",
+                eventSource = "inMemorySource",
                 payloadType = ProductPayload.class
         )
         public void accept(Message<ProductPayload> message) {

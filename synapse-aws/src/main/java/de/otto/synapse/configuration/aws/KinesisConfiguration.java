@@ -2,6 +2,7 @@ package de.otto.synapse.configuration.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.aws.configuration.AwsProperties;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderFactory;
 import de.otto.synapse.endpoint.sender.aws.KinesisMessageSenderFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,9 +40,10 @@ public class KinesisConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(MessageSenderFactory.class)
-    public MessageSenderFactory messageSenderFactory(ObjectMapper objectMapper,
-                                                     KinesisClient kinesisClient) {
-        return new KinesisMessageSenderFactory(objectMapper, kinesisClient);
+    public MessageSenderFactory messageSenderFactory(final MessageInterceptorRegistry registry,
+                                                     final ObjectMapper objectMapper,
+                                                     final KinesisClient kinesisClient) {
+        return new KinesisMessageSenderFactory(registry, objectMapper, kinesisClient);
     }
 
 }

@@ -3,30 +3,45 @@ package de.otto.synapse.example.consumer.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.annotation.EnableEventSource;
 import de.otto.synapse.channel.InMemoryChannels;
-import de.otto.synapse.endpoint.sender.InMemoryMessageSender;
+import de.otto.synapse.configuration.MessageEndpointConfigurer;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.endpoint.sender.InMemoryMessageSenderFactory;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
+import de.otto.synapse.endpoint.sender.MessageSenderFactory;
 import de.otto.synapse.eventsource.EventSourceBuilder;
-import de.otto.synapse.eventsource.InMemoryEventSource;
+import de.otto.synapse.eventsource.InMemoryEventSourceBuilder;
 import de.otto.synapse.example.consumer.state.BananaProduct;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;
 import de.otto.synapse.state.StateRepository;
-import de.otto.synapse.translator.JsonStringMessageTranslator;
-import de.otto.synapse.translator.MessageTranslator;
+import org.slf4j.Logger;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import static de.otto.synapse.endpoint.MessageInterceptorRegistration.receiverChannelsWith;
+import static de.otto.synapse.endpoint.MessageInterceptorRegistration.senderChannelsWith;
+import static org.slf4j.LoggerFactory.getLogger;
 
 
 @Configuration
 @EnableConfigurationProperties({MyServiceProperties.class})
 @EnableEventSource(name = "bananaSource",  channelName = "${exampleservice.banana-channel}")
 @EnableEventSource(name = "productSource", channelName = "${exampleservice.product-channel}")
-public class ExampleConfiguration {
+public class ExampleConfiguration implements MessageEndpointConfigurer {
 
-    @Bean
-    public InMemoryChannels inMemoryChannels(final ObjectMapper objectMapper) {
-        return new InMemoryChannels(objectMapper);
+    private static final Logger LOG = getLogger(ExampleConfiguration.class);
+
+    @Override
+    public void configureMessageInterceptors(final MessageInterceptorRegistry registry) {
+        registry.register(receiverChannelsWith((m) -> {
+            LOG.info("[receiver] Intercepted message " + m);
+            return m;
+        }));
+        registry.register(senderChannelsWith((m) -> {
+            LOG.info("[sender] Intercepted message " + m);
+            return m;
+        }));
     }
 
     @Bean
@@ -35,31 +50,35 @@ public class ExampleConfiguration {
     }
 
     @Bean
-    public EventSourceBuilder defaultEventSourceBuilder(final ApplicationEventPublisher eventPublisher,
+    public InMemoryChannels inMemoryChannels(final ObjectMapper objectMapper) {
+        return new InMemoryChannels(objectMapper);
+    }
+
+    @Bean
+    public MessageSenderFactory messageSenderFactory(final MessageInterceptorRegistry registry,
+                                                     final ObjectMapper objectMapper,
+                                                     final InMemoryChannels inMemoryChannels) {
+        return new InMemoryMessageSenderFactory(registry, inMemoryChannels, objectMapper);
+    }
+
+
+    @Bean
+    public EventSourceBuilder defaultEventSourceBuilder(final MessageInterceptorRegistry interceptorRegistry,
+                                                        final ApplicationEventPublisher eventPublisher,
                                                         final InMemoryChannels inMemoryChannels) {
-        return (name, channelName) -> {
-            return new InMemoryEventSource(name, inMemoryChannels.getChannel(channelName), eventPublisher);
-        };
+        return new InMemoryEventSourceBuilder(interceptorRegistry, inMemoryChannels, eventPublisher);
     }
 
     @Bean
-    public MessageSenderEndpoint bananaMessageSender(final MyServiceProperties properties,
-                                                     final ObjectMapper objectMapper,
-                                                     final InMemoryChannels inMemoryChannels) {
-        return buildMessageSender(properties.getBananaChannel(), objectMapper, inMemoryChannels);
+    public MessageSenderEndpoint bananaMessageSender(final MessageSenderFactory messageSenderFactory,
+                                                     final MyServiceProperties properties) {
+        return messageSenderFactory.createSenderFor(properties.getBananaChannel());
     }
 
     @Bean
-    public MessageSenderEndpoint productMessageSender(final MyServiceProperties properties,
-                                                      final ObjectMapper objectMapper,
-                                                      final InMemoryChannels inMemoryChannels) {
-        return buildMessageSender(properties.getProductChannel(), objectMapper, inMemoryChannels);
+    public MessageSenderEndpoint productMessageSender(final MessageSenderFactory messageSenderFactory,
+                                                      final MyServiceProperties properties) {
+        return messageSenderFactory.createSenderFor(properties.getProductChannel());
     }
 
-    private MessageSenderEndpoint buildMessageSender(final String channelName,
-                                                     final ObjectMapper objectMapper,
-                                                     final InMemoryChannels inMemoryChannels) {
-        final MessageTranslator<String> translator = new JsonStringMessageTranslator(objectMapper);
-        return new InMemoryMessageSender(translator, inMemoryChannels.getChannel(channelName));
-    }
 }

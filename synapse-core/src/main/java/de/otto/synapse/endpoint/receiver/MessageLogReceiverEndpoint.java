@@ -2,7 +2,6 @@ package de.otto.synapse.endpoint.receiver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Message;
@@ -46,7 +45,7 @@ public abstract class MessageLogReceiverEndpoint extends MessageReceiverEndpoint
      *
      * @param startFrom the start position used to proceed message consumption
      * @param stopCondition the predicate used to check if consumption should stop.
-     * @return ChannelResponse
+     * @return ChannelPosition
      */
     @Nonnull
     public abstract ChannelPosition consume(@Nonnull ChannelPosition startFrom,

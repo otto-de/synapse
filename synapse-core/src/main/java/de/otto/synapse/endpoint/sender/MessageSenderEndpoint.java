@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint.sender;
 
+import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.MessageEndpoint;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
@@ -7,6 +8,8 @@ import de.otto.synapse.translator.MessageTranslator;
 import javax.annotation.Nonnull;
 import java.util.Objects;
 import java.util.stream.Stream;
+
+import static de.otto.synapse.endpoint.EndpointType.SENDER;
 
 /**
  * Sender-side {@code MessageEndpoint endpoint} of a Message Channel with support for {@link MessageTranslator message translation}.
@@ -62,6 +65,11 @@ public abstract class MessageSenderEndpoint extends MessageEndpoint {
                 .map(messageTranslator::translate)
                 .map(this::intercept)
                 .filter(Objects::nonNull));
+    }
+
+    @Override
+    protected final EndpointType getEndpointType() {
+        return SENDER;
     }
 
     protected void doSendBatch(final @Nonnull Stream<Message<String>> batch) {

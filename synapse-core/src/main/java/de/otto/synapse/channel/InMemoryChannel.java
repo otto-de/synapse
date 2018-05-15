@@ -38,9 +38,9 @@ public class InMemoryChannel extends MessageLogReceiverEndpoint {
         this.eventQueue = synchronizedList(new ArrayList<>());
     }
 
-    public void send(final Message<String> event) {
-        LOG.info("Sending {} to {}", event, getChannelName());
-        eventQueue.add(event);
+    public void send(final Message<String> message) {
+        LOG.info("Sending {} to {}", message, getChannelName());
+        eventQueue.add(message);
     }
 
     @Nonnull
@@ -55,11 +55,17 @@ public class InMemoryChannel extends MessageLogReceiverEndpoint {
             if (hasMessageAfter(pos)) {
                 ++pos;
                 final Message<String> receivedMessage = eventQueue.get(pos);
-                getMessageDispatcher().accept(message(
-                        receivedMessage.getKey(),
-                        responseHeader(null, now()),
-                        receivedMessage.getPayload()));
-                shouldStop = stopCondition.test(receivedMessage);
+                final Message<String> interceptedMessage = intercept(
+                        message(
+                                receivedMessage.getKey(),
+                                responseHeader(null, now()),
+                                receivedMessage.getPayload()
+                        )
+                );
+                if (interceptedMessage != null) {
+                    getMessageDispatcher().accept(interceptedMessage);
+                    shouldStop = stopCondition.test(interceptedMessage);
+                }
             } else {
                 try {
                     Thread.sleep(100);

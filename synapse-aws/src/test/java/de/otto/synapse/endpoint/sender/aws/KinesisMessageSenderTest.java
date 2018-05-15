@@ -3,6 +3,7 @@ package de.otto.synapse.endpoint.sender.aws;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
@@ -18,10 +19,12 @@ import software.amazon.awssdk.services.kinesis.model.PutRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequestEntry;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsResponse;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static de.otto.synapse.endpoint.MessageInterceptorRegistration.allChannelsWith;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
 import static org.hamcrest.Matchers.hasSize;
@@ -74,7 +77,76 @@ public class KinesisMessageSenderTest {
     }
 
     @Test
-    public void shouldSendMultipleEvents() throws Exception {
+    public void shouldInterceptMessages() throws IOException {
+        // given
+        final Message<ExampleJsonObject> message = message("someKey", new ExampleJsonObject("banana"));
+
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(PutRecordsResponse.builder()
+                .failedRecordCount(0)
+                .build());
+        // and especially
+        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        registry.register(allChannelsWith((m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"apple\"}")));
+        kinesisMessageSender.registerInterceptorsFrom(registry);
+
+        // when
+        kinesisMessageSender.send(message);
+
+        // then
+        verify(kinesisClient).putRecords(putRecordsRequestCaptor.capture());
+        final PutRecordsRequest caputuredRequest = putRecordsRequestCaptor.getValue();
+
+        final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data());
+        ExampleJsonObject jsonObject = objectMapper.readValue(inputStream, ExampleJsonObject.class);
+        assertThat(jsonObject.value, is("apple"));
+    }
+
+
+    @Test
+    public void shouldSendBatch() throws Exception {
+        // given
+        ExampleJsonObject bananaObject = new ExampleJsonObject("banana");
+        ExampleJsonObject appleObject = new ExampleJsonObject("apple");
+
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(PutRecordsResponse.builder()
+                .failedRecordCount(0)
+                .build());
+
+        // and especially
+        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        registry.register(allChannelsWith((m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"Lovely day for a Guinness\"}")));
+        kinesisMessageSender.registerInterceptorsFrom(registry);
+
+        // when
+        kinesisMessageSender.sendBatch(Stream.of(
+                message("b", bananaObject),
+                message("a", appleObject)
+        ));
+
+        // then
+        verify(kinesisClient).putRecords(putRecordsRequestCaptor.capture());
+        final PutRecordsRequest caputuredRequest = putRecordsRequestCaptor.getValue();
+
+        assertThat(caputuredRequest.streamName(), is("test"));
+        assertThat(caputuredRequest.records(), hasSize(2));
+
+        final PutRecordsRequestEntry firstEntry = caputuredRequest.records().get(0);
+        assertThat(firstEntry.partitionKey(), is("b"));
+
+        assertThat(objectMapper.readValue(
+                new ByteBufferBackedInputStream(firstEntry.data()), ExampleJsonObject.class).value,
+                is("Lovely day for a Guinness"));
+
+        final PutRecordsRequestEntry secondEntry = caputuredRequest.records().get(1);
+        assertThat(secondEntry.partitionKey(), is("a"));
+
+        assertThat(objectMapper.readValue(
+                new ByteBufferBackedInputStream(secondEntry.data()), ExampleJsonObject.class).value,
+                is("Lovely day for a Guinness"));
+    }
+
+    @Test
+    public void shouldInterceptMessagesInBatch() throws Exception {
         // given
         ExampleJsonObject bananaObject = new ExampleJsonObject("banana");
         ExampleJsonObject appleObject = new ExampleJsonObject("apple");
@@ -109,7 +181,6 @@ public class KinesisMessageSenderTest {
         assertThat(objectMapper.readValue(
                 new ByteBufferBackedInputStream(secondEntry.data()), ExampleJsonObject.class).value,
                 is("apple"));
-
     }
 
     @Test

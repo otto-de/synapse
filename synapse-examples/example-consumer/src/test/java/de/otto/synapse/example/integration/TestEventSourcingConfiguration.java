@@ -2,10 +2,11 @@ package de.otto.synapse.example.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.InMemoryChannels;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.InMemoryMessageSender;
 import de.otto.synapse.endpoint.sender.MessageSenderFactory;
 import de.otto.synapse.eventsource.EventSourceBuilder;
-import de.otto.synapse.eventsource.InMemoryEventSource;
+import de.otto.synapse.eventsource.InMemoryEventSourceBuilder;
 import de.otto.synapse.example.consumer.configuration.MyServiceProperties;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
@@ -34,20 +35,12 @@ public class TestEventSourcingConfiguration {
         };
     }
 
-
     @Bean
-    public EventSourceBuilder defaultEventSourceBuilder(final MyServiceProperties myServiceProperties,
+    public EventSourceBuilder defaultEventSourceBuilder(final MessageInterceptorRegistry interceptorRegistry,
                                                         final ApplicationEventPublisher eventPublisher,
                                                         final InMemoryChannels inMemoryChannels) {
-        return (name, channelName) -> {
-            if (channelName.equals(myServiceProperties.getBananaChannel())) {
-                return new InMemoryEventSource(name, inMemoryChannels.getChannel(myServiceProperties.getBananaChannel()), eventPublisher);
-            } else if (channelName.equals(myServiceProperties.getProductChannel())) {
-                return new InMemoryEventSource(name, inMemoryChannels.getChannel(myServiceProperties.getProductChannel()), eventPublisher);
-            } else {
-                throw new IllegalArgumentException("no channel for name " + channelName + " available.");
-            }
-        };
+        return new InMemoryEventSourceBuilder(interceptorRegistry, inMemoryChannels, eventPublisher);
     }
+
 
 }

@@ -1,10 +1,12 @@
 package de.otto.synapse.channel.aws;
 
-import com.google.common.collect.ImmutableMap;
-import de.otto.synapse.channel.*;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ShardPosition;
+import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,17 +19,17 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
-import static de.otto.synapse.logging.LogHelper.error;
-import static de.otto.synapse.logging.LogHelper.info;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.logging.LogHelper.error;
+import static de.otto.synapse.logging.LogHelper.info;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
-import static java.time.Instant.*;
+import static java.time.Instant.now;
 
 @ThreadSafe
 public class KinesisShard {
@@ -36,14 +38,17 @@ public class KinesisShard {
     private final String shardId;
     private final String channelName;
     private final KinesisClient kinesisClient;
+    private final InterceptorChain interceptorChain;
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
     public KinesisShard(final String shardId,
                         final String channelName,
-                        final KinesisClient kinesisClient) {
+                        final KinesisClient kinesisClient,
+                        final InterceptorChain interceptorChain) {
         this.shardId = shardId;
         this.channelName = channelName;
         this.kinesisClient = kinesisClient;
+        this.interceptorChain = interceptorChain;
     }
 
     public String getShardId() {
@@ -70,17 +75,19 @@ public class KinesisShard {
                 final long t1 = System.currentTimeMillis();
                 if (!isEmptyStream(recordsResponse)) {
                     for (final Record record : recordsResponse.records()) {
-                        Message<String> kinesisMessage = kinesisMessage(shardId, durationBehind, record);
-                        consumeMessageSafely(consumer, record, kinesisMessage);
+                        final Message<String> message = interceptorChain.intercept(kinesisMessage(shardId, durationBehind, record));
+                        if (message != null) {
+                            consumeMessageSafely(consumer, record, message);
 
-                        lastRecord = record;
-                        shardPosition = fromPosition(shardId, record.sequenceNumber());
+                            lastRecord = record;
+                            shardPosition = fromPosition(shardId, record.sequenceNumber());
 
-                        //consume all records of current iterator, even if stop condition is true
-                        // because durationBehind is only per iterator, not per record and we want to consume all
-                        // records
-                        if (!stopRetrieval) {
-                            stopRetrieval = stopCondition.test(kinesisMessage);
+                            //consume all records of current iterator, even if stop condition is true
+                            // because durationBehind is only per iterator, not per record and we want to consume all
+                            // records
+                            if (!stopRetrieval) {
+                                stopRetrieval = stopCondition.test(message);
+                            }
                         }
                     }
                 } else {

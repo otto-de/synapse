@@ -1,8 +1,10 @@
 package de.otto.synapse.endpoint.sender;
 
 import de.otto.synapse.endpoint.MessageInterceptor;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
@@ -12,6 +14,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
+import static de.otto.synapse.endpoint.MessageInterceptorRegistration.allChannelsWith;
+import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingChannelsWith;
 import static de.otto.synapse.message.Message.message;
 import static java.util.stream.Stream.of;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -45,12 +49,10 @@ public class MessageSenderEndpointTest {
         // given
         final MessageTranslator<String> messageTranslator = mock(MessageTranslator.class);
         when(messageTranslator.translate(any(Message.class))).thenReturn(message("translated", null));
-        final MessageInterceptor interceptor = (m) -> m;
         final MessageSenderEndpoint senderEndpoint = new MessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
             protected void doSend(Message<String> message) { /* no-op */ }
         };
-        senderEndpoint.register(interceptor);
         // when
         final Message<Object> message = message("foo", null);
         senderEndpoint.send(message);
@@ -59,16 +61,35 @@ public class MessageSenderEndpointTest {
     }
 
     @Test
+    public void shouldRegisterMessageInterceptor() {
+        // given
+        final MessageTranslator<String> messageTranslator = mock(MessageTranslator.class);
+        final MessageSenderEndpoint senderEndpoint = new MessageSenderEndpoint("foo-channel", messageTranslator) {
+            @Override
+            protected void doSend(Message<String> message) { /* no-op */ }
+        };
+        MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        MessageInterceptor interceptor = (m) -> message("intercepted", null);
+        registry.register(allChannelsWith(interceptor));
+        // when
+        senderEndpoint.registerInterceptorsFrom(registry);
+        // then
+        assertThat(senderEndpoint.getInterceptorChain().getInterceptors(), Matchers.contains(interceptor));
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     public void shouldInterceptMessages() {
         // given
         final MessageTranslator<String> messageTranslator = (m) -> (Message<String>) m;
         final MessageInterceptor interceptor = mock(MessageInterceptor.class);
+        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        registry.register(matchingChannelsWith("foo-channel", interceptor));
         final MessageSenderEndpoint senderEndpoint = new MessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
             protected void doSend(@Nonnull Message<String> message) { /* no-op */ }
         };
-        senderEndpoint.register(interceptor);
+        senderEndpoint.registerInterceptorsFrom(registry);
         // when
         final Message<String> message = message("foo", null);
         senderEndpoint.send(message);
@@ -83,13 +104,15 @@ public class MessageSenderEndpointTest {
         final MessageTranslator<String> messageTranslator = (m) -> (Message<String>) m;
         final MessageInterceptor interceptor = mock(MessageInterceptor.class);
         when(interceptor.intercept(any(Message.class))).thenReturn(null);
+        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        registry.register(matchingChannelsWith("foo-channel", interceptor));
         final MessageSenderEndpoint senderEndpoint = new MessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
             protected void doSend(@Nonnull Message<String> message) {
                 fail("This should not be called for dropped messages!");
             }
         };
-        senderEndpoint.register(interceptor);
+        senderEndpoint.registerInterceptorsFrom(registry);
         // when
         final Message<String> message = message("foo", null);
         senderEndpoint.send(message);
@@ -124,6 +147,8 @@ public class MessageSenderEndpointTest {
         // given
         final MessageTranslator<String> messageTranslator = (m) -> message(m.getKey(), "translated ");
         final MessageInterceptor interceptor = (m) -> message(m.getKey(), m.getPayload() + "and intercepted");
+        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        registry.register(matchingChannelsWith("foo-channel", interceptor));
 
         final AtomicReference<Message<String>> sentMessage = new AtomicReference<>(null);
         final MessageSenderEndpoint senderEndpoint = new MessageSenderEndpoint("foo-channel", messageTranslator) {
@@ -132,7 +157,7 @@ public class MessageSenderEndpointTest {
                 sentMessage.set(message);
             }
         };
-        senderEndpoint.register(interceptor);
+        senderEndpoint.registerInterceptorsFrom(registry);
 
         // when
         senderEndpoint.send(message("foo", ""));
@@ -147,6 +172,8 @@ public class MessageSenderEndpointTest {
         // given
         final MessageTranslator<String> messageTranslator = (m) -> message(m.getKey(), "translated ");
         final MessageInterceptor interceptor = (m) -> message(m.getKey(), m.getPayload() + "and intercepted");
+        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        registry.register(matchingChannelsWith("foo-channel", interceptor));
 
         final List<Message<String>> sentMessages = new ArrayList<>();
         final MessageSenderEndpoint senderEndpoint = new MessageSenderEndpoint("foo-channel", messageTranslator) {
@@ -155,7 +182,7 @@ public class MessageSenderEndpointTest {
                 sentMessages.add(message);
             }
         };
-        senderEndpoint.register(interceptor);
+        senderEndpoint.registerInterceptorsFrom(registry);
         // when
         senderEndpoint.sendBatch(Stream.of(message("foo", ""), message("bar", "")));
 

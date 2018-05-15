@@ -132,7 +132,7 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
     private List<KinesisShard> retrieveAllOpenShards() {
         return retrieveAllShards().stream()
                 .filter(this::isShardOpen)
-                .map(shard -> new KinesisShard(shard.shardId(), getChannelName(), kinesisClient))
+                .map(shard -> new KinesisShard(shard.shardId(), getChannelName(), kinesisClient, getInterceptorChain()))
                 .collect(toImmutableList());
     }
 

@@ -2,29 +2,32 @@ package de.otto.synapse.example.producer.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.InMemoryChannels;
-import de.otto.synapse.endpoint.MessageInterceptor;
-import de.otto.synapse.endpoint.sender.InMemoryMessageSender;
+import de.otto.synapse.configuration.MessageEndpointConfigurer;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.endpoint.sender.InMemoryMessageSenderFactory;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderFactory;
-import de.otto.synapse.translator.JsonStringMessageTranslator;
-import de.otto.synapse.translator.MessageTranslator;
 import org.slf4j.Logger;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import static de.otto.synapse.endpoint.MessageInterceptorRegistration.receiverChannelsWith;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Configuration
 @EnableConfigurationProperties(MyServiceProperties.class)
-public class MessageSenderConfiguration {
+public class MessageSenderConfiguration implements MessageEndpointConfigurer {
 
     private static final Logger LOG = getLogger(MessageSenderConfiguration.class);
 
-    public static final MessageInterceptor LOGGING_INTERCEPTOR = (message) -> {
-        LOG.info("Sending message {}", message);
-        return message;
-    };
+    @Override
+    public void configureMessageInterceptors(final MessageInterceptorRegistry registry) {
+        registry.register(receiverChannelsWith((message) -> {
+            LOG.info("Sending message {}", message);
+            return message;
+        }));
+    }
 
     @Bean
     public InMemoryChannels inMemoryChannels(final ObjectMapper objectMapper) {
@@ -32,22 +35,16 @@ public class MessageSenderConfiguration {
     }
 
     @Bean
-    public MessageSenderFactory messageSenderFactory(final InMemoryChannels inMemoryChannels,
+    public MessageSenderFactory messageSenderFactory(final MessageInterceptorRegistry registry,
+                                                     final InMemoryChannels inMemoryChannels,
                                                      final ObjectMapper objectMapper) {
-        final MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator(objectMapper);
-        return channelName -> {
-            final InMemoryMessageSender messageSender = new InMemoryMessageSender(
-                    messageTranslator,
-                    inMemoryChannels.getChannel(channelName));
-            messageSender.register(LOGGING_INTERCEPTOR);
-            return messageSender;
-        };
+        return new InMemoryMessageSenderFactory(registry, inMemoryChannels, objectMapper);
     }
 
     @Bean
     public MessageSenderEndpoint productMessageSender(final MessageSenderFactory messageSenderFactory,
                                                       final MyServiceProperties properties) {
-        return messageSenderFactory.createSenderForStream(properties.getProductChannelName());
+        return messageSenderFactory.createSenderFor(properties.getProductChannelName());
 
     }
 }

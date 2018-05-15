@@ -62,17 +62,31 @@ public abstract class MessageEndpoint {
     }
 
     /**
-     * Registers a new {@code MessageInterceptor} at the {@code MessageEndpoint}.
+     * Returns the {@link InterceptorChain} of the {@code MessageEndpoint}.
+     *
+     * @return InterceptorChain
+     */
+    public final InterceptorChain getInterceptorChain() {
+        return interceptorChain;
+    }
+
+    /**
+     * Registers all {@code MessageInterceptor} from the {@link MessageInterceptorRegistry registry} that is matching
+     * the {@link #channelName} and {@link #getEndpointType()}.
      * <p>
      *     The registered interceptors will be used to intercept {@link Message messages} processed by the endpoint.
      * </p>
-     * @param messageInterceptor The registered MessageInterceptor
+     * @param registry the MessageInterceptorRegistry
      */
-    public final void register(final @Nonnull MessageInterceptor messageInterceptor) {
-        interceptorChain.register(
-                requireNonNull(messageInterceptor, "MessageInterceptor must not be null")
-        );
+    public final void registerInterceptorsFrom(final @Nonnull MessageInterceptorRegistry registry) {
+        registry.getRegistrations(channelName, getEndpointType())
+                .forEach(reg ->
+                        interceptorChain.register(reg.getInterceptor())
+                );
+
     }
+
+    protected abstract EndpointType getEndpointType();
 
     /**
      * Intercepts a message using all registered interceptors and returns the resulting message.

@@ -1,9 +1,9 @@
 package de.otto.synapse.example.producer;
 
-import de.otto.synapse.channel.InMemoryChannel;
 import de.otto.synapse.channel.InMemoryChannels;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.eventsource.EventSourceBuilder;
-import de.otto.synapse.eventsource.InMemoryEventSource;
+import de.otto.synapse.eventsource.InMemoryEventSourceBuilder;
 import de.otto.synapse.example.producer.configuration.MyServiceProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
@@ -15,11 +15,10 @@ import org.springframework.context.annotation.Configuration;
 public class TestEventConsumerConfiguration {
 
     @Bean
-    public EventSourceBuilder defaultEventSourceBuilder(final MyServiceProperties properties,
+    public EventSourceBuilder defaultEventSourceBuilder(final MessageInterceptorRegistry interceptorRegistry,
                                                         final ApplicationEventPublisher eventPublisher,
                                                         final InMemoryChannels inMemoryChannels) {
-        final InMemoryChannel productStream = inMemoryChannels.getChannel(properties.getProductChannelName());
-        return (name, streamName) -> new InMemoryEventSource(name, productStream, eventPublisher);
+        return new InMemoryEventSourceBuilder(interceptorRegistry, inMemoryChannels, eventPublisher);
     }
 
 }
