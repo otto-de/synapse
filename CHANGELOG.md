@@ -1,9 +1,14 @@
 # Release Notes
 
+## 0.6.5
+* Added `StartupHealthIndicator` that is unhealth until the first EventSource (the snapshot) is consumed.
+
 ## 0.6.4
 * Fixed problem that the KinesisShardIterator will not recover after an exception is thrown
 * Introduced MessageEndpointConfigurer used to register MessageInterceptors at MessageSender- and/or
   MessageReceiverEndpoints.
+* Added MessageFilter as a special implementation of a MessageInterceptor that is used to filter messages depending
+  on a Predicate
 
 ## 0.6.3
 * Using key-value pairs in (some) log messages

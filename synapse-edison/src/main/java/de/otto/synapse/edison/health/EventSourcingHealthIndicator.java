@@ -9,14 +9,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class EventSourcingHealthIndicator implements HealthIndicator {
 
-    private Health health = Health.up().build();
+    private volatile Health health = Health.up().build();
 
     @EventListener
-    public void onEventSourceNotification(EventSourceNotification eventSourceNotification) {
+    public void onEventSourceNotification(final EventSourceNotification eventSourceNotification) {
         if (eventSourceNotification.getStatus() == EventSourceNotification.Status.FAILED) {
             health = Health.down()
                     .withDetail("message", eventSourceNotification.getMessage())
-                    .withDetail("stream", eventSourceNotification.getChannelName())
+                    .withDetail("channelName", eventSourceNotification.getChannelName())
                     .build();
         }
     }
