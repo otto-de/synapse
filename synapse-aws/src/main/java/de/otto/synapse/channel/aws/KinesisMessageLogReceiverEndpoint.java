@@ -16,7 +16,6 @@ import software.amazon.awssdk.services.kinesis.model.Shard;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -25,7 +24,6 @@ import java.util.function.Predicate;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static de.otto.synapse.logging.LogHelper.info;
-import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.Executors.newFixedThreadPool;
@@ -47,17 +45,7 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
                                              final String channelName) {
         super(channelName, objectMapper);
         this.kinesisClient = kinesisClient;
-        createShardIteratorExecutorService();
-    }
-
-    private void createShardIteratorExecutorService() {
-        this.kinesisShards = retrieveAllOpenShards();
-        if (kinesisShards.isEmpty()) {
-            this.executorService = newSingleThreadExecutor();
-        } else {
-            this.executorService = newFixedThreadPool(kinesisShards.size(),
-                    new ThreadFactoryBuilder().setNameFormat("kinesis-message-log-%d").build());
-        }
+        initExecutorService();
     }
 
     @Override
@@ -67,7 +55,7 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
         try {
             final long t1 = System.currentTimeMillis();
             if (isNull(executorService)) {
-               createShardIteratorExecutorService();
+               initExecutorService();
             }
             final List<CompletableFuture<ChannelPosition>> futureShardPositions = kinesisShards
                     .stream()
@@ -103,6 +91,16 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
             }
             executorService = null;
             throw e;
+        }
+    }
+
+    private void initExecutorService() {
+        this.kinesisShards = retrieveAllOpenShards();
+        if (kinesisShards.isEmpty()) {
+            this.executorService = newSingleThreadExecutor();
+        } else {
+            this.executorService = newFixedThreadPool(kinesisShards.size(),
+                    new ThreadFactoryBuilder().setNameFormat("kinesis-message-log-%d").build());
         }
     }
 
