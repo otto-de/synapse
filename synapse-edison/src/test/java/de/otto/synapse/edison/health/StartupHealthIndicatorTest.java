@@ -18,12 +18,27 @@ import static org.mockito.Mockito.when;
 public class StartupHealthIndicatorTest {
 
     @Test
-    public void shouldInitiallyIndicateDown() {
+    public void shouldInitiallyIndicateDownIfNotConfigured() {
+        // given
+        HealthProperties properties = new HealthProperties();
+        SnapshotStatusProvider provider = new SnapshotStatusProvider(properties);
+        StartupHealthIndicator healthCheck = new StartupHealthIndicator(provider);
+
+        // when
+        Health health = healthCheck.health();
+
+        // then
+        assertThat(health.getStatus(), is(Status.UP));
+    }
+
+    @Test
+    public void shouldInitiallyIndicateDownIfChannelsConfigured() {
         // given
         HealthProperties properties = new HealthProperties();
         properties.setChannels(asList("some-stream", "other-stream"));
+        SnapshotStatusProvider provider = new SnapshotStatusProvider(properties);
 
-        StartupHealthIndicator healthCheck = new StartupHealthIndicator(properties);
+        StartupHealthIndicator healthCheck = new StartupHealthIndicator(provider);
 
         // when
         Health health = healthCheck.health();
@@ -37,7 +52,8 @@ public class StartupHealthIndicatorTest {
         // given
         HealthProperties properties = new HealthProperties();
         properties.setChannels(asList("some-stream", "other-stream"));
-        StartupHealthIndicator healthCheck = new StartupHealthIndicator(properties);
+        SnapshotStatusProvider provider = new SnapshotStatusProvider(properties);
+        StartupHealthIndicator healthCheck = new StartupHealthIndicator(provider);
 
         EventSource mockEventSource = mock(EventSource.class);
         when(mockEventSource.getChannelName()).thenReturn("some-stream");
@@ -62,7 +78,8 @@ public class StartupHealthIndicatorTest {
         // given
         HealthProperties properties = new HealthProperties();
         properties.setChannels(asList("some-stream", "other-stream"));
-        StartupHealthIndicator healthCheck = new StartupHealthIndicator(properties);
+        SnapshotStatusProvider provider = new SnapshotStatusProvider(properties);
+        StartupHealthIndicator healthCheck = new StartupHealthIndicator(provider);
 
         EventSource mockEventSource = mock(EventSource.class);
         when(mockEventSource.getChannelName()).thenReturn("some-stream");
