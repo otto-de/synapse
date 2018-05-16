@@ -1,7 +1,7 @@
 # Release Notes
 
 ## 0.6.5
-* Added `StartupHealthIndicator` that is unhealth until the first EventSource (the snapshot) is consumed.
+* Added `StartupHealthIndicator` that is unhealthy until the first EventSource (the snapshot) is consumed.
 
 ## 0.6.4
 * Fixed problem that the KinesisShardIterator will not recover after an exception is thrown

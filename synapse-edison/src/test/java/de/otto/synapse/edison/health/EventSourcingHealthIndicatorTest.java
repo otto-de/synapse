@@ -47,6 +47,6 @@ public class EventSourcingHealthIndicatorTest {
         // then
         assertThat(health.getStatus(), is(Status.DOWN));
         assertThat(health.getDetails(), hasEntry("message", "some message"));
-        assertThat(health.getDetails(), hasEntry("stream", "some-stream"));
+        assertThat(health.getDetails(), hasEntry("channelName", "some-stream"));
     }
 }
