@@ -8,5 +8,9 @@ public enum StartFrom {
     /**
      * Start consumption of messages at first message after the specified position.
      */
-    POSITION
+    POSITION,
+    /**
+     * Start consumption of messages at first message at the specified timestamp.
+     */
+    TIMESTAMP
 }

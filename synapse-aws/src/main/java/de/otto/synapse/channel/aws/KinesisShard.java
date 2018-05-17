@@ -142,6 +142,9 @@ public class KinesisShard {
 
         if (shardPosition == null || shardPosition.startFrom() == StartFrom.HORIZON) {
             shardRequestBuilder.shardIteratorType(ShardIteratorType.TRIM_HORIZON);
+        } else if (shardPosition.startFrom() == StartFrom.TIMESTAMP) {
+            shardRequestBuilder.shardIteratorType(ShardIteratorType.AT_TIMESTAMP);
+            shardRequestBuilder.timestamp(shardPosition.timestamp());
         } else {
             shardRequestBuilder.shardIteratorType(ShardIteratorType.AFTER_SEQUENCE_NUMBER);
             shardRequestBuilder.startingSequenceNumber(shardPosition.position());

@@ -19,6 +19,7 @@ import java.util.function.Predicate;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.channel.ShardPosition.fromTimestamp;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
@@ -112,6 +113,24 @@ public class KinesisShardTest {
                 .shardId("someShard")
                 .shardIteratorType(ShardIteratorType.AFTER_SEQUENCE_NUMBER)
                 .startingSequenceNumber("1")
+                .build();
+        verify(kinesisClient).getShardIterator(expectedRequest);
+    }
+
+    @Test
+    public void shouldReturnAtTimestampIterator() {
+        // when
+        final Instant now = Instant.now();
+        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromTimestamp("someShard", now));
+
+        // then
+        assertThat(iterator.getId(), is("someShardIterator"));
+
+        GetShardIteratorRequest expectedRequest = GetShardIteratorRequest.builder()
+                .streamName("someStream")
+                .shardId("someShard")
+                .shardIteratorType(ShardIteratorType.AT_TIMESTAMP)
+                .timestamp(now)
                 .build();
         verify(kinesisClient).getShardIterator(expectedRequest);
     }

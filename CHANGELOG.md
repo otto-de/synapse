@@ -3,6 +3,9 @@
 ## 0.6.5
 * Added `StartupHealthIndicator` that is unhealthy until the first EventSource (the snapshot) is consumed.
 
+## 0.6.5
+* ShardPosition from timestamp
+
 ## 0.6.4
 * Fixed problem that the KinesisShardIterator will not recover after an exception is thrown
 * Introduced MessageEndpointConfigurer used to register MessageInterceptors at MessageSender- and/or
