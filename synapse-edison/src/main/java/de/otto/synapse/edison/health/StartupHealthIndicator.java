@@ -1,17 +1,10 @@
 package de.otto.synapse.edison.health;
 
 import com.google.common.collect.ImmutableMap;
-import de.otto.synapse.eventsource.EventSourceNotification;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static de.otto.synapse.eventsource.EventSourceNotification.Status.FINISHED;
 import static org.springframework.boot.actuate.health.Health.*;
 
 /**
@@ -19,40 +12,30 @@ import static org.springframework.boot.actuate.health.Health.*;
  * {@link de.otto.synapse.eventsource.EventSource}
  */
 @Component
-@EnableConfigurationProperties(HealthProperties.class)
 public class StartupHealthIndicator implements HealthIndicator {
 
-    private volatile Health health = down().build();
-    private SnapshotStatusProvider provider;
+    private ChannelInfoProvider provider;
 
-    public StartupHealthIndicator(final SnapshotStatusProvider provider) {
+    public StartupHealthIndicator(final ChannelInfoProvider provider) {
         this.provider = provider;
-        updateStatus();
-    }
-
-    @EventListener
-    public void onEventSourceNotification(final EventSourceNotification eventSourceNotification) {
-        provider.onEventSourceNotification(eventSourceNotification);
-        updateStatus();
     }
 
     @Override
     public Health health() {
-        return health;
-    }
-
-    private void updateStatus() {
         final Builder builder;
 
-        if (!provider.finished()) {
-            builder = down();
-        } else {
+        if (provider.getInfos().isAtHead()) {
             builder = up();
+        } else {
+            builder = down();
         }
-        final Map<String, Map<String, String>> details = provider.getDetails();
-        details.keySet().forEach(key -> {
-            builder.withDetail(key, details.get(key));
+        provider.getInfos().getChannels().forEach(channel -> {
+            ChannelInfo startupInfo = provider.getInfos().getStartupInfo(channel);
+            builder.withDetail(channel, ImmutableMap.of(
+                    "status", startupInfo.getStatus().name(),
+                    "message", startupInfo.getMessage())
+            );
         });
-        health = builder.build();
+        return builder.build();
     }
 }
