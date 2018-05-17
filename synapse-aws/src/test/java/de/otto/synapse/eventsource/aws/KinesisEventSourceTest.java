@@ -16,6 +16,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.Nonnull;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.function.Predicate;
 
@@ -48,7 +49,7 @@ public class KinesisEventSourceTest {
             @Nonnull
             @Override
             public ChannelPosition consume(@Nonnull ChannelPosition startFrom, @Nonnull Predicate<Message<?>> stopCondition) {
-                return channelPosition(fromPosition("shard1", "4711"));
+                return channelPosition(fromPosition("shard1", Duration.ZERO, "4711"));
             }
 
             @Override
@@ -61,7 +62,7 @@ public class KinesisEventSourceTest {
     @SuppressWarnings("unchecked")
     public void shouldConsumeAllEventsWithRegisteredConsumers() {
         // given
-        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", "xyz"));
+        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", Duration.ZERO, "xyz"));
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher);
         eventSource.register(testDataConsumer);
@@ -78,12 +79,12 @@ public class KinesisEventSourceTest {
     @SuppressWarnings("unchecked")
     public void shouldFinishConsumptionOnStopCondition() {
         // given
-        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", "xyz"));
+        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", Duration.ZERO, "xyz"));
         receiverEndpoint = spy(new MessageLogReceiverEndpoint("test", new ObjectMapper()) {
             @Nonnull
             @Override
             public ChannelPosition consume(@Nonnull ChannelPosition startFrom, @Nonnull Predicate<Message<?>> stopCondition) {
-                return channelPosition(fromPosition("shard1", "4711"));
+                return channelPosition(fromPosition("shard1", Duration.ZERO, "4711"));
             }
 
             @Override
@@ -100,13 +101,13 @@ public class KinesisEventSourceTest {
 
         // then
         assertThat(eventSource.isStopping(), is(false));
-        assertThat(channelPosition, is(channelPosition(fromPosition("shard1", "4711"))));
+        assertThat(channelPosition, is(channelPosition(fromPosition("shard1", Duration.ZERO, "4711"))));
     }
 
     @Test
     public void shouldFinishConsumptionOnStop() {
         // given
-        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", "xyz"));
+        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", Duration.ZERO, "xyz"));
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher);
         eventSource.register(testDataConsumer);
@@ -122,7 +123,7 @@ public class KinesisEventSourceTest {
     @Test
     public void shouldPublishStartedAndFinishedEvents() {
         // given
-        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", "xyz"));
+        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", Duration.ZERO, "xyz"));
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher);
         eventSource.stop();
@@ -150,7 +151,7 @@ public class KinesisEventSourceTest {
     @SuppressWarnings("unchecked")
     public void shouldPublishStartedAndFailedEvents() {
         // given
-        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", "xyz"));
+        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", Duration.ZERO, "xyz"));
 
         receiverEndpoint = spy(new MessageLogReceiverEndpoint("test", new ObjectMapper()) {
             @Nonnull

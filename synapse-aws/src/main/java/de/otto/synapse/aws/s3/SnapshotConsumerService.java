@@ -11,6 +11,7 @@ import de.otto.synapse.message.Message;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.function.Predicate;
 import java.util.zip.ZipInputStream;
@@ -24,6 +25,7 @@ import static de.otto.synapse.message.Message.message;
 @Service
 public class SnapshotConsumerService {
 
+    public static final Duration MAX_DURATION = Duration.ofMillis(Long.MAX_VALUE);
     private final JsonFactory jsonFactory = new JsonFactory();
 
     public ChannelPosition consumeSnapshot(final File latestSnapshot,
@@ -35,7 +37,7 @@ public class SnapshotConsumerService {
                 BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
                 ZipInputStream zipInputStream = new ZipInputStream(bufferedInputStream)
         ) {
-            ChannelPosition shardPositions = fromHorizon();
+            ChannelPosition channelPosition = fromHorizon();
             zipInputStream.getNextEntry();
             JsonParser parser = jsonFactory.createParser(zipInputStream);
             while (!parser.isClosed()) {
@@ -43,7 +45,7 @@ public class SnapshotConsumerService {
                 if (currentToken == JsonToken.FIELD_NAME) {
                     switch (parser.getValueAsString()) {
                         case "startSequenceNumbers":
-                            shardPositions = processSequenceNumbers(parser);
+                            channelPosition = processSequenceNumbers(parser);
                             break;
                         case "data":
                             // TODO: This expects "startSequenceNumbers" to come _before_ "data" which can/should not be guaranteed in JSON
@@ -52,7 +54,7 @@ public class SnapshotConsumerService {
 
                                     /* TODO: Hier wird der StreamName als ShardName verwendet. Damit wird der Message _keine_ sinnvolle Position im Header mitgegeben! */
 
-                                    null, /*shardPositions.shard(channelName).position(),*/
+                                    channelPosition, /*shardPositions.shard(channelName).position(),*/
                                     stopCondition,
                                     messageConsumer);
                             break;
@@ -61,7 +63,7 @@ public class SnapshotConsumerService {
                     }
                 }
             }
-            return shardPositions;
+            return channelPosition;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -69,10 +71,11 @@ public class SnapshotConsumerService {
 
     @SuppressWarnings("unchecked")
     private <T> void processSnapshotData(final JsonParser parser,
-                                         final String sequenceNumber,
+                                         final ChannelPosition channelPosition,
                                          final Predicate<Message<?>> stopCondition,
                                          final MessageConsumer<String> messageConsumer) throws IOException {
         // TODO: Would be better to store event meta data together with key+value:
+        final ShardPosition shardPosition = channelPosition.shard(channelPosition.shards().iterator().next());
         final Instant arrivalTimestamp = Instant.EPOCH;
         boolean abort = false;
         while (!abort && parser.nextToken() != JsonToken.END_ARRAY) {
@@ -81,7 +84,7 @@ public class SnapshotConsumerService {
                 final String key = parser.getValueAsString();
                 final Message<String> message = message(
                         key,
-                        responseHeader(null /*TODO: sequenceNumber*/, arrivalTimestamp, null),
+                        responseHeader(shardPosition, arrivalTimestamp),
                         parser.nextTextValue()
                 );
                 messageConsumer.accept(message);
@@ -116,8 +119,8 @@ public class SnapshotConsumerService {
                     if (shardName != null) {
                         // TODO: "0" kann entfernt werden, wenn keine Snapshots mit "0" für HORIZON mehr exisiteren.
                         final ShardPosition shardPosition = sequenceNumber != null && !sequenceNumber.equals("0") && !sequenceNumber.equals("")
-                                ? ShardPosition.fromPosition(shardName, sequenceNumber)
-                                : ShardPosition.fromHorizon(shardName);
+                                ? ShardPosition.fromPosition(shardName, MAX_DURATION, sequenceNumber)
+                                : ShardPosition.fromHorizon(shardName, MAX_DURATION);
                         shardPositions.put(shardName, shardPosition);
                     }
                     shardName = null;

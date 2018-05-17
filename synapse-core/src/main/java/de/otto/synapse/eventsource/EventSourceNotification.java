@@ -2,12 +2,16 @@ package de.otto.synapse.eventsource;
 
 import de.otto.synapse.channel.ChannelPosition;
 
+import java.time.Duration;
 import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 public class EventSourceNotification {
 
     public enum Status {
         STARTED,
+        RUNNING,
         FAILED,
         FINISHED
     }
@@ -19,11 +23,11 @@ public class EventSourceNotification {
     private String message;
 
     protected EventSourceNotification(Builder builder) {
-        eventSourceName = builder.eventSourceName;
-        channelPosition = builder.channelPosition;
-        channelName = builder.channelName;
-        status = builder.status;
-        message = builder.message;
+        eventSourceName = requireNonNull(builder.eventSourceName);
+        channelPosition = requireNonNull(builder.channelPosition);
+        channelName = requireNonNull(builder.channelName);
+        status = requireNonNull(builder.status);
+        message = requireNonNull(builder.message);
     }
 
     public String getEventSourceName() {
@@ -60,6 +64,7 @@ public class EventSourceNotification {
 
     @Override
     public int hashCode() {
+
         return Objects.hash(eventSourceName, channelPosition, channelName, status, message);
     }
 
@@ -88,10 +93,10 @@ public class EventSourceNotification {
 
     public static class Builder {
         private String eventSourceName;
-        private ChannelPosition channelPosition;
-        private String channelName;
+        private ChannelPosition channelPosition = ChannelPosition.fromHorizon();
+        private String channelName = "";
         private Status status;
-        private String message;
+        private String message = "";
 
         protected Builder() {
         }

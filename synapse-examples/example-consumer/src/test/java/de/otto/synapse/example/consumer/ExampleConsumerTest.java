@@ -84,7 +84,7 @@ public class ExampleConsumerTest {
     private <T> Message<T> testEvent(String key, T payload) {
         return Message.message(
                 key,
-                responseHeader(ShardPosition.fromHorizon(""), Instant.now(), null),
+                responseHeader(ShardPosition.fromHorizon(""), Instant.now()),
                 payload
         );
     }

@@ -23,6 +23,7 @@ import static de.otto.synapse.channel.ShardPosition.fromTimestamp;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
+import static java.time.Duration.ZERO;
 import static java.time.Duration.ofMillis;
 import static java.time.Instant.now;
 import static org.hamcrest.core.Is.is;
@@ -87,7 +88,7 @@ public class KinesisShardTest {
                             .build();
                 });
 
-        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromPosition("someShard", "4711"));
+        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromPosition("someShard", ZERO, "4711"));
 
         // then
         assertThat(iterator.getId(), is("someShardIterator"));
@@ -103,7 +104,7 @@ public class KinesisShardTest {
     @Test
     public void shouldReturnAfterSequenceNumberIterator() {
         // when
-        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromPosition("someShard", "1"));
+        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromPosition("someShard", ZERO, "1"));
 
         // then
         assertThat(iterator.getId(), is("someShardIterator"));
@@ -121,7 +122,7 @@ public class KinesisShardTest {
     public void shouldReturnAtTimestampIterator() {
         // when
         final Instant now = Instant.now();
-        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromTimestamp("someShard", now));
+        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromTimestamp("someShard", ZERO, now));
 
         // then
         assertThat(iterator.getId(), is("someShardIterator"));
@@ -195,8 +196,8 @@ public class KinesisShardTest {
         final ChannelPosition channelPosition = kinesisShard.consumeShard(fromHorizon(), (message) -> true, consumer);
 
         // then
-        verify(consumer).accept(message("first", responseHeader(fromPosition("someShard", "1"), now, ofMillis(1234L)), "intercepted"));
-        verify(consumer).accept(message("second", responseHeader(fromPosition("someShard", "2"), now, ofMillis(1234L)), "intercepted"));
+        verify(consumer).accept(message("first", responseHeader(fromPosition("someShard", ofMillis(1234L), "1"), now), "intercepted"));
+        verify(consumer).accept(message("second", responseHeader(fromPosition("someShard", ofMillis(1234L), "2"), now), "intercepted"));
         verifyNoMoreInteractions(consumer);
 
         assertThat(channelPosition.shard("someShard").position(), is("2"));
@@ -233,7 +234,7 @@ public class KinesisShardTest {
         final ChannelPosition channelPosition = kinesisShard.consumeShard(fromHorizon(), (message) -> true, consumer);
 
         // then
-        verify(consumer).accept(message("second", responseHeader(fromPosition("someShard", "2"), now, ofMillis(1234L)), "intercepted"));
+        verify(consumer).accept(message("second", responseHeader(fromPosition("someShard", ofMillis(1234L), "2"), now), "intercepted"));
         verifyNoMoreInteractions(consumer);
 
         assertThat(channelPosition.shard("someShard").position(), is("2"));

@@ -17,6 +17,7 @@ import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.Integer.valueOf;
+import static java.time.Duration.ZERO;
 import static java.time.Instant.now;
 import static java.util.Collections.synchronizedList;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -74,7 +75,7 @@ public class InMemoryChannel extends MessageLogReceiverEndpoint {
                 }
             }
         } while (!shouldStop && !stopSignal.get());
-        return channelPosition(fromPosition(getChannelName(), String.valueOf(pos)));
+        return channelPosition(fromPosition(getChannelName(), ZERO, String.valueOf(pos)));
     }
 
     @Override

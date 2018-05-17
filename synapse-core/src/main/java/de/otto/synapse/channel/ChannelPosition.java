@@ -6,11 +6,14 @@ import com.google.common.collect.Maps;
 
 import javax.annotation.Nonnull;
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.*;
 
 import static java.util.Arrays.asList;
 
 public final class ChannelPosition implements Serializable {
+    private static final Duration MAX_DURATION = Duration.ofMillis(Long.MAX_VALUE);
+
     private final ImmutableMap<String, ShardPosition> shardPositions;
 
     public static ChannelPosition fromHorizon() {
@@ -53,6 +56,14 @@ public final class ChannelPosition implements Serializable {
 
     public static ChannelPosition channelPosition(final Iterable<ShardPosition> shardPositions) {
         return new ChannelPosition(shardPositions);
+    }
+
+    @Nonnull
+    public Duration getDurationBehind() {
+        return shardPositions.values().stream()
+                .map(ShardPosition::getDurationBehind)
+                .max(Duration::compareTo)
+                .orElse(MAX_DURATION);
     }
 
     protected ChannelPosition(final Iterable<ShardPosition> shardPositions) {

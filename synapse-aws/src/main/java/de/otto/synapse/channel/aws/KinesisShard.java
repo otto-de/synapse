@@ -80,7 +80,7 @@ public class KinesisShard {
                             consumeMessageSafely(consumer, record, message);
 
                             lastRecord = record;
-                            shardPosition = fromPosition(shardId, record.sequenceNumber());
+                            shardPosition = fromPosition(shardId, durationBehind, record.sequenceNumber());
 
                             //consume all records of current iterator, even if stop condition is true
                             // because durationBehind is only per iterator, not per record and we want to consume all
@@ -118,7 +118,7 @@ public class KinesisShard {
     private Message<String> dirtyHackToStopThreadMessage(final Duration durationBehind) {
         return message(
                 "no_key",
-                responseHeader(fromHorizon(shardId), now(), durationBehind),
+                responseHeader(fromHorizon(shardId, durationBehind), now()),
                 null);
     }
 

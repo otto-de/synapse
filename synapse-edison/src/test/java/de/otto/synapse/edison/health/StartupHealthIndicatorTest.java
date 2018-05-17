@@ -78,8 +78,7 @@ public class StartupHealthIndicatorTest {
         registry.getRegistrations("some-stream", EndpointType.RECEIVER).forEach(registration -> {
             final Message<String> headMessage = message("42", responseHeader(
                     fromHorizon(""),
-                    Instant.now(),
-                    Duration.ZERO), null);
+                    Instant.now()), null);
             registration.getInterceptor().intercept(headMessage);
         });
 
@@ -111,15 +110,14 @@ public class StartupHealthIndicatorTest {
         registry.getRegistrations("some-stream", EndpointType.RECEIVER).forEach(registration -> {
             final Message<String> headMessage = message("42", responseHeader(
                     fromHorizon(""),
-                    Instant.now(),
-                    Duration.ZERO), null);
+                    Instant.now()), null);
             registration.getInterceptor().intercept(headMessage);
         });
         registry.getRegistrations("other-stream", EndpointType.RECEIVER).forEach(registration -> {
             final Message<String> headMessage = message("42", responseHeader(
-                    fromHorizon(""),
-                    Instant.now(),
-                    Duration.ofHours(1)), null);
+                    fromHorizon("", Duration.ofHours(1)),
+                    Instant.now()),
+                    null);
             registration.getInterceptor().intercept(headMessage);
         });
 
@@ -150,15 +148,13 @@ public class StartupHealthIndicatorTest {
         registry.getRegistrations("some-stream", EndpointType.RECEIVER).forEach(registration -> {
             final Message<String> headMessage = message("42", responseHeader(
                     fromHorizon(""),
-                    Instant.now(),
-                    Duration.ZERO), null);
+                    Instant.now()), null);
             registration.getInterceptor().intercept(headMessage);
         });
         registry.getRegistrations("other-stream", EndpointType.RECEIVER).forEach(registration -> {
             final Message<String> headMessage = message("42", responseHeader(
                     fromHorizon(""),
-                    Instant.now(),
-                    Duration.ZERO), null);
+                    Instant.now()), null);
             registration.getInterceptor().intercept(headMessage);
         });
 
