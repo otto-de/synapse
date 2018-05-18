@@ -3,10 +3,16 @@ package de.otto.synapse.edison.health;
 import de.otto.synapse.eventsource.EventSourceNotification;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(
+        prefix = "synapse",
+        name = "consumer-process.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class EventSourcingHealthIndicator implements HealthIndicator {
 
     private volatile Health health = Health.up().build();
