@@ -4,7 +4,6 @@ import de.otto.edison.status.domain.Status;
 import de.otto.edison.status.domain.StatusDetail;
 import de.otto.edison.status.indicator.StatusDetailIndicator;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.eventsource.EventSourceNotification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
@@ -18,13 +17,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static java.lang.String.format;
-import static java.time.Instant.now;
 
 @Component
 public class EventSourcingStatusDetailIndicator implements StatusDetailIndicator {
 
     private SortedMap<String, StatusDetail> statusDetailMap = new TreeMap<>();
-    private Map<String, ChannelPosition> mapShardIdToDurationBehind = new ConcurrentHashMap<>();
+    private Map<String, ChannelPosition> mapChannelToDurationBehind = new ConcurrentHashMap<>();
     private Map<String, Instant> channelStartupTimes = new ConcurrentHashMap<>();
     private Clock clock;
 
@@ -56,12 +54,10 @@ public class EventSourcingStatusDetailIndicator implements StatusDetailIndicator
                         ? eventSourceNotification.getChannelPosition()
                         : fromHorizon();
                 if (!channelPosition.shards().isEmpty()) {
-                    for (final String shardId : channelPosition.shards()) {
-                        ChannelPosition previousChannelPosition = mapShardIdToDurationBehind.getOrDefault(shardId, fromHorizon());
-                        ChannelPosition mergedChannelPosition = ChannelPosition.merge(previousChannelPosition, channelPosition);
-                        mapShardIdToDurationBehind.put(shardId, mergedChannelPosition);
-                        statusDetail = createStatusDetail(Status.OK, channelName, format("Channel is %s behind head.", mergedChannelPosition.getDurationBehind()));
-                    }
+                    ChannelPosition previousChannelPosition = mapChannelToDurationBehind.getOrDefault(channelName, fromHorizon());
+                    ChannelPosition mergedChannelPosition = ChannelPosition.merge(previousChannelPosition, channelPosition);
+                    mapChannelToDurationBehind.put(channelName, mergedChannelPosition);
+                    statusDetail = createStatusDetail(Status.OK, channelName, format("Channel is %s behind head.", mergedChannelPosition.getDurationBehind()));
                 } else {
                     statusDetail = createStatusDetail(Status.OK, channelName, "Unknown duration behind head");
                 }

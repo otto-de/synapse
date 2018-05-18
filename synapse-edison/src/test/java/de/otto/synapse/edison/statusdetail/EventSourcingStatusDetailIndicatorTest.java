@@ -3,8 +3,6 @@ package de.otto.synapse.edison.statusdetail;
 import de.otto.edison.status.domain.Status;
 import de.otto.edison.status.domain.StatusDetail;
 import de.otto.edison.testsupport.util.TestClock;
-import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.eventsource.EventSourceNotification;
 import org.junit.Test;
 
@@ -32,7 +30,7 @@ public class EventSourcingStatusDetailIndicatorTest {
     @Test
     public void shouldUpdateStatusDetailForSnapshotStarted() {
         //given
-        EventSourceNotification eventSourceNotification = createSnapshotEventSourceNotification("myChannelName", STARTED, "Loading snapshot");
+        EventSourceNotification eventSourceNotification = createEventSourceNotification("myChannelName", STARTED, "Loading snapshot");
 
         //when
         eventSourcingStatusDetailIndicator.onEventSourceNotification(eventSourceNotification);
@@ -49,8 +47,8 @@ public class EventSourcingStatusDetailIndicatorTest {
     @Test
     public void shouldUpdateStatusDetailFor2ndSnapshotStarted() {
         //given
-        EventSourceNotification firstEventSourceNotification = createSnapshotEventSourceNotification("myChannelName", STARTED, "Loading snapshot");
-        EventSourceNotification secondEventSourceNotification = createSnapshotEventSourceNotification("myChannelName2", STARTED, "Loading snapshot");
+        EventSourceNotification firstEventSourceNotification = createEventSourceNotification("myChannelName", STARTED, "Loading snapshot");
+        EventSourceNotification secondEventSourceNotification = createEventSourceNotification("myChannelName2", STARTED, "Loading snapshot");
 
         //when
         eventSourcingStatusDetailIndicator.onEventSourceNotification(firstEventSourceNotification);
@@ -72,13 +70,13 @@ public class EventSourcingStatusDetailIndicatorTest {
         //given
 
         //when
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myChannelName", STARTED, "Loading snapshot"));
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createEventSourceNotification("myChannelName", STARTED, "Loading snapshot"));
         testClock.proceed(2, ChronoUnit.SECONDS);
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myChannelName2", STARTED, "Loading snapshot"));
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createEventSourceNotification("myChannelName2", STARTED, "Loading snapshot"));
         testClock.proceed(2, ChronoUnit.SECONDS);
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myChannelName", FINISHED, "Done."));
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createEventSourceNotification("myChannelName", FINISHED, "Done."));
         testClock.proceed(3, ChronoUnit.SECONDS);
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myChannelName2", FINISHED, "Done."));
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createEventSourceNotification("myChannelName2", FINISHED, "Done."));
 
         //then
         List<StatusDetail> statusDetails = eventSourcingStatusDetailIndicator.statusDetails();
@@ -92,12 +90,12 @@ public class EventSourcingStatusDetailIndicatorTest {
     }
 
     @Test
-    public void shouldDisplayDurationBehindPerShard() {
+    public void shouldDisplayDurationBehindForSingleShard() {
         //given
 
         //when
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myChannelName", STARTED, "Loading snapshot"));
-        eventSourcingStatusDetailIndicator.onEventSourceNotification(createSnapshotEventSourceNotification("myChannelName", RUNNING, "Done."));
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createEventSourceNotification("myChannelName", STARTED, "Loading snapshot"));
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createEventSourceNotification("myChannelName", RUNNING, "Done."));
 
         //then
         List<StatusDetail> statusDetails = eventSourcingStatusDetailIndicator.statusDetails();
@@ -107,7 +105,35 @@ public class EventSourcingStatusDetailIndicatorTest {
         assertThat(statusDetails.get(0).getMessage(), is("Channel is PT1H behind head."));
     }
 
-    private EventSourceNotification createSnapshotEventSourceNotification(final String channelName,
+    @Test
+    public void shouldDisplayDurationBehindForMultipleShards() {
+        //given
+
+        //when
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createEventSourceNotification("myChannelName", STARTED, "Loading snapshot"));
+
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createEventSourceNotificationBuilder("myChannelName", RUNNING, "Done.")
+                .withChannelPosition(channelPosition(fromPosition("shard1", Duration.ofHours(1), "pos1"))).build());
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createEventSourceNotificationBuilder("myChannelName", RUNNING, "Done.")
+                .withChannelPosition(channelPosition(fromPosition("shard2", Duration.ofHours(2), "pos2"))).build());
+        eventSourcingStatusDetailIndicator.onEventSourceNotification(createEventSourceNotificationBuilder("myChannelName", RUNNING, "Done.")
+                .withChannelPosition(channelPosition(fromPosition("shard3", Duration.ofHours(0), "pos3"))).build());
+
+        //then
+        List<StatusDetail> statusDetails = eventSourcingStatusDetailIndicator.statusDetails();
+
+        assertThat(statusDetails.get(0).getStatus(), is(Status.OK));
+        assertThat(statusDetails.get(0).getName(), is("myChannelName"));
+        assertThat(statusDetails.get(0).getMessage(), is("Channel is PT2H behind head."));
+    }
+
+    private EventSourceNotification createEventSourceNotification(final String channelName,
+                                                                  final EventSourceNotification.Status status,
+                                                                  final String message) {
+        return createEventSourceNotificationBuilder(channelName, status, message).build();
+    }
+
+    private EventSourceNotification.Builder createEventSourceNotificationBuilder(final String channelName,
                                                                           final EventSourceNotification.Status status,
                                                                           final String message) {
         return EventSourceNotification.builder()
@@ -115,8 +141,7 @@ public class EventSourcingStatusDetailIndicatorTest {
                 .withEventSourceName("snapshot")
                 .withChannelName(channelName)
                 .withMessage(message)
-                .withChannelPosition(channelPosition(fromPosition("single-shard", Duration.ofHours(1), "42")))
-                .build();
+                .withChannelPosition(channelPosition(fromPosition("single-shard", Duration.ofHours(1), "42")));
     }
 
 }
