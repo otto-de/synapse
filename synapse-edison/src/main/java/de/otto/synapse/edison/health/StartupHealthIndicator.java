@@ -3,6 +3,7 @@ package de.otto.synapse.edison.health;
 import com.google.common.collect.ImmutableMap;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import static org.springframework.boot.actuate.health.Health.*;
@@ -12,6 +13,11 @@ import static org.springframework.boot.actuate.health.Health.*;
  * {@link de.otto.synapse.eventsource.EventSource}
  */
 @Component
+@ConditionalOnProperty(
+        prefix = "synapse",
+        name = "health-indicator.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class StartupHealthIndicator implements HealthIndicator {
 
     private ChannelInfoProvider provider;
