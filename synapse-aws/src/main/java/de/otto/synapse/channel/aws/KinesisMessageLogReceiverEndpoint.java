@@ -99,6 +99,7 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
         if (kinesisShards.isEmpty()) {
             this.executorService = newSingleThreadExecutor();
         } else {
+            // TODO Publish all shards received event (channelName, shards)
             this.executorService = newFixedThreadPool(kinesisShards.size(),
                     new ThreadFactoryBuilder().setNameFormat("kinesis-message-log-%d").build());
         }

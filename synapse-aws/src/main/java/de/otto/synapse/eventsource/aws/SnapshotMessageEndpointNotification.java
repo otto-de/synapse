@@ -1,23 +1,23 @@
 package de.otto.synapse.eventsource.aws;
 
-import de.otto.synapse.eventsource.EventSourceNotification;
+import de.otto.synapse.info.MessageEndpointNotification;
 
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 
 /**
- * A special {@link EventSourceNotification} that additionally holds the timestamp of snapshot creation.
+ * A special {@link MessageEndpointNotification} that additionally holds the timestamp of snapshot creation.
  *
  * @deprecated don't rely on this event as the timestamp of snapshot creation should be obtained
  *             by the event message's metadata in the future
  */
 @Deprecated
-public class SnapshotEventSourceNotification extends EventSourceNotification {
+public class SnapshotMessageEndpointNotification extends MessageEndpointNotification {
 
     private final Instant snapshotTimestamp;
 
-    private SnapshotEventSourceNotification(Builder builder) {
+    private SnapshotMessageEndpointNotification(Builder builder) {
         super(builder);
         this.snapshotTimestamp = builder.snapshotTimestamp;
     }
@@ -32,7 +32,7 @@ public class SnapshotEventSourceNotification extends EventSourceNotification {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
-        SnapshotEventSourceNotification that = (SnapshotEventSourceNotification) o;
+        SnapshotMessageEndpointNotification that = (SnapshotMessageEndpointNotification) o;
         return Objects.equals(snapshotTimestamp, that.snapshotTimestamp);
     }
 
@@ -43,7 +43,7 @@ public class SnapshotEventSourceNotification extends EventSourceNotification {
 
     @Override
     public String toString() {
-        return "SnapshotEventSourceNotification{" +
+        return "SnapshotMessageEndpointNotification{" +
                 "snapshotTimestamp=" + snapshotTimestamp +
                 ", eventSourceName='" + getEventSourceName() + '\'' +
                 ", channelPosition=" + getChannelPosition() +
@@ -58,7 +58,7 @@ public class SnapshotEventSourceNotification extends EventSourceNotification {
     }
 
 
-    public static final class Builder extends EventSourceNotification.Builder {
+    public static final class Builder extends MessageEndpointNotification.Builder {
 
         private Instant snapshotTimestamp;
 
@@ -70,8 +70,8 @@ public class SnapshotEventSourceNotification extends EventSourceNotification {
             return this;
         }
 
-        public SnapshotEventSourceNotification build() {
-            return new SnapshotEventSourceNotification(this);
+        public SnapshotMessageEndpointNotification build() {
+            return new SnapshotMessageEndpointNotification(this);
         }
     }
 

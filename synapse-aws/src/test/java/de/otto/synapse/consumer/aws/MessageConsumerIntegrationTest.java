@@ -5,7 +5,8 @@ import de.otto.synapse.annotation.EventSourceConsumer;
 import de.otto.synapse.aws.s3.SnapshotReadService;
 import de.otto.synapse.configuration.aws.AwsEventSourcingAutoConfiguration;
 import de.otto.synapse.eventsource.EventSourceConsumerProcess;
-import de.otto.synapse.eventsource.EventSourceNotification;
+import de.otto.synapse.info.MessageEndpointNotification;
+import de.otto.synapse.info.MessageEndpointStatus;
 import de.otto.synapse.message.Message;
 import org.awaitility.Awaitility;
 import org.junit.Test;
@@ -54,7 +55,7 @@ public class MessageConsumerIntegrationTest {
     private static List<String> allReceivedEventKeys = new ArrayList<>();
     private static List<Apple> receivedAppleEventPayloads = new ArrayList<>();
     private static List<Banana> receivedBananaEventPayloads = new ArrayList<>();
-    private static List<EventSourceNotification> events = new ArrayList<>();
+    private static List<MessageEndpointNotification> events = new ArrayList<>();
 
 
     @Test
@@ -70,13 +71,13 @@ public class MessageConsumerIntegrationTest {
         assertThat(receivedAppleEventPayloads.get(0).appleId, is("1"));
         assertThat(receivedAppleEventPayloads.get(1).appleId, is("2"));
         assertThat(events, hasSize(4));
-        assertThat(events.get(0).getStatus(), is(EventSourceNotification.Status.STARTED));
+        assertThat(events.get(0).getStatus(), is(MessageEndpointStatus.STARTING));
         assertThat(events.get(0).getChannelName(), is("test-stream"));
-        assertThat(events.get(1).getStatus(), is(EventSourceNotification.Status.FINISHED));
+        assertThat(events.get(1).getStatus(), is(MessageEndpointStatus.FINISHED));
         assertThat(events.get(1).getChannelName(), is("test-stream"));
-        assertThat(events.get(2).getStatus(), is(EventSourceNotification.Status.STARTED));
+        assertThat(events.get(2).getStatus(), is(MessageEndpointStatus.STARTING));
         assertThat(events.get(2).getChannelName(), is("test-stream"));
-        assertThat(events.get(3).getStatus(), is(EventSourceNotification.Status.FAILED));
+        assertThat(events.get(3).getStatus(), is(MessageEndpointStatus.FAILED));
         assertThat(events.get(3).getChannelName(), is("test-stream"));
 
     }
@@ -93,8 +94,8 @@ public class MessageConsumerIntegrationTest {
 
     public static class TestConsumer {
         @EventListener
-        public void listenForFinishedEvent(EventSourceNotification eventSourceNotification) {
-            events.add(eventSourceNotification);
+        public void listenForFinishedEvent(MessageEndpointNotification messageEndpointNotification) {
+            events.add(messageEndpointNotification);
         }
 
         @EventSourceConsumer(

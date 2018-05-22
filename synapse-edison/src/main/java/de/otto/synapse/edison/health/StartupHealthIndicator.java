@@ -1,11 +1,10 @@
 package de.otto.synapse.edison.health;
 
-import com.google.common.collect.ImmutableMap;
+import de.otto.synapse.edison.provider.MessageReceiverEndpointInfoProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
-
-import static org.springframework.boot.actuate.health.Health.*;
 
 /**
  * A Spring Boot HealthIndicator that is healthy after finishing the first (snapshot)
@@ -14,28 +13,30 @@ import static org.springframework.boot.actuate.health.Health.*;
 @Component
 public class StartupHealthIndicator implements HealthIndicator {
 
-    private ChannelInfoProvider provider;
+    private MessageReceiverEndpointInfoProvider provider;
 
-    public StartupHealthIndicator(final ChannelInfoProvider provider) {
+    @Autowired
+    public StartupHealthIndicator(final MessageReceiverEndpointInfoProvider provider) {
         this.provider = provider;
     }
 
     @Override
     public Health health() {
-        final Builder builder;
-
-        if (provider.getInfos().isAtHead()) {
-            builder = up();
-        } else {
-            builder = down();
-        }
-        provider.getInfos().getChannels().forEach(channel -> {
-            ChannelInfo startupInfo = provider.getInfos().getStartupInfo(channel);
-            builder.withDetail(channel, ImmutableMap.of(
-                    "status", startupInfo.getStatus().name(),
-                    "message", startupInfo.getMessage())
-            );
-        });
-        return builder.build();
+        return Health.up().build();
+//        final Builder builder;
+//
+//        if (provider.getInfos().allChannelsAtHead()) {
+//            builder = up();
+//        } else {
+//            builder = down();
+//        }
+//        provider.getInfos().getChannels().forEach(channel -> {
+//            MessageReceiverEndpointInfo startupInfo = provider.getInfos().getChannelInfoFor(channel);
+//            builder.withDetail(channel, ImmutableMap.of(
+//                    "status", startupInfo.getStatus().name(),
+//                    "message", startupInfo.getMessage())
+//            );
+//        });
+//        return builder.build();
     }
 }

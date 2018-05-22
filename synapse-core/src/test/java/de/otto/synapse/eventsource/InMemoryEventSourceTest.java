@@ -5,6 +5,8 @@ import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.InMemoryChannel;
 import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.info.MessageEndpointNotification;
+import de.otto.synapse.info.MessageEndpointStatus;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -57,16 +59,16 @@ public class InMemoryEventSourceTest {
 
 
         // then
-        ArgumentCaptor<EventSourceNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(EventSourceNotification.class);
+        ArgumentCaptor<MessageEndpointNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(MessageEndpointNotification.class);
         verify(eventPublisher, times(2)).publishEvent(notificationArgumentCaptor.capture());
 
-        EventSourceNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
-        assertThat(startedEvent.getStatus(), is(EventSourceNotification.Status.STARTED));
+        MessageEndpointNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
+        assertThat(startedEvent.getStatus(), is(MessageEndpointStatus.STARTING));
         assertThat(startedEvent.getChannelPosition(), is(ChannelPosition.fromHorizon()));
         assertThat(startedEvent.getChannelName(), is("some-stream"));
 
-        EventSourceNotification finishedEvent = notificationArgumentCaptor.getAllValues().get(1);
-        assertThat(finishedEvent.getStatus(), is(EventSourceNotification.Status.FINISHED));
+        MessageEndpointNotification finishedEvent = notificationArgumentCaptor.getAllValues().get(1);
+        assertThat(finishedEvent.getStatus(), is(MessageEndpointStatus.FINISHED));
         assertThat(finishedEvent.getChannelPosition().shard("some-stream").startFrom(), is(StartFrom.POSITION));
         assertThat(finishedEvent.getChannelPosition().shard("some-stream").position(), is("0"));
         assertThat(finishedEvent.getChannelName(), is("some-stream"));

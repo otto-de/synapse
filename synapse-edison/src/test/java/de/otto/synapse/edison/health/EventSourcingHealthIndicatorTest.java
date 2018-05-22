@@ -1,7 +1,8 @@
 package de.otto.synapse.edison.health;
 
 import de.otto.synapse.eventsource.EventSource;
-import de.otto.synapse.eventsource.EventSourceNotification;
+import de.otto.synapse.info.MessageEndpointNotification;
+import de.otto.synapse.info.MessageEndpointStatus;
 import org.junit.Test;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.Status;
@@ -34,13 +35,13 @@ public class EventSourcingHealthIndicatorTest {
         EventSource mockEventSource = mock(EventSource.class);
         when(mockEventSource.getChannelName()).thenReturn("some-stream");
 
-        EventSourceNotification eventSourceNotification = EventSourceNotification.builder()
-                .withStatus(EventSourceNotification.Status.FAILED)
+        MessageEndpointNotification messageEndpointNotification = MessageEndpointNotification.builder()
+                .withStatus(MessageEndpointStatus.FAILED)
                 .withMessage("some message")
                 .withChannelName("some-stream")
                 .withEventSourceName("some-eventsource")
                 .build();
-        healthCheck.onEventSourceNotification(eventSourceNotification);
+        healthCheck.onEventSourceNotification(messageEndpointNotification);
 
         // when
         Health health = healthCheck.health();

@@ -5,7 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
-import de.otto.synapse.eventsource.EventSourceNotification;
+import de.otto.synapse.info.MessageEndpointNotification;
+import de.otto.synapse.info.MessageEndpointStatus;
 import de.otto.synapse.message.Message;
 import org.junit.Before;
 import org.junit.Test;
@@ -132,16 +133,16 @@ public class KinesisEventSourceTest {
         ChannelPosition finalChannelPosition = eventSource.consume(initialPositions, (message) -> false);
 
         // then
-        ArgumentCaptor<EventSourceNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(EventSourceNotification.class);
+        ArgumentCaptor<MessageEndpointNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(MessageEndpointNotification.class);
         verify(eventPublisher, times(2)).publishEvent(notificationArgumentCaptor.capture());
 
-        EventSourceNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
-        assertThat(startedEvent.getStatus(), is(EventSourceNotification.Status.STARTED));
+        MessageEndpointNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
+        assertThat(startedEvent.getStatus(), is(MessageEndpointStatus.STARTING));
         assertThat(startedEvent.getChannelPosition(), is(initialPositions));
         assertThat(startedEvent.getChannelName(), is("test"));
 
-        EventSourceNotification finishedEvent = notificationArgumentCaptor.getAllValues().get(1);
-        assertThat(finishedEvent.getStatus(), is(EventSourceNotification.Status.FINISHED));
+        MessageEndpointNotification finishedEvent = notificationArgumentCaptor.getAllValues().get(1);
+        assertThat(finishedEvent.getStatus(), is(MessageEndpointStatus.FINISHED));
         assertThat(finishedEvent.getChannelPosition(), is(finalChannelPosition));
         assertThat(finishedEvent.getChannelName(), is("test"));
     }
@@ -172,16 +173,16 @@ public class KinesisEventSourceTest {
             fail("expected RuntimeException");
         } catch (final RuntimeException e) {
             // then
-            ArgumentCaptor<EventSourceNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(EventSourceNotification.class);
+            ArgumentCaptor<MessageEndpointNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(MessageEndpointNotification.class);
             verify(eventPublisher, times(2)).publishEvent(notificationArgumentCaptor.capture());
 
-            EventSourceNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
-            assertThat(startedEvent.getStatus(), is(EventSourceNotification.Status.STARTED));
+            MessageEndpointNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
+            assertThat(startedEvent.getStatus(), is(MessageEndpointStatus.STARTING));
             assertThat(startedEvent.getChannelPosition(), is(initialPositions));
             assertThat(startedEvent.getChannelName(), is("test"));
 
-            EventSourceNotification failedEvent = notificationArgumentCaptor.getAllValues().get(1);
-            assertThat(failedEvent.getStatus(), is(EventSourceNotification.Status.FAILED));
+            MessageEndpointNotification failedEvent = notificationArgumentCaptor.getAllValues().get(1);
+            assertThat(failedEvent.getStatus(), is(MessageEndpointStatus.FAILED));
             assertThat(failedEvent.getMessage(), is("Error consuming messages from Kinesis: Some Error Message"));
             assertThat(failedEvent.getChannelPosition(), is(initialPositions));
             assertThat(failedEvent.getChannelName(), is("test"));
