@@ -69,7 +69,6 @@ public class KinesisShard {
             Record lastRecord = null;
             final long t0 = System.currentTimeMillis();
 
-            callback.accept(shardPosition);
             do {
                 GetRecordsResponse recordsResponse = kinesisShardIterator.next();
                 Duration durationBehind = ofMillis(recordsResponse.millisBehindLatest());
@@ -91,6 +90,7 @@ public class KinesisShard {
                         }
                     }
                 } else {
+                    shardPosition = shardPosition.withDurationBehind(durationBehind);
                     Message<String> kinesisMessage = lastRecord != null
                             ? kinesisMessage(shardId, durationBehind, lastRecord)
                             : dirtyHackToStopThreadMessage(durationBehind);

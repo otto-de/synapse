@@ -230,19 +230,17 @@ public class KinesisMessageLogReceiverEndpointTest {
 
         // then
 
-        verify(eventPublisher, times(5)).publishEvent(eventCaptor.capture());
+        verify(eventPublisher, times(4)).publishEvent(eventCaptor.capture());
         List<MessageEndpointNotification> events = eventCaptor.getAllValues();
 
         assertThat(events.get(0).getStatus(), is(STARTED));
         assertThat(events.get(0).getChannelPosition(), is(ChannelPosition.fromHorizon()));
-        assertThat(events.get(1).getStatus(), is(RUNNING)); // Initial callback before do/while
-        assertThat(events.get(1).getChannelPosition(), is(ChannelPosition.channelPosition(fromHorizon("shard1"))));;
-        assertThat(events.get(2).getStatus(), is(RUNNING)); // first emtpy record response, we dont evaluate millis behind latest from record response with zero records
-        assertThat(events.get(2).getChannelPosition(), is(ChannelPosition.channelPosition(fromHorizon("shard1"))));
+        assertThat(events.get(1).getStatus(), is(RUNNING)); // first emtpy record response, we dont evaluate millis behind latest from record response with zero records
+        assertThat(events.get(1).getChannelPosition(), is(channelPosition(fromHorizon("shard1", Duration.ofMillis(555L)))));
+        assertThat(events.get(2).getStatus(), is(RUNNING));
+        assertThat(events.get(2).getChannelPosition(), is(channelPosition(fromPosition("shard1", Duration.ofMillis(1234L), "sequence-blue"))));
         assertThat(events.get(3).getStatus(), is(RUNNING));
-        assertThat(events.get(3).getChannelPosition(), is(ChannelPosition.channelPosition(fromPosition("shard1", Duration.ofMillis(1234L), "sequence-blue"))));
-        assertThat(events.get(4).getStatus(), is(RUNNING));
-        assertThat(events.get(4).getChannelPosition(), is(ChannelPosition.channelPosition(fromPosition("shard1", Duration.ofMillis(2345L), "sequence-green"))));
+        assertThat(events.get(3).getChannelPosition(), is(channelPosition(fromPosition("shard1", Duration.ofMillis(2345L), "sequence-green"))));
         assertThat(finalChannelPosition.shard("shard1").position(), is("sequence-green"));
     }
 
@@ -263,7 +261,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         ChannelPosition finalChannelPosition = kinesisMessageLog.consume(ChannelPosition.fromHorizon(), (m) -> false);
 
         // then
-        assertThat(finalChannelPosition, is(channelPosition(fromHorizon("shard1"))));
+        assertThat(finalChannelPosition, is(channelPosition(fromHorizon("shard1", Duration.ofMillis(555L)))));
     }
 
     @Test

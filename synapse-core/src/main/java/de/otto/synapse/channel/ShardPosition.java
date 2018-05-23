@@ -23,7 +23,7 @@ public final class ShardPosition implements Serializable {
         this.durationBehind = requireNonNull(durationBehind);
         this.position = requireNonNull(position);
         this.timestamp = null;
-        this.startFrom = StartFrom.POSITION;
+        this.startFrom = position.isEmpty() ? StartFrom.HORIZON : StartFrom.POSITION;
     }
 
     private ShardPosition(final @Nonnull String shardName, final @Nonnull Duration durationBehind, final @Nonnull Instant timestamp) {
@@ -34,22 +34,20 @@ public final class ShardPosition implements Serializable {
         this.startFrom = StartFrom.TIMESTAMP;
     }
 
-    private ShardPosition(final @Nonnull String shardName, final @Nonnull Duration durationBehind) {
-        this.shardName = requireNonNull(shardName);
-        this.durationBehind = requireNonNull(durationBehind);
-        this.position = "";
-        this.timestamp = null;
-        this.startFrom = StartFrom.HORIZON;
+    public ShardPosition withDurationBehind(final @Nonnull Duration durationBehind) {
+        return timestamp == null
+                ? new ShardPosition(shardName, durationBehind, position)
+                : new ShardPosition(shardName, durationBehind, timestamp);
     }
 
     @Nonnull
     public static ShardPosition fromHorizon(final @Nonnull String shardName) {
-        return new ShardPosition(shardName, MAX_DURATION);
+        return new ShardPosition(shardName, MAX_DURATION, "");
     }
 
     @Nonnull
     public static ShardPosition fromHorizon(final @Nonnull String shardName, final @Nonnull Duration durationBehind) {
-        return new ShardPosition(shardName, durationBehind);
+        return new ShardPosition(shardName, durationBehind, "");
     }
 
     @Nonnull
