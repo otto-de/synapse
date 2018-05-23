@@ -61,6 +61,7 @@ public class MessageReceiverEndpointInfoProvider {
                         .builder()
                         .withChannelName(notification.getChannelName())
                         .withStatus(MessageEndpointStatus.STARTING)
+                        .withChannelPosition(notification.getChannelPosition())
                         .withMessage(notification.getMessage());
                 messageReceiverEndpointInfos.update(channelName, builder.build());
                 channelStartupTimes.put(channelName, clock.instant());
@@ -71,6 +72,7 @@ public class MessageReceiverEndpointInfoProvider {
                         .builder()
                         .withChannelName(channelName)
                         .withStatus(notification.getStatus())
+                        .withChannelPosition(notification.getChannelPosition())
                         .withMessage(notification.getMessage())
                         .build());
                 break;

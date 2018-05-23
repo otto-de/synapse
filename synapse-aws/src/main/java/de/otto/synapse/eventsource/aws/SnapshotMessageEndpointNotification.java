@@ -45,7 +45,6 @@ public class SnapshotMessageEndpointNotification extends MessageEndpointNotifica
     public String toString() {
         return "SnapshotMessageEndpointNotification{" +
                 "snapshotTimestamp=" + snapshotTimestamp +
-                ", eventSourceName='" + getEventSourceName() + '\'' +
                 ", channelPosition=" + getChannelPosition() +
                 ", channelName='" + getChannelName() + '\'' +
                 ", status=" + getStatus() +

@@ -28,8 +28,8 @@ public class InMemoryEventSourceTest {
     @Test
     public void shouldSendEventInStreamToConsumer() {
         // given
-        InMemoryChannel inMemoryChannel = new InMemoryChannel("some-stream", objectMapper);
-        InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es",inMemoryChannel, eventPublisher);
+        InMemoryChannel inMemoryChannel = new InMemoryChannel("some-stream", objectMapper, eventPublisher);
+        InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es", inMemoryChannel, eventPublisher);
         StringMessageConsumer eventConsumer = new StringMessageConsumer();
         inMemoryEventSource.register(eventConsumer);
         inMemoryChannel.send(message("key", "payload"));
@@ -47,7 +47,7 @@ public class InMemoryEventSourceTest {
     @Test
     public void shouldPublishStartedAndFinishedEvents() {
         // given
-        InMemoryChannel inMemoryChannel = new InMemoryChannel("some-stream", objectMapper);
+        InMemoryChannel inMemoryChannel = new InMemoryChannel("some-stream", objectMapper, eventPublisher);
         InMemoryEventSource inMemoryEventSource = new InMemoryEventSource("es", inMemoryChannel, eventPublisher);
         StringMessageConsumer eventConsumer = new StringMessageConsumer();
         inMemoryEventSource.register(eventConsumer);

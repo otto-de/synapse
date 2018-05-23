@@ -5,8 +5,10 @@ import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Message;
+import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.function.Predicate;
 
 /**
@@ -20,8 +22,9 @@ import java.util.function.Predicate;
 public abstract class MessageLogReceiverEndpoint extends MessageReceiverEndpoint {
 
     public MessageLogReceiverEndpoint(final @Nonnull String channelName,
-                                      final @Nonnull ObjectMapper objectMapper) {
-        super(channelName, objectMapper);
+                                      final @Nonnull ObjectMapper objectMapper,
+                                      final @Nullable ApplicationEventPublisher eventPublisher) {
+        super(channelName, objectMapper, eventPublisher);
     }
 
     /**

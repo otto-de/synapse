@@ -62,7 +62,7 @@ public class MessageConsumerIntegrationTest {
     public void shouldCallCorrectConsumerDependingOnEventKey() {
         Awaitility.await()
                 .atMost(5, TimeUnit.SECONDS)
-                .until(() -> events.size(), is(4));
+                .until(() -> events.size(), is(6));
 
         assertThat(receivedBananaEventPayloads.size(), is(2));
         assertThat(receivedBananaEventPayloads.get(0).bananaId, is("1"));
@@ -70,15 +70,19 @@ public class MessageConsumerIntegrationTest {
         assertThat(receivedAppleEventPayloads.size(), is(2));
         assertThat(receivedAppleEventPayloads.get(0).appleId, is("1"));
         assertThat(receivedAppleEventPayloads.get(1).appleId, is("2"));
-        assertThat(events, hasSize(4));
+        assertThat(events, hasSize(6));
         assertThat(events.get(0).getStatus(), is(MessageEndpointStatus.STARTING));
         assertThat(events.get(0).getChannelName(), is("test-stream"));
-        assertThat(events.get(1).getStatus(), is(MessageEndpointStatus.FINISHED));
+        assertThat(events.get(1).getStatus(), is(MessageEndpointStatus.STARTED));
         assertThat(events.get(1).getChannelName(), is("test-stream"));
-        assertThat(events.get(2).getStatus(), is(MessageEndpointStatus.STARTING));
+        assertThat(events.get(2).getStatus(), is(MessageEndpointStatus.FINISHED));
         assertThat(events.get(2).getChannelName(), is("test-stream"));
-        assertThat(events.get(3).getStatus(), is(MessageEndpointStatus.FINISHED));
+        assertThat(events.get(3).getStatus(), is(MessageEndpointStatus.STARTING));
         assertThat(events.get(3).getChannelName(), is("test-stream"));
+        assertThat(events.get(4).getStatus(), is(MessageEndpointStatus.STARTED));
+        assertThat(events.get(4).getChannelName(), is("test-stream"));
+        assertThat(events.get(5).getStatus(), is(MessageEndpointStatus.FINISHED));
+        assertThat(events.get(5).getChannelName(), is("test-stream"));
 
     }
 

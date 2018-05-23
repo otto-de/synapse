@@ -5,6 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
+import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -29,13 +30,14 @@ public class InMemoryChannel extends MessageLogReceiverEndpoint {
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
     public InMemoryChannel(final String channelName) {
-        super(channelName, new ObjectMapper().registerModule(new JavaTimeModule()));
+        super(channelName, new ObjectMapper().registerModule(new JavaTimeModule()), null);
         this.eventQueue = synchronizedList(new ArrayList<>());
     }
 
     public InMemoryChannel(final String channelName,
-                           final ObjectMapper objectMapper) {
-        super(channelName, objectMapper);
+                           final ObjectMapper objectMapper,
+                           final ApplicationEventPublisher eventPublisher) {
+        super(channelName, objectMapper, eventPublisher);
         this.eventQueue = synchronizedList(new ArrayList<>());
     }
 

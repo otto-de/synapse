@@ -83,7 +83,6 @@ public abstract class AbstractEventSource implements EventSource {
     protected void publishEvent(ChannelPosition channelPosition, MessageEndpointStatus status, String message) {
         if (eventPublisher != null) {
             MessageEndpointNotification notification = MessageEndpointNotification.builder()
-                    .withEventSourceName(name)
                     .withChannelName(this.getChannelName())
                     .withChannelPosition(channelPosition)
                     .withStatus(status)

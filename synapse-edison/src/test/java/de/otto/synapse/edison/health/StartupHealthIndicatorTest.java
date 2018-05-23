@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
+import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.info.MessageEndpointNotification.Builder;
 import static de.otto.synapse.info.MessageEndpointNotification.builder;
@@ -168,7 +169,7 @@ public class StartupHealthIndicatorTest {
         // then
         Health health = healthCheck.health();
         assertThat(health.getStatus(), is(Status.DOWN));
-        assertThat(health.getDetails(), hasEntry("message", "ChannelPositions not yet available"));
+        assertThat(health.getDetails(), hasEntry("message", "Channels not yet up to date"));
     }
 
     @Test
@@ -269,14 +270,15 @@ public class StartupHealthIndicatorTest {
         final Builder builder = builder()
                 .withChannelName(channelName)
                 .withStatus(status)
-                .withMessage("some message")
-                .withEventSourceName("some-eventsource");
+                .withMessage("some message");
         if (durationBehind != null && durationBehind.length > 0) {
             final List<ShardPosition> positions = new ArrayList<>();
             for (int i=0; i<durationBehind.length; ++i) {
                 positions.add(fromPosition("some-shard-" + i, durationBehind[i], "42"));
             }
             builder.withChannelPosition(channelPosition(positions));
+        } else {
+            builder.withChannelPosition(fromHorizon());
         }
         provider.onEventSourceNotification(builder
                 .build());

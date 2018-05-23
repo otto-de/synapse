@@ -207,7 +207,6 @@ public class MessageReceiverEndpointProviderTest {
                                                                                      final String message) {
         MessageEndpointNotification.Builder builder = MessageEndpointNotification.builder()
                 .withStatus(status)
-                .withEventSourceName("snapshot")
                 .withChannelName(channelName)
                 .withMessage(message);
         if (status == RUNNING) {
@@ -223,7 +222,6 @@ public class MessageReceiverEndpointProviderTest {
                                                                                      final int hours) {
         return MessageEndpointNotification.builder()
                 .withStatus(status)
-                .withEventSourceName("snapshot")
                 .withChannelName(channelName)
                 .withMessage(message)
                 .withChannelPosition(channelPosition(fromPosition(shardName, Duration.ofHours(hours), "42")));

@@ -2,8 +2,8 @@ package de.otto.synapse.aws.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.consumer.MessageConsumer;
-import de.otto.synapse.info.MessageEndpointNotification;
 import de.otto.synapse.eventsource.aws.SnapshotMessageEndpointNotification;
+import de.otto.synapse.info.MessageEndpointNotification;
 import de.otto.synapse.info.MessageEndpointStatus;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,7 +82,6 @@ public class SnapshotEventSourceTest {
 
         // then
         MessageEndpointNotification expectedFailedEvent = SnapshotMessageEndpointNotification.builder()
-                .withEventSourceName("snapshotEventSource")
                 .withChannelName(STREAM_NAME)
                 .withStatus(MessageEndpointStatus.FAILED)
                 .withChannelPosition(fromHorizon())
@@ -113,7 +112,7 @@ public class SnapshotEventSourceTest {
     }
 
     @Test
-    public void shouldPublishStartAndFinishEvents() {
+    public void shouldPublishStartingStartedAndFinishEvents() {
         // given
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.empty());
 
@@ -122,21 +121,28 @@ public class SnapshotEventSourceTest {
 
         // then
         MessageEndpointNotification expectedStartEvent = SnapshotMessageEndpointNotification.builder()
-                .withEventSourceName("snapshotEventSource")
                 .withChannelName(STREAM_NAME)
                 .withStatus(MessageEndpointStatus.STARTING)
-                .withMessage("Loading snapshot from S3.")
+                .withMessage("Retrieve snapshot file from S3.")
                 .withChannelPosition(fromHorizon())
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedStartEvent);
 
+        MessageEndpointNotification expectedStartedEvent = SnapshotMessageEndpointNotification.builder()
+                .withChannelName(STREAM_NAME)
+                .withStatus(MessageEndpointStatus.STARTED)
+                .withMessage("Loading snapshot.")
+                .withChannelPosition(fromHorizon())
+                .build();
+        verify(applicationEventPublisher).publishEvent(expectedStartedEvent);
+
         MessageEndpointNotification expectedFinishedEvent = SnapshotMessageEndpointNotification.builder()
-                .withEventSourceName("snapshotEventSource")
                 .withChannelName(STREAM_NAME)
                 .withStatus(MessageEndpointStatus.FINISHED)
                 .withMessage("Finished to load snapshot from S3.")
                 .withChannelPosition(fromHorizon())
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedFinishedEvent);
+        verifyNoMoreInteractions(applicationEventPublisher);
     }
 }

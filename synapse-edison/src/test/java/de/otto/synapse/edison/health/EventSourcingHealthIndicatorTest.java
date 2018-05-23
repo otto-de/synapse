@@ -39,7 +39,6 @@ public class EventSourcingHealthIndicatorTest {
                 .withStatus(MessageEndpointStatus.FAILED)
                 .withMessage("some message")
                 .withChannelName("some-stream")
-                .withEventSourceName("some-eventsource")
                 .build();
         healthCheck.onEventSourceNotification(messageEndpointNotification);
 

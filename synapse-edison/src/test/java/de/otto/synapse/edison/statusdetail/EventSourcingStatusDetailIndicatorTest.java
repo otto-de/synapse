@@ -2,7 +2,6 @@ package de.otto.synapse.edison.statusdetail;
 
 import de.otto.edison.status.domain.Status;
 import de.otto.edison.status.domain.StatusDetail;
-import de.otto.edison.testsupport.util.TestClock;
 import de.otto.synapse.edison.provider.MessageReceiverEndpointInfoProvider;
 import de.otto.synapse.info.MessageReceiverEndpointInfo;
 import de.otto.synapse.info.MessageReceiverEndpointInfos;
@@ -18,8 +17,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class EventSourcingStatusDetailIndicatorTest {
-
-    private TestClock testClock = TestClock.now();
 
     public EventSourcingStatusDetailIndicatorTest() {
     }

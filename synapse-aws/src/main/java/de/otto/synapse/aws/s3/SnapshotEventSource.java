@@ -5,8 +5,8 @@ import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.eventsource.EventSource;
-import de.otto.synapse.info.MessageEndpointNotification;
 import de.otto.synapse.eventsource.aws.SnapshotMessageEndpointNotification;
+import de.otto.synapse.info.MessageEndpointNotification;
 import de.otto.synapse.info.MessageEndpointStatus;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
@@ -73,9 +73,10 @@ public class SnapshotEventSource implements EventSource {
         Instant snapshotTimestamp = null;
 
         try {
-            publishEvent(startFrom, MessageEndpointStatus.STARTING, "Loading snapshot from S3.", null);
+            publishEvent(startFrom, MessageEndpointStatus.STARTING, "Retrieve snapshot file from S3.", null);
 
             Optional<File> snapshotFile = snapshotReadService.retrieveLatestSnapshot(this.getChannelName());
+                publishEvent(startFrom, MessageEndpointStatus.STARTED, "Loading snapshot.", null);
             if (snapshotFile.isPresent()) {
                 snapshotTimestamp = SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName());
                 snapshotStreamPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), stopCondition, getMessageDispatcher());
@@ -108,7 +109,6 @@ public class SnapshotEventSource implements EventSource {
         if (eventPublisher != null) {
             MessageEndpointNotification notification = SnapshotMessageEndpointNotification.builder()
                     .withSnapshotTimestamp(snapshotTimestamp)
-                    .withEventSourceName(name)
                     .withChannelName(this.getChannelName())
                     .withChannelPosition(channelPosition)
                     .withStatus(status)

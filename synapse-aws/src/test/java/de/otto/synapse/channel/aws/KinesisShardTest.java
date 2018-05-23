@@ -13,7 +13,9 @@ import org.mockito.stubbing.Answer;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static de.otto.synapse.channel.ShardPosition.*;
@@ -156,7 +158,7 @@ public class KinesisShardTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
 
         // when
-        final ShardPosition shardPosition = kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), (message) -> true, consumer);
+        final ShardPosition shardPosition = kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), (message) -> true, consumer, (x) -> {});
 
         // then
         verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record1));
@@ -190,7 +192,7 @@ public class KinesisShardTest {
 
         // when
         interceptorChain.register((m) -> message(m.getKey(), m.getHeader(), "intercepted"));
-        final ShardPosition shardPosition = kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), (message) -> true, consumer);
+        final ShardPosition shardPosition = kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), (message) -> true, consumer, (x) -> {});
 
         // then
         verify(consumer).accept(message("first", responseHeader(fromPosition("someShard", ofMillis(1234L), "1"), now), "intercepted"));
@@ -228,7 +230,7 @@ public class KinesisShardTest {
                         ? null
                         : message(m.getKey(), m.getHeader(), "intercepted")
         );
-        final ShardPosition shardPosition = kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), (message) -> true, consumer);
+        final ShardPosition shardPosition = kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), (message) -> true, consumer, (x) -> {});
 
         // then
         verify(consumer).accept(message("second", responseHeader(fromPosition("someShard", ofMillis(1234L), "2"), now), "intercepted"));
@@ -261,7 +263,7 @@ public class KinesisShardTest {
 
         // when
         kinesisShard.stop();
-        final ShardPosition shardPosition = kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), (message) -> false, consumer);
+        final ShardPosition shardPosition = kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), (message) -> false, consumer, (x) -> {});
 
         // then
         verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record1));
@@ -270,6 +272,39 @@ public class KinesisShardTest {
 
         assertThat(shardPosition.position(), is("2"));
         assertThat(kinesisShard.isStopping(), is(true));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void shouldCallCallbackForRecords() {
+        final Instant now = now();
+        // given
+        final Record record1 = Record.builder()
+                .sequenceNumber("1")
+                .approximateArrivalTimestamp(now)
+                .partitionKey("first")
+                .build();
+        final Record record2 = Record.builder()
+                .sequenceNumber("2")
+                .approximateArrivalTimestamp(now)
+                .partitionKey("second")
+                .build();
+        final GetRecordsResponse response = GetRecordsResponse.builder()
+                .records(record1, record2)
+                .nextShardIterator("nextShardIterator")
+                .millisBehindLatest(1234L)
+                .build();
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
+
+        // when
+        kinesisShard.stop();
+        final Consumer callback = mock(Consumer.class);
+        kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), (message) -> false, consumer, callback);
+
+        // then
+        verify(callback).accept(ShardPosition.fromHorizon("someShard"));
+        verify(callback).accept(ShardPosition.fromPosition("someShard", Duration.ofMillis(1234L), "2"));
+        verifyNoMoreInteractions(callback);
     }
 
     @Test
@@ -292,7 +327,7 @@ public class KinesisShardTest {
         when(mockStopCondition.test(any())).thenReturn(true);
 
         // when
-        ShardPosition shardPosition = kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), mockStopCondition, consumer);
+        ShardPosition shardPosition = kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), mockStopCondition, consumer, (x) -> {});
 
         // then
         verify(mockStopCondition).test(kinesisMessage("someShard", ofMillis(1234L), record));
@@ -311,7 +346,7 @@ public class KinesisShardTest {
         when(mockStopCondition.test(any())).thenReturn(true);
 
         // when
-        ShardPosition shardPosition = kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), mockStopCondition, consumer);
+        ShardPosition shardPosition = kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), mockStopCondition, consumer, (x) -> {});
 
         // then
         assertThat(shardPosition.position(), is(""));
@@ -323,7 +358,7 @@ public class KinesisShardTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenThrow(RuntimeException.class);
 
         // when
-        kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), mockStopCondition, consumer);
+        kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), mockStopCondition, consumer, (x) -> {});
 
         // then
         // exception is thrown
@@ -354,7 +389,7 @@ public class KinesisShardTest {
         doThrow(new RuntimeException("forced exception for test")).when(consumer).accept(kinesisMessage);
 
         // when
-        kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), (message) -> message.getKey().equals("second"), consumer);
+        kinesisShard.consumeShard(ShardPosition.fromHorizon("someShard"), (message) -> message.getKey().equals("second"), consumer, (x) -> {});
 
         //then
         verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record1));

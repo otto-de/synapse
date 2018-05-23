@@ -8,22 +8,16 @@ import static java.util.Objects.requireNonNull;
 
 public class MessageEndpointNotification {
 
-    private String eventSourceName;
     private ChannelPosition channelPosition;
     private String channelName;
     private MessageEndpointStatus status;
     private String message;
 
     protected MessageEndpointNotification(Builder builder) {
-        eventSourceName = requireNonNull(builder.eventSourceName);
         channelPosition = requireNonNull(builder.channelPosition);
         channelName = requireNonNull(builder.channelName);
         status = requireNonNull(builder.status);
         message = requireNonNull(builder.message);
-    }
-
-    public String getEventSourceName() {
-        return eventSourceName;
     }
 
     public ChannelPosition getChannelPosition() {
@@ -47,8 +41,7 @@ public class MessageEndpointNotification {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MessageEndpointNotification that = (MessageEndpointNotification) o;
-        return Objects.equals(eventSourceName, that.eventSourceName) &&
-                Objects.equals(channelPosition, that.channelPosition) &&
+        return Objects.equals(channelPosition, that.channelPosition) &&
                 Objects.equals(channelName, that.channelName) &&
                 status == that.status &&
                 Objects.equals(message, that.message);
@@ -57,14 +50,13 @@ public class MessageEndpointNotification {
     @Override
     public int hashCode() {
 
-        return Objects.hash(eventSourceName, channelPosition, channelName, status, message);
+        return Objects.hash(channelPosition, channelName, status, message);
     }
 
     @Override
     public String toString() {
         return "MessageEndpointNotification{" +
-                "eventSourceName='" + eventSourceName + '\'' +
-                ", channelPosition=" + channelPosition +
+                "channelPosition=" + channelPosition +
                 ", channelName='" + channelName + '\'' +
                 ", status=" + status +
                 ", message='" + message + '\'' +
@@ -84,18 +76,12 @@ public class MessageEndpointNotification {
     }
 
     public static class Builder {
-        private String eventSourceName;
         private ChannelPosition channelPosition = ChannelPosition.fromHorizon();
         private String channelName = "";
         private MessageEndpointStatus status;
         private String message = "";
 
         protected Builder() {
-        }
-
-        public Builder withEventSourceName(String val) {
-            eventSourceName = val;
-            return this;
         }
 
         public Builder withChannelPosition(ChannelPosition val) {

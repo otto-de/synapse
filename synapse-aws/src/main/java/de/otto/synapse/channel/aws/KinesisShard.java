@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.kinesis.model.*;
 import javax.annotation.concurrent.ThreadSafe;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
@@ -55,7 +56,8 @@ public class KinesisShard {
 
     public ShardPosition consumeShard(final ShardPosition startPosition,
                                       final Predicate<Message<?>> stopCondition,
-                                      final MessageConsumer<String> consumer) {
+                                      final MessageConsumer<String> consumer,
+                                      final Consumer<ShardPosition> callback) {
         try {
             MDC.put("channelName", channelName);
             MDC.put("shardId", shardId);
@@ -66,6 +68,8 @@ public class KinesisShard {
             boolean stopRetrieval = false;
             Record lastRecord = null;
             final long t0 = System.currentTimeMillis();
+
+            callback.accept(shardPosition);
             do {
                 GetRecordsResponse recordsResponse = kinesisShardIterator.next();
                 Duration durationBehind = ofMillis(recordsResponse.millisBehindLatest());
@@ -78,7 +82,6 @@ public class KinesisShard {
 
                             lastRecord = record;
                             shardPosition = fromPosition(shardId, durationBehind, record.sequenceNumber());
-
                             //consume all records of current iterator, even if stop condition is true
                             // because durationBehind is only per iterator, not per record and we want to consume all
                             // records
@@ -93,6 +96,8 @@ public class KinesisShard {
                             : dirtyHackToStopThreadMessage(durationBehind);
                     stopRetrieval = stopCondition.test(kinesisMessage);
                 }
+
+                callback.accept(shardPosition);
 
                 final long t2 = System.currentTimeMillis();
                 logInfo(channelName, recordsResponse, durationBehind, t2 - t1);
