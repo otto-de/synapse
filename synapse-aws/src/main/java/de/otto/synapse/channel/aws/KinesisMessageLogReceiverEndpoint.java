@@ -5,6 +5,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
@@ -57,23 +58,23 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
             if (isNull(executorService)) {
                initExecutorService();
             }
-            final List<CompletableFuture<ChannelPosition>> futureShardPositions = kinesisShards
+            final List<CompletableFuture<ShardPosition>> futureShardPositions = kinesisShards
                     .stream()
                     .map(shard -> supplyAsync(
-                            () -> consumeShard(shard, startFrom, stopCondition),
+                            () -> consumeShard(shard, startFrom.shard(shard.getShardId()), stopCondition),
                             executorService))
                     .collect(toList());
 
             // don't chain futureShardPositions with CompletableFuture::join as lazy execution will prevent threads from
             // running in parallel
 
-            final List<ChannelPosition> shardPositions = futureShardPositions
+            final List<ShardPosition> shardPositions = futureShardPositions
                     .stream()
                     .map(CompletableFuture::join)
                     .collect(toList());
             final long t2 = System.currentTimeMillis();
             info(LOG, ImmutableMap.of("runtime", (t2-t1)), "Consume events from Kinesis", null);
-            return ChannelPosition.merge(shardPositions);
+            return ChannelPosition.channelPosition(shardPositions);
         } catch (final RuntimeException e) {
             LOG.error("Failed to consume from Kinesis stream {}: {}", getChannelName(), e.getMessage());
             // When an exception occurs in a completable future's thread, other threads continue running.
@@ -105,9 +106,9 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
         }
     }
 
-    private ChannelPosition consumeShard(final KinesisShard shard,
-                                         final ChannelPosition startFrom,
-                                         final Predicate<Message<?>> stopCondition) {
+    private ShardPosition consumeShard(final KinesisShard shard,
+                                       final ShardPosition startFrom,
+                                       final Predicate<Message<?>> stopCondition) {
         try {
             return shard.consumeShard(startFrom, stopCondition, getMessageDispatcher());
         } catch (final RuntimeException e) {
