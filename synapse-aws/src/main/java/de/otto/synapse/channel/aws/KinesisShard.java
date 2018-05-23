@@ -175,8 +175,8 @@ public class KinesisShard {
 
     private boolean waitABit() {
         try {
-            /* See DECISIONS.md - Question #1 */
-            Thread.sleep(500);
+            /*Wait one second as documented by amazon: https://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetRecords.html*/
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             LOG.warn("Thread got interrupted");
             return true;
