@@ -35,7 +35,7 @@ public class MessageDispatcherTest {
         // when
         Message<String> someMessage = message(
                 "someKey",
-                responseHeader(fromHorizon("test"), Instant.now(), Duration.ZERO),
+                responseHeader(fromHorizon("test"), Instant.now()),
                 "{}"
         );
         messageDispatcher.accept(someMessage);
@@ -59,8 +59,8 @@ public class MessageDispatcherTest {
 
         // when
         final Instant now = Instant.now();
-        Message<String> someAppleMessage = message("apple.123", responseHeader(fromHorizon("test"), now, Duration.ZERO),"{}");
-        Message<String> someBananaMessage = message("banana.456", responseHeader(fromHorizon("test"), now, Duration.ZERO), "{}");
+        Message<String> someAppleMessage = message("apple.123", responseHeader(fromHorizon("test"), now),"{}");
+        Message<String> someBananaMessage = message("banana.456", responseHeader(fromHorizon("test"), now), "{}");
         messageDispatcher.accept(someAppleMessage);
         messageDispatcher.accept(someBananaMessage);
 
@@ -68,12 +68,12 @@ public class MessageDispatcherTest {
         verify(eventConsumerApple).accept(
                 message(
                         someAppleMessage.getKey(),
-                        responseHeader(fromHorizon("test"), now, Duration.ZERO),
+                        responseHeader(fromHorizon("test"), now),
                         new Apple()));
         verify(eventConsumerBanana).accept(
                 message(
                         someBananaMessage.getKey(),
-                        responseHeader(fromHorizon("test"), now, Duration.ZERO),
+                        responseHeader(fromHorizon("test"), now),
                         new Banana()));
         verify(eventConsumerCherry, never()).accept(any(Message.class));
     }

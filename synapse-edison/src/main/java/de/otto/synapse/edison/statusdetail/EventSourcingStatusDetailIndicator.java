@@ -3,60 +3,24 @@ package de.otto.synapse.edison.statusdetail;
 import de.otto.edison.status.domain.Status;
 import de.otto.edison.status.domain.StatusDetail;
 import de.otto.edison.status.indicator.StatusDetailIndicator;
-import de.otto.synapse.eventsource.EventSourceNotification;
+import de.otto.synapse.edison.provider.MessageReceiverEndpointInfoProvider;
+import de.otto.synapse.info.MessageEndpointStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import java.time.Clock;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+import static de.otto.synapse.info.MessageEndpointStatus.FAILED;
 
 @Component
 public class EventSourcingStatusDetailIndicator implements StatusDetailIndicator {
 
-    private SortedMap<String, Long> startingTimeMap = new TreeMap<>();
-
-    private SortedMap<String, StatusDetail> statusDetailMap = new TreeMap<>();
-    private Clock clock;
+    private final MessageReceiverEndpointInfoProvider provider;
 
     @Autowired
-    public EventSourcingStatusDetailIndicator() {
-        clock = Clock.systemDefaultZone();
-    }
-
-    //for test
-    EventSourcingStatusDetailIndicator(Clock clock) {
-        this.clock = clock;
-    }
-
-    @EventListener
-    public void onEventSourceNotification(EventSourceNotification eventSourceNotification) {
-        String channelName = eventSourceNotification.getChannelName();
-        StatusDetail statusDetail = createStatusDetail(Status.WARNING, channelName, "Should not happen.");
-
-        switch (eventSourceNotification.getStatus()) {
-            case FAILED:
-                statusDetail = createStatusDetail(Status.ERROR, channelName, eventSourceNotification.getMessage());
-                break;
-            case STARTED:
-                statusDetail = createStatusDetail(Status.OK, channelName, eventSourceNotification.getMessage());
-                startingTimeMap.put(eventSourceAndChannelName(eventSourceNotification), clock.millis());
-                break;
-            case FINISHED:
-                long runtime = clock.millis() - startingTimeMap.get(eventSourceAndChannelName(eventSourceNotification));
-                statusDetail = createStatusDetail(Status.OK, channelName, String.format("%s Finished consumption after %d seconds.", eventSourceNotification.getMessage(), runtime / 1000));
-                break;
-        }
-
-        statusDetailMap.put(channelName, statusDetail);
-
-    }
-
-    private String eventSourceAndChannelName(EventSourceNotification eventSourceNotification) {
-        return eventSourceNotification.getEventSourceName() + ":" + eventSourceNotification.getChannelName();
+    public EventSourcingStatusDetailIndicator(final MessageReceiverEndpointInfoProvider provider) {
+        this.provider = provider;
     }
 
     @Override
@@ -66,7 +30,13 @@ public class EventSourcingStatusDetailIndicator implements StatusDetailIndicator
 
     @Override
     public List<StatusDetail> statusDetails() {
-        return new ArrayList<>(statusDetailMap.values());
+        return provider.getInfos().stream()
+                .map(channelInfo -> createStatusDetail(statusOf(channelInfo.getStatus()), channelInfo.getChannelName(), channelInfo.getMessage()))
+                .collect(Collectors.toList());
+    }
+
+    private Status statusOf(final MessageEndpointStatus status) {
+        return status != FAILED ? Status.OK : Status.ERROR;
     }
 
     private StatusDetail createStatusDetail(Status status, String name, String message) {

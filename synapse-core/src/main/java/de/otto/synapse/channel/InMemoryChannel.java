@@ -5,6 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
+import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.Integer.valueOf;
+import static java.time.Duration.ZERO;
 import static java.time.Instant.now;
 import static java.util.Collections.synchronizedList;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -28,13 +30,14 @@ public class InMemoryChannel extends MessageLogReceiverEndpoint {
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
     public InMemoryChannel(final String channelName) {
-        super(channelName, new ObjectMapper().registerModule(new JavaTimeModule()));
+        super(channelName, new ObjectMapper().registerModule(new JavaTimeModule()), null);
         this.eventQueue = synchronizedList(new ArrayList<>());
     }
 
     public InMemoryChannel(final String channelName,
-                           final ObjectMapper objectMapper) {
-        super(channelName, objectMapper);
+                           final ObjectMapper objectMapper,
+                           final ApplicationEventPublisher eventPublisher) {
+        super(channelName, objectMapper, eventPublisher);
         this.eventQueue = synchronizedList(new ArrayList<>());
     }
 
@@ -74,7 +77,7 @@ public class InMemoryChannel extends MessageLogReceiverEndpoint {
                 }
             }
         } while (!shouldStop && !stopSignal.get());
-        return channelPosition(fromPosition(getChannelName(), String.valueOf(pos)));
+        return channelPosition(fromPosition(getChannelName(), ZERO, String.valueOf(pos)));
     }
 
     @Override

@@ -1,6 +1,8 @@
 package de.otto.synapse.edison.health;
 
-import com.google.common.collect.ImmutableMap;
+import de.otto.synapse.edison.provider.MessageReceiverEndpointInfoProvider;
+import de.otto.synapse.info.MessageEndpointStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -20,28 +22,34 @@ import static org.springframework.boot.actuate.health.Health.*;
         matchIfMissing = true)
 public class StartupHealthIndicator implements HealthIndicator {
 
-    private ChannelInfoProvider provider;
+    private static final long MAX_SECONDS_BEHIND = 10L;
 
-    public StartupHealthIndicator(final ChannelInfoProvider provider) {
+    private MessageReceiverEndpointInfoProvider provider;
+
+    @Autowired
+    public StartupHealthIndicator(final MessageReceiverEndpointInfoProvider provider) {
         this.provider = provider;
     }
 
     @Override
     public Health health() {
-        final Builder builder;
-
-        if (provider.getInfos().isAtHead()) {
-            builder = up();
+        final Builder healthBuilder;
+        if (allChannelsUpToDate()) {
+            healthBuilder = up().withDetail("message", "All channels up to date");
         } else {
-            builder = down();
+            healthBuilder = down().withDetail("message", "Channels not yet up to date");
         }
-        provider.getInfos().getChannels().forEach(channel -> {
-            ChannelInfo startupInfo = provider.getInfos().getStartupInfo(channel);
-            builder.withDetail(channel, ImmutableMap.of(
-                    "status", startupInfo.getStatus().name(),
-                    "message", startupInfo.getMessage())
-            );
-        });
-        return builder.build();
+        return healthBuilder.build();
     }
+
+    private boolean allChannelsUpToDate() {
+        return provider
+                .getInfos()
+                .stream()
+                .allMatch(info -> info.getStatus() != MessageEndpointStatus.STARTING && info.getChannelPosition().get()
+                        .getDurationBehind()
+                        .minusSeconds(MAX_SECONDS_BEHIND)
+                        .isNegative());
+    }
+
 }

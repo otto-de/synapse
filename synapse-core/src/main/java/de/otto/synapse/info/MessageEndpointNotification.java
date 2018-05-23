@@ -1,33 +1,23 @@
-package de.otto.synapse.eventsource;
+package de.otto.synapse.info;
 
 import de.otto.synapse.channel.ChannelPosition;
 
 import java.util.Objects;
 
-public class EventSourceNotification {
+import static java.util.Objects.requireNonNull;
 
-    public enum Status {
-        STARTED,
-        FAILED,
-        FINISHED
-    }
+public class MessageEndpointNotification {
 
-    private String eventSourceName;
     private ChannelPosition channelPosition;
     private String channelName;
-    private Status status;
+    private MessageEndpointStatus status;
     private String message;
 
-    protected EventSourceNotification(Builder builder) {
-        eventSourceName = builder.eventSourceName;
-        channelPosition = builder.channelPosition;
-        channelName = builder.channelName;
-        status = builder.status;
-        message = builder.message;
-    }
-
-    public String getEventSourceName() {
-        return eventSourceName;
+    protected MessageEndpointNotification(Builder builder) {
+        channelPosition = requireNonNull(builder.channelPosition);
+        channelName = requireNonNull(builder.channelName);
+        status = requireNonNull(builder.status);
+        message = requireNonNull(builder.message);
     }
 
     public ChannelPosition getChannelPosition() {
@@ -38,7 +28,7 @@ public class EventSourceNotification {
         return channelName;
     }
 
-    public Status getStatus() {
+    public MessageEndpointStatus getStatus() {
         return status;
     }
 
@@ -50,9 +40,8 @@ public class EventSourceNotification {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        EventSourceNotification that = (EventSourceNotification) o;
-        return Objects.equals(eventSourceName, that.eventSourceName) &&
-                Objects.equals(channelPosition, that.channelPosition) &&
+        MessageEndpointNotification that = (MessageEndpointNotification) o;
+        return Objects.equals(channelPosition, that.channelPosition) &&
                 Objects.equals(channelName, that.channelName) &&
                 status == that.status &&
                 Objects.equals(message, that.message);
@@ -60,14 +49,14 @@ public class EventSourceNotification {
 
     @Override
     public int hashCode() {
-        return Objects.hash(eventSourceName, channelPosition, channelName, status, message);
+
+        return Objects.hash(channelPosition, channelName, status, message);
     }
 
     @Override
     public String toString() {
-        return "EventSourceNotification{" +
-                "eventSourceName='" + eventSourceName + '\'' +
-                ", channelPosition=" + channelPosition +
+        return "MessageEndpointNotification{" +
+                "channelPosition=" + channelPosition +
                 ", channelName='" + channelName + '\'' +
                 ", status=" + status +
                 ", message='" + message + '\'' +
@@ -78,7 +67,7 @@ public class EventSourceNotification {
         return new Builder();
     }
 
-    public static Builder builder(EventSourceNotification copy) {
+    public static Builder builder(MessageEndpointNotification copy) {
         Builder builder = new Builder();
         builder.channelPosition = copy.getChannelPosition();
         builder.channelName = copy.getChannelName();
@@ -87,18 +76,12 @@ public class EventSourceNotification {
     }
 
     public static class Builder {
-        private String eventSourceName;
-        private ChannelPosition channelPosition;
-        private String channelName;
-        private Status status;
-        private String message;
+        private ChannelPosition channelPosition = ChannelPosition.fromHorizon();
+        private String channelName = "";
+        private MessageEndpointStatus status;
+        private String message = "";
 
         protected Builder() {
-        }
-
-        public Builder withEventSourceName(String val) {
-            eventSourceName = val;
-            return this;
         }
 
         public Builder withChannelPosition(ChannelPosition val) {
@@ -111,7 +94,7 @@ public class EventSourceNotification {
             return this;
         }
 
-        public Builder withStatus(Status val) {
+        public Builder withStatus(MessageEndpointStatus val) {
             status = val;
             return this;
         }
@@ -121,8 +104,8 @@ public class EventSourceNotification {
             return this;
         }
 
-        public EventSourceNotification build() {
-            return new EventSourceNotification(this);
+        public MessageEndpointNotification build() {
+            return new MessageEndpointNotification(this);
         }
     }
 }

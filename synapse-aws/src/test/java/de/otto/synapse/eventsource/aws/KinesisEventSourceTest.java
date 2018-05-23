@@ -5,7 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
-import de.otto.synapse.eventsource.EventSourceNotification;
+import de.otto.synapse.info.MessageEndpointNotification;
+import de.otto.synapse.info.MessageEndpointStatus;
 import de.otto.synapse.message.Message;
 import org.junit.Before;
 import org.junit.Test;
@@ -16,6 +17,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.Nonnull;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.function.Predicate;
 
@@ -44,11 +46,11 @@ public class KinesisEventSourceTest {
     @SuppressWarnings("unchecked")
     public void setUp() {
         initMocks(this);
-        receiverEndpoint = spy(new MessageLogReceiverEndpoint("test", new ObjectMapper()) {
+        receiverEndpoint = spy(new MessageLogReceiverEndpoint("test", new ObjectMapper(), eventPublisher) {
             @Nonnull
             @Override
             public ChannelPosition consume(@Nonnull ChannelPosition startFrom, @Nonnull Predicate<Message<?>> stopCondition) {
-                return channelPosition(fromPosition("shard1", "4711"));
+                return channelPosition(fromPosition("shard1", Duration.ZERO, "4711"));
             }
 
             @Override
@@ -61,7 +63,7 @@ public class KinesisEventSourceTest {
     @SuppressWarnings("unchecked")
     public void shouldConsumeAllEventsWithRegisteredConsumers() {
         // given
-        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", "xyz"));
+        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", Duration.ZERO, "xyz"));
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher);
         eventSource.register(testDataConsumer);
@@ -78,12 +80,12 @@ public class KinesisEventSourceTest {
     @SuppressWarnings("unchecked")
     public void shouldFinishConsumptionOnStopCondition() {
         // given
-        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", "xyz"));
-        receiverEndpoint = spy(new MessageLogReceiverEndpoint("test", new ObjectMapper()) {
+        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", Duration.ZERO, "xyz"));
+        receiverEndpoint = spy(new MessageLogReceiverEndpoint("test", new ObjectMapper(), eventPublisher) {
             @Nonnull
             @Override
             public ChannelPosition consume(@Nonnull ChannelPosition startFrom, @Nonnull Predicate<Message<?>> stopCondition) {
-                return channelPosition(fromPosition("shard1", "4711"));
+                return channelPosition(fromPosition("shard1", Duration.ZERO, "4711"));
             }
 
             @Override
@@ -100,13 +102,13 @@ public class KinesisEventSourceTest {
 
         // then
         assertThat(eventSource.isStopping(), is(false));
-        assertThat(channelPosition, is(channelPosition(fromPosition("shard1", "4711"))));
+        assertThat(channelPosition, is(channelPosition(fromPosition("shard1", Duration.ZERO, "4711"))));
     }
 
     @Test
     public void shouldFinishConsumptionOnStop() {
         // given
-        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", "xyz"));
+        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", Duration.ZERO, "xyz"));
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher);
         eventSource.register(testDataConsumer);
@@ -120,9 +122,9 @@ public class KinesisEventSourceTest {
     }
 
     @Test
-    public void shouldPublishStartedAndFinishedEvents() {
+    public void shouldPublishStartingStartedRunningAndFinishedEvents() {
         // given
-        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", "xyz"));
+        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", Duration.ZERO, "xyz"));
 
         KinesisEventSource eventSource = new KinesisEventSource("kinesisEventSource", receiverEndpoint, eventPublisher);
         eventSource.stop();
@@ -131,16 +133,16 @@ public class KinesisEventSourceTest {
         ChannelPosition finalChannelPosition = eventSource.consume(initialPositions, (message) -> false);
 
         // then
-        ArgumentCaptor<EventSourceNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(EventSourceNotification.class);
+        ArgumentCaptor<MessageEndpointNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(MessageEndpointNotification.class);
         verify(eventPublisher, times(2)).publishEvent(notificationArgumentCaptor.capture());
 
-        EventSourceNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
-        assertThat(startedEvent.getStatus(), is(EventSourceNotification.Status.STARTED));
-        assertThat(startedEvent.getChannelPosition(), is(initialPositions));
-        assertThat(startedEvent.getChannelName(), is("test"));
+        MessageEndpointNotification startEvent = notificationArgumentCaptor.getAllValues().get(0);
+        assertThat(startEvent.getStatus(), is(MessageEndpointStatus.STARTING));
+        assertThat(startEvent.getChannelPosition(), is(initialPositions));
+        assertThat(startEvent.getChannelName(), is("test"));
 
-        EventSourceNotification finishedEvent = notificationArgumentCaptor.getAllValues().get(1);
-        assertThat(finishedEvent.getStatus(), is(EventSourceNotification.Status.FINISHED));
+        MessageEndpointNotification finishedEvent = notificationArgumentCaptor.getAllValues().get(1);
+        assertThat(finishedEvent.getStatus(), is(MessageEndpointStatus.FINISHED));
         assertThat(finishedEvent.getChannelPosition(), is(finalChannelPosition));
         assertThat(finishedEvent.getChannelName(), is("test"));
     }
@@ -150,9 +152,9 @@ public class KinesisEventSourceTest {
     @SuppressWarnings("unchecked")
     public void shouldPublishStartedAndFailedEvents() {
         // given
-        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", "xyz"));
+        ChannelPosition initialPositions = channelPosition(fromPosition("shard1", Duration.ZERO, "xyz"));
 
-        receiverEndpoint = spy(new MessageLogReceiverEndpoint("test", new ObjectMapper()) {
+        receiverEndpoint = spy(new MessageLogReceiverEndpoint("test", new ObjectMapper(), eventPublisher) {
             @Nonnull
             @Override
             public ChannelPosition consume(@Nonnull ChannelPosition startFrom, @Nonnull Predicate<Message<?>> stopCondition) {
@@ -171,16 +173,16 @@ public class KinesisEventSourceTest {
             fail("expected RuntimeException");
         } catch (final RuntimeException e) {
             // then
-            ArgumentCaptor<EventSourceNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(EventSourceNotification.class);
+            ArgumentCaptor<MessageEndpointNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(MessageEndpointNotification.class);
             verify(eventPublisher, times(2)).publishEvent(notificationArgumentCaptor.capture());
 
-            EventSourceNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
-            assertThat(startedEvent.getStatus(), is(EventSourceNotification.Status.STARTED));
+            MessageEndpointNotification startedEvent = notificationArgumentCaptor.getAllValues().get(0);
+            assertThat(startedEvent.getStatus(), is(MessageEndpointStatus.STARTING));
             assertThat(startedEvent.getChannelPosition(), is(initialPositions));
             assertThat(startedEvent.getChannelName(), is("test"));
 
-            EventSourceNotification failedEvent = notificationArgumentCaptor.getAllValues().get(1);
-            assertThat(failedEvent.getStatus(), is(EventSourceNotification.Status.FAILED));
+            MessageEndpointNotification failedEvent = notificationArgumentCaptor.getAllValues().get(1);
+            assertThat(failedEvent.getStatus(), is(MessageEndpointStatus.FAILED));
             assertThat(failedEvent.getMessage(), is("Error consuming messages from Kinesis: Some Error Message"));
             assertThat(failedEvent.getChannelPosition(), is(initialPositions));
             assertThat(failedEvent.getChannelName(), is("test"));

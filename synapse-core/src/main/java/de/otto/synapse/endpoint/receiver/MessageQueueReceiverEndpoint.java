@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Message;
+import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Receiver-side {@code MessageEndpoint endpoint} of a Message Channel with Queue or FIFO semantics.
@@ -16,8 +18,10 @@ import javax.annotation.Nonnull;
  */
 public abstract class MessageQueueReceiverEndpoint extends MessageReceiverEndpoint {
 
-    public MessageQueueReceiverEndpoint(@Nonnull String channelName, @Nonnull ObjectMapper objectMapper) {
-        super(channelName, objectMapper);
+    public MessageQueueReceiverEndpoint(final @Nonnull String channelName,
+                                        final @Nonnull ObjectMapper objectMapper,
+                                        final @Nullable ApplicationEventPublisher eventPublisher) {
+        super(channelName, objectMapper, eventPublisher);
     }
 
     /**

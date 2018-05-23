@@ -33,36 +33,24 @@ public class Header implements Serializable {
     // TODO: Header extends ImmutableMultimap<String, Object>
 
     public static Header emptyHeader() {
-        return new Header(null, now(), null);
-    }
-
-    public static Header responseHeader(final ShardPosition shardPosition,
-                                        final Instant arrivalTimestamp,
-                                        final Duration durationBehind) {
-        return new Header(
-                shardPosition,
-                arrivalTimestamp,
-                durationBehind);
+        return new Header(null, now());
     }
 
     public static Header responseHeader(final ShardPosition shardPosition,
                                         final Instant arrivalTimestamp) {
         return new Header(
                 shardPosition,
-                arrivalTimestamp,
-                null);
+                arrivalTimestamp
+        );
     }
 
     private final ShardPosition shardPosition;
     private final Instant arrivalTimestamp;
-    private final Duration durationBehind;
 
     private Header(final ShardPosition shardPosition,
-                   final Instant approximateArrivalTimestamp,
-                   final Duration durationBehind) {
+                   final Instant approximateArrivalTimestamp) {
         this.shardPosition = shardPosition;
         this.arrivalTimestamp = requireNonNull(approximateArrivalTimestamp);
-        this.durationBehind = durationBehind;
     }
 
     @Nonnull
@@ -81,8 +69,12 @@ public class Header implements Serializable {
      * @return Duration
      */
     @Nonnull
+    @Deprecated
     public Optional<Duration> getDurationBehind() {
-        return Optional.ofNullable(durationBehind);
+        if (shardPosition == null) {
+            return Optional.empty();
+        }
+        return Optional.of(shardPosition.getDurationBehind());
     }
 
     @Override
@@ -91,14 +83,13 @@ public class Header implements Serializable {
         if (o == null || getClass() != o.getClass()) return false;
         Header header = (Header) o;
         return Objects.equals(shardPosition, header.shardPosition) &&
-                Objects.equals(arrivalTimestamp, header.arrivalTimestamp) &&
-                Objects.equals(durationBehind, header.durationBehind);
+                Objects.equals(arrivalTimestamp, header.arrivalTimestamp);
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(shardPosition, arrivalTimestamp, durationBehind);
+        return Objects.hash(shardPosition, arrivalTimestamp);
     }
 
     @Override
@@ -106,7 +97,6 @@ public class Header implements Serializable {
         return "Header{" +
                 "shardPosition=" + shardPosition +
                 ", arrivalTimestamp=" + arrivalTimestamp +
-                ", durationBehind=" + durationBehind +
                 '}';
     }
 }

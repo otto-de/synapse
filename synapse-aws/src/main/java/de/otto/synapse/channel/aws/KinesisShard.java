@@ -2,7 +2,6 @@ package de.otto.synapse.channel.aws;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.consumer.MessageConsumer;
@@ -17,9 +16,9 @@ import software.amazon.awssdk.services.kinesis.model.*;
 import javax.annotation.concurrent.ThreadSafe;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.logging.LogHelper.error;
@@ -55,20 +54,22 @@ public class KinesisShard {
         return shardId;
     }
 
-    //TODO Refactor: Return a ShardPosition, not a ChannelPosition
-    public ChannelPosition consumeShard(final ChannelPosition startPosition,
-                                        final Predicate<Message<?>> stopCondition,
-                                        final MessageConsumer<String> consumer) {
+    public ShardPosition consumeShard(final ShardPosition startPosition,
+                                      final Predicate<Message<?>> stopCondition,
+                                      final MessageConsumer<String> consumer,
+                                      final Consumer<ShardPosition> callback) {
         try {
             MDC.put("channelName", channelName);
             MDC.put("shardId", shardId);
             info(LOG, ImmutableMap.of("position", startPosition), "Reading from stream", null);
 
-            ShardPosition shardPosition = startPosition.shard(shardId);
+            ShardPosition shardPosition = startPosition;
             KinesisShardIterator kinesisShardIterator = retrieveIterator(shardPosition);
             boolean stopRetrieval = false;
             Record lastRecord = null;
             final long t0 = System.currentTimeMillis();
+
+            callback.accept(shardPosition);
             do {
                 GetRecordsResponse recordsResponse = kinesisShardIterator.next();
                 Duration durationBehind = ofMillis(recordsResponse.millisBehindLatest());
@@ -80,8 +81,7 @@ public class KinesisShard {
                             consumeMessageSafely(consumer, record, message);
 
                             lastRecord = record;
-                            shardPosition = fromPosition(shardId, record.sequenceNumber());
-
+                            shardPosition = fromPosition(shardId, durationBehind, record.sequenceNumber());
                             //consume all records of current iterator, even if stop condition is true
                             // because durationBehind is only per iterator, not per record and we want to consume all
                             // records
@@ -97,17 +97,19 @@ public class KinesisShard {
                     stopRetrieval = stopCondition.test(kinesisMessage);
                 }
 
+                callback.accept(shardPosition);
+
                 final long t2 = System.currentTimeMillis();
-                logInfo(channelName, recordsResponse, durationBehind, t2-t1);
+                logInfo(channelName, recordsResponse, durationBehind, t2 - t1);
 
                 stopRetrieval = stopRetrieval || stopSignal.get() || waitABit();
 
             } while (!stopRetrieval);
             final long t3 = System.currentTimeMillis();
-            info(LOG, ImmutableMap.of( "position", lastRecord != null ? lastRecord.sequenceNumber() : "", "runtime", (t3-t0)), "Done consuming from shard.", null);
-            return channelPosition(shardPosition);
+            info(LOG, ImmutableMap.of("position", lastRecord != null ? lastRecord.sequenceNumber() : "", "runtime", (t3 - t0)), "Done consuming from shard.", null);
+            return shardPosition;
         } catch (final Exception e) {
-            error(LOG, ImmutableMap.of("channelName", channelName, "shardId", shardId),"kinesis consumer died unexpectedly", e);
+            error(LOG, ImmutableMap.of("channelName", channelName, "shardId", shardId), "kinesis consumer died unexpectedly", e);
             throw e;
         } finally {
             MDC.remove("channelName");
@@ -118,7 +120,7 @@ public class KinesisShard {
     private Message<String> dirtyHackToStopThreadMessage(final Duration durationBehind) {
         return message(
                 "no_key",
-                responseHeader(fromHorizon(shardId), now(), durationBehind),
+                responseHeader(fromHorizon(shardId, durationBehind), now()),
                 null);
     }
 

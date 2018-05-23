@@ -2,8 +2,9 @@ package de.otto.synapse.aws.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.consumer.MessageConsumer;
-import de.otto.synapse.eventsource.EventSourceNotification;
-import de.otto.synapse.eventsource.aws.SnapshotEventSourceNotification;
+import de.otto.synapse.eventsource.aws.SnapshotMessageEndpointNotification;
+import de.otto.synapse.info.MessageEndpointNotification;
+import de.otto.synapse.info.MessageEndpointStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -80,15 +81,14 @@ public class SnapshotEventSourceTest {
         }
 
         // then
-        EventSourceNotification expectedFailedEvent = SnapshotEventSourceNotification.builder()
-                .withEventSourceName("snapshotEventSource")
+        MessageEndpointNotification expectedFailedEvent = SnapshotMessageEndpointNotification.builder()
                 .withChannelName(STREAM_NAME)
-                .withStatus(EventSourceNotification.Status.FAILED)
+                .withStatus(MessageEndpointStatus.FAILED)
                 .withChannelPosition(fromHorizon())
                 .withMessage("Failed to load snapshot from S3: boom - simulate exception while loading from S3 (Service: null; Status Code: 0; Request ID: null)")
                 .build();
 
-        ArgumentCaptor<EventSourceNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(EventSourceNotification.class);
+        ArgumentCaptor<MessageEndpointNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(MessageEndpointNotification.class);
         verify(applicationEventPublisher, times(2)).publishEvent(notificationArgumentCaptor.capture());
 
         assertThat(notificationArgumentCaptor.getAllValues().get(1), is(expectedFailedEvent));
@@ -112,7 +112,7 @@ public class SnapshotEventSourceTest {
     }
 
     @Test
-    public void shouldPublishStartAndFinishEvents() {
+    public void shouldPublishStartingStartedAndFinishEvents() {
         // given
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.empty());
 
@@ -120,22 +120,29 @@ public class SnapshotEventSourceTest {
         snapshotEventSource.consume();
 
         // then
-        EventSourceNotification expectedStartEvent = SnapshotEventSourceNotification.builder()
-                .withEventSourceName("snapshotEventSource")
+        MessageEndpointNotification expectedStartEvent = SnapshotMessageEndpointNotification.builder()
                 .withChannelName(STREAM_NAME)
-                .withStatus(EventSourceNotification.Status.STARTED)
-                .withMessage("Loading snapshot from S3.")
+                .withStatus(MessageEndpointStatus.STARTING)
+                .withMessage("Retrieve snapshot file from S3.")
                 .withChannelPosition(fromHorizon())
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedStartEvent);
 
-        EventSourceNotification expectedFinishedEvent = SnapshotEventSourceNotification.builder()
-                .withEventSourceName("snapshotEventSource")
+        MessageEndpointNotification expectedStartedEvent = SnapshotMessageEndpointNotification.builder()
                 .withChannelName(STREAM_NAME)
-                .withStatus(EventSourceNotification.Status.FINISHED)
+                .withStatus(MessageEndpointStatus.STARTED)
+                .withMessage("Loading snapshot.")
+                .withChannelPosition(fromHorizon())
+                .build();
+        verify(applicationEventPublisher).publishEvent(expectedStartedEvent);
+
+        MessageEndpointNotification expectedFinishedEvent = SnapshotMessageEndpointNotification.builder()
+                .withChannelName(STREAM_NAME)
+                .withStatus(MessageEndpointStatus.FINISHED)
                 .withMessage("Finished to load snapshot from S3.")
                 .withChannelPosition(fromHorizon())
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedFinishedEvent);
+        verifyNoMoreInteractions(applicationEventPublisher);
     }
 }

@@ -2,6 +2,7 @@ package de.otto.synapse.eventsource;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.InMemoryChannel;
+import de.otto.synapse.info.MessageEndpointStatus;
 import de.otto.synapse.message.Message;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -22,9 +23,9 @@ public class InMemoryEventSource extends AbstractEventSource {
     @Override
     public ChannelPosition consume(final ChannelPosition startFrom,
                                    final Predicate<Message<?>> stopCondition) {
-        publishEvent(startFrom, EventSourceNotification.Status.STARTED);
+        publishEvent(startFrom, MessageEndpointStatus.STARTING);
         final ChannelPosition currentPosition = inMemoryChannel.consume(startFrom, stopCondition);
-        publishEvent(currentPosition, EventSourceNotification.Status.FINISHED);
+        publishEvent(currentPosition, MessageEndpointStatus.FINISHED);
         return currentPosition;
     }
 }

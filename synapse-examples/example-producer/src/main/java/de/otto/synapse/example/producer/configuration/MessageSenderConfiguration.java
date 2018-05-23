@@ -9,6 +9,7 @@ import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderFactory;
 import org.slf4j.Logger;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,8 +31,8 @@ public class MessageSenderConfiguration implements MessageEndpointConfigurer {
     }
 
     @Bean
-    public InMemoryChannels inMemoryChannels(final ObjectMapper objectMapper) {
-        return new InMemoryChannels(objectMapper);
+    public InMemoryChannels inMemoryChannels(final ObjectMapper objectMapper, final ApplicationEventPublisher eventPublisher) {
+        return new InMemoryChannels(objectMapper, eventPublisher);
     }
 
     @Bean

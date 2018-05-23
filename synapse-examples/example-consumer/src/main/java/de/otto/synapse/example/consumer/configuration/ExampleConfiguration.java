@@ -50,8 +50,8 @@ public class ExampleConfiguration implements MessageEndpointConfigurer {
     }
 
     @Bean
-    public InMemoryChannels inMemoryChannels(final ObjectMapper objectMapper) {
-        return new InMemoryChannels(objectMapper);
+    public InMemoryChannels inMemoryChannels(final ObjectMapper objectMapper, final ApplicationEventPublisher eventPublisher) {
+        return new InMemoryChannels(objectMapper, eventPublisher);
     }
 
     @Bean

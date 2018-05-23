@@ -4,6 +4,8 @@ import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
+import de.otto.synapse.info.MessageEndpointNotification;
+import de.otto.synapse.info.MessageEndpointStatus;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -74,14 +76,13 @@ public abstract class AbstractEventSource implements EventSource {
         return messageLog.getMessageDispatcher();
     }
 
-    protected void publishEvent(ChannelPosition channelPosition, EventSourceNotification.Status status) {
+    protected void publishEvent(ChannelPosition channelPosition, MessageEndpointStatus status) {
         publishEvent(channelPosition, status, "");
     }
 
-    protected void publishEvent(ChannelPosition channelPosition, EventSourceNotification.Status status, String message) {
+    protected void publishEvent(ChannelPosition channelPosition, MessageEndpointStatus status, String message) {
         if (eventPublisher != null) {
-            EventSourceNotification notification = EventSourceNotification.builder()
-                    .withEventSourceName(name)
+            MessageEndpointNotification notification = MessageEndpointNotification.builder()
                     .withChannelName(this.getChannelName())
                     .withChannelPosition(channelPosition)
                     .withStatus(status)

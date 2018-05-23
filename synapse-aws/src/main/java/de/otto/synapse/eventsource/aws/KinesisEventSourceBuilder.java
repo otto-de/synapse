@@ -37,7 +37,7 @@ public class KinesisEventSourceBuilder implements EventSourceBuilder {
     public EventSource buildEventSource(final String name, final String channelName) {
         Objects.requireNonNull(channelName, "channel name must not be null");
         LOG.info("Building '{}' as KinesisEventSource", channelName);
-        final MessageLogReceiverEndpoint messageLog = new KinesisMessageLogReceiverEndpoint(kinesisClient, objectMapper, channelName);
+        final MessageLogReceiverEndpoint messageLog = new KinesisMessageLogReceiverEndpoint(channelName, kinesisClient, objectMapper, eventPublisher);
         messageLog.registerInterceptorsFrom(interceptorRegistry);
         return new KinesisEventSource(name, messageLog, eventPublisher);
     }

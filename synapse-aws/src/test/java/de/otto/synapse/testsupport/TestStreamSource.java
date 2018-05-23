@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -73,7 +74,7 @@ public class TestStreamSource {
         return channelPosition(mapShardIdToLastWrittenSequence
                 .keySet()
                 .stream()
-                .map(shardId -> fromPosition(shardId, mapShardIdToLastWrittenSequence.get(shardId)))
+                .map(shardId -> fromPosition(shardId, Duration.ZERO, mapShardIdToLastWrittenSequence.get(shardId)))
                 .collect(toImmutableList()));
     }
 
@@ -81,7 +82,7 @@ public class TestStreamSource {
         return channelPosition(mapShardIdToFirstWrittenSequence
                 .keySet()
                 .stream()
-                .map(shardId -> fromPosition(shardId, mapShardIdToFirstWrittenSequence.get(shardId)))
+                .map(shardId -> fromPosition(shardId, Duration.ZERO, mapShardIdToFirstWrittenSequence.get(shardId)))
                 .collect(toImmutableList()));
 
     }
