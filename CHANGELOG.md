@@ -1,10 +1,8 @@
 # Release Notes
 
 ## 0.6.5
-* Added `StartupHealthIndicator` that is unhealthy until the first EventSource (the snapshot) is consumed.
-
-## 0.6.5
-* ShardPosition from timestamp
+* Added `StartupHealthIndicator` that is unhealthy until all EventSources are (almost) up to date.
+* Added possibility to consume MessageLogs from timestamp
 
 ## 0.6.4
 * Fixed problem that the KinesisShardIterator will not recover after an exception is thrown
