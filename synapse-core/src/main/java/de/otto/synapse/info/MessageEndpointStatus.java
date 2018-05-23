@@ -6,7 +6,7 @@ public enum MessageEndpointStatus {
      */
     STARTING,
     /**
-     * Endpoint is successfully initialized.
+     * Endpoint is successfully initialized, an optional snapshot is read and all shards are known.
      */
     STARTED,
     /**

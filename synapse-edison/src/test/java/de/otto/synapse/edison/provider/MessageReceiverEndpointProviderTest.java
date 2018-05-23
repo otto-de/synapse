@@ -110,6 +110,24 @@ public class MessageReceiverEndpointProviderTest {
     }
 
     @Test
+    public void shouldReturnInfoForFailedEndpoints() {
+        //given
+
+        //when
+        provider.onEventSourceNotification(createEventSourceNotification("foo", STARTING, "Loading snapshot"));
+        provider.onEventSourceNotification(createEventSourceNotification("foo", STARTED, "Loading snapshot"));
+        testClock.proceed(2, ChronoUnit.SECONDS);
+        provider.onEventSourceNotification(createEventSourceNotification("foo", FAILED, "Kawumm!!!"));
+
+        //then
+        MessageReceiverEndpointInfo fooInfo = provider.getInfos().getChannelInfoFor("foo");
+
+        assertThat(fooInfo.getChannelName(), is("foo"));
+        assertThat(fooInfo.getStatus(), is(FAILED));
+        assertThat(fooInfo.getMessage(), is("Kawumm!!!"));
+    }
+
+    @Test
     public void shouldDisplayDurationBehindForSingleShard() {
         //given
 
@@ -117,6 +135,24 @@ public class MessageReceiverEndpointProviderTest {
         provider.onEventSourceNotification(createEventSourceNotification("foo", STARTING, "Loading snapshot"));
         provider.onEventSourceNotification(createEventSourceNotification("foo", STARTED, "Loading snapshot"));
         provider.onEventSourceNotification(createEventSourceNotification("foo", RUNNING, "Done."));
+
+
+        //then
+        MessageReceiverEndpointInfo fooInfo = provider.getInfos().getChannelInfoFor("foo");
+
+        // TODO
+        assertThat(fooInfo.getChannelPosition().get().getDurationBehind(), is(Duration.ofHours(1)));
+    }
+
+    @Test
+    public void shouldKeepDurationBehindForFinishedChannels() {
+        //given
+
+        //when
+        provider.onEventSourceNotification(createEventSourceNotification("foo", STARTING, "Loading snapshot"));
+        provider.onEventSourceNotification(createEventSourceNotification("foo", STARTED, "Loading snapshot"));
+        provider.onEventSourceNotification(createEventSourceNotification("foo", RUNNING, "Running."));
+        provider.onEventSourceNotification(createEventSourceNotification("foo", FINISHED, "Done."));
 
 
         //then
@@ -169,12 +205,15 @@ public class MessageReceiverEndpointProviderTest {
     private MessageEndpointNotification.Builder createEventSourceNotificationBuilder(final String channelName,
                                                                                      final MessageEndpointStatus status,
                                                                                      final String message) {
-        return MessageEndpointNotification.builder()
+        MessageEndpointNotification.Builder builder = MessageEndpointNotification.builder()
                 .withStatus(status)
                 .withEventSourceName("snapshot")
                 .withChannelName(channelName)
-                .withMessage(message)
-                .withChannelPosition(channelPosition(fromPosition("single-shard", Duration.ofHours(1), "42")));
+                .withMessage(message);
+        if (status == RUNNING) {
+            builder.withChannelPosition(channelPosition(fromPosition("single-shard", Duration.ofHours(1), "42")));
+        }
+        return builder;
     }
 
     private MessageEndpointNotification.Builder createEventSourceNotificationBuilder(final String channelName,

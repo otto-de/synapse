@@ -30,8 +30,6 @@ public class EventSourcingStatusDetailIndicator implements StatusDetailIndicator
 
     @Override
     public List<StatusDetail> statusDetails() {
-
-
         return provider.getInfos().stream()
                 .map(channelInfo -> createStatusDetail(statusOf(channelInfo.getStatus()), channelInfo.getChannelName(), channelInfo.getMessage()))
                 .collect(Collectors.toList());

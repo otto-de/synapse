@@ -17,8 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static java.lang.String.format;
@@ -73,7 +71,6 @@ public class MessageReceiverEndpointInfoProvider {
                         .builder()
                         .withChannelName(channelName)
                         .withStatus(notification.getStatus())
-                        .withChannelPosition(notification.getChannelPosition())
                         .withMessage(notification.getMessage())
                         .build());
                 break;
@@ -81,25 +78,16 @@ public class MessageReceiverEndpointInfoProvider {
                 final ChannelPosition channelPosition = notification.getChannelPosition() != null
                         ? notification.getChannelPosition()
                         : fromHorizon();
-                if (!channelPosition.shards().isEmpty()) {
-                    ChannelPosition previousChannelPosition = mapChannelToDurationBehind.getOrDefault(channelName, fromHorizon());
-                    ChannelPosition mergedChannelPosition = ChannelPosition.merge(previousChannelPosition, channelPosition);
-                    mapChannelToDurationBehind.put(channelName, mergedChannelPosition);
-                    messageReceiverEndpointInfos.update(channelName, MessageReceiverEndpointInfo
-                            .builder()
-                            .withChannelName(channelName)
-                            .withStatus(notification.getStatus())
-                            .withChannelPosition(mergedChannelPosition)
-                            .withMessage(format("Channel is %s behind head.", mergedChannelPosition.getDurationBehind()))
-                            .build());
-                } else {
-                    messageReceiverEndpointInfos.update(channelName, MessageReceiverEndpointInfo
-                            .builder()
-                            .withChannelName(channelName)
-                            .withStatus(notification.getStatus())
-                            .withMessage("Unknown duration behind head")
-                            .build());
-                }
+                ChannelPosition previousChannelPosition = mapChannelToDurationBehind.getOrDefault(channelName, fromHorizon());
+                ChannelPosition mergedChannelPosition = ChannelPosition.merge(previousChannelPosition, channelPosition);
+                mapChannelToDurationBehind.put(channelName, mergedChannelPosition);
+                messageReceiverEndpointInfos.update(channelName, MessageReceiverEndpointInfo
+                        .builder()
+                        .withChannelName(channelName)
+                        .withStatus(notification.getStatus())
+                        .withChannelPosition(mergedChannelPosition)
+                        .withMessage(format("Channel is %s behind head.", mergedChannelPosition.getDurationBehind()))
+                        .build());
                 break;
             case FINISHED:
                 final Duration runtime = Duration.between(channelStartupTimes.get(channelName), clock.instant());
@@ -107,6 +95,7 @@ public class MessageReceiverEndpointInfoProvider {
                         .builder()
                         .withChannelName(channelName)
                         .withStatus(notification.getStatus())
+                        .withChannelPosition(mapChannelToDurationBehind.get(channelName))
                         .withMessage(format("%s Finished consumption after %s.", notification.getMessage(), runtime))
                         .build());
                 break;
@@ -116,7 +105,10 @@ public class MessageReceiverEndpointInfoProvider {
                         .withChannelName(channelName)
                         .withStatus(notification.getStatus())
                         .withMessage(notification.getMessage())
+                        .withChannelPosition(mapChannelToDurationBehind.get(channelName))
                         .build());
+                break;
+            default:
                 break;
         }
 

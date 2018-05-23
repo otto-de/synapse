@@ -77,7 +77,7 @@ public class MessageConsumerIntegrationTest {
         assertThat(events.get(1).getChannelName(), is("test-stream"));
         assertThat(events.get(2).getStatus(), is(MessageEndpointStatus.STARTING));
         assertThat(events.get(2).getChannelName(), is("test-stream"));
-        assertThat(events.get(3).getStatus(), is(MessageEndpointStatus.FAILED));
+        assertThat(events.get(3).getStatus(), is(MessageEndpointStatus.FINISHED));
         assertThat(events.get(3).getChannelName(), is("test-stream"));
 
     }
