@@ -7,6 +7,7 @@ import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.message.Message;
 
 import javax.annotation.Nonnull;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.function.Predicate;
 
@@ -66,10 +67,10 @@ public class CompactedKinesisEventSource implements EventSource {
     }
 
     @Override
-    public ChannelPosition consume(ChannelPosition startFrom, Predicate<Message<?>> stopCondition) {
-        Predicate<Message<?>> neverStop = e -> false;
-        final ChannelPosition channelPosition = snapshotEventSource.consume(neverStop);
-        return kinesisEventSource.consume(channelPosition, stopCondition);
+    public ChannelPosition consumeUntil(final ChannelPosition startFrom,
+                                        final Instant until) {
+        final ChannelPosition channelPosition = snapshotEventSource.consume();
+        return kinesisEventSource.consumeUntil(channelPosition, until);
     }
 
     @Override

@@ -23,6 +23,8 @@ public class KinesisShardIterator {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShardIterator.class);
 
+    public final static String POISON_SHARD_ITER = "__synapse__poison__iter";
+
     static final Integer FETCH_RECORDS_LIMIT = 10000;
     private static final int RETRY_MAX_ATTEMPTS = 16;
     private static final int RETRY_BACK_OFF_POLICY_INITIAL_INTERVAL = 1000;
@@ -51,6 +53,22 @@ public class KinesisShardIterator {
 
     public String getId() {
         return this.id;
+    }
+
+    /**
+     * The shard iterator has returned an id that is matching {@link #POISON_SHARD_ITER}.
+     * <p>
+     *     !!!Only intended for testing purposes!!!
+     * </p>
+     * <p>
+     *     This is useful in tests, when you want to finish consumption of Kinesis message logs after some
+     *     mocked responses. Have a look at KinesisMessageLogReceiverEndpointTest for examples on how to use
+     *     this.
+     * </p>
+     * @return true if the iterator is poisonous, false otherwise.
+     */
+    boolean isPoison() {
+        return this.id.equals(POISON_SHARD_ITER);
     }
 
     public void stop() {

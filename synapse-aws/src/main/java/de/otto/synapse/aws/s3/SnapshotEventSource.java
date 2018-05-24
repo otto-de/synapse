@@ -67,8 +67,8 @@ public class SnapshotEventSource implements EventSource {
     }
 
     @Override
-    public ChannelPosition consume(final ChannelPosition startFrom,
-                                   final Predicate<Message<?>> stopCondition) {
+    public ChannelPosition consumeUntil(@Nonnull final ChannelPosition startFrom,
+                                        @Nonnull final Instant until) {
         ChannelPosition snapshotStreamPosition;
         Instant snapshotTimestamp = null;
 
@@ -79,7 +79,7 @@ public class SnapshotEventSource implements EventSource {
                 publishEvent(startFrom, MessageEndpointStatus.STARTED, "Loading snapshot.", null);
             if (snapshotFile.isPresent()) {
                 snapshotTimestamp = SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName());
-                snapshotStreamPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), stopCondition, getMessageDispatcher());
+                snapshotStreamPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), getMessageDispatcher());
             } else {
                 snapshotStreamPosition = ChannelPosition.fromHorizon();
             }

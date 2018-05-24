@@ -6,6 +6,7 @@ import de.otto.synapse.info.MessageEndpointStatus;
 import de.otto.synapse.message.Message;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.time.Instant;
 import java.util.function.Predicate;
 
 public class InMemoryEventSource extends AbstractEventSource {
@@ -21,10 +22,10 @@ public class InMemoryEventSource extends AbstractEventSource {
     }
 
     @Override
-    public ChannelPosition consume(final ChannelPosition startFrom,
-                                   final Predicate<Message<?>> stopCondition) {
+    public ChannelPosition consumeUntil(final ChannelPosition startFrom,
+                                        final Instant until) {
         publishEvent(startFrom, MessageEndpointStatus.STARTING);
-        final ChannelPosition currentPosition = inMemoryChannel.consume(startFrom, stopCondition);
+        final ChannelPosition currentPosition = inMemoryChannel.consumeUntil(startFrom, until);
         publishEvent(currentPosition, MessageEndpointStatus.FINISHED);
         return currentPosition;
     }

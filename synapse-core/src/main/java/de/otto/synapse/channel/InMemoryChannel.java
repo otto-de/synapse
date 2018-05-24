@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.Nonnull;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -48,8 +49,8 @@ public class InMemoryChannel extends MessageLogReceiverEndpoint {
 
     @Nonnull
     @Override
-    public ChannelPosition consume(@Nonnull final ChannelPosition startFrom,
-                                   @Nonnull final Predicate<Message<?>> stopCondition) {
+    public ChannelPosition consumeUntil(@Nonnull final ChannelPosition startFrom,
+                                        @Nonnull final Instant until) {
         boolean shouldStop = false;
         int pos = startFrom.shard(getChannelName()).startFrom() == StartFrom.HORIZON
                 ? -1
@@ -67,7 +68,7 @@ public class InMemoryChannel extends MessageLogReceiverEndpoint {
                 );
                 if (interceptedMessage != null) {
                     getMessageDispatcher().accept(interceptedMessage);
-                    shouldStop = stopCondition.test(interceptedMessage);
+                    shouldStop = until.isBefore(interceptedMessage.getHeader().getArrivalTimestamp());
                 }
             } else {
                 try {

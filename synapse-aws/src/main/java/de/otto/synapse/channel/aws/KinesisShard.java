@@ -14,21 +14,19 @@ import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
 import javax.annotation.concurrent.ThreadSafe;
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.logging.LogHelper.error;
 import static de.otto.synapse.logging.LogHelper.info;
-import static de.otto.synapse.message.Header.responseHeader;
-import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
-import static java.time.Instant.now;
 
 @ThreadSafe
 public class KinesisShard {
@@ -39,15 +37,18 @@ public class KinesisShard {
     private final KinesisClient kinesisClient;
     private final InterceptorChain interceptorChain;
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
+    private final Clock clock;
 
     public KinesisShard(final String shardId,
                         final String channelName,
                         final KinesisClient kinesisClient,
-                        final InterceptorChain interceptorChain) {
+                        final InterceptorChain interceptorChain,
+                        final Clock clock) {
         this.shardId = shardId;
         this.channelName = channelName;
         this.kinesisClient = kinesisClient;
         this.interceptorChain = interceptorChain;
+        this.clock = clock;
     }
 
     public String getShardId() {
@@ -55,7 +56,7 @@ public class KinesisShard {
     }
 
     public ShardPosition consumeShard(final ShardPosition startPosition,
-                                      final Predicate<Message<?>> stopCondition,
+                                      final Instant until,
                                       final MessageConsumer<String> consumer,
                                       final Consumer<ShardPosition> callback) {
         try {
@@ -66,12 +67,19 @@ public class KinesisShard {
             ShardPosition shardPosition = startPosition;
             KinesisShardIterator kinesisShardIterator = retrieveIterator(shardPosition);
             boolean stopRetrieval = false;
-            Record lastRecord = null;
             final long t0 = System.currentTimeMillis();
 
             do {
-                GetRecordsResponse recordsResponse = kinesisShardIterator.next();
-                Duration durationBehind = ofMillis(recordsResponse.millisBehindLatest());
+                /*
+                Poison-Pill injected by a test. This is helpful, if you want to write tests that should terminate
+                after a number of iterated shards.
+                 */
+                if (kinesisShardIterator.isPoison()) {
+                    LOG.warn("Received Poison-Pill - This should only happen during tests!");
+                    break;
+                }
+                final GetRecordsResponse recordsResponse = kinesisShardIterator.next();
+                final Duration durationBehind = ofMillis(recordsResponse.millisBehindLatest());
                 final long t1 = System.currentTimeMillis();
                 if (!isEmptyStream(recordsResponse)) {
                     for (final Record record : recordsResponse.records()) {
@@ -79,22 +87,18 @@ public class KinesisShard {
                         if (message != null) {
                             consumeMessageSafely(consumer, record, message);
 
-                            lastRecord = record;
                             shardPosition = fromPosition(shardId, durationBehind, record.sequenceNumber());
                             //consume all records of current iterator, even if stop condition is true
                             // because durationBehind is only per iterator, not per record and we want to consume all
                             // records
                             if (!stopRetrieval) {
-                                stopRetrieval = stopCondition.test(message);
+                                stopRetrieval = !until.isAfter(message.getHeader().getArrivalTimestamp());
                             }
                         }
                     }
                 } else {
                     shardPosition = shardPosition.withDurationBehind(durationBehind);
-                    Message<String> kinesisMessage = lastRecord != null
-                            ? kinesisMessage(shardId, durationBehind, lastRecord)
-                            : dirtyHackToStopThreadMessage(durationBehind);
-                    stopRetrieval = stopCondition.test(kinesisMessage);
+                    stopRetrieval = !until.isAfter(Instant.now(clock));
                 }
 
                 callback.accept(shardPosition);
@@ -106,7 +110,7 @@ public class KinesisShard {
 
             } while (!stopRetrieval);
             final long t3 = System.currentTimeMillis();
-            info(LOG, ImmutableMap.of("position", lastRecord != null ? lastRecord.sequenceNumber() : "", "runtime", (t3 - t0)), "Done consuming from shard.", null);
+            info(LOG, ImmutableMap.of("position", shardPosition.position(), "runtime", (t3 - t0)), "Done consuming from shard.", null);
             return shardPosition;
         } catch (final Exception e) {
             error(LOG, ImmutableMap.of("channelName", channelName, "shardId", shardId), "kinesis consumer died unexpectedly", e);
@@ -115,13 +119,6 @@ public class KinesisShard {
             MDC.remove("channelName");
             MDC.remove("shardId");
         }
-    }
-
-    private Message<String> dirtyHackToStopThreadMessage(final Duration durationBehind) {
-        return message(
-                "no_key",
-                responseHeader(fromHorizon(shardId, durationBehind), now()),
-                null);
     }
 
     @VisibleForTesting

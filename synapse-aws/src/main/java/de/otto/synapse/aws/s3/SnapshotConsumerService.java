@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.function.Predicate;
 import java.util.zip.ZipInputStream;
 
 import static com.google.common.collect.ImmutableMap.builder;
@@ -29,7 +28,6 @@ public class SnapshotConsumerService {
     private final JsonFactory jsonFactory = new JsonFactory();
 
     public ChannelPosition consumeSnapshot(final File latestSnapshot,
-                                           final Predicate<Message<?>> stopCondition,
                                            final MessageConsumer<String> messageConsumer) {
 
         try (
@@ -55,7 +53,6 @@ public class SnapshotConsumerService {
                                     /* TODO: Hier wird der StreamName als ShardName verwendet. Damit wird der Message _keine_ sinnvolle Position im Header mitgegeben! */
 
                                     channelPosition, /*shardPositions.shard(channelName).position(),*/
-                                    stopCondition,
                                     messageConsumer);
                             break;
                         default:
@@ -72,13 +69,11 @@ public class SnapshotConsumerService {
     @SuppressWarnings("unchecked")
     private <T> void processSnapshotData(final JsonParser parser,
                                          final ChannelPosition channelPosition,
-                                         final Predicate<Message<?>> stopCondition,
                                          final MessageConsumer<String> messageConsumer) throws IOException {
         // TODO: Would be better to store event meta data together with key+value:
         final ShardPosition shardPosition = channelPosition.shard(channelPosition.shards().iterator().next());
         final Instant arrivalTimestamp = Instant.EPOCH;
-        boolean abort = false;
-        while (!abort && parser.nextToken() != JsonToken.END_ARRAY) {
+        while (parser.nextToken() != JsonToken.END_ARRAY) {
             JsonToken currentToken = parser.currentToken();
             if (currentToken == JsonToken.FIELD_NAME) {
                 final String key = parser.getValueAsString();
@@ -88,7 +83,6 @@ public class SnapshotConsumerService {
                         parser.nextTextValue()
                 );
                 messageConsumer.accept(message);
-                abort = stopCondition.test(message);
             }
         }
     }

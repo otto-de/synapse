@@ -6,8 +6,12 @@ import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Message;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.time.Instant;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+
+import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 
 /**
  * An event source of {@link Message events}.
@@ -63,7 +67,7 @@ public interface EventSource {
      * @return the new read position
      */
     default ChannelPosition consume() {
-        return consume(ChannelPosition.fromHorizon(), event -> false);
+        return consumeUntil(fromHorizon(), Instant.MAX);
     }
 
     /**
@@ -78,21 +82,21 @@ public interface EventSource {
      * @return the new read position
      */
     default ChannelPosition consume(ChannelPosition startFrom) {
-        return consume(startFrom, event -> false);
+        return consumeUntil(startFrom, Instant.MAX);
     }
 
     /**
-     * Consumes all events from the EventSource until the {@link Predicate stopCondition} is met.
+     * Consumes all events from the EventSource until the timestamp is reached.
      * <p>
      *     The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
      *     the number of events retrieved from the EventSource.
      * </p>
      *
-     * @param stopCondition the predicate used as a stop condition
+     * @param until the timestamp until the messages should be consumed
      * @return the new read position
      */
-    default ChannelPosition consume(Predicate<Message<?>> stopCondition) {
-        return consume(ChannelPosition.fromHorizon(), stopCondition);
+    default ChannelPosition consumeUntil(final @Nonnull Instant until) {
+        return consumeUntil(fromHorizon(), until);
     }
 
     /**
@@ -104,11 +108,11 @@ public interface EventSource {
      * </p>
      *
      * @param startFrom the read position returned from earlier executions
-     * @param stopCondition the predicate used as a stop condition
+     * @param until the arrival timestamp until the messages should be consumed
      * @return the new read position
      */
-    ChannelPosition consume(ChannelPosition startFrom,
-                            Predicate<Message<?>> stopCondition);
+    ChannelPosition consumeUntil(@Nonnull ChannelPosition startFrom,
+                                 @Nonnull Instant until);
 
     void stop();
 

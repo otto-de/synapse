@@ -18,6 +18,8 @@ import software.amazon.awssdk.services.kinesis.model.DescribeStreamResponse;
 import software.amazon.awssdk.services.kinesis.model.Shard;
 
 import javax.annotation.Nonnull;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -28,6 +30,7 @@ import java.util.function.Predicate;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
+import static de.otto.synapse.channel.ChannelPosition.merge;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.logging.LogHelper.info;
 import static java.util.Objects.isNull;
@@ -42,7 +45,7 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
 
 
     private final KinesisClient kinesisClient;
-
+    private final Clock clock;
     private List<KinesisShard> kinesisShards;
     private ExecutorService executorService;
 
@@ -50,21 +53,30 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
                                              final KinesisClient kinesisClient,
                                              final ObjectMapper objectMapper,
                                              final ApplicationEventPublisher eventPublisher) {
+        this(channelName, kinesisClient, objectMapper, eventPublisher, Clock.systemDefaultZone());
+    }
+
+    public KinesisMessageLogReceiverEndpoint(final String channelName,
+                                             final KinesisClient kinesisClient,
+                                             final ObjectMapper objectMapper,
+                                             final ApplicationEventPublisher eventPublisher,
+                                             final Clock clock) {
         super(channelName, objectMapper, eventPublisher);
         this.kinesisClient = kinesisClient;
+        this.clock = clock;
         initExecutorService();
     }
 
     @Override
     @Nonnull
-    public ChannelPosition consume(final @Nonnull ChannelPosition startFrom,
-                                   final @Nonnull Predicate<Message<?>> stopCondition) {
+    public ChannelPosition consumeUntil(final @Nonnull ChannelPosition startFrom,
+                                        final @Nonnull Instant until) {
         try {
             final long t1 = System.currentTimeMillis();
             if (isNull(executorService)) {
                initExecutorService();
             }
-            final ChannelPosition currentChannelPosition = ChannelPosition.merge(
+            final ChannelPosition currentChannelPosition = merge(
                     channelPosition(kinesisShards.stream().map(shard -> fromHorizon(shard.getShardId())).collect(toList())),
                     startFrom);
             publishEvent(currentChannelPosition, MessageEndpointStatus.STARTED, "Received shards from Kinesis.");
@@ -72,7 +84,7 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
             final List<CompletableFuture<ShardPosition>> futureShardPositions = kinesisShards
                     .stream()
                     .map(shard -> supplyAsync(
-                            () -> consumeShard(shard, startFrom.shard(shard.getShardId()), stopCondition),
+                            () -> consumeShard(shard, startFrom.shard(shard.getShardId()), until),
                             executorService))
                     .collect(toList());
 
@@ -118,13 +130,13 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
 
     private ShardPosition consumeShard(final KinesisShard shard,
                                        final ShardPosition startFrom,
-                                       final Predicate<Message<?>> stopCondition) {
+                                       final Instant until) {
         try {
 
             // TODO: ShardPosition zur ChannelPosition mergen??
 
             final Consumer<ShardPosition> publishNotificationCallback = shardPosition -> publishEvent(channelPosition(shardPosition), MessageEndpointStatus.RUNNING, "Reading from kinesis shard.");
-            return shard.consumeShard(startFrom, stopCondition, getMessageDispatcher(), publishNotificationCallback);
+            return shard.consumeShard(startFrom, until, getMessageDispatcher(), publishNotificationCallback);
         } catch (final RuntimeException e) {
             LOG.error("Failed to consume from Kinesis shard {}: {}", getChannelName(), shard.getShardId(), e.getMessage());
             // Stop all shards and shutdown if this shard is failing:
@@ -146,7 +158,7 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
     private List<KinesisShard> retrieveAllOpenShards() {
         return retrieveAllShards().stream()
                 .filter(this::isShardOpen)
-                .map(shard -> new KinesisShard(shard.shardId(), getChannelName(), kinesisClient, getInterceptorChain()))
+                .map(shard -> new KinesisShard(shard.shardId(), getChannelName(), kinesisClient, getInterceptorChain(), clock))
                 .collect(toImmutableList());
     }
 

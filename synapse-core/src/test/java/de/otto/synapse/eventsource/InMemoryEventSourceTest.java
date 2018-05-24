@@ -36,7 +36,7 @@ public class InMemoryEventSourceTest {
         inMemoryEventSource.stop();
 
         // when
-        inMemoryEventSource.consume(event -> true);
+        inMemoryEventSource.consume();
 
 
         // then
@@ -55,7 +55,7 @@ public class InMemoryEventSourceTest {
         inMemoryEventSource.stop();
 
         // when
-        inMemoryEventSource.consume(event -> true);
+        inMemoryEventSource.consume();
 
 
         // then

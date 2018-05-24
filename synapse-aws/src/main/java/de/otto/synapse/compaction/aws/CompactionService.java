@@ -10,10 +10,13 @@ import de.otto.synapse.state.StateRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.function.Predicate;
 
 import static java.time.Duration.ofSeconds;
+import static java.time.Instant.now;
 
 public class CompactionService {
 
@@ -22,6 +25,7 @@ public class CompactionService {
     private final StateRepository<String> stateRepository;
     private final SnapshotWriteService snapshotWriteService;
     private final EventSourceBuilder eventSourceBuilder;
+    private final Clock clock;
 
     public CompactionService(final SnapshotWriteService snapshotWriteService,
                              final StateRepository<String> stateRepository,
@@ -30,6 +34,18 @@ public class CompactionService {
         this.snapshotWriteService = snapshotWriteService;
         this.stateRepository = stateRepository;
         this.eventSourceBuilder = eventSourceBuilder;
+        this.clock = Clock.systemDefaultZone();
+    }
+
+    public CompactionService(final SnapshotWriteService snapshotWriteService,
+                             final StateRepository<String> stateRepository,
+                             final EventSourceBuilder eventSourceBuilder,
+                             final Clock clock)
+    {
+        this.snapshotWriteService = snapshotWriteService;
+        this.stateRepository = stateRepository;
+        this.eventSourceBuilder = eventSourceBuilder;
+        this.clock = clock;
     }
 
     public String compact(final String channelName) {
@@ -44,7 +60,7 @@ public class CompactionService {
         );
 
         try {
-            final ChannelPosition currentPosition = compactingKinesisEventSource.consume(stopCondition());
+            final ChannelPosition currentPosition = compactingKinesisEventSource.consumeUntil(now(clock));
 
             LOG.info("Finished updating snapshot data. StateRepository now holds {} entries.", stateRepository.size());
 
@@ -54,16 +70,6 @@ public class CompactionService {
         } finally {
             stateRepository.clear();
         }
-    }
-
-    private Predicate<Message<?>> stopCondition() {
-        return event -> event.getHeader().getDurationBehind()
-                .map(CompactionService::isLessThan10Seconds)
-                .orElse(true);
-    }
-
-    private static Boolean isLessThan10Seconds(Duration d) {
-        return d.compareTo(ofSeconds(10)) < 0;
     }
 
 }

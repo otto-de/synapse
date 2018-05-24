@@ -96,8 +96,8 @@ public class SnapshotWriteServiceTest {
 
         final MessageConsumer<Map> messageConsumer = MessageConsumer.of(".*", Map.class,
                 (event) -> data.put(event.getKey(), event.getPayload()));
-        ChannelPosition actualChannelPosition = new SnapshotConsumerService().consumeSnapshot(snapshot,
-                (event) -> false,
+        ChannelPosition actualChannelPosition = new SnapshotConsumerService().consumeSnapshot(
+                snapshot,
                 new MessageDispatcher(OBJECT_MAPPER, singletonList(messageConsumer)));
 
         assertThat(actualChannelPosition, is(channelPosition));

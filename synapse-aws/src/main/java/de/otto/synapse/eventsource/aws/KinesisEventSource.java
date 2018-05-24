@@ -8,6 +8,7 @@ import de.otto.synapse.message.Message;
 import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.Nonnull;
+import java.time.Instant;
 import java.util.function.Predicate;
 
 import static de.otto.synapse.info.MessageEndpointStatus.FINISHED;
@@ -31,11 +32,11 @@ public class KinesisEventSource extends AbstractEventSource {
 
     @Nonnull
     @Override
-    public ChannelPosition consume(final ChannelPosition startFrom,
-                                   final Predicate<Message<?>> stopCondition) {
+    public ChannelPosition consumeUntil(final @Nonnull ChannelPosition startFrom,
+                                        final @Nonnull Instant until) {
         publishEvent(startFrom, MessageEndpointStatus.STARTING, "Consuming messages from Kinesis.");
         try {
-            ChannelPosition currentPosition = messageLog.consume(startFrom, stopCondition);
+            ChannelPosition currentPosition = messageLog.consumeUntil(startFrom, until);
             publishEvent(currentPosition, FINISHED, "Stopped consuming messages from Kinesis.");
             return currentPosition;
         } catch (final RuntimeException e) {

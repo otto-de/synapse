@@ -57,7 +57,7 @@ public class SnapshotEventSourceTest {
     public void shouldThrowExceptionIfDownloadFails() {
         // given
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.of(new File("someFileWithPattern-snapshot-2018-01-01T00-00Z-1234567890123456789.json.zip")));
-        when(snapshotConsumerService.consumeSnapshot(any(),any(),any())).thenThrow(new RuntimeException("boom - simulate exception while loading from S3"));
+        when(snapshotConsumerService.consumeSnapshot(any(),any())).thenThrow(new RuntimeException("boom - simulate exception while loading from S3"));
 
         // when
         snapshotEventSource.consume();

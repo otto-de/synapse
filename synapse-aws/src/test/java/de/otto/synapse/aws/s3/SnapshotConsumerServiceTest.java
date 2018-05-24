@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,7 +40,6 @@ public class SnapshotConsumerServiceTest {
         });
         final ChannelPosition shardPositions = testee.consumeSnapshot(
                 file,
-                (event) -> false,
                 new MessageDispatcher(OBJECT_MAPPER, Collections.singletonList(messageConsumer)));
         //then
         assertThat(shardPositions.shards().size(), is(2));

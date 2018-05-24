@@ -18,11 +18,15 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.Nonnull;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.util.function.Predicate;
 
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static java.time.Instant.now;
+import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -49,7 +53,7 @@ public class KinesisEventSourceTest {
         receiverEndpoint = spy(new MessageLogReceiverEndpoint("test", new ObjectMapper(), eventPublisher) {
             @Nonnull
             @Override
-            public ChannelPosition consume(@Nonnull ChannelPosition startFrom, @Nonnull Predicate<Message<?>> stopCondition) {
+            public ChannelPosition consumeUntil(@Nonnull ChannelPosition startFrom, @Nonnull Instant until) {
                 return channelPosition(fromPosition("shard1", Duration.ZERO, "4711"));
             }
 
@@ -70,10 +74,10 @@ public class KinesisEventSourceTest {
         eventSource.stop();
 
         // when
-        eventSource.consume(initialPositions, this::stopIfGreenForString);
+        eventSource.consumeUntil(initialPositions, now().plus(20, MILLIS));
 
         // then
-        verify(receiverEndpoint).consume(eq(initialPositions), any(Predicate.class));
+        verify(receiverEndpoint).consumeUntil(eq(initialPositions), any(Instant.class));
     }
 
     @Test
@@ -84,7 +88,7 @@ public class KinesisEventSourceTest {
         receiverEndpoint = spy(new MessageLogReceiverEndpoint("test", new ObjectMapper(), eventPublisher) {
             @Nonnull
             @Override
-            public ChannelPosition consume(@Nonnull ChannelPosition startFrom, @Nonnull Predicate<Message<?>> stopCondition) {
+            public ChannelPosition consumeUntil(@Nonnull ChannelPosition startFrom, @Nonnull Instant until) {
                 return channelPosition(fromPosition("shard1", Duration.ZERO, "4711"));
             }
 
@@ -98,7 +102,7 @@ public class KinesisEventSourceTest {
         eventSource.register(testDataConsumer);
 
         // when
-        final ChannelPosition channelPosition = eventSource.consume(initialPositions, (message) -> true);
+        final ChannelPosition channelPosition = eventSource.consume(initialPositions);
 
         // then
         assertThat(eventSource.isStopping(), is(false));
@@ -115,7 +119,7 @@ public class KinesisEventSourceTest {
 
         // when
         eventSource.stop();
-        eventSource.consume(initialPositions, (message) -> false);
+        eventSource.consumeUntil(initialPositions, now());
 
         // then
         assertThat(eventSource.isStopping(), is(true));
@@ -130,7 +134,7 @@ public class KinesisEventSourceTest {
         eventSource.stop();
 
         // when
-        ChannelPosition finalChannelPosition = eventSource.consume(initialPositions, (message) -> false);
+        ChannelPosition finalChannelPosition = eventSource.consumeUntil(initialPositions, now());
 
         // then
         ArgumentCaptor<MessageEndpointNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(MessageEndpointNotification.class);
@@ -157,7 +161,7 @@ public class KinesisEventSourceTest {
         receiverEndpoint = spy(new MessageLogReceiverEndpoint("test", new ObjectMapper(), eventPublisher) {
             @Nonnull
             @Override
-            public ChannelPosition consume(@Nonnull ChannelPosition startFrom, @Nonnull Predicate<Message<?>> stopCondition) {
+            public ChannelPosition consumeUntil(@Nonnull ChannelPosition startFrom, @Nonnull Instant until) {
                 throw new RuntimeException("Some Error Message");
             }
 
@@ -169,7 +173,7 @@ public class KinesisEventSourceTest {
 
         // when
         try {
-            eventSource.consume(initialPositions, this::stopIfGreenForString);
+            eventSource.consumeUntil(initialPositions, now().plus(20, MILLIS));
             fail("expected RuntimeException");
         } catch (final RuntimeException e) {
             // then

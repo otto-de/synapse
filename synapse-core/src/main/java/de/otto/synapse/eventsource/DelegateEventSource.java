@@ -9,6 +9,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 import javax.annotation.Nonnull;
+import java.time.Instant;
 import java.util.function.Predicate;
 
 public class DelegateEventSource implements EventSource, ApplicationContextAware {
@@ -84,18 +85,18 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
      * Consumes all events from the EventSource, beginning with {@link ChannelPosition startFrom}, until
      * the {@link Predicate stopCondition} is met.
      * <p>
-     * The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
-     * the number of events retrieved from the EventSource.
+     *     The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
+     *     the number of events retrieved from the EventSource.
      * </p>
      *
-     * @param startFrom     the read position returned from earlier executions
-     * @param stopCondition the predicate used as a stop condition
+     * @param startFrom the read position returned from earlier executions
+     * @param until the arrival timestamp until the messages should be consumed
      * @return the new read position
      */
     @Override
-    public ChannelPosition consume(final ChannelPosition startFrom,
-                                   final Predicate<Message<?>> stopCondition) {
-        return delegate.consume(startFrom, stopCondition);
+    public ChannelPosition consumeUntil(final ChannelPosition startFrom,
+                                        final Instant until) {
+        return delegate.consumeUntil(startFrom, until);
     }
 
     @Override
