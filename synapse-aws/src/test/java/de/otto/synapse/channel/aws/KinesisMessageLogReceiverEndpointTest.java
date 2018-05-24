@@ -234,7 +234,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         List<MessageEndpointNotification> events = eventCaptor.getAllValues();
 
         assertThat(events.get(0).getStatus(), is(STARTED));
-        assertThat(events.get(0).getChannelPosition(), is(ChannelPosition.fromHorizon()));
+        assertThat(events.get(0).getChannelPosition(), is(channelPosition(fromHorizon("shard1"))));
         assertThat(events.get(1).getStatus(), is(RUNNING)); // first emtpy record response, we dont evaluate millis behind latest from record response with zero records
         assertThat(events.get(1).getChannelPosition(), is(channelPosition(fromHorizon("shard1", Duration.ofMillis(555L)))));
         assertThat(events.get(2).getStatus(), is(RUNNING));

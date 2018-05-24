@@ -16,18 +16,25 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
+import static de.otto.synapse.channel.ChannelPosition.merge;
 import static java.lang.String.format;
 
 @Component
 public class MessageReceiverEndpointInfoProvider {
 
 
+    private static final long MAX_SECONDS_BEHIND = 10;
     private final MessageReceiverEndpointInfos messageReceiverEndpointInfos = new MessageReceiverEndpointInfos();
 
-    private final Map<String, ChannelPosition> mapChannelToDurationBehind = new ConcurrentHashMap<>();
+    private final Set<String> allChannels = new ConcurrentSkipListSet<>();
+    private final Set<String> startedChannels = new ConcurrentSkipListSet<>();
+
+    private final Map<String, ChannelPosition> mapChannelToPosition = new ConcurrentHashMap<>();
     private final Map<String, Instant> channelStartupTimes = new ConcurrentHashMap<>();
     private final Clock clock;
 
@@ -46,7 +53,10 @@ public class MessageReceiverEndpointInfoProvider {
         eventSources.ifPresent(es -> {
             es.stream()
                     .map(EventSource::getChannelName)
-                    .forEach(messageReceiverEndpointInfos::add);
+                    .forEach( channelName -> {
+                        allChannels.add(channelName);
+                        messageReceiverEndpointInfos.add(channelName);
+                    });
         });
         this.clock = clock;
     }
@@ -75,21 +85,26 @@ public class MessageReceiverEndpointInfoProvider {
                         .withChannelPosition(notification.getChannelPosition())
                         .withMessage(notification.getMessage())
                         .build());
+                mapChannelToPosition.put(channelName, notification.getChannelPosition());
                 break;
             case RUNNING:
                 final ChannelPosition channelPosition = notification.getChannelPosition() != null
                         ? notification.getChannelPosition()
                         : fromHorizon();
-                ChannelPosition previousChannelPosition = mapChannelToDurationBehind.getOrDefault(channelName, fromHorizon());
-                ChannelPosition mergedChannelPosition = ChannelPosition.merge(previousChannelPosition, channelPosition);
-                mapChannelToDurationBehind.put(channelName, mergedChannelPosition);
-                messageReceiverEndpointInfos.update(channelName, MessageReceiverEndpointInfo
+                ChannelPosition previousChannelPosition = mapChannelToPosition.getOrDefault(channelName, fromHorizon());
+                ChannelPosition mergedChannelPosition = merge(previousChannelPosition, channelPosition);
+                mapChannelToPosition.put(channelName, mergedChannelPosition);
+                final MessageReceiverEndpointInfo endpointInfo = MessageReceiverEndpointInfo
                         .builder()
                         .withChannelName(channelName)
                         .withStatus(notification.getStatus())
                         .withChannelPosition(mergedChannelPosition)
                         .withMessage(format("Channel is %s behind head.", mergedChannelPosition.getDurationBehind()))
-                        .build());
+                        .build();
+                if (isCurrentlyUpToDate(endpointInfo)) {
+                    startedChannels.add(channelName);
+                }
+                messageReceiverEndpointInfos.update(channelName, endpointInfo);
                 break;
             case FINISHED:
                 final Duration runtime = Duration.between(channelStartupTimes.get(channelName), clock.instant());
@@ -97,7 +112,7 @@ public class MessageReceiverEndpointInfoProvider {
                         .builder()
                         .withChannelName(channelName)
                         .withStatus(notification.getStatus())
-                        .withChannelPosition(mapChannelToDurationBehind.get(channelName))
+                        .withChannelPosition(mapChannelToPosition.get(channelName))
                         .withMessage(format("%s Finished consumption after %s.", notification.getMessage(), runtime))
                         .build());
                 break;
@@ -107,7 +122,7 @@ public class MessageReceiverEndpointInfoProvider {
                         .withChannelName(channelName)
                         .withStatus(notification.getStatus())
                         .withMessage(notification.getMessage())
-                        .withChannelPosition(mapChannelToDurationBehind.get(channelName))
+                        .withChannelPosition(mapChannelToPosition.get(channelName))
                         .build());
                 break;
             default:
@@ -118,6 +133,17 @@ public class MessageReceiverEndpointInfoProvider {
 
     public MessageReceiverEndpointInfos getInfos() {
         return messageReceiverEndpointInfos;
+    }
+
+    public boolean allChannelsStarted() {
+        return startedChannels.containsAll(allChannels);
+    }
+
+    private boolean isCurrentlyUpToDate(MessageReceiverEndpointInfo info) {
+        return info.getStatus() != MessageEndpointStatus.STARTING && info.getChannelPosition().get()
+                .getDurationBehind()
+                .minusSeconds(MAX_SECONDS_BEHIND)
+                .isNegative();
     }
 
 }

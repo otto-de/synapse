@@ -2,12 +2,18 @@ package de.otto.synapse.edison.health;
 
 import de.otto.synapse.edison.provider.MessageReceiverEndpointInfoProvider;
 import de.otto.synapse.info.MessageEndpointStatus;
+import de.otto.synapse.info.MessageReceiverEndpointInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toSet;
 import static org.springframework.boot.actuate.health.Health.*;
 
 /**
@@ -22,8 +28,6 @@ import static org.springframework.boot.actuate.health.Health.*;
         matchIfMissing = true)
 public class StartupHealthIndicator implements HealthIndicator {
 
-    private static final long MAX_SECONDS_BEHIND = 10L;
-
     private MessageReceiverEndpointInfoProvider provider;
 
     @Autowired
@@ -34,22 +38,12 @@ public class StartupHealthIndicator implements HealthIndicator {
     @Override
     public Health health() {
         final Builder healthBuilder;
-        if (allChannelsUpToDate()) {
+        if (provider.allChannelsStarted()) {
             healthBuilder = up().withDetail("message", "All channels up to date");
         } else {
             healthBuilder = down().withDetail("message", "Channels not yet up to date");
         }
         return healthBuilder.build();
-    }
-
-    private boolean allChannelsUpToDate() {
-        return provider
-                .getInfos()
-                .stream()
-                .allMatch(info -> info.getStatus() != MessageEndpointStatus.STARTING && info.getChannelPosition().get()
-                        .getDurationBehind()
-                        .minusSeconds(MAX_SECONDS_BEHIND)
-                        .isNegative());
     }
 
 }

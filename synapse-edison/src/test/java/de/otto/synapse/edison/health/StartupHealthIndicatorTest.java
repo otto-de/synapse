@@ -111,7 +111,7 @@ public class StartupHealthIndicatorTest {
         whenFinished(provider, "some-stream");
 
         whenStarting(provider, "other-stream");
-        whenStarted(provider, "other-stream");
+        whenStarted(provider, "other-stream", 2);
         whenRunning(provider, "other-stream", ofSeconds(2), ofSeconds(11));
 
         // then
@@ -138,7 +138,7 @@ public class StartupHealthIndicatorTest {
         whenFinished(provider, "some-stream");
 
         whenStarting(provider, "other-stream");
-        whenStarted(provider, "other-stream");
+        whenStarted(provider, "other-stream", 2);
         whenRunning(provider, "other-stream", ofSeconds(2), ofSeconds(9));
 
         // then
@@ -148,7 +148,7 @@ public class StartupHealthIndicatorTest {
     }
 
     @Test
-    public void shouldBeDownIfChannelStarted() {
+    public void shouldBeDownIfOneChannelStarted() {
         // given
         MessageReceiverEndpointInfoProvider provider = new MessageReceiverEndpointInfoProvider(
                 of(asList(
@@ -231,6 +231,38 @@ public class StartupHealthIndicatorTest {
         assertThat(health.getDetails(), hasEntry("message", "All channels up to date"));
     }
 
+    @Test
+    public void shouldStayHealthyIfEndpointIsFallingBehind() {
+        // given
+        MessageReceiverEndpointInfoProvider provider = new MessageReceiverEndpointInfoProvider(
+                of(asList(
+                        mockEventSource("some-stream"),
+                        mockEventSource("other-stream"))),
+                clock);
+
+        StartupHealthIndicator healthCheck = new StartupHealthIndicator(provider);
+
+        EventSource mockEventSource = mock(EventSource.class);
+        when(mockEventSource.getChannelName()).thenReturn("some-stream");
+
+        // when
+        whenStarting(provider, "some-stream");
+        whenStarted(provider, "some-stream");
+        whenRunning(provider, "some-stream", ofSeconds(0));
+
+        whenStarting(provider, "other-stream");
+        whenStarted(provider, "other-stream");
+        whenRunning(provider, "other-stream", ofSeconds(9));
+
+        whenRunning(provider, "some-stream", ofSeconds(11));
+        whenRunning(provider, "some-stream", ofSeconds(3600));
+
+        // then
+        Health health = healthCheck.health();
+        assertThat(health.getStatus(), is(Status.UP));
+        assertThat(health.getDetails(), hasEntry("message", "All channels up to date"));
+    }
+
     private EventSource mockEventSource(final String channelName) {
         EventSource eventSource = mock(EventSource.class);
         when(eventSource.getChannelName()).thenReturn(channelName);
@@ -247,6 +279,21 @@ public class StartupHealthIndicatorTest {
         sendNotification(provider, channelName, STARTED);
     }
 
+    private void whenStarted(final MessageReceiverEndpointInfoProvider provider,
+                             final String channelName,
+                             final int numShards) {
+        final Builder builder = builder()
+                .withChannelName(channelName)
+                .withStatus(STARTED)
+                .withMessage("some message");
+        final List<ShardPosition> positions = new ArrayList<>();
+        for (int i=0; i<numShards; ++i) {
+            positions.add(fromPosition("some-shard-" + i, Duration.ofMillis(Long.MAX_VALUE), "42"));
+        }
+        builder.withChannelPosition(channelPosition(positions));
+        provider.onEventSourceNotification(builder.build());
+    }
+
     private void whenFinished(final MessageReceiverEndpointInfoProvider provider,
                               final String channelName) {
         sendNotification(provider, channelName, FINISHED);
@@ -255,7 +302,24 @@ public class StartupHealthIndicatorTest {
     private void whenRunning(final MessageReceiverEndpointInfoProvider provider,
                              final String channelName,
                              final Duration... durationBehind) {
-        sendNotification(provider, channelName, RUNNING, durationBehind);
+        if (durationBehind != null && durationBehind.length > 0) {
+            for (int i=0; i<durationBehind.length; ++i) {
+                final Builder builder = builder()
+                        .withChannelName(channelName)
+                        .withStatus(RUNNING)
+                        .withMessage("some message");
+                builder.withChannelPosition(channelPosition(fromPosition("some-shard-" + i, durationBehind[i], "42")));
+                provider.onEventSourceNotification(builder.build());
+            }
+        } else {
+            final Builder builder = builder()
+                    .withChannelName(channelName)
+                    .withStatus(RUNNING)
+                    .withMessage("some message");
+            builder.withChannelPosition(fromHorizon());
+            provider.onEventSourceNotification(builder.build());
+        }
+
     }
 
     private void whenFailed(final MessageReceiverEndpointInfoProvider provider,
@@ -267,6 +331,7 @@ public class StartupHealthIndicatorTest {
                                   final String channelName,
                                   final MessageEndpointStatus status,
                                   final Duration... durationBehind) {
+        // TODO Die KinesisShards senden ChannelPosition einzeln pro Shard; nicht die gesamte ChannelPosition. Fixen!!!
         final Builder builder = builder()
                 .withChannelName(channelName)
                 .withStatus(status)
@@ -280,8 +345,7 @@ public class StartupHealthIndicatorTest {
         } else {
             builder.withChannelPosition(fromHorizon());
         }
-        provider.onEventSourceNotification(builder
-                .build());
+        provider.onEventSourceNotification(builder.build());
     }
 
 }

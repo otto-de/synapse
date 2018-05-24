@@ -38,10 +38,10 @@ public final class ChannelPosition implements Serializable {
             throw new IllegalArgumentException("Parameter channelPositions must contain at least one element");
         }
         final Map<String,ShardPosition> shardPositions = new LinkedHashMap<>();
-        channelPositions.forEach(streamPosition -> streamPosition
+        channelPositions.forEach(channelPosition -> channelPosition
                 .shards()
                 .forEach(shardId ->
-                        shardPositions.put(shardId, streamPosition.shard(shardId)))
+                        shardPositions.put(shardId, channelPosition.shard(shardId)))
         );
         return new ChannelPosition(ImmutableList.copyOf(shardPositions.values()));
     }
