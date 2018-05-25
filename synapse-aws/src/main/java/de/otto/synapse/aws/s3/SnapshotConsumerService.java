@@ -18,6 +18,8 @@ import java.util.zip.ZipInputStream;
 import static com.google.common.collect.ImmutableMap.builder;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
+import static de.otto.synapse.channel.ShardPosition.fromHorizon;
+import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 
@@ -113,8 +115,8 @@ public class SnapshotConsumerService {
                     if (shardName != null) {
                         // TODO: "0" kann entfernt werden, wenn keine Snapshots mit "0" für HORIZON mehr exisiteren.
                         final ShardPosition shardPosition = sequenceNumber != null && !sequenceNumber.equals("0") && !sequenceNumber.equals("")
-                                ? ShardPosition.fromPosition(shardName, MAX_DURATION, sequenceNumber)
-                                : ShardPosition.fromHorizon(shardName, MAX_DURATION);
+                                ? fromPosition(shardName, sequenceNumber)
+                                : fromHorizon(shardName);
                         shardPositions.put(shardName, shardPosition);
                     }
                     shardName = null;

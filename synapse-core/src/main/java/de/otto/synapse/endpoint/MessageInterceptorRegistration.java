@@ -104,7 +104,7 @@ public class MessageInterceptorRegistration {
         this.interceptor = requireNonNull(interceptor);
         this.enabledEndpointTypes = requireNonNull(enabledEndpointTypes);
         if (enabledEndpointTypes.isEmpty()) {
-            throw new IllegalArgumentException("The set of enabled endpoint types must not be empty");
+            throw new IllegalArgumentException("The set of enabled endpoint types must not be unknown");
         }
     }
 

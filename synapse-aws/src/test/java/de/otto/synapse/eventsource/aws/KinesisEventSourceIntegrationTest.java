@@ -37,11 +37,9 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -113,7 +111,7 @@ public class KinesisEventSourceIntegrationTest {
          */
         final KinesisMessageLogReceiverEndpoint kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(TEST_CHANNEL, kinesisClient, objectMapper, null);
         kinesisMessageLog.registerInterceptorsFrom(messageInterceptorRegistry);
-        this.integrationEventSource = new KinesisEventSource("integrationEventSource", kinesisMessageLog, eventPublisher);
+        this.integrationEventSource = new KinesisEventSource("integrationEventSource", kinesisMessageLog);
         this.integrationEventSource.register(MessageConsumer.of(".*", String.class, (message) -> messages.add(message)));
     }
 

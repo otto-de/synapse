@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -74,7 +73,7 @@ public class TestStreamSource {
         return channelPosition(mapShardIdToLastWrittenSequence
                 .keySet()
                 .stream()
-                .map(shardId -> fromPosition(shardId, Duration.ZERO, mapShardIdToLastWrittenSequence.get(shardId)))
+                .map(shardId -> fromPosition(shardId, mapShardIdToLastWrittenSequence.get(shardId)))
                 .collect(toImmutableList()));
     }
 
@@ -82,7 +81,7 @@ public class TestStreamSource {
         return channelPosition(mapShardIdToFirstWrittenSequence
                 .keySet()
                 .stream()
-                .map(shardId -> fromPosition(shardId, Duration.ZERO, mapShardIdToFirstWrittenSequence.get(shardId)))
+                .map(shardId -> fromPosition(shardId, mapShardIdToFirstWrittenSequence.get(shardId)))
                 .collect(toImmutableList()));
 
     }
@@ -136,7 +135,7 @@ public class TestStreamSource {
 
     public void putRecords(String channelName, List<PutRecordsRequestEntry> records) {
         if (records.isEmpty()) {
-            throw new IllegalArgumentException("records must not be empty");
+            throw new IllegalArgumentException("records must not be unknown");
         }
 
         PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder()

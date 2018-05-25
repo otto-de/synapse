@@ -1,13 +1,13 @@
 package de.otto.synapse.endpoint.receiver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ChannelDurationBehind;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.MessageEndpoint;
-import de.otto.synapse.info.MessageEndpointNotification;
-import de.otto.synapse.info.MessageEndpointStatus;
+import de.otto.synapse.info.MessageReceiverNotification;
+import de.otto.synapse.info.MessageReceiverStatus;
 import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.Nonnull;
@@ -61,13 +61,13 @@ public class MessageReceiverEndpoint extends MessageEndpoint {
         return RECEIVER;
     }
 
-    protected void publishEvent(final @Nonnull ChannelPosition channelPosition,
-                                final @Nonnull MessageEndpointStatus status,
-                                final @Nullable String message) {
+    protected void publishEvent(final @Nonnull MessageReceiverStatus status,
+                                final @Nullable String message,
+                                final @Nullable ChannelDurationBehind durationBehind) {
         if (eventPublisher != null) {
-            MessageEndpointNotification notification = MessageEndpointNotification.builder()
+            MessageReceiverNotification notification = MessageReceiverNotification.builder()
                     .withChannelName(this.getChannelName())
-                    .withChannelPosition(channelPosition)
+                    .withChannelDurationBehind(durationBehind)
                     .withStatus(status)
                     .withMessage(Objects.toString(message, ""))
                     .build();

@@ -5,7 +5,6 @@ import software.amazon.awssdk.services.kinesis.model.Record;
 
 import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
-import java.time.Duration;
 import java.util.function.Function;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
@@ -28,12 +27,11 @@ public class KinesisMessage {
     };
 
     public static Message<String> kinesisMessage(final @Nonnull String shard,
-                                                 final @Nonnull Duration durationBehind,
                                                  final @Nonnull Record record) {
         return message(
                 record.partitionKey(),
                 responseHeader(
-                        fromPosition(shard, durationBehind, record.sequenceNumber()),
+                        fromPosition(shard, record.sequenceNumber()),
                         record.approximateArrivalTimestamp()
                 ),
                 BYTE_BUFFER_STRING.apply(record.data()));

@@ -5,8 +5,6 @@ import de.otto.synapse.annotation.EventSourceConsumer;
 import de.otto.synapse.aws.s3.SnapshotReadService;
 import de.otto.synapse.configuration.aws.AwsEventSourcingAutoConfiguration;
 import de.otto.synapse.eventsource.EventSourceConsumerProcess;
-import de.otto.synapse.info.MessageEndpointNotification;
-import de.otto.synapse.info.MessageEndpointStatus;
 import de.otto.synapse.message.Message;
 import org.awaitility.Awaitility;
 import org.junit.Test;
@@ -17,7 +15,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Primary;
-import org.springframework.context.event.EventListener;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
@@ -32,7 +29,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -55,14 +51,13 @@ public class MessageConsumerIntegrationTest {
     private static List<String> allReceivedEventKeys = new ArrayList<>();
     private static List<Apple> receivedAppleEventPayloads = new ArrayList<>();
     private static List<Banana> receivedBananaEventPayloads = new ArrayList<>();
-    private static List<MessageEndpointNotification> events = new ArrayList<>();
 
 
     @Test
     public void shouldCallCorrectConsumerDependingOnEventKey() {
         Awaitility.await()
                 .atMost(5, TimeUnit.SECONDS)
-                .until(() -> events.size(), is(6));
+                .until(() -> receivedAppleEventPayloads.size(), is(2));
 
         assertThat(receivedBananaEventPayloads.size(), is(2));
         assertThat(receivedBananaEventPayloads.get(0).bananaId, is("1"));
@@ -70,20 +65,6 @@ public class MessageConsumerIntegrationTest {
         assertThat(receivedAppleEventPayloads.size(), is(2));
         assertThat(receivedAppleEventPayloads.get(0).appleId, is("1"));
         assertThat(receivedAppleEventPayloads.get(1).appleId, is("2"));
-        assertThat(events, hasSize(6));
-        assertThat(events.get(0).getStatus(), is(MessageEndpointStatus.STARTING));
-        assertThat(events.get(0).getChannelName(), is("test-stream"));
-        assertThat(events.get(1).getStatus(), is(MessageEndpointStatus.STARTED));
-        assertThat(events.get(1).getChannelName(), is("test-stream"));
-        assertThat(events.get(2).getStatus(), is(MessageEndpointStatus.FINISHED));
-        assertThat(events.get(2).getChannelName(), is("test-stream"));
-        assertThat(events.get(3).getStatus(), is(MessageEndpointStatus.STARTING));
-        assertThat(events.get(3).getChannelName(), is("test-stream"));
-        assertThat(events.get(4).getStatus(), is(MessageEndpointStatus.STARTED));
-        assertThat(events.get(4).getChannelName(), is("test-stream"));
-        assertThat(events.get(5).getStatus(), is(MessageEndpointStatus.FINISHED));
-        assertThat(events.get(5).getChannelName(), is("test-stream"));
-
     }
 
     private static class Apple {
@@ -97,10 +78,6 @@ public class MessageConsumerIntegrationTest {
     }
 
     public static class TestConsumer {
-        @EventListener
-        public void listenForFinishedEvent(MessageEndpointNotification messageEndpointNotification) {
-            events.add(messageEndpointNotification);
-        }
 
         @EventSourceConsumer(
                 eventSource = "test",

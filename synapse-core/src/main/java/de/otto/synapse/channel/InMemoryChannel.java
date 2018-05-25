@@ -2,7 +2,9 @@ package de.otto.synapse.channel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.google.common.collect.Iterables;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
+import de.otto.synapse.info.MessageReceiverStatus;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
@@ -12,14 +14,14 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Predicate;
 
+import static de.otto.synapse.channel.ChannelDurationBehind.channelDurationBehind;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.Integer.valueOf;
-import static java.time.Duration.ZERO;
+import static java.time.Duration.between;
 import static java.time.Instant.now;
 import static java.util.Collections.synchronizedList;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -55,6 +57,12 @@ public class InMemoryChannel extends MessageLogReceiverEndpoint {
         int pos = startFrom.shard(getChannelName()).startFrom() == StartFrom.HORIZON
                 ? -1
                 : valueOf(startFrom.shard(getChannelName()).position());
+        publishEvent(MessageReceiverStatus.STARTING, "Starting InMemoryChannel " + getChannelName(), null);
+        final Message<String> lastMessage = eventQueue.isEmpty() ? null : Iterables.getLast(eventQueue);
+        final ChannelDurationBehind durationBehind = lastMessage != null
+                ? channelDurationBehind().with(getChannelName(), between(lastMessage.getHeader().getArrivalTimestamp(), now())).build()
+                : null;
+        publishEvent(MessageReceiverStatus.STARTED, "Started InMemoryChannel " + getChannelName(), durationBehind);
         do {
             if (hasMessageAfter(pos)) {
                 ++pos;
@@ -68,9 +76,10 @@ public class InMemoryChannel extends MessageLogReceiverEndpoint {
                 );
                 if (interceptedMessage != null) {
                     getMessageDispatcher().accept(interceptedMessage);
-                    shouldStop = until.isBefore(interceptedMessage.getHeader().getArrivalTimestamp());
+                    shouldStop = !until.isAfter(interceptedMessage.getHeader().getArrivalTimestamp());
                 }
             } else {
+                shouldStop = !until.isAfter(now());
                 try {
                     Thread.sleep(100);
                 } catch (final InterruptedException e) {
@@ -78,7 +87,8 @@ public class InMemoryChannel extends MessageLogReceiverEndpoint {
                 }
             }
         } while (!shouldStop && !stopSignal.get());
-        return channelPosition(fromPosition(getChannelName(), ZERO, String.valueOf(pos)));
+        publishEvent(MessageReceiverStatus.FINISHED, "Finished InMemoryChannel " + getChannelName(), durationBehind);
+        return channelPosition(fromPosition(getChannelName(), String.valueOf(pos)));
     }
 
     @Override

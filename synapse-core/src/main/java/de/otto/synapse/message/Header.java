@@ -7,7 +7,6 @@ import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 
 import javax.annotation.Nonnull;
 import java.io.Serializable;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
@@ -61,20 +60,6 @@ public class Header implements Serializable {
     @Nonnull
     public Instant getArrivalTimestamp() {
         return arrivalTimestamp;
-    }
-
-    /**
-     * Returns the approx. duration of this event behind the latest event in the event source.
-     *
-     * @return Duration
-     */
-    @Nonnull
-    @Deprecated
-    public Optional<Duration> getDurationBehind() {
-        if (shardPosition == null) {
-            return Optional.empty();
-        }
-        return Optional.of(shardPosition.getDurationBehind());
     }
 
     @Override

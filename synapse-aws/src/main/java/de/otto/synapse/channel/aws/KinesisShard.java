@@ -58,7 +58,7 @@ public class KinesisShard {
     public ShardPosition consumeShard(final ShardPosition startPosition,
                                       final Instant until,
                                       final MessageConsumer<String> consumer,
-                                      final Consumer<ShardPosition> callback) {
+                                      final Consumer<Duration> callback) {
         try {
             MDC.put("channelName", channelName);
             MDC.put("shardId", shardId);
@@ -83,11 +83,10 @@ public class KinesisShard {
                 final long t1 = System.currentTimeMillis();
                 if (!isEmptyStream(recordsResponse)) {
                     for (final Record record : recordsResponse.records()) {
-                        final Message<String> message = interceptorChain.intercept(kinesisMessage(shardId, durationBehind, record));
+                        final Message<String> message = interceptorChain.intercept(kinesisMessage(shardId, record));
                         if (message != null) {
                             consumeMessageSafely(consumer, record, message);
-
-                            shardPosition = fromPosition(shardId, durationBehind, record.sequenceNumber());
+                            shardPosition = fromPosition(shardId, record.sequenceNumber());
                             //consume all records of current iterator, even if stop condition is true
                             // because durationBehind is only per iterator, not per record and we want to consume all
                             // records
@@ -97,11 +96,10 @@ public class KinesisShard {
                         }
                     }
                 } else {
-                    shardPosition = shardPosition.withDurationBehind(durationBehind);
                     stopRetrieval = !until.isAfter(Instant.now(clock));
                 }
 
-                callback.accept(shardPosition);
+                callback.accept(durationBehind);
 
                 final long t2 = System.currentTimeMillis();
                 logInfo(channelName, recordsResponse, durationBehind, t2 - t1);

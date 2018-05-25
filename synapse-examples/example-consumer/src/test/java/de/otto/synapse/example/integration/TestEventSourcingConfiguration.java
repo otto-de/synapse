@@ -11,7 +11,6 @@ import de.otto.synapse.example.consumer.configuration.MyServiceProperties;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -37,9 +36,8 @@ public class TestEventSourcingConfiguration {
 
     @Bean
     public EventSourceBuilder defaultEventSourceBuilder(final MessageInterceptorRegistry interceptorRegistry,
-                                                        final ApplicationEventPublisher eventPublisher,
                                                         final InMemoryChannels inMemoryChannels) {
-        return new InMemoryEventSourceBuilder(interceptorRegistry, inMemoryChannels, eventPublisher);
+        return new InMemoryEventSourceBuilder(interceptorRegistry, inMemoryChannels);
     }
 
 

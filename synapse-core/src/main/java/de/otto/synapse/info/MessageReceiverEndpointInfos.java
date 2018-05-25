@@ -18,7 +18,7 @@ public class MessageReceiverEndpointInfos {
         channelNameToEndpointInfo.put(channelName, builder()
                 .withChannelName(channelName)
                 .withMessage(MSG_CHANNEL_STARTING)
-                .withStatus(MessageEndpointStatus.STARTING) // TODO INITIALIZING until all shards available
+                .withStatus(MessageReceiverStatus.STARTING)
                 .build());
     }
 

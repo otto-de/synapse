@@ -84,7 +84,7 @@ public class EventSourceConsumerProcessTest {
     @SuppressWarnings("unchecked")
     public void shouldInvokeTwoConsumersForSameEventSource() throws InterruptedException {
         final InMemoryChannel channel = new InMemoryChannel("test");
-        final EventSource eventSource = new InMemoryEventSource("test", channel, null);
+        final EventSource eventSource = new InMemoryEventSource("test", channel);
 
         final TestMessageConsumer eventConsumerA = testEventConsumer(".*", String.class);
         final TestMessageConsumer eventConsumerB = testEventConsumer(".*", String.class);

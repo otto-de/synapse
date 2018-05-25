@@ -4,22 +4,22 @@ import de.otto.edison.status.domain.Status;
 import de.otto.edison.status.domain.StatusDetail;
 import de.otto.edison.status.indicator.StatusDetailIndicator;
 import de.otto.synapse.edison.provider.MessageReceiverEndpointInfoProvider;
-import de.otto.synapse.info.MessageEndpointStatus;
+import de.otto.synapse.info.MessageReceiverStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static de.otto.synapse.info.MessageEndpointStatus.FAILED;
+import static de.otto.synapse.info.MessageReceiverStatus.FAILED;
 
 @Component
-public class EventSourcingStatusDetailIndicator implements StatusDetailIndicator {
+public class MessageReceiverStatusDetailIndicator implements StatusDetailIndicator {
 
     private final MessageReceiverEndpointInfoProvider provider;
 
     @Autowired
-    public EventSourcingStatusDetailIndicator(final MessageReceiverEndpointInfoProvider provider) {
+    public MessageReceiverStatusDetailIndicator(final MessageReceiverEndpointInfoProvider provider) {
         this.provider = provider;
     }
 
@@ -35,7 +35,7 @@ public class EventSourcingStatusDetailIndicator implements StatusDetailIndicator
                 .collect(Collectors.toList());
     }
 
-    private Status statusOf(final MessageEndpointStatus status) {
+    private Status statusOf(final MessageReceiverStatus status) {
         return status != FAILED ? Status.OK : Status.ERROR;
     }
 

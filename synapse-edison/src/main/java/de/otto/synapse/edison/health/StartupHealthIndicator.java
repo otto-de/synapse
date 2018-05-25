@@ -1,18 +1,21 @@
 package de.otto.synapse.edison.health;
 
-import de.otto.synapse.edison.provider.MessageReceiverEndpointInfoProvider;
-import de.otto.synapse.info.MessageEndpointStatus;
-import de.otto.synapse.info.MessageReceiverEndpointInfo;
+import de.otto.synapse.eventsource.EventSource;
+import de.otto.synapse.info.MessageReceiverNotification;
+import de.otto.synapse.info.MessageReceiverStatus;
+import io.netty.util.internal.ConcurrentSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.stream.Collectors;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toSet;
 import static org.springframework.boot.actuate.health.Health.*;
 
@@ -28,20 +31,37 @@ import static org.springframework.boot.actuate.health.Health.*;
         matchIfMissing = true)
 public class StartupHealthIndicator implements HealthIndicator {
 
-    private MessageReceiverEndpointInfoProvider provider;
+    public static final long TEN_SECONDS = 10000L;
+    private Set<String> allChannels;
+    private Set<String> healthyChannels;
 
     @Autowired
-    public StartupHealthIndicator(final MessageReceiverEndpointInfoProvider provider) {
-        this.provider = provider;
+    public StartupHealthIndicator(final Optional<List<EventSource>> eventSources) {
+        allChannels = eventSources.orElse(emptyList())
+                .stream()
+                .map(EventSource::getChannelName)
+                .collect(toSet());
+        healthyChannels = new ConcurrentSet<>();
     }
 
-    @Override
+    @EventListener
+    public void on(final MessageReceiverNotification notification) {
+        if (notification.getStatus() == MessageReceiverStatus.RUNNING) {
+            notification.getChannelDurationBehind().ifPresent(channelDurationBehind -> {
+                if (channelDurationBehind.getDurationBehind().toMillis() <= TEN_SECONDS) {
+                    healthyChannels.add(notification.getChannelName());
+                }
+            });
+        }
+    }
+
+        @Override
     public Health health() {
         final Builder healthBuilder;
-        if (provider.allChannelsStarted()) {
+        if (healthyChannels.containsAll(allChannels)) {
             healthBuilder = up().withDetail("message", "All channels up to date");
         } else {
-            healthBuilder = down().withDetail("message", "Channels not yet up to date");
+            healthBuilder = down().withDetail("message", "Channel(s) not yet up to date");
         }
         return healthBuilder.build();
     }

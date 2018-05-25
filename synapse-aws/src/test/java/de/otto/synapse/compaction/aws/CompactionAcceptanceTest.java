@@ -104,7 +104,7 @@ public class CompactionAcceptanceTest {
         //when write additional data with partially existing ids
         writeToStream(INTEGRATION_TEST_STREAM, "integrationtest-stream.txt");
 
-        //Write an empty object for key 100000 - should be removed during compaction
+        //Write an unknown object for key 100000 - should be removed during compaction
         kinesisClient.putRecord(PutRecordRequest.builder().streamName(INTEGRATION_TEST_STREAM).partitionKey("100000").data(EMPTY_BYTE_BUFFER).build());
 
 

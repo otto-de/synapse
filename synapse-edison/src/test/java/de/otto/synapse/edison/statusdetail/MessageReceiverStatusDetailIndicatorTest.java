@@ -10,43 +10,44 @@ import org.junit.Test;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static de.otto.synapse.info.MessageEndpointStatus.*;
+import static de.otto.synapse.info.MessageReceiverEndpointInfo.builder;
+import static de.otto.synapse.info.MessageReceiverStatus.*;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class EventSourcingStatusDetailIndicatorTest {
+public class MessageReceiverStatusDetailIndicatorTest {
 
-    public EventSourcingStatusDetailIndicatorTest() {
+    public MessageReceiverStatusDetailIndicatorTest() {
     }
 
-    private EventSourcingStatusDetailIndicator detailIndicatorWith(final MessageReceiverEndpointInfo... infos) {
+    private MessageReceiverStatusDetailIndicator detailIndicatorWith(final MessageReceiverEndpointInfo... infos) {
         MessageReceiverEndpointInfoProvider provider = mock(MessageReceiverEndpointInfoProvider.class);
         MessageReceiverEndpointInfos endpointInfos = mock(MessageReceiverEndpointInfos.class);
         when(endpointInfos.stream()).thenReturn(Stream.of(infos));
         when(provider.getInfos()).thenReturn(endpointInfos);
-        return new EventSourcingStatusDetailIndicator(provider);
+        return new MessageReceiverStatusDetailIndicator(provider);
     }
 
     @Test
-    public void shouldBeOkForSnapshotStarting() {
+    public void shouldBeOkForStartingMessageLog() {
         //given
         //when
-        EventSourcingStatusDetailIndicator eventSourcingStatusDetailIndicator = detailIndicatorWith(
-                MessageReceiverEndpointInfo.builder()
+        MessageReceiverStatusDetailIndicator indicator = detailIndicatorWith(
+                builder()
                         .withChannelName("myChannelName")
-                        .withMessage("Loading snapshot")
+                        .withMessage("some message")
                         .withStatus(STARTING)
                         .build()
         );
 
         //then
-        List<StatusDetail> statusDetail = eventSourcingStatusDetailIndicator.statusDetails();
+        List<StatusDetail> details = indicator.statusDetails();
 
-        assertThat(statusDetail.get(0).getStatus(), is(Status.OK));
-        assertThat(statusDetail.get(0).getName(), is("myChannelName"));
-        assertThat(statusDetail.get(0).getMessage(), is("Loading snapshot"));
+        assertThat(details.get(0).getStatus(), is(Status.OK));
+        assertThat(details.get(0).getName(), is("myChannelName"));
+        assertThat(details.get(0).getMessage(), is("some message"));
     }
 
     @Test
@@ -54,29 +55,29 @@ public class EventSourcingStatusDetailIndicatorTest {
         //given
 
         //when
-        EventSourcingStatusDetailIndicator eventSourcingStatusDetailIndicator = detailIndicatorWith(
-                MessageReceiverEndpointInfo.builder()
+        MessageReceiverStatusDetailIndicator details = detailIndicatorWith(
+                builder()
                         .withChannelName("myChannelName")
                         .withMessage("Kawumm")
                         .withStatus(FAILED)
                         .build(),
-                MessageReceiverEndpointInfo.builder()
+                builder()
                         .withChannelName("myChannelName2")
-                        .withMessage("Loading snapshot")
+                        .withMessage("some message")
                         .withStatus(RUNNING)
                         .build()
 
         );
 
         //then
-        List<StatusDetail> statusDetails = eventSourcingStatusDetailIndicator.statusDetails();
+        List<StatusDetail> statusDetails = details.statusDetails();
 
         assertThat(statusDetails.get(0).getStatus(), is(Status.ERROR));
         assertThat(statusDetails.get(0).getName(), is("myChannelName"));
         assertThat(statusDetails.get(0).getMessage(), is("Kawumm"));
         assertThat(statusDetails.get(1).getStatus(), is(Status.OK));
         assertThat(statusDetails.get(1).getName(), is("myChannelName2"));
-        assertThat(statusDetails.get(1).getMessage(), is("Loading snapshot"));
+        assertThat(statusDetails.get(1).getMessage(), is("some message"));
     }
 
 }

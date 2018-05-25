@@ -64,9 +64,8 @@ public class ExampleConfiguration implements MessageEndpointConfigurer {
 
     @Bean
     public EventSourceBuilder defaultEventSourceBuilder(final MessageInterceptorRegistry interceptorRegistry,
-                                                        final ApplicationEventPublisher eventPublisher,
                                                         final InMemoryChannels inMemoryChannels) {
-        return new InMemoryEventSourceBuilder(interceptorRegistry, inMemoryChannels, eventPublisher);
+        return new InMemoryEventSourceBuilder(interceptorRegistry, inMemoryChannels);
     }
 
     @Bean

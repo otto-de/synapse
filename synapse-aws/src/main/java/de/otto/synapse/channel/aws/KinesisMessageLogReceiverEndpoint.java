@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import de.otto.synapse.channel.ChannelDurationBehind;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
-import de.otto.synapse.info.MessageEndpointStatus;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.info.MessageReceiverStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -19,19 +19,20 @@ import software.amazon.awssdk.services.kinesis.model.Shard;
 
 import javax.annotation.Nonnull;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
+import static de.otto.synapse.channel.ChannelDurationBehind.copyOf;
+import static de.otto.synapse.channel.ChannelDurationBehind.unknown;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
-import static de.otto.synapse.channel.ChannelPosition.merge;
-import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.logging.LogHelper.info;
 import static java.util.Objects.isNull;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -48,6 +49,7 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
     private final Clock clock;
     private List<KinesisShard> kinesisShards;
     private ExecutorService executorService;
+    private final AtomicReference<ChannelDurationBehind> durationBehind = new AtomicReference<>();
 
     public KinesisMessageLogReceiverEndpoint(final String channelName,
                                              final KinesisClient kinesisClient,
@@ -72,14 +74,17 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
     public ChannelPosition consumeUntil(final @Nonnull ChannelPosition startFrom,
                                         final @Nonnull Instant until) {
         try {
+            publishEvent(MessageReceiverStatus.STARTING, "Consuming messages from Kinesis.", null);
             final long t1 = System.currentTimeMillis();
             if (isNull(executorService)) {
                initExecutorService();
             }
-            final ChannelPosition currentChannelPosition = merge(
-                    channelPosition(kinesisShards.stream().map(shard -> fromHorizon(shard.getShardId())).collect(toList())),
-                    startFrom);
-            publishEvent(currentChannelPosition, MessageEndpointStatus.STARTED, "Received shards from Kinesis.");
+            final List<String> shards = kinesisShards.stream()
+                    .map(KinesisShard::getShardId)
+                    .collect(toList());
+            durationBehind.set(unknown(shards));
+
+            publishEvent(MessageReceiverStatus.STARTED, "Received shards from Kinesis.", null);
 
             final List<CompletableFuture<ShardPosition>> futureShardPositions = kinesisShards
                     .stream()
@@ -97,9 +102,11 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
                     .collect(toList());
             final long t2 = System.currentTimeMillis();
             info(LOG, ImmutableMap.of("runtime", (t2-t1)), "Consume events from Kinesis", null);
+            publishEvent(MessageReceiverStatus.FINISHED, "Finished consuming messages from Kinesis", null);
             return channelPosition(shardPositions);
         } catch (final RuntimeException e) {
             LOG.error("Failed to consume from Kinesis stream {}: {}", getChannelName(), e.getMessage());
+            publishEvent(MessageReceiverStatus.FAILED, "Failed to consume messages from Kinesis: " + e.getMessage(), null);
             // When an exception occurs in a completable future's thread, other threads continue running.
             // Stop all before proceeding.
             stop();
@@ -132,10 +139,10 @@ public class KinesisMessageLogReceiverEndpoint extends MessageLogReceiverEndpoin
                                        final ShardPosition startFrom,
                                        final Instant until) {
         try {
-
-            // TODO: ShardPosition zur ChannelPosition mergen??
-
-            final Consumer<ShardPosition> publishNotificationCallback = shardPosition -> publishEvent(channelPosition(shardPosition), MessageEndpointStatus.RUNNING, "Reading from kinesis shard.");
+            final Consumer<Duration> publishNotificationCallback = duration -> {
+                durationBehind.updateAndGet(behind -> copyOf(behind).with(shard.getShardId(), duration).build());
+                publishEvent(MessageReceiverStatus.RUNNING, "Reading from kinesis shard.", durationBehind.get());
+            };
             return shard.consumeShard(startFrom, until, getMessageDispatcher(), publishNotificationCallback);
         } catch (final RuntimeException e) {
             LOG.error("Failed to consume from Kinesis shard {}: {}", getChannelName(), shard.getShardId(), e.getMessage());

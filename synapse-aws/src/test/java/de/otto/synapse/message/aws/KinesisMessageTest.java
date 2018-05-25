@@ -5,7 +5,6 @@ import org.junit.Test;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
 import java.nio.ByteBuffer;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -14,7 +13,6 @@ import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
 
 public class KinesisMessageTest {
 
@@ -29,13 +27,11 @@ public class KinesisMessageTest {
                 .build();
         final Message<String> message = kinesisMessage(
                 "some-shard",
-                Duration.ofMillis(42L),
                 record);
         assertThat(message.getKey(), is("42"));
         assertThat(message.getPayload(), is("ßome dätä"));
         assertThat(message.getHeader().getArrivalTimestamp(), is(now));
-        assertThat(message.getHeader().getDurationBehind(), is(Optional.of(Duration.ofMillis(42L))));
-        assertThat(message.getHeader().getShardPosition(), is(Optional.of(fromPosition("some-shard", Duration.ofMillis(42L), "00001"))));
+        assertThat(message.getHeader().getShardPosition(), is(Optional.of(fromPosition("some-shard", "00001"))));
     }
 
 }

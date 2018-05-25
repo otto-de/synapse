@@ -3,7 +3,6 @@ package de.otto.synapse.eventsource;
 import de.otto.synapse.channel.InMemoryChannel;
 import de.otto.synapse.channel.InMemoryChannels;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import org.springframework.context.ApplicationEventPublisher;
 
 /**
  * A builder used to build in-memory implementations of an {@link EventSource}.
@@ -15,15 +14,12 @@ public class InMemoryEventSourceBuilder implements EventSourceBuilder {
 
     private final MessageInterceptorRegistry interceptorRegistry;
     private final InMemoryChannels inMemoryChannels;
-    private final ApplicationEventPublisher eventPublisher;
 
     public InMemoryEventSourceBuilder(final MessageInterceptorRegistry interceptorRegistry,
-                                      final InMemoryChannels inMemoryChannels,
-                                      final ApplicationEventPublisher eventPublisher) {
+                                      final InMemoryChannels inMemoryChannels) {
 
         this.interceptorRegistry = interceptorRegistry;
         this.inMemoryChannels = inMemoryChannels;
-        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -31,7 +27,7 @@ public class InMemoryEventSourceBuilder implements EventSourceBuilder {
                                         final String channelName) {
         final InMemoryChannel channel = inMemoryChannels.getChannel(channelName);
         channel.registerInterceptorsFrom(interceptorRegistry);
-        return new InMemoryEventSource(name, channel, eventPublisher);
+        return new InMemoryEventSource(name, channel);
 
     }
 }

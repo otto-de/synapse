@@ -16,16 +16,12 @@ import software.amazon.awssdk.services.kinesis.model.*;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 
 import static de.otto.synapse.channel.ShardPosition.*;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
-import static java.time.Duration.ZERO;
-import static java.time.Duration.ofMillis;
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -60,7 +56,7 @@ public class KinesisShardTest {
     }
 
     @Test
-    public void shouldReturnTrimHorizonShardIteratorWhenStartPositionIsZero() {
+    public void shouldReturnTrimHorizonShardIteratorWhenStartingAtHorizon() {
         // when
         KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromHorizon("someShard"));
 
@@ -88,7 +84,7 @@ public class KinesisShardTest {
                             .build();
                 });
 
-        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromPosition("someShard", ZERO, "4711"));
+        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromPosition("someShard", "4711"));
 
         // then
         assertThat(iterator.getId(), is("someShardIterator"));
@@ -104,7 +100,7 @@ public class KinesisShardTest {
     @Test
     public void shouldReturnAfterSequenceNumberIterator() {
         // when
-        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromPosition("someShard", ZERO, "1"));
+        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromPosition("someShard", "1"));
 
         // then
         assertThat(iterator.getId(), is("someShardIterator"));
@@ -122,7 +118,7 @@ public class KinesisShardTest {
     public void shouldReturnAtTimestampIterator() {
         // when
         final Instant now = now();
-        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromTimestamp("someShard", ZERO, now));
+        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromTimestamp("someShard", now));
 
         // then
         assertThat(iterator.getId(), is("someShardIterator"));
@@ -138,7 +134,7 @@ public class KinesisShardTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void shouldConsumeSingleRecordSetForStopAlwaysCondition() {
+    public void shouldConsumeSingleRecordSet() {
         final Instant now = now();
         final Instant future = now.plus(1, SECONDS);
         // given
@@ -163,8 +159,8 @@ public class KinesisShardTest {
         final ShardPosition shardPosition = kinesisShard.consumeShard(fromHorizon("someShard"), now, consumer, (x) -> {});
 
         // then
-        verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record1));
-        verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record2));
+        verify(consumer).accept(kinesisMessage("someShard", record1));
+        verify(consumer).accept(kinesisMessage("someShard", record2));
         verifyNoMoreInteractions(consumer);
 
         assertThat(shardPosition.position(), is("2"));
@@ -198,8 +194,8 @@ public class KinesisShardTest {
         final ShardPosition shardPosition = kinesisShard.consumeShard(fromHorizon("someShard"), now, consumer, (x) -> {});
 
         // then
-        verify(consumer).accept(message("first", responseHeader(fromPosition("someShard", ofMillis(1234L), "1"), future), "intercepted"));
-        verify(consumer).accept(message("second", responseHeader(fromPosition("someShard", ofMillis(1234L), "2"), future), "intercepted"));
+        verify(consumer).accept(message("first", responseHeader(fromPosition("someShard", "1"), future), "intercepted"));
+        verify(consumer).accept(message("second", responseHeader(fromPosition("someShard", "2"), future), "intercepted"));
         verifyNoMoreInteractions(consumer);
 
         assertThat(shardPosition.position(), is("2"));
@@ -237,7 +233,7 @@ public class KinesisShardTest {
         final ShardPosition shardPosition = kinesisShard.consumeShard(fromHorizon("someShard"), now, consumer, (x) -> {});
 
         // then
-        verify(consumer).accept(message("second", responseHeader(fromPosition("someShard", ofMillis(1234L), "2"), future), "intercepted"));
+        verify(consumer).accept(message("second", responseHeader(fromPosition("someShard", "2"), future), "intercepted"));
         verifyNoMoreInteractions(consumer);
 
         assertThat(shardPosition.position(), is("2"));
@@ -272,8 +268,8 @@ public class KinesisShardTest {
         final ShardPosition shardPosition = kinesisShard.consumeShard(fromHorizon("someShard"), now, consumer, (x) -> {});
 
         // then
-        verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record1));
-        verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record2));
+        verify(consumer).accept(kinesisMessage("someShard", record1));
+        verify(consumer).accept(kinesisMessage("someShard", record2));
         verifyNoMoreInteractions(consumer);
 
         assertThat(shardPosition.position(), is("2"));
@@ -309,7 +305,7 @@ public class KinesisShardTest {
         kinesisShard.consumeShard(fromHorizon("someShard"), now, consumer, callback);
 
         // then
-        verify(callback).accept(fromPosition("someShard", ofMillis(1234L), "2"));
+        verify(callback).accept(Duration.ofMillis(1234L));
         verifyNoMoreInteractions(callback);
     }
 
@@ -327,10 +323,10 @@ public class KinesisShardTest {
         // when
         kinesisShard.stop();
         final Consumer callback = mock(Consumer.class);
-        kinesisShard.consumeShard(fromPosition("someShard", ofMillis(Long.MAX_VALUE), "2"), now().minus(1, MILLIS), consumer, callback);
+        kinesisShard.consumeShard(fromPosition("someShard", "2"), now().minus(1, MILLIS), consumer, callback);
 
         // then
-        verify(callback).accept(fromPosition("someShard", ofMillis(1234L), "2"));
+        verify(callback).accept(Duration.ofMillis(1234L));
         verifyNoMoreInteractions(callback);
     }
 
@@ -385,14 +381,14 @@ public class KinesisShardTest {
                 .build();
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
 
-        final Message<String> kinesisMessage = kinesisMessage("someShard", ofMillis(1234L), record1);
+        final Message<String> kinesisMessage = kinesisMessage("someShard", record1);
         doThrow(new RuntimeException("forced exception for test")).when(consumer).accept(kinesisMessage);
 
         // when
         kinesisShard.consumeShard(fromHorizon("someShard"), now, consumer, (x) -> {});
 
         //then
-        verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record1));
-        verify(consumer).accept(kinesisMessage("someShard", ofMillis(1234L), record2));
+        verify(consumer).accept(kinesisMessage("someShard", record1));
+        verify(consumer).accept(kinesisMessage("someShard", record2));
     }
 }

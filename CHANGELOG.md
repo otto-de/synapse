@@ -1,5 +1,19 @@
 # Release Notes
 
+## 0.6.6
+* Removed `Predicate` from `EventSource` and `MessageLogReceiverEndpoint` interfaces and
+  replaced it by `consumeUntil()` methods taking an `Instant`as a parameter to stop
+  message retrieval at a specified timestamp.
+* Removed `durationBehind` from channel- and shard-positions.
+* Introduced type `ChannelDurationBehind` that is used in notifications to announce the duration that consumers are 
+  behind of the channel head position.   
+* Renamed `EventSourcingHealthIndicator` to `MessageReceiverEndpointHealthIndicator`
+* Introduced `SnapshotReaderHealthIndicator`  
+* Renamed `EventSourcingStatusDetailIndicator` to `MessageReceiverStatusDetailIndicator`
+* Introduced `SnapshotStatusDetailIndicator`
+* Refactored eventsource notifications and separated them into `SnapshotReaderNotification` and 
+  `MessageReceiverNotification`.
+
 ## 0.6.5
 * Added `StartupHealthIndicator` that is unhealthy until all EventSources are (almost) up to date.
 * Added possibility to consume MessageLogs from timestamp

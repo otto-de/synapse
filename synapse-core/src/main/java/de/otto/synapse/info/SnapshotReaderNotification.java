@@ -1,65 +1,70 @@
 package de.otto.synapse.info;
 
-import de.otto.synapse.channel.ChannelPosition;
-
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.time.Instant;
 import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
-public class MessageEndpointNotification {
+public class SnapshotReaderNotification {
 
-    private ChannelPosition channelPosition;
     private String channelName;
-    private MessageEndpointStatus status;
+    private SnapshotReaderStatus status;
     private String message;
+    private Instant snapshotTimestamp;
 
-    protected MessageEndpointNotification(Builder builder) {
-        channelPosition = requireNonNull(builder.channelPosition);
+    protected SnapshotReaderNotification(Builder builder) {
         channelName = requireNonNull(builder.channelName);
         status = requireNonNull(builder.status);
         message = requireNonNull(builder.message);
+        snapshotTimestamp = builder.snapshotTimestamp;
     }
 
-    public ChannelPosition getChannelPosition() {
-        return channelPosition;
-    }
-
+    @Nonnull
     public String getChannelName() {
         return channelName;
     }
 
-    public MessageEndpointStatus getStatus() {
+    @Nonnull
+    public SnapshotReaderStatus getStatus() {
         return status;
     }
 
+    @Nonnull
     public String getMessage() {
         return message;
+    }
+
+    @Nullable
+    public Instant getSnapshotTimestamp() {
+        return snapshotTimestamp;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        MessageEndpointNotification that = (MessageEndpointNotification) o;
-        return Objects.equals(channelPosition, that.channelPosition) &&
-                Objects.equals(channelName, that.channelName) &&
+        SnapshotReaderNotification that = (SnapshotReaderNotification) o;
+        return Objects.equals(channelName, that.channelName) &&
                 status == that.status &&
-                Objects.equals(message, that.message);
+                Objects.equals(message, that.message) &&
+                Objects.equals(snapshotTimestamp, that.snapshotTimestamp);
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(channelPosition, channelName, status, message);
+        return Objects.hash(channelName, status, message, snapshotTimestamp);
     }
 
     @Override
     public String toString() {
-        return "MessageEndpointNotification{" +
-                "channelPosition=" + channelPosition +
-                ", channelName='" + channelName + '\'' +
+        return "SnapshotReaderNotification{" +
+                "channelName='" + channelName + '\'' +
                 ", status=" + status +
                 ", message='" + message + '\'' +
+                ", snapshotTimestamp=" + snapshotTimestamp +
                 '}';
     }
 
@@ -67,26 +72,20 @@ public class MessageEndpointNotification {
         return new Builder();
     }
 
-    public static Builder builder(MessageEndpointNotification copy) {
+    public static Builder builder(SnapshotReaderNotification copy) {
         Builder builder = new Builder();
-        builder.channelPosition = copy.getChannelPosition();
         builder.channelName = copy.getChannelName();
         builder.status = copy.getStatus();
         return builder;
     }
 
     public static class Builder {
-        private ChannelPosition channelPosition = ChannelPosition.fromHorizon();
         private String channelName = "";
-        private MessageEndpointStatus status;
+        private SnapshotReaderStatus status;
         private String message = "";
+        private Instant snapshotTimestamp;
 
         protected Builder() {
-        }
-
-        public Builder withChannelPosition(ChannelPosition val) {
-            channelPosition = val;
-            return this;
         }
 
         public Builder withChannelName(String val) {
@@ -94,7 +93,7 @@ public class MessageEndpointNotification {
             return this;
         }
 
-        public Builder withStatus(MessageEndpointStatus val) {
+        public Builder withStatus(SnapshotReaderStatus val) {
             status = val;
             return this;
         }
@@ -104,8 +103,13 @@ public class MessageEndpointNotification {
             return this;
         }
 
-        public MessageEndpointNotification build() {
-            return new MessageEndpointNotification(this);
+        public Builder withSnapshotTimestamp(final Instant snapshotTimestamp) {
+            this.snapshotTimestamp = snapshotTimestamp;
+            return this;
+        }
+
+        public SnapshotReaderNotification build() {
+            return new SnapshotReaderNotification(this);
         }
     }
 }

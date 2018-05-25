@@ -42,7 +42,7 @@ public final class InterceptorChain implements MessageInterceptor {
     private final List<MessageInterceptor> interceptors;
 
     /**
-     * Creates an empty InterceptorChain.
+     * Creates an unknown InterceptorChain.
      */
     public InterceptorChain() {
         this.interceptors = new CopyOnWriteArrayList<>();

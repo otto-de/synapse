@@ -1,8 +1,7 @@
 package de.otto.synapse.info;
 
-import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ChannelDurationBehind;
 
-import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -12,15 +11,14 @@ public class MessageReceiverEndpointInfo {
 
     private final String channelName;
     private final String message;
-    private final MessageEndpointStatus status;
+    private final MessageReceiverStatus status;
+    private final Optional<ChannelDurationBehind> durationBehind;
 
-    private final Optional<ChannelPosition> channelPosition;
-
-    public MessageReceiverEndpointInfo(Builder builder) {
+    private MessageReceiverEndpointInfo(Builder builder) {
         this.message = requireNonNull(builder.message);
         this.status = requireNonNull(builder.status);
         this.channelName = requireNonNull(builder.channelName);
-        this.channelPosition = Optional.ofNullable(builder.channelPosition);
+        this.durationBehind = Optional.ofNullable(builder.channelDurationBehind);
     }
 
     public static Builder builder() {
@@ -35,12 +33,12 @@ public class MessageReceiverEndpointInfo {
         return message;
     }
 
-    public MessageEndpointStatus getStatus() {
+    public MessageReceiverStatus getStatus() {
         return status;
     }
 
-    public Optional<ChannelPosition> getChannelPosition() {
-        return channelPosition;
+    public Optional<ChannelDurationBehind> getDurationBehind() {
+        return durationBehind;
     }
 
     @Override
@@ -49,6 +47,7 @@ public class MessageReceiverEndpointInfo {
                 "channelName='" + channelName + '\'' +
                 ", message='" + message + '\'' +
                 ", status=" + status +
+                ", durationBehind=" + durationBehind +
                 '}';
     }
 
@@ -59,12 +58,14 @@ public class MessageReceiverEndpointInfo {
         MessageReceiverEndpointInfo that = (MessageReceiverEndpointInfo) o;
         return Objects.equals(channelName, that.channelName) &&
                 Objects.equals(message, that.message) &&
-                status == that.status;
+                status == that.status &&
+                Objects.equals(durationBehind, that.durationBehind);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(channelName, message, status);
+
+        return Objects.hash(channelName, message, status, durationBehind);
     }
 
     public static Builder builder(MessageReceiverEndpointInfo info) {
@@ -75,29 +76,29 @@ public class MessageReceiverEndpointInfo {
 
         private String channelName;
         private String message;
-        private MessageEndpointStatus status;
-        private ChannelPosition channelPosition;
+        private MessageReceiverStatus status;
+        private ChannelDurationBehind channelDurationBehind;
 
         private Builder() {
         }
 
-        public Builder withMessage(String message) {
+        public Builder withMessage(final String message) {
             this.message = message;
             return this;
         }
 
-        public Builder withStatus(MessageEndpointStatus status) {
+        public Builder withStatus(final MessageReceiverStatus status) {
             this.status = status;
             return this;
         }
 
-        public Builder withChannelName(String channelName) {
+        public Builder withChannelName(final String channelName) {
             this.channelName = channelName;
             return this;
         }
 
-        public Builder withChannelPosition(ChannelPosition channelPosition) {
-            this.channelPosition = channelPosition;
+        public Builder withChannelDurationBehind(final ChannelDurationBehind durationBehind) {
+            this.channelDurationBehind = durationBehind;
             return this;
         }
 

@@ -1,6 +1,6 @@
 package de.otto.synapse.info;
 
-public enum MessageEndpointStatus {
+public enum MessageReceiverStatus {
     /**
      * Endpoint is initializing, but not yet running.
      */

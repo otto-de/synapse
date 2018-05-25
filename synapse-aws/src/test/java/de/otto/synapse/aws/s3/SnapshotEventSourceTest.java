@@ -2,9 +2,8 @@ package de.otto.synapse.aws.s3;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.consumer.MessageConsumer;
-import de.otto.synapse.eventsource.aws.SnapshotMessageEndpointNotification;
-import de.otto.synapse.info.MessageEndpointNotification;
-import de.otto.synapse.info.MessageEndpointStatus;
+import de.otto.synapse.info.SnapshotReaderNotification;
+import de.otto.synapse.info.SnapshotReaderStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,8 +16,8 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import java.io.File;
 import java.util.Optional;
 
-import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
-import static org.hamcrest.Matchers.is;
+import static de.otto.synapse.info.SnapshotReaderNotification.builder;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
@@ -81,14 +80,13 @@ public class SnapshotEventSourceTest {
         }
 
         // then
-        MessageEndpointNotification expectedFailedEvent = SnapshotMessageEndpointNotification.builder()
+        SnapshotReaderNotification expectedFailedEvent = builder()
                 .withChannelName(STREAM_NAME)
-                .withStatus(MessageEndpointStatus.FAILED)
-                .withChannelPosition(fromHorizon())
+                .withStatus(SnapshotReaderStatus.FAILED)
                 .withMessage("Failed to load snapshot from S3: boom - simulate exception while loading from S3 (Service: null; Status Code: 0; Request ID: null)")
                 .build();
 
-        ArgumentCaptor<MessageEndpointNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(MessageEndpointNotification.class);
+        ArgumentCaptor<SnapshotReaderNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(SnapshotReaderNotification.class);
         verify(applicationEventPublisher, times(2)).publishEvent(notificationArgumentCaptor.capture());
 
         assertThat(notificationArgumentCaptor.getAllValues().get(1), is(expectedFailedEvent));
@@ -112,7 +110,7 @@ public class SnapshotEventSourceTest {
     }
 
     @Test
-    public void shouldPublishStartingStartedAndFinishEvents() {
+    public void shouldPublishStartingAndFinishEvents() {
         // given
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.empty());
 
@@ -120,27 +118,17 @@ public class SnapshotEventSourceTest {
         snapshotEventSource.consume();
 
         // then
-        MessageEndpointNotification expectedStartEvent = SnapshotMessageEndpointNotification.builder()
+        SnapshotReaderNotification expectedStartEvent = builder()
                 .withChannelName(STREAM_NAME)
-                .withStatus(MessageEndpointStatus.STARTING)
+                .withStatus(SnapshotReaderStatus.STARTING)
                 .withMessage("Retrieve snapshot file from S3.")
-                .withChannelPosition(fromHorizon())
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedStartEvent);
 
-        MessageEndpointNotification expectedStartedEvent = SnapshotMessageEndpointNotification.builder()
+        SnapshotReaderNotification expectedFinishedEvent = builder()
                 .withChannelName(STREAM_NAME)
-                .withStatus(MessageEndpointStatus.STARTED)
-                .withMessage("Loading snapshot.")
-                .withChannelPosition(fromHorizon())
-                .build();
-        verify(applicationEventPublisher).publishEvent(expectedStartedEvent);
-
-        MessageEndpointNotification expectedFinishedEvent = SnapshotMessageEndpointNotification.builder()
-                .withChannelName(STREAM_NAME)
-                .withStatus(MessageEndpointStatus.FINISHED)
+                .withStatus(SnapshotReaderStatus.FINISHED)
                 .withMessage("Finished to load snapshot from S3.")
-                .withChannelPosition(fromHorizon())
                 .build();
         verify(applicationEventPublisher).publishEvent(expectedFinishedEvent);
         verifyNoMoreInteractions(applicationEventPublisher);

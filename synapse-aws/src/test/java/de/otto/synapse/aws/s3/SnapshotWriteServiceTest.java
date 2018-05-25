@@ -28,8 +28,6 @@ import static de.otto.synapse.aws.s3.SnapshotServiceTestUtils.snapshotProperties
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
-import static java.time.Duration.ZERO;
-import static java.time.Duration.ofMillis;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
@@ -86,8 +84,8 @@ public class SnapshotWriteServiceTest {
 
         //when
         ChannelPosition channelPosition = channelPosition(
-                fromPosition("shard1", ofMillis(Long.MAX_VALUE), "1234"),
-                fromPosition("shard2", ofMillis(Long.MAX_VALUE), "abcde"));
+                fromPosition("shard1", "1234"),
+                fromPosition("shard2", "abcde"));
         File snapshot = testee.createSnapshot(STREAM_NAME, channelPosition, stateRepository);
 
         //then
@@ -114,7 +112,7 @@ public class SnapshotWriteServiceTest {
         stateRepository.put("testKey", "testValue1");
         stateRepository.put("testKey2", "testValue2");
 
-        ChannelPosition channelPosition = channelPosition(fromPosition("shard1", ZERO, "1234"), fromPosition("shard2", ZERO, "abcde"));
+        ChannelPosition channelPosition = channelPosition(fromPosition("shard1", "1234"), fromPosition("shard2", "abcde"));
 
         // when
         try {
@@ -134,7 +132,7 @@ public class SnapshotWriteServiceTest {
         StateRepository<String> stateRepository = mock(StateRepository.class);
         when(stateRepository.get(any())).thenThrow(new RuntimeException("forced test exception"));
 
-        ChannelPosition channelPosition = channelPosition(fromPosition("shard1", ZERO, "1234"), fromPosition("shard2", ZERO, "abcde"));
+        ChannelPosition channelPosition = channelPosition(fromPosition("shard1", "1234"), fromPosition("shard2", "abcde"));
 
         // when
         try {

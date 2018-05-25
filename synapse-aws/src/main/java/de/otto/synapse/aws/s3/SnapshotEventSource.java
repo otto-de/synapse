@@ -5,10 +5,8 @@ import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.eventsource.EventSource;
-import de.otto.synapse.eventsource.aws.SnapshotMessageEndpointNotification;
-import de.otto.synapse.info.MessageEndpointNotification;
-import de.otto.synapse.info.MessageEndpointStatus;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.info.SnapshotReaderNotification;
+import de.otto.synapse.info.SnapshotReaderStatus;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -16,8 +14,9 @@ import javax.annotation.Nonnull;
 import java.io.File;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.function.Predicate;
 
+import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
+import static de.otto.synapse.info.SnapshotReaderStatus.*;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class SnapshotEventSource implements EventSource {
@@ -73,25 +72,25 @@ public class SnapshotEventSource implements EventSource {
         Instant snapshotTimestamp = null;
 
         try {
-            publishEvent(startFrom, MessageEndpointStatus.STARTING, "Retrieve snapshot file from S3.", null);
+            publishEvent(STARTING, "Retrieve snapshot file from S3.", null);
 
             Optional<File> snapshotFile = snapshotReadService.retrieveLatestSnapshot(this.getChannelName());
-                publishEvent(startFrom, MessageEndpointStatus.STARTED, "Loading snapshot.", null);
             if (snapshotFile.isPresent()) {
                 snapshotTimestamp = SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName());
+                publishEvent(STARTED, "Retrieve snapshot file from S3.", snapshotTimestamp);
                 snapshotStreamPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), getMessageDispatcher());
             } else {
-                snapshotStreamPosition = ChannelPosition.fromHorizon();
+                snapshotStreamPosition = fromHorizon();
             }
         } catch (RuntimeException e) {
-            publishEvent(ChannelPosition.fromHorizon(), MessageEndpointStatus.FAILED, "Failed to load snapshot from S3: " + e.getMessage(), null);
+            publishEvent(FAILED, "Failed to load snapshot from S3: " + e.getMessage(), snapshotTimestamp);
             throw e;
         } finally {
             LOG.info("Finished reading snapshot into Memory");
             snapshotReadService.deleteOlderSnapshots(this.getChannelName());
         }
 
-        publishEvent(snapshotStreamPosition, MessageEndpointStatus.FINISHED, "Finished to load snapshot from S3.", snapshotTimestamp);
+        publishEvent(FINISHED, "Finished to load snapshot from S3.", snapshotTimestamp);
         return snapshotStreamPosition;
     }
 
@@ -105,12 +104,11 @@ public class SnapshotEventSource implements EventSource {
         return false;
     }
 
-    private void publishEvent(ChannelPosition channelPosition, MessageEndpointStatus status, String message, Instant snapshotTimestamp) {
+    private void publishEvent(SnapshotReaderStatus status, String message, Instant snapshotTimestamp) {
         if (eventPublisher != null) {
-            MessageEndpointNotification notification = SnapshotMessageEndpointNotification.builder()
+            SnapshotReaderNotification notification = SnapshotReaderNotification.builder()
                     .withSnapshotTimestamp(snapshotTimestamp)
                     .withChannelName(this.getChannelName())
-                    .withChannelPosition(channelPosition)
                     .withStatus(status)
                     .withMessage(message)
                     .build();

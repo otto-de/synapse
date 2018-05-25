@@ -17,9 +17,8 @@ public class InMemoryEventSourceConfiguration {
 
     @Bean
     public EventSourceBuilder inMemEventSourceBuilder(final MessageInterceptorRegistry interceptorRegistry,
-                                                        final ApplicationEventPublisher eventPublisher,
-                                                        final InMemoryChannels inMemoryChannels) {
-        return new InMemoryEventSourceBuilder(interceptorRegistry, inMemoryChannels, eventPublisher);
+                                                      final InMemoryChannels inMemoryChannels) {
+        return new InMemoryEventSourceBuilder(interceptorRegistry, inMemoryChannels);
     }
 
 

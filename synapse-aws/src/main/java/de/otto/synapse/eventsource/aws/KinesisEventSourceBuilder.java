@@ -39,7 +39,7 @@ public class KinesisEventSourceBuilder implements EventSourceBuilder {
         LOG.info("Building '{}' as KinesisEventSource", channelName);
         final MessageLogReceiverEndpoint messageLog = new KinesisMessageLogReceiverEndpoint(channelName, kinesisClient, objectMapper, eventPublisher);
         messageLog.registerInterceptorsFrom(interceptorRegistry);
-        return new KinesisEventSource(name, messageLog, eventPublisher);
+        return new KinesisEventSource(name, messageLog);
     }
 
 }

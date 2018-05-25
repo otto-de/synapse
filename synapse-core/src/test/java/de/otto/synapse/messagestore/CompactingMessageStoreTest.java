@@ -21,8 +21,6 @@ import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
-import static java.time.Duration.ZERO;
-import static java.time.Duration.ofMillis;
 import static java.time.Instant.now;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.CompletableFuture.allOf;
@@ -78,7 +76,7 @@ public class CompactingMessageStoreTest {
                 final String shardId = valueOf(shard);
                 completion[shard] = CompletableFuture.runAsync(() -> {
                     for (int pos = 0; pos < 1000; ++pos) {
-                        messageStore.add(message(valueOf(pos), responseHeader(fromPosition("shard-" + shardId, ZERO, valueOf(pos)), now()), "some payload"));
+                        messageStore.add(message(valueOf(pos), responseHeader(fromPosition("shard-" + shardId, valueOf(pos)), now()), "some payload"));
                         assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).startFrom(), is(StartFrom.POSITION));
                         assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).position(), is(valueOf(pos)));
                     }
@@ -102,7 +100,7 @@ public class CompactingMessageStoreTest {
         final MessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<5; ++i) {
             for (int pos = 0; pos < 10000; ++pos) {
-                messageStore.add(message(valueOf(pos), responseHeader(fromPosition("some-shard", ZERO, valueOf(pos)), now()), "some payload"));
+                messageStore.add(message(valueOf(pos), responseHeader(fromPosition("some-shard", valueOf(pos)), now()), "some payload"));
                 assertThat(messageStore.getLatestChannelPosition().shard("some-shard").startFrom(), is(StartFrom.POSITION));
                 assertThat(messageStore.getLatestChannelPosition().shard("some-shard").position(), is(valueOf(pos)));
             }
@@ -133,18 +131,21 @@ public class CompactingMessageStoreTest {
         for (int i=0; i<10; ++i) {
             messageStore.add(message(
                     valueOf(i),
-                    responseHeader(fromPosition("foo", ofMillis(42), valueOf(i)), yesterday),
+                    responseHeader(fromPosition("foo", valueOf(i)), yesterday),
                     "some foo payload"));
             messageStore.add(message(
                     valueOf(i),
-                    responseHeader(fromPosition("bar", ofMillis(44), valueOf(i)), yesterday),
+                    responseHeader(fromPosition("bar", valueOf(i)), yesterday),
                     "some bar payload"));
         }
         for (int i=0; i<10; ++i) {
-            messageStore.add(message(valueOf(i), responseHeader(fromPosition("foo", ZERO, valueOf(20 + i)), now), null));
-            messageStore.add(message(valueOf(i), responseHeader(fromPosition("bar", ZERO, valueOf(42 + i)), now), null));
+            messageStore.add(message(valueOf(i), responseHeader(fromPosition("foo", valueOf(20 + i)), now), null));
+            messageStore.add(message(valueOf(i), responseHeader(fromPosition("bar", valueOf(42 + i)), now), null));
         }
-        assertThat(messageStore.getLatestChannelPosition(), is(channelPosition(fromPosition("foo", ZERO, "29"), fromPosition("bar", ZERO, "51"))));
+        assertThat(messageStore.getLatestChannelPosition(), is(channelPosition(
+                fromPosition("foo", "29"),
+                fromPosition("bar", "51")))
+        );
         assertThat(messageStore.size(), is(0));
         assertThat(messageStore.stream().count(), is(0L));
     }

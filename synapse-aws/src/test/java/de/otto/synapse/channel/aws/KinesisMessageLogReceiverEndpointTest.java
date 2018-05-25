@@ -6,7 +6,7 @@ import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.info.MessageEndpointNotification;
+import de.otto.synapse.info.MessageReceiverNotification;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.TestClock;
 import org.junit.Before;
@@ -22,21 +22,18 @@ import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import static de.otto.synapse.channel.ChannelDurationBehind.channelDurationBehind;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
+import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
-import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.aws.KinesisShardIterator.POISON_SHARD_ITER;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingReceiverChannelsWith;
-import static de.otto.synapse.info.MessageEndpointStatus.RUNNING;
-import static de.otto.synapse.info.MessageEndpointStatus.STARTED;
-import static java.time.Instant.now;
-import static java.time.temporal.ChronoUnit.HOURS;
-import static java.time.temporal.ChronoUnit.MILLIS;
+import static de.otto.synapse.info.MessageReceiverStatus.*;
+import static java.time.Duration.ZERO;
+import static java.time.Duration.ofMillis;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -170,7 +167,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog.register(messageConsumer);
 
         // when
-        ChannelPosition finalChannelPosition = kinesisMessageLog.consume(ChannelPosition.fromHorizon());
+        ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon());
 
         // then
         verify(messageConsumer, times(3)).accept(messageArgumentCaptor.capture());
@@ -205,7 +202,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog.register(messageConsumer);
 
         // when
-        final ChannelPosition finalChannelPosition = kinesisMessageLog.consume(ChannelPosition.fromHorizon());
+        final ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon());
 
         // then
         verify(interceptor, atLeast(3)).intercept(any(Message.class));
@@ -226,27 +223,31 @@ public class KinesisMessageLogReceiverEndpointTest {
                 ImmutableList.of(
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", "iter1");
-        ArgumentCaptor<MessageEndpointNotification> eventCaptor = ArgumentCaptor.forClass(MessageEndpointNotification.class);
+        ArgumentCaptor<MessageReceiverNotification> eventCaptor = ArgumentCaptor.forClass(MessageReceiverNotification.class);
         final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
         kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("testStream", kinesisClient, objectMapper,eventPublisher);
         kinesisMessageLog.register(messageConsumer);
 
         // when
-        final ChannelPosition finalChannelPosition = kinesisMessageLog.consume(ChannelPosition.fromHorizon());
+        final ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon());
 
         // then
+        verify(eventPublisher, times(6)).publishEvent(eventCaptor.capture());
+        List<MessageReceiverNotification> events = eventCaptor.getAllValues();
 
-        verify(eventPublisher, times(4)).publishEvent(eventCaptor.capture());
-        List<MessageEndpointNotification> events = eventCaptor.getAllValues();
-
-        assertThat(events.get(0).getStatus(), is(STARTED));
-        assertThat(events.get(0).getChannelPosition(), is(channelPosition(fromHorizon("shard1"))));
-        assertThat(events.get(1).getStatus(), is(RUNNING)); // first emtpy record response, we dont evaluate millis behind latest from record response with zero records
-        assertThat(events.get(1).getChannelPosition(), is(channelPosition(fromHorizon("shard1", Duration.ofMillis(555L)))));
-        assertThat(events.get(2).getStatus(), is(RUNNING));
-        assertThat(events.get(2).getChannelPosition(), is(channelPosition(fromPosition("shard1", Duration.ofMillis(1234L), "sequence-blue"))));
+        assertThat(events.get(0).getStatus(), is(STARTING));
+        assertThat(events.get(0).getChannelDurationBehind().isPresent(), is(false));
+        assertThat(events.get(1).getStatus(), is(STARTED));
+        assertThat(events.get(1).getChannelDurationBehind().isPresent(), is(false));
+        assertThat(events.get(2).getStatus(), is(RUNNING)); // first emtpy record response, we dont evaluate millis behind latest from record response with zero records
+        assertThat(events.get(2).getChannelDurationBehind().orElse(null), is(channelDurationBehind().with("shard1", ofMillis(555L)).build()));
         assertThat(events.get(3).getStatus(), is(RUNNING));
-        assertThat(events.get(3).getChannelPosition(), is(channelPosition(fromPosition("shard1", Duration.ofMillis(0L), "sequence-green"))));
+        assertThat(events.get(3).getChannelDurationBehind().orElse(null), is(channelDurationBehind().with("shard1", ofMillis(1234L)).build()));
+        assertThat(events.get(4).getStatus(), is(RUNNING));
+        assertThat(events.get(4).getChannelDurationBehind().orElse(null), is(channelDurationBehind().with("shard1", ZERO).build()));
+        assertThat(events.get(5).getStatus(), is(FINISHED));
+        assertThat(events.get(5).getChannelDurationBehind().isPresent(), is(false));
+
         assertThat(finalChannelPosition.shard("shard1").position(), is("sequence-green"));
     }
 
@@ -264,10 +265,10 @@ public class KinesisMessageLogReceiverEndpointTest {
 
         // when
         kinesisMessageLog.stop();
-        ChannelPosition finalChannelPosition = kinesisMessageLog.consume(ChannelPosition.fromHorizon());
+        ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon());
 
         // then
-        assertThat(finalChannelPosition, is(channelPosition(fromHorizon("shard1", Duration.ofMillis(555L)))));
+        assertThat(finalChannelPosition, is(channelPosition(fromHorizon("shard1"))));
     }
 
     @Test
@@ -284,7 +285,7 @@ public class KinesisMessageLogReceiverEndpointTest {
 
         // when
         kinesisMessageLog.stop();
-        kinesisMessageLog.consume(ChannelPosition.fromHorizon());
+        kinesisMessageLog.consume(fromHorizon());
 
         // then
         assertThat(kinesisMessageLog.getCurrentKinesisShards().size(), is(1));
@@ -306,7 +307,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog.register(messageConsumer);
 
         // when
-        kinesisMessageLog.consume(ChannelPosition.fromHorizon());
+        kinesisMessageLog.consume(fromHorizon());
     }
 
     @Test
@@ -322,7 +323,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
         kinesisMessageLog.register(messageConsumer);
         try {
-            kinesisMessageLog.consume(ChannelPosition.fromHorizon());
+            kinesisMessageLog.consume(fromHorizon());
         } catch (RuntimeException e) {
             /* ignore */
         }
@@ -336,7 +337,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         describeRecordsForShard("shard1", "iter1");
         describeRecordsForShard("shard2", "iter2");
 
-        kinesisMessageLog.consume(ChannelPosition.fromHorizon());
+        kinesisMessageLog.consume(fromHorizon());
 
         // then
         // 6 because of 2xshard1 + 1xshard2 - the failing-shard2 will not get messages
@@ -420,7 +421,7 @@ public class KinesisMessageLogReceiverEndpointTest {
                 .partitionKey(String.valueOf(nextKey++))
                 .approximateArrivalTimestamp(clock.instant())
                 .data(ByteBuffer.allocateDirect(0))
-                .sequenceNumber("sequence-" + "empty")
+                .sequenceNumber("sequence-" + "unknown")
                 .build();
     }
 

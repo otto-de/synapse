@@ -2,66 +2,47 @@ package de.otto.synapse.channel;
 
 import javax.annotation.Nonnull;
 import java.io.Serializable;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
-import static java.time.Duration.ofMillis;
 import static java.util.Objects.requireNonNull;
 
 public final class ShardPosition implements Serializable {
-    private final static Duration MAX_DURATION = ofMillis(Long.MAX_VALUE);
 
     private final String shardName;
-    private final Duration durationBehind;
     private final String position;
     private final StartFrom startFrom;
     private final Instant timestamp;
 
-    private ShardPosition(final @Nonnull String shardName, final @Nonnull Duration durationBehind, final @Nonnull String position) {
+    private ShardPosition(final @Nonnull String shardName, final @Nonnull String position) {
         this.shardName = requireNonNull(shardName);
-        this.durationBehind = requireNonNull(durationBehind);
         this.position = requireNonNull(position);
         this.timestamp = null;
         this.startFrom = position.isEmpty() ? StartFrom.HORIZON : StartFrom.POSITION;
     }
 
-    private ShardPosition(final @Nonnull String shardName, final @Nonnull Duration durationBehind, final @Nonnull Instant timestamp) {
+    private ShardPosition(final @Nonnull String shardName, final @Nonnull Instant timestamp) {
         this.shardName = requireNonNull(shardName);
-        this.durationBehind = requireNonNull(durationBehind);
         this.position = "";
         this.timestamp = requireNonNull(timestamp);
         this.startFrom = StartFrom.TIMESTAMP;
     }
 
-    public ShardPosition withDurationBehind(final @Nonnull Duration durationBehind) {
-        return timestamp == null
-                ? new ShardPosition(shardName, durationBehind, position)
-                : new ShardPosition(shardName, durationBehind, timestamp);
-    }
-
     @Nonnull
     public static ShardPosition fromHorizon(final @Nonnull String shardName) {
-        return new ShardPosition(shardName, MAX_DURATION, "");
-    }
-
-    @Nonnull
-    public static ShardPosition fromHorizon(final @Nonnull String shardName, final @Nonnull Duration durationBehind) {
-        return new ShardPosition(shardName, durationBehind, "");
+        return new ShardPosition(shardName, "");
     }
 
     @Nonnull
     public static ShardPosition fromPosition(final @Nonnull String shardName,
-                                             final @Nonnull Duration durationBehind,
                                              final @Nonnull String position) {
-        return new ShardPosition(shardName, durationBehind, position);
+        return new ShardPosition(shardName, position);
     }
 
     @Nonnull
     public static ShardPosition fromTimestamp(final @Nonnull String shardName,
-                                              final @Nonnull Duration durationBehind,
                                               final @Nonnull Instant timestamp) {
-        return new ShardPosition(shardName, durationBehind, timestamp);
+        return new ShardPosition(shardName, timestamp);
     }
 
     public String shardName() {
@@ -83,16 +64,10 @@ public final class ShardPosition implements Serializable {
         return startFrom;
     }
 
-    @Nonnull
-    public Duration getDurationBehind() {
-        return durationBehind;
-    }
-
     @Override
     public String toString() {
         return "ShardPosition{" +
                 "shardName='" + shardName + '\'' +
-                ", durationBehind=" + durationBehind +
                 ", position='" + position + '\'' +
                 ", startFrom=" + startFrom +
                 ", timestamp=" + timestamp +
@@ -105,7 +80,6 @@ public final class ShardPosition implements Serializable {
         if (o == null || getClass() != o.getClass()) return false;
         ShardPosition that = (ShardPosition) o;
         return Objects.equals(shardName, that.shardName) &&
-                Objects.equals(durationBehind, that.durationBehind) &&
                 Objects.equals(position, that.position) &&
                 startFrom == that.startFrom &&
                 Objects.equals(timestamp, that.timestamp);
@@ -114,7 +88,7 @@ public final class ShardPosition implements Serializable {
     @Override
     public int hashCode() {
 
-        return Objects.hash(shardName, durationBehind, position, startFrom, timestamp);
+        return Objects.hash(shardName, position, startFrom, timestamp);
     }
 
 }

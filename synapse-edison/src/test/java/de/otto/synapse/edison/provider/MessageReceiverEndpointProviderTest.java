@@ -2,20 +2,20 @@ package de.otto.synapse.edison.provider;
 
 import de.otto.edison.testsupport.util.TestClock;
 import de.otto.synapse.eventsource.EventSource;
-import de.otto.synapse.info.MessageEndpointNotification;
-import de.otto.synapse.info.MessageEndpointStatus;
 import de.otto.synapse.info.MessageReceiverEndpointInfo;
+import de.otto.synapse.info.MessageReceiverNotification;
+import de.otto.synapse.info.MessageReceiverStatus;
 import org.junit.Test;
 
-import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static de.otto.synapse.channel.ChannelPosition.channelPosition;
-import static de.otto.synapse.channel.ShardPosition.fromPosition;
-import static de.otto.synapse.info.MessageEndpointStatus.*;
+import static de.otto.synapse.channel.ChannelDurationBehind.channelDurationBehind;
+import static de.otto.synapse.info.MessageReceiverNotification.builder;
+import static de.otto.synapse.info.MessageReceiverStatus.*;
+import static java.time.Duration.ofHours;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
@@ -42,10 +42,10 @@ public class MessageReceiverEndpointProviderTest {
     @Test
     public void shouldReturnInfoForStartingEndpoint() {
         //given
-        MessageEndpointNotification messageEndpointNotification = createEventSourceNotification("foo", STARTING, "Loading snapshot");
+        MessageReceiverNotification messageEndpointNotification = notificationOf("foo", STARTING, "Loading snapshot").build();
 
         //when
-        provider.onEventSourceNotification(messageEndpointNotification);
+        provider.on(messageEndpointNotification);
 
         //then
         MessageReceiverEndpointInfo info = provider.getInfos().getChannelInfoFor("foo");
@@ -59,12 +59,12 @@ public class MessageReceiverEndpointProviderTest {
     @Test
     public void shouldReturnInfoForTwoStartingEndpoints() {
         //given
-        MessageEndpointNotification firstMessageEndpointNotification = createEventSourceNotification("foo", STARTING, "Loading snapshot");
-        MessageEndpointNotification secondMessageEndpointNotification = createEventSourceNotification("bar", STARTING, "Loading snapshot");
+        MessageReceiverNotification firstMessageEndpointNotification = notificationOf("foo", STARTING, "Loading snapshot").build();
+        MessageReceiverNotification secondMessageEndpointNotification = notificationOf("bar", STARTING, "Loading snapshot").build();
 
         //when
-        provider.onEventSourceNotification(firstMessageEndpointNotification);
-        provider.onEventSourceNotification(secondMessageEndpointNotification);
+        provider.on(firstMessageEndpointNotification);
+        provider.on(secondMessageEndpointNotification);
 
         //then
         MessageReceiverEndpointInfo fooInfo = provider.getInfos().getChannelInfoFor("foo");
@@ -85,15 +85,15 @@ public class MessageReceiverEndpointProviderTest {
         //given
 
         //when
-        provider.onEventSourceNotification(createEventSourceNotification("foo", STARTING, "Loading snapshot"));
-        provider.onEventSourceNotification(createEventSourceNotification("foo", STARTED, "Loading snapshot"));
+        provider.on(notificationOf("foo", STARTING, "Loading snapshot").build());
+        provider.on(notificationOf("foo", STARTED, "Loading snapshot").build());
         testClock.proceed(2, ChronoUnit.SECONDS);
-        provider.onEventSourceNotification(createEventSourceNotification("bar", STARTING, "Loading snapshot"));
-        provider.onEventSourceNotification(createEventSourceNotification("bar", STARTED, "Loading snapshot"));
+        provider.on(notificationOf("bar", STARTING, "Loading snapshot").build());
+        provider.on(notificationOf("bar", STARTED, "Loading snapshot").build());
         testClock.proceed(2, ChronoUnit.SECONDS);
-        provider.onEventSourceNotification(createEventSourceNotification("foo", FINISHED, "Done."));
+        provider.on(notificationOf("foo", FINISHED, "Done.").build());
         testClock.proceed(3, ChronoUnit.SECONDS);
-        provider.onEventSourceNotification(createEventSourceNotification("bar", FINISHED, "Done."));
+        provider.on(notificationOf("bar", FINISHED, "Done.").build());
 
         //then
         MessageReceiverEndpointInfo fooInfo = provider.getInfos().getChannelInfoFor("foo");
@@ -114,10 +114,10 @@ public class MessageReceiverEndpointProviderTest {
         //given
 
         //when
-        provider.onEventSourceNotification(createEventSourceNotification("foo", STARTING, "Loading snapshot"));
-        provider.onEventSourceNotification(createEventSourceNotification("foo", STARTED, "Loading snapshot"));
+        provider.on(notificationOf("foo", STARTING, "Loading snapshot").build());
+        provider.on(notificationOf("foo", STARTED, "Loading snapshot").build());
         testClock.proceed(2, ChronoUnit.SECONDS);
-        provider.onEventSourceNotification(createEventSourceNotification("foo", FAILED, "Kawumm!!!"));
+        provider.on(notificationOf("foo", FAILED, "Kawumm!!!").build());
 
         //then
         MessageReceiverEndpointInfo fooInfo = provider.getInfos().getChannelInfoFor("foo");
@@ -132,16 +132,15 @@ public class MessageReceiverEndpointProviderTest {
         //given
 
         //when
-        provider.onEventSourceNotification(createEventSourceNotification("foo", STARTING, "Loading snapshot"));
-        provider.onEventSourceNotification(createEventSourceNotification("foo", STARTED, "Loading snapshot"));
-        provider.onEventSourceNotification(createEventSourceNotification("foo", RUNNING, "Done."));
+        provider.on(notificationOf("foo", STARTING, "Loading snapshot").build());
+        provider.on(notificationOf("foo", STARTED, "Loading snapshot").build());
+        provider.on(notificationOf("foo", RUNNING, "Done.").build());
 
 
         //then
         MessageReceiverEndpointInfo fooInfo = provider.getInfos().getChannelInfoFor("foo");
 
-        // TODO
-        assertThat(fooInfo.getChannelPosition().get().getDurationBehind(), is(Duration.ofHours(1)));
+        assertThat(fooInfo.getDurationBehind().get().getDurationBehind(), is(ofHours(2)));
     }
 
     @Test
@@ -149,17 +148,16 @@ public class MessageReceiverEndpointProviderTest {
         //given
 
         //when
-        provider.onEventSourceNotification(createEventSourceNotification("foo", STARTING, "Loading snapshot"));
-        provider.onEventSourceNotification(createEventSourceNotification("foo", STARTED, "Loading snapshot"));
-        provider.onEventSourceNotification(createEventSourceNotification("foo", RUNNING, "Running."));
-        provider.onEventSourceNotification(createEventSourceNotification("foo", FINISHED, "Done."));
+        provider.on(notificationOf("foo", STARTING, "Loading snapshot").build());
+        provider.on(notificationOf("foo", STARTED, "Loading snapshot").build());
+        provider.on(notificationOf("foo", RUNNING, "Running.").build());
+        provider.on(notificationOf("foo", FINISHED, "Done.").build());
 
 
         //then
         MessageReceiverEndpointInfo fooInfo = provider.getInfos().getChannelInfoFor("foo");
 
-        // TODO
-        assertThat(fooInfo.getChannelPosition().get().getDurationBehind(), is(Duration.ofHours(1)));
+        assertThat(fooInfo.getDurationBehind().get().getDurationBehind(), is(ofHours(2)));
     }
 
     @Test
@@ -167,15 +165,14 @@ public class MessageReceiverEndpointProviderTest {
         //given
 
         //when
-        provider.onEventSourceNotification(createEventSourceNotification("foo", STARTING, "Loading snapshot"));
-        provider.onEventSourceNotification(createEventSourceNotification("foo", STARTED, "Loading snapshot"));
-        provider.onEventSourceNotification(createEventSourceNotificationBuilder("foo", RUNNING, "running...","first", 2 ).build());
-        provider.onEventSourceNotification(createEventSourceNotificationBuilder("foo", RUNNING, "running...","second", 1 ).build());
+        provider.on(notificationOf("foo", STARTING, "Loading snapshot").build());
+        provider.on(notificationOf("foo", STARTED, "Loading snapshot").build());
+        provider.on(notificationOf("foo", RUNNING, "running...",2, 1 ).build());
 
         //then
         MessageReceiverEndpointInfo fooInfo = provider.getInfos().getChannelInfoFor("foo");
 
-        assertThat(fooInfo.getChannelPosition().get().getDurationBehind(), is(Duration.ofHours(2)));
+        assertThat(fooInfo.getDurationBehind().get().getDurationBehind(), is(ofHours(2)));
     }
 
     @Test
@@ -183,48 +180,57 @@ public class MessageReceiverEndpointProviderTest {
         //given
 
         //when
-        provider.onEventSourceNotification(createEventSourceNotification("foo", STARTING, "Loading snapshot"));
-        provider.onEventSourceNotification(createEventSourceNotification("foo", STARTED, "Loading snapshot"));
-        provider.onEventSourceNotification(createEventSourceNotificationBuilder("foo", RUNNING, "running...","first", 3 ).build());
-        provider.onEventSourceNotification(createEventSourceNotificationBuilder("foo", RUNNING, "running...","first", 2 ).build());
-        provider.onEventSourceNotification(createEventSourceNotificationBuilder("foo", RUNNING, "running...","second", 4 ).build());
-        provider.onEventSourceNotification(createEventSourceNotificationBuilder("foo", RUNNING, "running...","second", 1 ).build());
+        provider.on(notificationOf("foo", STARTING, "Loading snapshot").build());
+        provider.on(notificationOf("foo", STARTED, "Loading snapshot").build());
+        provider.on(notificationOf("foo", RUNNING, "running...",5L, 3L).build());
+        provider.on(notificationOf("foo", RUNNING, "running...",4L, 2L).build());
+        provider.on(notificationOf("foo", RUNNING, "running...",4L, 1L).build());
+        provider.on(notificationOf("foo", RUNNING, "running...",1L, 0L).build());
 
         //then
         MessageReceiverEndpointInfo fooInfo = provider.getInfos().getChannelInfoFor("foo");
 
-        assertThat(fooInfo.getChannelPosition().get().getDurationBehind(), is(Duration.ofHours(2)));
+        assertThat(fooInfo.getDurationBehind().get().getDurationBehind(), is(ofHours(1)));
+        assertThat(fooInfo.getDurationBehind().get(), is(channelDurationBehind()
+                .with("first-shard", ofHours(1L))
+                .with("second-shard", ofHours(0L))
+                .build())
+        );
     }
 
-    private MessageEndpointNotification createEventSourceNotification(final String channelName,
-                                                                      final MessageEndpointStatus status,
-                                                                      final String message) {
-        return createEventSourceNotificationBuilder(channelName, status, message).build();
-    }
-
-    private MessageEndpointNotification.Builder createEventSourceNotificationBuilder(final String channelName,
-                                                                                     final MessageEndpointStatus status,
-                                                                                     final String message) {
-        MessageEndpointNotification.Builder builder = MessageEndpointNotification.builder()
+    private MessageReceiverNotification.Builder notificationOf(final String channelName,
+                                                               final MessageReceiverStatus status,
+                                                               final String message) {
+        final MessageReceiverNotification.Builder builder = builder()
                 .withStatus(status)
                 .withChannelName(channelName)
                 .withMessage(message);
         if (status == RUNNING) {
-            builder.withChannelPosition(channelPosition(fromPosition("single-shard", Duration.ofHours(1), "42")));
+            builder.withChannelDurationBehind(channelDurationBehind()
+                    .with("first-shard", ofHours(1))
+                    .with("second-shard", ofHours(2))
+                    .build());
         }
         return builder;
     }
 
-    private MessageEndpointNotification.Builder createEventSourceNotificationBuilder(final String channelName,
-                                                                                     final MessageEndpointStatus status,
-                                                                                     final String message,
-                                                                                     final String shardName,
-                                                                                     final int hours) {
-        return MessageEndpointNotification.builder()
+    private MessageReceiverNotification.Builder notificationOf(final String channelName,
+                                                               final MessageReceiverStatus status,
+                                                               final String message,
+                                                               final long firstShardBehind,
+                                                               final long secondShardBehind) {
+        final MessageReceiverNotification.Builder builder = builder()
                 .withStatus(status)
                 .withChannelName(channelName)
-                .withMessage(message)
-                .withChannelPosition(channelPosition(fromPosition(shardName, Duration.ofHours(hours), "42")));
+                .withMessage(message);
+        if (status == RUNNING) {
+            builder.withChannelDurationBehind(
+                    channelDurationBehind()
+                            .with("first-shard", ofHours(firstShardBehind))
+                            .with("second-shard", ofHours(secondShardBehind))
+                            .build());
+        }
+        return builder;
     }
 
 }
