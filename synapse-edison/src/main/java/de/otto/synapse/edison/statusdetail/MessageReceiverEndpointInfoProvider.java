@@ -1,4 +1,4 @@
-package de.otto.synapse.edison.provider;
+package de.otto.synapse.edison.statusdetail;
 
 import de.otto.synapse.channel.ChannelDurationBehind;
 import de.otto.synapse.eventsource.EventSource;

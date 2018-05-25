@@ -1,4 +1,4 @@
-package de.otto.synapse.edison.provider;
+package de.otto.synapse.edison.statusdetail;
 
 import de.otto.edison.testsupport.util.TestClock;
 import de.otto.synapse.eventsource.EventSource;
