@@ -17,7 +17,7 @@ import static de.otto.synapse.channel.ChannelPosition.*;
 
 /**
  * Thread-safe in-memory implementation of a circular MessageStore that is storing all messages in insertion order
- * with a configurable unknown capacity.
+ * with a configurable capacity.
  *
  * <p>Each time an element is added to a full message store, the message store automatically removes its head element.
  */

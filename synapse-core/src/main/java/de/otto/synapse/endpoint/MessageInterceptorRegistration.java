@@ -104,7 +104,7 @@ public class MessageInterceptorRegistration {
         this.interceptor = requireNonNull(interceptor);
         this.enabledEndpointTypes = requireNonNull(enabledEndpointTypes);
         if (enabledEndpointTypes.isEmpty()) {
-            throw new IllegalArgumentException("The set of enabled endpoint types must not be unknown");
+            throw new IllegalArgumentException("The set of enabled endpoint types must not be empty");
         }
     }
 
@@ -121,13 +121,13 @@ public class MessageInterceptorRegistration {
      * Returns {@code true} if the registration is matching the given {@code channelName} and {@code EndpointType},
      * false otherwise.
      *
-     * @param channelName the name of the channel
+     * @param channelNamePattern the regexp used to match channel names
      * @param endpointType the {@link EndpointType} of the channel
      * @return boolean
      */
-    public boolean isEnabledFor(final String channelName,
+    public boolean isEnabledFor(final String channelNamePattern,
                                 final EndpointType endpointType) {
-        return enabledEndpointTypes.contains(endpointType) && channelNamePattern.matcher(channelName).matches();
+        return enabledEndpointTypes.contains(endpointType) && this.channelNamePattern.matcher(channelNamePattern).matches();
     }
 
     @Override

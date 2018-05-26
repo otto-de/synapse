@@ -135,7 +135,7 @@ public class TestStreamSource {
 
     public void putRecords(String channelName, List<PutRecordsRequestEntry> records) {
         if (records.isEmpty()) {
-            throw new IllegalArgumentException("records must not be unknown");
+            throw new IllegalArgumentException("records must not be empty");
         }
 
         PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder()
