@@ -1,4 +1,4 @@
-package de.otto.synapse.aws.s3;
+package de.otto.synapse.compaction.aws;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;

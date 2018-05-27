@@ -1,4 +1,4 @@
-package de.otto.synapse.aws.s3;
+package de.otto.synapse.compaction.aws;
 
 import com.google.common.collect.ImmutableList;
 import de.otto.edison.aws.s3.S3Service;
@@ -12,7 +12,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Optional;
 
-import static de.otto.synapse.aws.s3.SnapshotServiceTestUtils.snapshotProperties;
+import static de.otto.synapse.compaction.aws.SnapshotServiceTestUtils.snapshotProperties;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.hamcrest.Matchers.is;

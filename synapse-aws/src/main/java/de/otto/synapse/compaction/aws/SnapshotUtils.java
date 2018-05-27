@@ -1,4 +1,4 @@
-package de.otto.synapse.aws.s3;
+package de.otto.synapse.compaction.aws;
 
 public class SnapshotUtils {
 

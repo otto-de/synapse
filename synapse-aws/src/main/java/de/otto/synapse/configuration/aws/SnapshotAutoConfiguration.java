@@ -1,9 +1,9 @@
 package de.otto.synapse.configuration.aws;
 
 import de.otto.edison.aws.s3.S3Service;
-import de.otto.synapse.aws.s3.SnapshotConsumerService;
-import de.otto.synapse.aws.s3.SnapshotReadService;
-import de.otto.synapse.aws.s3.SnapshotWriteService;
+import de.otto.synapse.compaction.aws.SnapshotConsumerService;
+import de.otto.synapse.compaction.aws.SnapshotReadService;
+import de.otto.synapse.compaction.aws.SnapshotWriteService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;

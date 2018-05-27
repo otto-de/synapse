@@ -1,4 +1,4 @@
-package de.otto.synapse.aws.s3;
+package de.otto.synapse.compaction.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.aws.s3.S3Service;
@@ -24,10 +24,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static de.otto.synapse.aws.s3.SnapshotServiceTestUtils.snapshotProperties;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.compaction.aws.SnapshotServiceTestUtils.snapshotProperties;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;

@@ -1,4 +1,4 @@
-package de.otto.synapse.aws.s3;
+package de.otto.synapse.compaction.aws;
 
 import de.otto.edison.aws.s3.S3Service;
 import org.junit.After;

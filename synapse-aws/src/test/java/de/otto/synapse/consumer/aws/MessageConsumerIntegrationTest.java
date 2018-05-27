@@ -2,7 +2,7 @@ package de.otto.synapse.consumer.aws;
 
 import de.otto.synapse.annotation.EnableEventSource;
 import de.otto.synapse.annotation.EventSourceConsumer;
-import de.otto.synapse.aws.s3.SnapshotReadService;
+import de.otto.synapse.compaction.aws.SnapshotReadService;
 import de.otto.synapse.configuration.aws.AwsEventSourcingAutoConfiguration;
 import de.otto.synapse.eventsource.EventSourceConsumerProcess;
 import de.otto.synapse.message.Message;

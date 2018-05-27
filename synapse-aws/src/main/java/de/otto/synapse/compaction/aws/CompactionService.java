@@ -1,21 +1,15 @@
 package de.otto.synapse.compaction.aws;
 
-import de.otto.synapse.aws.s3.SnapshotWriteService;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.DefaultMessageConsumer;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
-import de.otto.synapse.message.Message;
 import de.otto.synapse.state.StateRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.function.Predicate;
 
-import static java.time.Duration.ofSeconds;
 import static java.time.Instant.now;
 
 public class CompactionService {

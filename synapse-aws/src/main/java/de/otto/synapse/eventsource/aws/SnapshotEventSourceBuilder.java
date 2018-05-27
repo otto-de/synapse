@@ -1,9 +1,9 @@
 package de.otto.synapse.eventsource.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.aws.s3.SnapshotConsumerService;
-import de.otto.synapse.aws.s3.SnapshotEventSource;
-import de.otto.synapse.aws.s3.SnapshotReadService;
+import de.otto.synapse.compaction.aws.SnapshotConsumerService;
+import de.otto.synapse.compaction.aws.SnapshotEventSource;
+import de.otto.synapse.compaction.aws.SnapshotReadService;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
 import org.slf4j.Logger;

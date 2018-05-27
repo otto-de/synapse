@@ -1,4 +1,4 @@
-package de.otto.synapse.aws.s3;
+package de.otto.synapse.compaction.aws;
 
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.configuration.aws.SnapshotProperties;
@@ -16,8 +16,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static de.otto.synapse.aws.s3.SnapshotUtils.COMPACTION_FILE_EXTENSION;
-import static de.otto.synapse.aws.s3.SnapshotUtils.getSnapshotFileNamePrefix;
+import static de.otto.synapse.compaction.aws.SnapshotUtils.COMPACTION_FILE_EXTENSION;
+import static de.otto.synapse.compaction.aws.SnapshotUtils.getSnapshotFileNamePrefix;
 import static java.lang.String.format;
 import static java.nio.file.Files.delete;
 import static java.util.Comparator.comparing;
