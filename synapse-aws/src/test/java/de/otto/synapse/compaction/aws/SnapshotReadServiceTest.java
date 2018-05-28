@@ -120,7 +120,7 @@ public class SnapshotReadServiceTest {
                 .build();
         when(s3Service.listAll("test-teststream")).thenReturn(ImmutableList.of(obj));
 
-        final Path tempFile = TempFileHelper.getTempFile("/compaction-testStream-snapshot-1.json.zip");
+        final Path tempFile = SnapshotFileHelper.getTempFile("/compaction-testStream-snapshot-1.json.zip");
         Files.deleteIfExists(tempFile);
         Files.createFile(tempFile);
 
@@ -132,7 +132,7 @@ public class SnapshotReadServiceTest {
             verify(s3Service, never()).download(any(), any(), any());
             assertThat(fileOptional.get().toPath(), is(tempFile));
         } finally {
-            Files.delete(TempFileHelper.getTempFile("/compaction-testStream-snapshot-1.json.zip"));
+            Files.delete(SnapshotFileHelper.getTempFile("/compaction-testStream-snapshot-1.json.zip"));
         }
     }
 }

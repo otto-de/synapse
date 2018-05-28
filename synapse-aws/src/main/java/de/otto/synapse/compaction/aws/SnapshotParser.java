@@ -27,9 +27,6 @@ public class SnapshotParser {
 
     private final JsonFactory jsonFactory = new JsonFactory();
 
-    public SnapshotParser() {
-    }
-
     public ChannelPosition parse(final File latestSnapshot,
                                  final MessageConsumer<String> messageConsumer) {
 

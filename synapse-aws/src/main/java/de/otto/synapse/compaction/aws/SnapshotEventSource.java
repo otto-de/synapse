@@ -73,7 +73,7 @@ public class SnapshotEventSource implements EventSource {
 
             Optional<File> snapshotFile = snapshotReadService.retrieveLatestSnapshot(this.getChannelName());
             if (snapshotFile.isPresent()) {
-                snapshotTimestamp = SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName());
+                snapshotTimestamp = SnapshotFileHelper.getSnapshotTimestamp(snapshotFile.get().getName());
                 publishEvent(STARTED, "Retrieve snapshot file from S3.", snapshotTimestamp);
                 snapshotStreamPosition = new SnapshotParser().parse(snapshotFile.get(), getMessageDispatcher());
             } else {

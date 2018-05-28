@@ -7,17 +7,25 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
 import static java.lang.String.format;
 import static java.nio.file.Files.delete;
+import static java.time.format.DateTimeFormatter.ofPattern;
 
-public final class TempFileHelper {
-    private static final Logger LOG = LoggerFactory.getLogger(TempFileHelper.class);
+public final class SnapshotFileHelper {
+    public static final String COMPACTION_FILE_EXTENSION = ".json.zip";
+    private static final Logger LOG = LoggerFactory.getLogger(SnapshotFileHelper.class);
     private static final int ONE_MB = 1024 * 1024;
+    private static final DateTimeFormatter dateTimeFormatter = ofPattern("yyyy-MM-dd'T'HH-mmX").withZone(ZoneOffset.UTC);
 
-    private TempFileHelper() {
+    private SnapshotFileHelper() {
     }
 
     public static Path getTempFile(String filename) {
@@ -90,4 +98,19 @@ public final class TempFileHelper {
         }
     }
 
+    public static String getSnapshotFileNamePrefix(String channelName) {
+        return format("compaction-%s-snapshot-", channelName);
+    }
+
+    public static Instant getSnapshotTimestamp(String filename) {
+        Pattern pattern = Pattern.compile(".*-snapshot-(.*)-[0-9]*.json.zip");
+        Matcher matcher = pattern.matcher(filename);
+        if (matcher.matches()) {
+            String dateTimeString = matcher.group(1);
+            return dateTimeFormatter.parse(dateTimeString, Instant::from);
+        } else {
+            throw new IllegalArgumentException("Could not parse timestamp from filename " + filename);
+        }
+
+    }
 }

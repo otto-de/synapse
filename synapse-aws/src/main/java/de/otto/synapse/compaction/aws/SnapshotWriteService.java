@@ -24,9 +24,9 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static de.otto.synapse.compaction.aws.SnapshotUtils.COMPACTION_FILE_EXTENSION;
-import static de.otto.synapse.compaction.aws.SnapshotUtils.getSnapshotFileNamePrefix;
-import static de.otto.synapse.compaction.aws.TempFileHelper.getTempDir;
+import static de.otto.synapse.compaction.aws.SnapshotFileHelper.COMPACTION_FILE_EXTENSION;
+import static de.otto.synapse.compaction.aws.SnapshotFileHelper.getSnapshotFileNamePrefix;
+import static de.otto.synapse.compaction.aws.SnapshotFileHelper.getTempDir;
 import static java.time.format.DateTimeFormatter.ofPattern;
 import static org.slf4j.LoggerFactory.getLogger;
 

@@ -10,9 +10,9 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
-import static de.otto.synapse.compaction.aws.SnapshotUtils.COMPACTION_FILE_EXTENSION;
-import static de.otto.synapse.compaction.aws.SnapshotUtils.getSnapshotFileNamePrefix;
-import static de.otto.synapse.compaction.aws.TempFileHelper.*;
+import static de.otto.synapse.compaction.aws.SnapshotFileHelper.COMPACTION_FILE_EXTENSION;
+import static de.otto.synapse.compaction.aws.SnapshotFileHelper.getSnapshotFileNamePrefix;
+import static de.otto.synapse.compaction.aws.SnapshotFileHelper.*;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.reverseOrder;
 import static org.slf4j.LoggerFactory.getLogger;
