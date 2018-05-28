@@ -13,14 +13,20 @@ import de.otto.synapse.state.StateRepository;
 import org.slf4j.Logger;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static de.otto.synapse.compaction.aws.SnapshotUtils.COMPACTION_FILE_EXTENSION;
 import static de.otto.synapse.compaction.aws.SnapshotUtils.getSnapshotFileNamePrefix;
+import static de.otto.synapse.compaction.aws.TempFileHelper.getTempDir;
 import static java.time.format.DateTimeFormatter.ofPattern;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -35,12 +41,11 @@ public class SnapshotWriteService {
     private static final String START_SEQUENCE_NUMBERS_FIELD_NAME = "startSequenceNumbers";
     private static final String SHARD_FIELD_NAME = "shard";
     private static final String SEQUENCE_NUMBER_FIELD_NAME = "sequenceNumber";
+    private static final int NUM_SNAPSHOTS_TO_KEEP = 6;
 
     private final S3Service s3Service;
     private final String snapshotBucketName;
-
     private final JsonFactory jsonFactory = new JsonFactory();
-
     public SnapshotWriteService(final S3Service s3Service,
                                 final SnapshotProperties properties) {
         this.s3Service = s3Service;
@@ -58,6 +63,7 @@ public class SnapshotWriteService {
             LOG.info("Finished creating snapshot file: {}", snapshotFile.getAbsolutePath());
             uploadSnapshot(this.snapshotBucketName, snapshotFile);
             LOG.info("Finished uploading snapshot file to s3");
+            deleteOlderSnapshots(channelName);
         } finally {
             if (snapshotFile != null) {
                 LOG.info("delete file {}", snapshotFile.toPath().toString());
@@ -113,6 +119,33 @@ public class SnapshotWriteService {
             System.gc();
         }
         return snapshotFile;
+    }
+
+    public void deleteOlderSnapshots(final String channelName) {
+        String snapshotFileNamePrefix = getSnapshotFileNamePrefix(channelName);
+        String snapshotFileSuffix = ".json.zip";
+        List<File> oldestFiles;
+        try {
+            oldestFiles = Files.find(Paths.get(getTempDir()), 1,
+                    (path, basicFileAttributes) -> (path.getFileName().toString().startsWith(snapshotFileNamePrefix) && path.getFileName().toString().endsWith(snapshotFileSuffix)))
+                    .sorted((path1, path2) -> (int) (path2.toFile().lastModified() - path1.toFile().lastModified()))
+                    .map(Path::toFile)
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        if (oldestFiles.size() > NUM_SNAPSHOTS_TO_KEEP) {
+            oldestFiles.subList(NUM_SNAPSHOTS_TO_KEEP, oldestFiles.size()).forEach(this::deleteSnapshotFile);
+        }
+    }
+
+    private void deleteSnapshotFile(File snapshotFile) {
+        boolean success = snapshotFile.delete();
+        if (success) {
+            LOG.info("deleted {}", snapshotFile.getName());
+        } else {
+            LOG.warn("deletion of {} failed", snapshotFile.getName());
+        }
     }
 
     private void deleteFile(File file) {

@@ -84,7 +84,6 @@ public class SnapshotEventSource implements EventSource {
             throw e;
         } finally {
             LOG.info("Finished reading snapshot into Memory");
-            snapshotReadService.deleteOlderSnapshots(this.getChannelName());
         }
 
         publishEvent(FINISHED, "Finished to load snapshot from S3.", snapshotTimestamp);

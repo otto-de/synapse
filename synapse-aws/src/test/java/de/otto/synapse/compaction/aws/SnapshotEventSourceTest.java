@@ -88,23 +88,6 @@ public class SnapshotEventSourceTest {
     }
 
     @Test
-    public void shouldDeleteOlderSnapshotsInCaseOfAnException() {
-        // given
-        S3Exception bucketNotFoundException = new S3Exception("boom - simulate exception while loading from S3");
-        when(snapshotReadService.retrieveLatestSnapshot(any())).thenThrow(bucketNotFoundException);
-
-        // when
-        try {
-            snapshotEventSource.consume();
-        } catch (Exception e) {
-            // ignore exception
-        }
-
-        // then
-        verify(snapshotReadService).deleteOlderSnapshots(STREAM_NAME);
-    }
-
-    @Test
     public void shouldPublishStartingAndFinishEvents() {
         // given
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.empty());
