@@ -23,14 +23,15 @@ import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 
-@Service
-public class SnapshotConsumerService {
+public class SnapshotParser {
 
-    public static final Duration MAX_DURATION = Duration.ofMillis(Long.MAX_VALUE);
     private final JsonFactory jsonFactory = new JsonFactory();
 
-    public ChannelPosition consumeSnapshot(final File latestSnapshot,
-                                           final MessageConsumer<String> messageConsumer) {
+    public SnapshotParser() {
+    }
+
+    public ChannelPosition parse(final File latestSnapshot,
+                                 final MessageConsumer<String> messageConsumer) {
 
         try (
                 FileInputStream fileInputStream = new FileInputStream(latestSnapshot);

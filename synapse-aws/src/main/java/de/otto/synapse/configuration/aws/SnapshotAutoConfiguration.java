@@ -1,7 +1,6 @@
 package de.otto.synapse.configuration.aws;
 
 import de.otto.edison.aws.s3.S3Service;
-import de.otto.synapse.compaction.aws.SnapshotConsumerService;
 import de.otto.synapse.compaction.aws.SnapshotReadService;
 import de.otto.synapse.compaction.aws.SnapshotWriteService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -24,12 +23,6 @@ public class SnapshotAutoConfiguration {
     public SnapshotWriteService snapshotWriteService(final S3Service s3Service,
                                                      final SnapshotProperties snapshotProperties) {
         return new SnapshotWriteService(s3Service, snapshotProperties);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    public SnapshotConsumerService snapshotConsumerService() {
-        return new SnapshotConsumerService();
     }
 
 }

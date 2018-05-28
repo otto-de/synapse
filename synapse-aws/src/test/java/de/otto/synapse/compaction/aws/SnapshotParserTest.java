@@ -17,14 +17,14 @@ import java.util.Map;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-public class SnapshotConsumerServiceTest {
+public class SnapshotParserTest {
 
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private SnapshotConsumerService testee;
+    private SnapshotParser testee;
 
     @Before
     public void setUp() throws Exception {
-        testee = new SnapshotConsumerService();
+        testee = new SnapshotParser();
     }
 
     @Test
@@ -37,7 +37,7 @@ public class SnapshotConsumerServiceTest {
             System.out.println(event.getPayload());
             allData.put(event.getKey(), event.getPayload());
         });
-        final ChannelPosition shardPositions = testee.consumeSnapshot(
+        final ChannelPosition shardPositions = testee.parse(
                 file,
                 new MessageDispatcher(OBJECT_MAPPER, Collections.singletonList(messageConsumer)));
         //then

@@ -26,20 +26,17 @@ public class SnapshotEventSource implements EventSource {
     private final String name;
     private final String channelName;
     private final SnapshotReadService snapshotReadService;
-    private final SnapshotConsumerService snapshotConsumerService;
     private final ApplicationEventPublisher eventPublisher;
     private final MessageDispatcher messageDispatcher;
 
     public SnapshotEventSource(final String name,
                                final String channelName,
                                final SnapshotReadService snapshotReadService,
-                               final SnapshotConsumerService snapshotConsumerService,
                                final ApplicationEventPublisher eventPublisher,
                                final ObjectMapper objectMapper) {
         this.name = name;
         this.channelName = channelName;
         this.snapshotReadService = snapshotReadService;
-        this.snapshotConsumerService = snapshotConsumerService;
         this.eventPublisher = eventPublisher;
         this.messageDispatcher = new MessageDispatcher(objectMapper);
     }
@@ -78,7 +75,7 @@ public class SnapshotEventSource implements EventSource {
             if (snapshotFile.isPresent()) {
                 snapshotTimestamp = SnapshotFileTimestampParser.getSnapshotTimestamp(snapshotFile.get().getName());
                 publishEvent(STARTED, "Retrieve snapshot file from S3.", snapshotTimestamp);
-                snapshotStreamPosition = snapshotConsumerService.consumeSnapshot(snapshotFile.get(), getMessageDispatcher());
+                snapshotStreamPosition = new SnapshotParser().parse(snapshotFile.get(), getMessageDispatcher());
             } else {
                 snapshotStreamPosition = fromHorizon();
             }

@@ -1,7 +1,6 @@
 package de.otto.synapse.eventsource.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.compaction.aws.SnapshotConsumerService;
 import de.otto.synapse.compaction.aws.SnapshotEventSource;
 import de.otto.synapse.compaction.aws.SnapshotReadService;
 import de.otto.synapse.eventsource.EventSource;
@@ -18,18 +17,15 @@ public class SnapshotEventSourceBuilder implements EventSourceBuilder {
     private static final Logger LOG = getLogger(SnapshotEventSourceBuilder.class);
 
     private final SnapshotReadService snapshotReadService;
-    private final SnapshotConsumerService snapshotConsumerService;
 
     private final ObjectMapper objectMapper;
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public SnapshotEventSourceBuilder(final SnapshotReadService snapshotReadService,
-                                      final SnapshotConsumerService snapshotConsumerService,
                                       final ObjectMapper objectMapper,
                                       final ApplicationEventPublisher applicationEventPublisher) {
         this.snapshotReadService = snapshotReadService;
-        this.snapshotConsumerService = snapshotConsumerService;
         this.objectMapper = objectMapper;
         this.applicationEventPublisher = applicationEventPublisher;
     }
@@ -42,7 +38,6 @@ public class SnapshotEventSourceBuilder implements EventSourceBuilder {
                 name,
                 channelName,
                 snapshotReadService,
-                snapshotConsumerService,
                 applicationEventPublisher,
                 objectMapper
         );

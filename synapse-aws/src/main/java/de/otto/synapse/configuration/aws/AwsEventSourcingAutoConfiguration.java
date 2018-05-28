@@ -3,7 +3,7 @@ package de.otto.synapse.configuration.aws;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.aws.configuration.AwsConfiguration;
 import de.otto.edison.aws.s3.configuration.S3Configuration;
-import de.otto.synapse.compaction.aws.SnapshotConsumerService;
+import de.otto.synapse.compaction.aws.SnapshotParser;
 import de.otto.synapse.compaction.aws.SnapshotReadService;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.eventsource.aws.CompactedKinesisEventSourceBuilder;
@@ -39,10 +39,9 @@ public class AwsEventSourcingAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = "snapshotEventSourceBuilder")
     public SnapshotEventSourceBuilder snapshotEventSourceBuilder(final SnapshotReadService snapshotReadService,
-                                                                 final SnapshotConsumerService snapshotConsumerService,
                                                                  final ObjectMapper objectMapper,
                                                                  final ApplicationEventPublisher applicationEventPublisher) {
-        return new SnapshotEventSourceBuilder(snapshotReadService, snapshotConsumerService, objectMapper, applicationEventPublisher);
+        return new SnapshotEventSourceBuilder(snapshotReadService, objectMapper, applicationEventPublisher);
     }
     @Bean
     @ConditionalOnMissingBean(name = "defaultEventSourceBuilder")

@@ -32,9 +32,6 @@ public class SnapshotEventSourceTest {
     private SnapshotReadService snapshotReadService;
 
     @Mock
-    private SnapshotConsumerService snapshotConsumerService;
-
-    @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
     private SnapshotEventSource snapshotEventSource;
@@ -46,7 +43,6 @@ public class SnapshotEventSourceTest {
                 "snapshotEventSource",
                 STREAM_NAME,
                 snapshotReadService,
-                snapshotConsumerService,
                 applicationEventPublisher,
                 new ObjectMapper());
         snapshotEventSource.register(MessageConsumer.of(".*", String.class, (event)->{}));
@@ -56,7 +52,6 @@ public class SnapshotEventSourceTest {
     public void shouldThrowExceptionIfDownloadFails() {
         // given
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.of(new File("someFileWithPattern-snapshot-2018-01-01T00-00Z-1234567890123456789.json.zip")));
-        when(snapshotConsumerService.consumeSnapshot(any(),any())).thenThrow(new RuntimeException("boom - simulate exception while loading from S3"));
 
         // when
         snapshotEventSource.consume();
