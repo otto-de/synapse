@@ -22,7 +22,7 @@ import static de.otto.synapse.channel.ChannelPosition.*;
  * <p>Each time an element is added to a full message store, the message store automatically removes its head element.
  */
 @ThreadSafe
-public class InMemoryRingBufferMessageStore implements MessageStore {
+public class InMemoryRingBufferMessageStore implements WritableMessageStore {
 
     private final Queue<Message<String>> messages;
     private final AtomicReference<ChannelPosition> latestChannelPosition = new AtomicReference<>(fromHorizon());

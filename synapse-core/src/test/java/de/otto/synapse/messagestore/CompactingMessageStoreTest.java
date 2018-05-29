@@ -35,7 +35,7 @@ import static org.hamcrest.Matchers.*;
 public class CompactingMessageStoreTest {
 
     @Parameters
-    public static Iterable<? extends Supplier<MessageStore>> messageStores() {
+    public static Iterable<? extends Supplier<WritableMessageStore>> messageStores() {
         return asList(
                 CompactingInMemoryMessageStore::new,
                 CompactingConcurrentMapMessageStore::new,
@@ -44,11 +44,11 @@ public class CompactingMessageStoreTest {
     }
 
     @Parameter
-    public Supplier<MessageStore> messageStoreBuilder;
+    public Supplier<WritableMessageStore> messageStoreBuilder;
 
     @Test
     public void shouldCompactMessagesByKey() {
-        final MessageStore messageStore = messageStoreBuilder.get();
+        final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
             messageStore.add(message(valueOf(i), "some payload"));
         }
@@ -67,7 +67,7 @@ public class CompactingMessageStoreTest {
 
     @Test
     public void shouldCalculateCompactedMultiShardedChannelPosition() {
-        final MessageStore messageStore = messageStoreBuilder.get();
+        final WritableMessageStore messageStore = messageStoreBuilder.get();
         final ExecutorService executorService = newFixedThreadPool(10);
         final CompletableFuture[] completion = new CompletableFuture[5];
 
@@ -97,7 +97,7 @@ public class CompactingMessageStoreTest {
 
     @Test
     public void shouldCalculateCompactedChannelPosition() {
-        final MessageStore messageStore = messageStoreBuilder.get();
+        final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<5; ++i) {
             for (int pos = 0; pos < 10000; ++pos) {
                 messageStore.add(message(valueOf(pos), responseHeader(fromPosition("some-shard", valueOf(pos)), now()), "some payload"));
@@ -112,7 +112,7 @@ public class CompactingMessageStoreTest {
 
     @Test
     public void shouldRemoveMessagesWithoutChannelPositionWithNullPayload() {
-        final MessageStore messageStore = messageStoreBuilder.get();
+        final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
             messageStore.add(message(valueOf(i), "some payload"));
         }
@@ -125,7 +125,7 @@ public class CompactingMessageStoreTest {
 
     @Test
     public void shouldRemoveMessagesWithNullPayload() {
-        final MessageStore messageStore = messageStoreBuilder.get();
+        final WritableMessageStore messageStore = messageStoreBuilder.get();
         final Instant yesterday = Instant.now().minus(1, ChronoUnit.DAYS);
         final Instant now = Instant.now().minus(1, ChronoUnit.DAYS);
         for (int i=0; i<10; ++i) {

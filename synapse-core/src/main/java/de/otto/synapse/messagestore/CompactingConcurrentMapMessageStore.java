@@ -26,7 +26,7 @@ import static de.otto.synapse.channel.ChannelPosition.merge;
  * </p>
  */
 @ThreadSafe
-public class CompactingConcurrentMapMessageStore implements MessageStore {
+public class CompactingConcurrentMapMessageStore implements WritableMessageStore {
 
     private static final int DEFAULT_KEY_SIZE_BYTES = 128;
     private static final double DEFAULT_VALUE_SIZE_BYTES = 512;

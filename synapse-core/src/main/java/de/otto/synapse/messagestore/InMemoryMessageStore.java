@@ -17,7 +17,7 @@ import static de.otto.synapse.channel.ChannelPosition.*;
  * Concurrent in-memory implementation of a MessageStore that is storing all messages in insertion order.
  */
 @ThreadSafe
-public class InMemoryMessageStore implements MessageStore {
+public class InMemoryMessageStore implements WritableMessageStore {
 
     private final Deque<Message<String>> messages = new ConcurrentLinkedDeque<>();
     private final AtomicReference<ChannelPosition> latestChannelPosition = new AtomicReference<>(fromHorizon());

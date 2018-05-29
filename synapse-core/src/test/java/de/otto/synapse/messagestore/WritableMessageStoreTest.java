@@ -27,16 +27,15 @@ import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.fail;
 
 /**
  * Tests that must be successful for all MessageStore implementations
  */
 @RunWith(Parameterized.class)
-public class MessageStoreTest {
+public class WritableMessageStoreTest {
 
     @Parameters
-    public static Iterable<? extends Supplier<MessageStore>> messageStores() {
+    public static Iterable<? extends Supplier<WritableMessageStore>> messageStores() {
         return asList(
                 InMemoryMessageStore::new,
                 () -> new InMemoryRingBufferMessageStore(10000),
@@ -46,11 +45,11 @@ public class MessageStoreTest {
     }
 
     @Parameter
-    public Supplier<MessageStore> messageStoreBuilder;
+    public Supplier<WritableMessageStore> messageStoreBuilder;
 
     @Test
     public void shouldAddMessagesWithoutHeaders() {
-        final MessageStore messageStore = messageStoreBuilder.get();
+        final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
             messageStore.add(message(valueOf(i), "some payload"));
         }
@@ -65,7 +64,7 @@ public class MessageStoreTest {
 
     @Test
     public void shouldKeepInsertionOrderOfMessages() {
-        final MessageStore messageStore = messageStoreBuilder.get();
+        final WritableMessageStore messageStore = messageStoreBuilder.get();
         final ExecutorService executorService = newFixedThreadPool(10);
         final CompletableFuture[] completion = new CompletableFuture[5];
         for (int shard=0; shard<5; ++shard) {
@@ -93,8 +92,4 @@ public class MessageStoreTest {
         assertThat(messageStore.size(), isOneOf(10000, 50000));
     }
 
-    // TODO: @Test
-    public void shouldCalculateDurationBehindProperly() {
-        fail("not yet implemented");
-    }
 }

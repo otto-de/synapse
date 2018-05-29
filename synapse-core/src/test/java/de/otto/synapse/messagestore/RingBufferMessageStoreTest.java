@@ -30,18 +30,18 @@ import static org.hamcrest.Matchers.*;
 public class RingBufferMessageStoreTest {
 
     @Parameters
-    public static Iterable<? extends Supplier<MessageStore>> messageStores() {
+    public static Iterable<? extends Supplier<WritableMessageStore>> messageStores() {
         return asList(
                 InMemoryRingBufferMessageStore::new
         );
     }
 
     @Parameter
-    public Supplier<MessageStore> messageStoreBuilder;
+    public Supplier<WritableMessageStore> messageStoreBuilder;
 
     @Test
     public void shouldKeepNoMoreThanCapacityIndicates() {
-        final MessageStore messageStore = messageStoreBuilder.get();
+        final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<101; ++i) {
             messageStore.add(message(valueOf(i), "some payload"));
         }
@@ -50,7 +50,7 @@ public class RingBufferMessageStoreTest {
 
     @Test
     public void shouldRemoveOldestIfCapacityIsReached() {
-        final MessageStore messageStore = messageStoreBuilder.get();
+        final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<102; ++i) {
             messageStore.add(message(valueOf(i), "some payload"));
         }
@@ -64,7 +64,7 @@ public class RingBufferMessageStoreTest {
 
     @Test
     public void shouldCalculateMultiShardedChannelPosition() {
-        final MessageStore messageStore = messageStoreBuilder.get();
+        final WritableMessageStore messageStore = messageStoreBuilder.get();
         final ExecutorService executorService = newFixedThreadPool(10);
         final CompletableFuture[] completion = new CompletableFuture[5];
 
@@ -94,7 +94,7 @@ public class RingBufferMessageStoreTest {
 
     @Test
     public void shouldCalculateChannelPosition() {
-        final MessageStore messageStore = messageStoreBuilder.get();
+        final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<5; ++i) {
             for (int pos = 0; pos < 10000; ++pos) {
                 messageStore.add(message(valueOf(pos), responseHeader(fromPosition("some-shard", valueOf(pos)), now()), "some payload"));

@@ -20,7 +20,7 @@ import static de.otto.synapse.channel.ChannelPosition.merge;
  * </p>
  */
 @ThreadSafe
-public class CompactingInMemoryMessageStore implements MessageStore {
+public class CompactingInMemoryMessageStore implements WritableMessageStore {
 
     private final ConcurrentNavigableMap<String, Message<String>> messages = new ConcurrentSkipListMap<>();
     private final AtomicReference<ChannelPosition> latestChannelPosition = new AtomicReference<>(fromHorizon());

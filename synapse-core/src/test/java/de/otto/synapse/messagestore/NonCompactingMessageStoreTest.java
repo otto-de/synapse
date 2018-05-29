@@ -30,7 +30,7 @@ import static org.hamcrest.Matchers.is;
 public class NonCompactingMessageStoreTest {
 
     @Parameterized.Parameters
-    public static Iterable<? extends Supplier<MessageStore>> messageStores() {
+    public static Iterable<? extends Supplier<WritableMessageStore>> messageStores() {
         return asList(
                 InMemoryMessageStore::new,
                 () -> new InMemoryRingBufferMessageStore(50000)
@@ -38,11 +38,11 @@ public class NonCompactingMessageStoreTest {
     }
 
     @Parameter
-    public Supplier<MessageStore> messageStoreBuilder;
+    public Supplier<WritableMessageStore> messageStoreBuilder;
 
     @Test
     public void shouldCalculateUncompactedChannelPositions() {
-        final MessageStore messageStore = messageStoreBuilder.get();
+        final WritableMessageStore messageStore = messageStoreBuilder.get();
         final ExecutorService executorService = newFixedThreadPool(10);
         final CompletableFuture[] completion = new CompletableFuture[5];
         for (int shard=0; shard<5; ++shard) {

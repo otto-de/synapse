@@ -29,16 +29,7 @@ import java.util.stream.Stream;
  * </p>
  * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageStore.html">EIP: Message Store</a>
  */
-public interface MessageStore {
-
-    /* TODO: MessageStore speichert nur Message<String>. Fühlt sich noch falsch an.
-
-    /**
-     * Adds a Message to the MessageStore.
-     *
-     * @param message the message to add
-     */
-    void add(Message<String> message);
+public interface MessageStore extends AutoCloseable {
 
     /**
      * Returns the latest {@link ChannelPosition} of the MessageStore.
@@ -66,8 +57,24 @@ public interface MessageStore {
 
     /**
      * Returns the number of messages contained in the MessageStore.
+     * <p>
+     *     Primarily used for testing purposes.
      *
+     *     If the MessageStore can not implement this without major performance impacts (like, for example, having
+     *     to download and parse huge files from S3), the method is not required to be implemented.
+     * </p>
      * @return number of messages
      */
-    int size();
+    default int size() {
+        return -1;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws Exception
+     */
+    @Override
+    default void close() throws Exception{
+    }
 }
