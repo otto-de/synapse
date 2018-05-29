@@ -69,4 +69,7 @@ public abstract class AbstractEventSource implements EventSource {
         return messageLog.getMessageDispatcher();
     }
 
+    protected MessageLogReceiverEndpoint getMessageLog() {
+        return messageLog;
+    }
 }
