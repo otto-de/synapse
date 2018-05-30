@@ -9,6 +9,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.io.ClassPathResource;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.File;
@@ -97,4 +98,20 @@ public class SnapshotMessageStoreTest {
         verify(eventPublisher).publishEvent(expectedFinishedEvent);
         verifyNoMoreInteractions(eventPublisher);
     }
+
+    //@Test
+    public void measureRuntimeFor5000Messages() throws IOException {
+        final File bigFile = new ClassPathResource("compaction-integrationtest-snapshot-2017-09-29T09-02Z-3053797267191232636.json.zip").getFile();
+        when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.of(bigFile));
+
+        long ts = System.currentTimeMillis();
+        final SnapshotMessageStore messageStore = new SnapshotMessageStore(STREAM_NAME, snapshotReadService, eventPublisher);
+        try {
+            messageStore.stream().forEach((m) -> m.getKey());
+        } finally {
+            messageStore.close();
+        }
+        System.out.println("Consuming messages took " + (System.currentTimeMillis()-ts) + "ms.");
+    }
+
 }

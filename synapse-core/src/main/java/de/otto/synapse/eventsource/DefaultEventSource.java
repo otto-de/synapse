@@ -11,15 +11,15 @@ import java.time.Instant;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class CompactedEventSource extends AbstractEventSource {
+public class DefaultEventSource extends AbstractEventSource {
 
-    private static final Logger LOG = getLogger(CompactedEventSource.class);
+    private static final Logger LOG = getLogger(DefaultEventSource.class);
 
     private final MessageStore messageStore;
 
-    public CompactedEventSource(final @Nonnull String name,
-                                final @Nonnull MessageStore messageStore,
-                                final @Nonnull MessageLogReceiverEndpoint messageLog) {
+    public DefaultEventSource(final @Nonnull String name,
+                              final @Nonnull MessageStore messageStore,
+                              final @Nonnull MessageLogReceiverEndpoint messageLog) {
         super(name, messageLog);
         this.messageStore = messageStore;
     }
@@ -33,7 +33,7 @@ public class CompactedEventSource extends AbstractEventSource {
             messageStore.stream().forEach(message -> {
                 final Message<String> interceptedMessage = getMessageLogReceiverEndpoint().getInterceptorChain().intercept(message);
                 if (interceptedMessage != null) {
-                    getMessageDispatcher().accept(interceptedMessage);
+                    getMessageLogReceiverEndpoint().getMessageDispatcher().accept(interceptedMessage);
                 }
             });
 

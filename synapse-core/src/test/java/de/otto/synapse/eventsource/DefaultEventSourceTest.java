@@ -19,13 +19,13 @@ import static de.otto.synapse.message.Message.message;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class CompactedEventSourceTest {
+public class DefaultEventSourceTest {
 
     @Test
     public void shouldReadMessagesFromMessageStore() {
         // given
         final MessageStore messageStore = mock(MessageStore.class);
-        final CompactedEventSource eventSource = new CompactedEventSource("foo", messageStore, mock(MessageLogReceiverEndpoint.class));
+        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, mock(MessageLogReceiverEndpoint.class));
 
         // when
         eventSource.consume();
@@ -40,7 +40,7 @@ public class CompactedEventSourceTest {
         final MessageStore messageStore = mock(MessageStore.class);
         when(messageStore.getLatestChannelPosition()).thenReturn(fromHorizon());
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
-        final CompactedEventSource eventSource = new CompactedEventSource("foo", messageStore, messageLog);
+        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
 
         // when
         eventSource.consume();
@@ -61,8 +61,8 @@ public class CompactedEventSourceTest {
         final InterceptorChain interceptorChain = mock(InterceptorChain.class);
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
         when(messageLog.getInterceptorChain()).thenReturn(interceptorChain);
-        // and our famous CompactedEventSource:
-        final CompactedEventSource eventSource = new CompactedEventSource("foo", messageStore, messageLog);
+        // and our famous DefaultEventSource:
+        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
 
         // when
         eventSource.consume();
@@ -89,8 +89,8 @@ public class CompactedEventSourceTest {
         when(messageLog.getInterceptorChain()).thenReturn(interceptorChain);
         final MessageDispatcher messageDispatcher = mock(MessageDispatcher.class);
         when(messageLog.getMessageDispatcher()).thenReturn(messageDispatcher);
-        // and our famous CompactedEventSource:
-        final CompactedEventSource eventSource = new CompactedEventSource("foo", messageStore, messageLog);
+        // and our famous DefaultEventSource:
+        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
 
         // when
         eventSource.consume();
@@ -112,8 +112,8 @@ public class CompactedEventSourceTest {
         when(messageLog.getInterceptorChain()).thenReturn(new InterceptorChain());
         final MessageDispatcher messageDispatcher = mock(MessageDispatcher.class);
         when(messageLog.getMessageDispatcher()).thenReturn(messageDispatcher);
-        // and our famous CompactedEventSource:
-        final CompactedEventSource eventSource = new CompactedEventSource("foo", messageStore, messageLog);
+        // and our famous DefaultEventSource:
+        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
 
         // when
         eventSource.consume();
@@ -131,8 +131,8 @@ public class CompactedEventSourceTest {
         when(messageStore.getLatestChannelPosition()).thenReturn(expectedChannelPosition);
         // and some MessageLogReceiverEndpoint with our InterceptorChain:
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
-        // and our famous CompactedEventSource:
-        final CompactedEventSource eventSource = new CompactedEventSource("foo", messageStore, messageLog);
+        // and our famous DefaultEventSource:
+        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
 
         // when
         eventSource.consume();
@@ -145,7 +145,7 @@ public class CompactedEventSourceTest {
     public void shouldCloseMessageStore() throws Exception {
         // given
         final MessageStore messageStore = mock(MessageStore.class);
-        final CompactedEventSource eventSource = new CompactedEventSource("foo", messageStore, mock(MessageLogReceiverEndpoint.class));
+        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, mock(MessageLogReceiverEndpoint.class));
 
         // when
         eventSource.consume();

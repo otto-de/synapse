@@ -3,7 +3,6 @@ package de.otto.synapse.annotation;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.annotation.AliasFor;
 
 import java.lang.annotation.*;
 

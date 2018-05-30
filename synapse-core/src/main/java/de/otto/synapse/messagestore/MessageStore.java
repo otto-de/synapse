@@ -69,12 +69,6 @@ public interface MessageStore extends AutoCloseable {
         return -1;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws Exception
-     */
-    @Override
-    default void close() throws Exception{
+    default void close() throws Exception {
     }
 }
