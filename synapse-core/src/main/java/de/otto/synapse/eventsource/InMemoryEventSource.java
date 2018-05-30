@@ -3,6 +3,7 @@ package de.otto.synapse.eventsource;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.InMemoryChannel;
 
+import javax.annotation.Nonnull;
 import java.time.Instant;
 
 public class InMemoryEventSource extends AbstractEventSource {
@@ -16,9 +17,10 @@ public class InMemoryEventSource extends AbstractEventSource {
         this.inMemoryChannel = inMemoryChannel;
     }
 
+    @Nonnull
     @Override
-    public ChannelPosition consumeUntil(final ChannelPosition startFrom,
-                                        final Instant until) {
+    public ChannelPosition consumeUntil(@Nonnull final ChannelPosition startFrom,
+                                        @Nonnull final Instant until) {
         return inMemoryChannel.consumeUntil(startFrom, until);
     }
 }

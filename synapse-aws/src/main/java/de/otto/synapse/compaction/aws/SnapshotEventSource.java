@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.info.SnapshotReaderNotification;
 import de.otto.synapse.info.SnapshotReaderStatus;
@@ -57,11 +58,19 @@ public class SnapshotEventSource implements EventSource {
         return messageDispatcher;
     }
 
+    @Nonnull
+    @Override
+    public MessageLogReceiverEndpoint getMessageLogReceiverEndpoint() {
+        // TODO
+        return null;
+    }
+
     @Override
     public String getChannelName() {
         return channelName;
     }
 
+    @Nonnull
     @Override
     public ChannelPosition consumeUntil(@Nonnull final ChannelPosition startFrom,
                                         @Nonnull final Instant until) {

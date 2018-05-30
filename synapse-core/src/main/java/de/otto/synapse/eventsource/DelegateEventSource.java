@@ -3,7 +3,7 @@ package de.otto.synapse.eventsource;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -67,6 +67,18 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
         return delegate.getMessageDispatcher();
     }
 
+
+    /**
+     * Returns the MessageLogReceiverEndpoint used by the {@code EventSource} to consume events.
+     *
+     * @return MessageLogReceiverEndpoint
+     */
+    @Override
+    @Nonnull
+    public MessageLogReceiverEndpoint getMessageLogReceiverEndpoint() {
+        return delegate.getMessageLogReceiverEndpoint();
+    }
+
     /**
      * Returns the name of the EventSource.
      * <p>
@@ -93,9 +105,10 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
      * @param until the arrival timestamp until the messages should be consumed
      * @return the new read position
      */
+    @Nonnull
     @Override
-    public ChannelPosition consumeUntil(final ChannelPosition startFrom,
-                                        final Instant until) {
+    public ChannelPosition consumeUntil(@Nonnull final ChannelPosition startFrom,
+                                        @Nonnull final Instant until) {
         return delegate.consumeUntil(startFrom, until);
     }
 

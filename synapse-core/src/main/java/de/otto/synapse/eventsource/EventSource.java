@@ -3,10 +3,10 @@ package de.otto.synapse.eventsource;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -46,6 +46,14 @@ public interface EventSource {
      */
     @Nonnull
     MessageDispatcher getMessageDispatcher();
+
+    /**
+     * Returns the MessageLogReceiverEndpoint used by the {@code EventSource} to consume events.
+     *
+     * @return MessageLogReceiverEndpoint
+     */
+    @Nonnull
+    MessageLogReceiverEndpoint getMessageLogReceiverEndpoint();
 
     /**
      * Returns the name of the EventSource.
@@ -111,8 +119,8 @@ public interface EventSource {
      * @param until the arrival timestamp until the messages should be consumed
      * @return the new read position
      */
-    ChannelPosition consumeUntil(@Nonnull ChannelPosition startFrom,
-                                 @Nonnull Instant until);
+    @Nonnull ChannelPosition consumeUntil(@Nonnull ChannelPosition startFrom,
+                                          @Nonnull Instant until);
 
     void stop();
 

@@ -24,19 +24,20 @@ public class CompactedEventSource extends AbstractEventSource {
         this.messageStore = messageStore;
     }
 
+    @Nonnull
     @Override
     public ChannelPosition consumeUntil(final @Nonnull ChannelPosition startFrom,
                                         final @Nonnull Instant until) {
 
         try {
             messageStore.stream().forEach(message -> {
-                final Message<String> interceptedMessage = getMessageLog().getInterceptorChain().intercept(message);
+                final Message<String> interceptedMessage = getMessageLogReceiverEndpoint().getInterceptorChain().intercept(message);
                 if (interceptedMessage != null) {
                     getMessageDispatcher().accept(interceptedMessage);
                 }
             });
 
-            return getMessageLog().consumeUntil(messageStore.getLatestChannelPosition(), until);
+            return getMessageLogReceiverEndpoint().consumeUntil(messageStore.getLatestChannelPosition(), until);
         } finally {
             try {
                 messageStore.close();

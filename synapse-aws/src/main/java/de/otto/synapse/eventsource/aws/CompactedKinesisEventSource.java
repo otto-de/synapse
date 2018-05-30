@@ -3,13 +3,12 @@ package de.otto.synapse.eventsource.aws;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.EventSource;
-import de.otto.synapse.message.Message;
 
 import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.util.Objects;
-import java.util.function.Predicate;
 
 public class CompactedKinesisEventSource implements EventSource {
 
@@ -61,14 +60,21 @@ public class CompactedKinesisEventSource implements EventSource {
         return snapshotEventSource.getMessageDispatcher();
     }
 
+    @Nonnull
+    @Override
+    public MessageLogReceiverEndpoint getMessageLogReceiverEndpoint() {
+        return kinesisEventSource.getMessageLogReceiverEndpoint();
+    }
+
     @Override
     public String getChannelName() {
         return channelName;
     }
 
+    @Nonnull
     @Override
-    public ChannelPosition consumeUntil(final ChannelPosition startFrom,
-                                        final Instant until) {
+    public ChannelPosition consumeUntil(@Nonnull final ChannelPosition startFrom,
+                                        @Nonnull final Instant until) {
         final ChannelPosition channelPosition = snapshotEventSource.consume();
         return kinesisEventSource.consumeUntil(channelPosition, until);
     }

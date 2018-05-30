@@ -73,7 +73,7 @@ public class SnapshotMessageStoreAcceptanceTest {
         s3Service.createBucket(INTEGRATION_TEST_BUCKET);
         s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
 
-        final ChannelPosition startSequenceNumbers = writeToStream(INTEGRATION_TEST_STREAM, "users_small1.txt").getFirstReadPosition();
+        final ChannelPosition startSequenceNumbers = writeToStream(INTEGRATION_TEST_STREAM, "users_big1.txt").getFirstReadPosition();
         createInitialEmptySnapshotWithSequenceNumbers(startSequenceNumbers);
         compactionService.compact(INTEGRATION_TEST_STREAM);
     }
