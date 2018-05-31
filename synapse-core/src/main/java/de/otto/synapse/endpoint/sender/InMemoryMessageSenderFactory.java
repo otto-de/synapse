@@ -5,7 +5,9 @@ import de.otto.synapse.channel.InMemoryChannels;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 
-public class InMemoryMessageSenderFactory implements MessageSenderFactory {
+import javax.annotation.Nonnull;
+
+public class InMemoryMessageSenderFactory implements MessageSenderEndpointFactory {
 
     private final MessageInterceptorRegistry registry;
     private final ObjectMapper objectMapper;
@@ -19,7 +21,8 @@ public class InMemoryMessageSenderFactory implements MessageSenderFactory {
         this.inMemoryChannels = inMemoryChannels;
     }
 
-    public MessageSenderEndpoint createSenderFor(final String channelName) {
+    @Override
+    public MessageSenderEndpoint create(@Nonnull final String channelName) {
         final InMemoryMessageSender messageSender = new InMemoryMessageSender(
                 new JsonStringMessageTranslator(objectMapper),
                 inMemoryChannels.getChannel(channelName));

@@ -4,43 +4,28 @@ import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 
 import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.util.function.Predicate;
 
-public class DelegateEventSource implements EventSource, ApplicationContextAware {
+public class DelegateEventSource implements EventSource {
 
-    private final String name;
-    private final String channelName;
-    private final String eventSourceBuilder;
-    private EventSource delegate;
+    private final EventSource delegate;
 
     public DelegateEventSource(final String name,
                                final String channelName,
-                               final String eventSourceBuilder) {
-        this.name = name;
-        this.channelName = channelName;
-        this.eventSourceBuilder = eventSourceBuilder;
+                               final EventSourceBuilder eventSourceBuilder) {
+        this.delegate = eventSourceBuilder.buildEventSource(name, channelName);
     }
 
     @Override
     public String getName() {
-        return name;
+        return delegate.getName();
     }
 
     public EventSource getDelegate() {
         return delegate;
-    }
-
-    @Override
-    public void setApplicationContext(final ApplicationContext applicationContext) throws BeansException {
-        delegate = applicationContext
-                .getBean(eventSourceBuilder, EventSourceBuilder.class)
-                .buildEventSource(name, channelName);
     }
 
     /**
@@ -125,9 +110,7 @@ public class DelegateEventSource implements EventSource, ApplicationContextAware
     @Override
     public String toString() {
         return "DelegateEventSource{" +
-                "channelName='" + channelName + '\'' +
-                ", eventSourceBuilder='" + eventSourceBuilder + '\'' +
-                ", delegate=" + delegate +
+                "delegate=" + delegate +
                 '}';
     }
 }

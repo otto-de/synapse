@@ -17,7 +17,6 @@ import static com.google.common.base.Strings.emptyToNull;
 import static de.otto.synapse.annotation.BeanNameHelper.beanNameForChannel;
 import static java.lang.String.format;
 import static org.slf4j.LoggerFactory.getLogger;
-import static org.springframework.beans.factory.support.AbstractBeanDefinition.AUTOWIRE_BY_NAME;
 import static org.springframework.beans.factory.support.AbstractBeanDefinition.DEPENDENCY_CHECK_ALL;
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.genericBeanDefinition;
 
@@ -67,9 +66,8 @@ public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, 
             final String beanName = Objects.toString(
                     emptyToNull(annotationAttributes.getString("name")),
                     beanNameForChannel(channelName));
-            final String builderName = annotationAttributes.getString("builder");
             if (!registry.containsBeanDefinition(beanName)) {
-                registerBeanDefinition(registry, beanName, channelName.isEmpty() ? beanName : channelName, builderName);
+                registerBeanDefinition(registry, beanName, channelName.isEmpty() ? beanName : channelName);
             } else {
                 throw new BeanCreationException(beanName, format("EventSource %s is already registered.", beanName));
             }
@@ -84,10 +82,9 @@ public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, 
             final String beanName = Objects.toString(
                     emptyToNull(eventSourceAttr.getFirst("name").toString()),
                     beanNameForChannel(streamName));
-            final String builderName = eventSourceAttr.getFirst("builder").toString();
 
             if (!registry.containsBeanDefinition(beanName)) {
-                registerBeanDefinition(registry, beanName, streamName.isEmpty() ? beanName : streamName, builderName);
+                registerBeanDefinition(registry, beanName, streamName.isEmpty() ? beanName : streamName);
             } else {
                 throw new BeanCreationException(beanName, format("EventSource %s is already registered.", beanName));
             }
@@ -96,19 +93,16 @@ public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, 
 
     private void registerBeanDefinition(final BeanDefinitionRegistry registry,
                                         final String beanName,
-                                        final String channelName,
-                                        final String builderName) {
+                                        final String channelName) {
         registry.registerBeanDefinition(
                 beanName,
                 genericBeanDefinition(DelegateEventSource.class)
                         .addConstructorArgValue(beanName)
                         .addConstructorArgValue(channelName)
-                        .addConstructorArgValue(builderName)
                         .setDependencyCheck(DEPENDENCY_CHECK_ALL)
-                        .setAutowireMode(AUTOWIRE_BY_NAME)
                         .getBeanDefinition()
         );
-        LOG.info("Registered EventSource {} with for channelName {} using {}", beanName, channelName, builderName);
+        LOG.info("Registered EventSource {} with for channelName {}", beanName, channelName);
     }
 
 }

@@ -1,10 +1,10 @@
 package de.otto.synapse.annotation;
 
-import de.otto.synapse.configuration.EventSourcingAutoConfiguration;
+import de.otto.synapse.configuration.InMemoryTestConfiguration;
+import de.otto.synapse.configuration.SynapseAutoConfiguration;
+import de.otto.synapse.eventsource.DefaultEventSource;
 import de.otto.synapse.eventsource.DelegateEventSource;
 import de.otto.synapse.eventsource.EventSource;
-import de.otto.synapse.testsupport.InMemoryEventSourceConfiguration;
-import de.otto.synapse.testsupport.TestDefaultEventSourceConfiguration;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.BeanCreationException;
@@ -24,17 +24,17 @@ public class EventSourceBeanRegistrarTest {
         }
     }
 
-    @EnableEventSource(name = "testEventSource", channelName = "test-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "testEventSource", channelName = "test-stream")
     static class SingleEventSourceTestConfig {
     }
 
-    @EnableEventSource(name = "brokenEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
-    @EnableEventSource(name = "brokenEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "brokenEventSource", channelName = "some-stream")
+    @EnableEventSource(name = "brokenEventSource", channelName = "some-stream")
     static class MultiEventSourceTestConfigWithSameNames {
     }
 
-    @EnableEventSource(name = "firstEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
-    @EnableEventSource(name = "secondEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "firstEventSource", channelName = "some-stream")
+    @EnableEventSource(name = "secondEventSource", channelName = "some-stream")
     static class MultiEventSourceTestConfigWithDifferentNames {
     }
 
@@ -45,17 +45,17 @@ public class EventSourceBeanRegistrarTest {
 
     @Test(expected = BeanCreationException.class)
     public void shouldFailToRegisterMultipleEventSourcesForSameStreamNameWithSameName() {
-        context.register(EventSourcingAutoConfiguration.class);
+        context.register(SynapseAutoConfiguration.class);
         context.register(MultiEventSourceTestConfigWithSameNames.class);
-        context.register(InMemoryEventSourceConfiguration.class);
+        context.register(InMemoryTestConfiguration.class);
         context.refresh();
     }
 
     @Test
     public void shouldRegisterMultipleEventSourcesForSameStreamNameWithDifferentNames() {
-        context.register(EventSourcingAutoConfiguration.class);
+        context.register(SynapseAutoConfiguration.class);
         context.register(MultiEventSourceTestConfigWithDifferentNames .class);
-        context.register(InMemoryEventSourceConfiguration.class);
+        context.register(InMemoryTestConfiguration.class);
         context.refresh();
 
         assertThat(context.getBean("firstEventSource", EventSource.class).getChannelName()).isEqualTo("some-stream");
@@ -65,9 +65,9 @@ public class EventSourceBeanRegistrarTest {
 
     @Test
     public void shouldRegisterEventSource() {
-        context.register(EventSourcingAutoConfiguration.class);
+        context.register(SynapseAutoConfiguration.class);
         context.register(SingleEventSourceTestConfig.class);
-        context.register(InMemoryEventSourceConfiguration.class);
+        context.register(InMemoryTestConfiguration.class);
         context.refresh();
 
         assertThat(context.containsBean("testEventSource")).isTrue();
@@ -75,22 +75,20 @@ public class EventSourceBeanRegistrarTest {
 
     @Test
     public void shouldRegisterEventSourceWithDefaultType() {
-        context.register(EventSourcingAutoConfiguration.class);
-        context.register(InMemoryEventSourceConfiguration.class);
-        context.register(TestDefaultEventSourceConfiguration.class);
+        context.register(SynapseAutoConfiguration.class);
+        context.register(InMemoryTestConfiguration.class);
         context.register(RepeatableMultiEventSourceTestConfig.class);
         context.refresh();
 
         final DelegateEventSource testEventSource = context.getBean("firstEventSource", DelegateEventSource.class);
-        assertThat(testEventSource.getDelegate()).isInstanceOf(TestDefaultEventSourceConfiguration.TestEventSource.class);
+        assertThat(testEventSource.getDelegate()).isInstanceOf(DefaultEventSource.class);
     }
 
     @Test
     public void shouldRegisterMultipleEventSources() {
         context.register(RepeatableMultiEventSourceTestConfig.class);
-        context.register(InMemoryEventSourceConfiguration.class);
-        context.register(EventSourcingAutoConfiguration.class);
-        context.register(TestDefaultEventSourceConfiguration.class);
+        context.register(InMemoryTestConfiguration.class);
+        context.register(SynapseAutoConfiguration.class);
         addEnvironment(this.context,
                 "test.stream-name=second-stream"
         );
@@ -101,11 +99,11 @@ public class EventSourceBeanRegistrarTest {
 
         final EventSource first = context.getBean("firstEventSource", DelegateEventSource.class).getDelegate();
         assertThat(first.getChannelName()).isEqualTo("first-stream");
-        assertThat(first).isInstanceOf(TestDefaultEventSourceConfiguration.TestEventSource.class);
+        assertThat(first).isInstanceOf(DefaultEventSource.class);
 
         final EventSource second = context.getBean("secondEventSource", DelegateEventSource.class).getDelegate();
         assertThat(second.getChannelName()).isEqualTo("second-stream");
-        assertThat(second).isInstanceOf(TestDefaultEventSourceConfiguration.TestEventSource.class);
+        assertThat(second).isInstanceOf(DefaultEventSource.class);
     }
 
 }

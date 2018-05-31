@@ -421,7 +421,7 @@ public class KinesisMessageLogReceiverEndpointTest {
                 .partitionKey(String.valueOf(nextKey++))
                 .approximateArrivalTimestamp(clock.instant())
                 .data(ByteBuffer.allocateDirect(0))
-                .sequenceNumber("sequence-empty")
+                .sequenceNumber("sequence-emptyMessageStore")
                 .build();
     }
 

@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static de.otto.synapse.consumer.TestMessageConsumer.testEventConsumer;
+import static de.otto.synapse.messagestore.MessageStores.emptyMessageStore;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.awaitility.Awaitility.await;
@@ -84,7 +85,7 @@ public class EventSourceConsumerProcessTest {
     @SuppressWarnings("unchecked")
     public void shouldInvokeTwoConsumersForSameEventSource() throws InterruptedException {
         final InMemoryChannel channel = new InMemoryChannel("test");
-        final EventSource eventSource = new InMemoryEventSource("test", channel);
+        final EventSource eventSource = new DefaultEventSource("test", emptyMessageStore(), channel);
 
         final TestMessageConsumer eventConsumerA = testEventConsumer(".*", String.class);
         final TestMessageConsumer eventConsumerB = testEventConsumer(".*", String.class);

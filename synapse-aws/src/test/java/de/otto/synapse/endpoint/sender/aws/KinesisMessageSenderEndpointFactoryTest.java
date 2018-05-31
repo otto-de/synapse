@@ -12,16 +12,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.mock;
 
-public class KinesisMessageSenderFactoryTest {
+public class KinesisMessageSenderEndpointFactoryTest {
 
     @Test
     public void shouldBuildKinesisMessageSender() {
         final ObjectMapper objectMapper = mock(ObjectMapper.class);
         final KinesisClient kinesisClient = mock(KinesisClient.class);
 
-        final KinesisMessageSenderFactory factory = new KinesisMessageSenderFactory(new MessageInterceptorRegistry(), objectMapper, kinesisClient);
+        final KinesisMessageSenderEndpointFactory factory = new KinesisMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, kinesisClient);
 
-        final MessageSenderEndpoint sender = factory.createSenderFor("foo-stream");
+        final MessageSenderEndpoint sender = factory.create("foo-stream");
         assertThat(sender.getChannelName(), is("foo-stream"));
         assertThat(sender, is(instanceOf(KinesisMessageSender.class)));
     }
@@ -35,9 +35,9 @@ public class KinesisMessageSenderFactoryTest {
         final MessageInterceptor interceptor = mock(MessageInterceptor.class);
         registry.register(MessageInterceptorRegistration.allChannelsWith(interceptor));
 
-        final KinesisMessageSenderFactory factory = new KinesisMessageSenderFactory(registry, objectMapper, kinesisClient);
+        final KinesisMessageSenderEndpointFactory factory = new KinesisMessageSenderEndpointFactory(registry, objectMapper, kinesisClient);
 
-        final MessageSenderEndpoint sender = factory.createSenderFor("foo-stream");
+        final MessageSenderEndpoint sender = factory.create("foo-stream");
 
         assertThat(sender.getInterceptorChain().getInterceptors(), contains(interceptor));
     }

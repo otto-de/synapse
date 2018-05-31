@@ -4,8 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.otto.synapse.annotation.EventSourceConsumerBeanPostProcessor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
+import de.otto.synapse.eventsource.DefaultEventSource;
 import de.otto.synapse.eventsource.EventSource;
+import de.otto.synapse.eventsource.EventSourceBuilder;
 import de.otto.synapse.eventsource.EventSourceConsumerProcess;
+import de.otto.synapse.messagestore.MessageStore;
+import de.otto.synapse.messagestore.MessageStoreFactory;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -24,13 +30,24 @@ import static org.springframework.beans.factory.config.BeanDefinition.ROLE_INFRA
 
 @Configuration
 @EnableConfigurationProperties(ConsumerProcessProperties.class)
-public class EventSourcingAutoConfiguration {
+public class SynapseAutoConfiguration {
 
-    private static final Logger LOG = getLogger(EventSourcingAutoConfiguration.class);
+    private static final Logger LOG = getLogger(SynapseAutoConfiguration.class);
 
     @Autowired(required = false)
     private List<EventSource> eventSources;
     private MessageInterceptorRegistry registry;
+
+    @Bean
+    @ConditionalOnMissingBean
+    public EventSourceBuilder eventSourceBuilder(final MessageStoreFactory<MessageStore> snapshotMessageStoreFactory,
+                                                 final MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory) {
+        return (name, channelName) -> {
+            final MessageStore messageStore = snapshotMessageStoreFactory.createMessageStoreFor(channelName);
+            final MessageLogReceiverEndpoint messageLog = messageLogReceiverEndpointFactory.create(channelName);
+            return new DefaultEventSource(channelName, messageStore, messageLog);
+        };
+    }
 
     @Bean
     @ConditionalOnProperty(

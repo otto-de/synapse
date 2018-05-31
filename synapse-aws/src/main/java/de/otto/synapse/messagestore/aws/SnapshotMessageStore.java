@@ -89,7 +89,7 @@ public class SnapshotMessageStore implements MessageStore {
                         }
                     }
             } else {
-                LOG.info("No Snapshot available. Returning empty MessageStore.");
+                LOG.info("No Snapshot available. Returning emptyMessageStore MessageStore.");
             }
         } catch (final Exception e) {
             try {

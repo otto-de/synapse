@@ -28,7 +28,7 @@ public class CompactionAutoConfiguration {
     @ConditionalOnProperty(prefix = "synapse.compaction", name = "enabled", havingValue = "true")
     public CompactionService compactionService(final SnapshotWriteService snapshotWriteService,
                                                final StateRepository<String> compactionStateRepository,
-                                               final EventSourceBuilder defaultEventSourceBuilder) {
-        return new CompactionService(snapshotWriteService, compactionStateRepository, defaultEventSourceBuilder);
+                                               final EventSourceBuilder eventSourceBuilder) {
+        return new CompactionService(snapshotWriteService, compactionStateRepository, eventSourceBuilder);
     }
 }

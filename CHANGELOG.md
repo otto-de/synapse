@@ -1,6 +1,14 @@
 # Release Notes
 
 ## 0.6.6
+* Removed `EnableEventSource#builder()` and replaced it by an 
+  auto-configuration of the new `MessageSenderEndpointFactory` and 
+  `MessageLogReceiverEndpointFactory` instances, together with the (also new) 
+  general-purpose `DefaultEventSource` implementation that is replacing the
+  different other `EventSource` implementations.
+* Simplified the configuration of in-memory implementations of the different endpoints for
+  testing purposes. It is now possible to just add `@ImportAutoConfiguration(InMemoryTestConfiguration.class)` to
+  your test configuration to do this.
 * Removed `Predicate` from `EventSource` and `MessageLogReceiverEndpoint` interfaces and
   replaced it by `consumeUntil()` methods taking an `Instant`as a parameter to stop
   message retrieval at a specified timestamp.

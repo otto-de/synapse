@@ -1,11 +1,11 @@
 package de.otto.synapse.annotation;
 
-import de.otto.synapse.configuration.EventSourcingAutoConfiguration;
+import de.otto.synapse.configuration.InMemoryTestConfiguration;
+import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MethodInvokingMessageConsumer;
 import de.otto.synapse.eventsource.DelegateEventSource;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.testsupport.InMemoryEventSourceConfiguration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,9 +37,9 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test
     public void shouldRegisterMultipleEventConsumers() {
-        context.register(EventSourcingAutoConfiguration.class);
+        context.register(SynapseAutoConfiguration.class);
         context.register(ThreeConsumersAtTwoEventSourcesConfiguration.class);
-        context.register(InMemoryEventSourceConfiguration.class);
+        context.register(InMemoryTestConfiguration.class);
         context.refresh();
 
         final DelegateEventSource someStreamEventSource = context.getBean("testEventSource", DelegateEventSource.class);
@@ -56,9 +56,9 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test(expected = BeanCreationException.class)
     public void shouldFailToRegisterConsumerBecauseOfMissingEventSource() {
-        context.register(EventSourcingAutoConfiguration.class);
+        context.register(SynapseAutoConfiguration.class);
         context.register(TestConfigurationWithMissingEventSource.class);
-        context.register(InMemoryEventSourceConfiguration.class);
+        context.register(InMemoryTestConfiguration.class);
         context.refresh();
     }
 
@@ -68,9 +68,9 @@ public class EventSourceConsumerBeanPostProcessorTest {
      */
     @Test
     public void shouldRegisterConsumerAtSpecifiedEventSource() {
-        context.register(EventSourcingAutoConfiguration.class);
+        context.register(SynapseAutoConfiguration.class);
         context.register(TwoEventSourcesWithSameStreamAndSecificConsumerConfiguration.class);
-        context.register(InMemoryEventSourceConfiguration.class);
+        context.register(InMemoryTestConfiguration.class);
         context.refresh();
 
         final DelegateEventSource someStreamEventSource = context.getBean("someTestEventSource", DelegateEventSource.class);
@@ -81,9 +81,9 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test
     public void shouldCreateEventConsumerWithSpecificPayloadType() {
-        context.register(EventSourcingAutoConfiguration.class);
+        context.register(SynapseAutoConfiguration.class);
         context.register(TestConfigurationDifferentPayload.class);
-        context.register(InMemoryEventSourceConfiguration.class);
+        context.register(InMemoryTestConfiguration.class);
         context.refresh();
 
         final DelegateEventSource someStreamEventSource = context.getBean("testEventSource", DelegateEventSource.class);
@@ -96,9 +96,9 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test
     public void shouldRegisterEventConsumerWithSpecificKeyPattern() {
-        context.register(EventSourcingAutoConfiguration.class);
+        context.register(SynapseAutoConfiguration.class);
         context.register(TestConfigurationDifferentPayload.class);
-        context.register(InMemoryEventSourceConfiguration.class);
+        context.register(InMemoryTestConfiguration.class);
         context.refresh();
 
         final DelegateEventSource someStreamEventSource = context.getBean("testEventSource", DelegateEventSource.class);
@@ -108,8 +108,8 @@ public class EventSourceConsumerBeanPostProcessorTest {
         assertThat(pattern).containsExactlyInAnyOrder("apple.*", "banana.*");
     }
 
-    @EnableEventSource(name = "testEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
-    @EnableEventSource(name = "otherStreamTestSource", channelName = "other-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "testEventSource", channelName = "some-stream")
+    @EnableEventSource(name = "otherStreamTestSource", channelName = "other-stream")
     static class ThreeConsumersAtTwoEventSourcesConfiguration {
         @Bean
         public TestConsumer test() {
@@ -117,8 +117,8 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
-    @EnableEventSource(name = "someTestEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
-    @EnableEventSource(name = "otherTestEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "someTestEventSource", channelName = "some-stream")
+    @EnableEventSource(name = "otherTestEventSource", channelName = "some-stream")
     static class TwoEventSourcesWithSameStreamAndUnspecificConsumerConfiguration {
         @Bean
         public SingleUnspecificConsumer test() {
@@ -126,8 +126,8 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
-    @EnableEventSource(name = "someTestEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
-    @EnableEventSource(name = "otherTestEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "someTestEventSource", channelName = "some-stream")
+    @EnableEventSource(name = "otherTestEventSource", channelName = "some-stream")
     static class TwoEventSourcesWithSameStreamAndSecificConsumerConfiguration {
         @Bean
         public SingleSpecificConsumer test() {
@@ -135,7 +135,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
         }
     }
 
-    @EnableEventSource(name = "testEventSource", channelName = "some-stream", builder = "inMemEventSourceBuilder")
+    @EnableEventSource(name = "testEventSource", channelName = "some-stream")
     static class TestConfigurationDifferentPayload {
         @Bean
         public TestConsumerWithSameStreamNameAndDifferentPayload test() {

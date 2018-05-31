@@ -2,6 +2,7 @@ package de.otto.synapse.annotation;
 
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
@@ -13,8 +14,14 @@ import java.lang.annotation.*;
  *     beans can be specified by {@link #name()}.
  * </p>
  * <p>
- *     EventSources are created using one of the registered {@link EventSourceBuilder}.
- *     The {@link #builder()} attribute is used to select the {@code EventSourceBuilder} instance.
+ *     EventSources are created using a {@link EventSourceBuilder} that must be registered in the
+ *     {@code ApplicationContext}. The default builder is configured in
+ *     {@link de.otto.synapse.configuration.SynapseAutoConfiguration} and will create instances of
+ *     {@link de.otto.synapse.eventsource.DefaultEventSource}.
+ * </p>
+ * <p>
+ *     Because the {@code EventSourceBuilder} is annotated as {@link ConditionalOnMissingBean}, it can be
+ *     replaced by other implementations by just registering a different bean.
  * </p>
  * <p>
  *     The {@link EventSource#getChannelName()} is configured using {@link #channelName()}.
@@ -45,14 +52,5 @@ public @interface EnableEventSource {
      * @return stream name
      */
     String channelName();
-
-    /**
-     * The optional name of the {@link EventSourceBuilder} bean used to construct the {@link EventSource} instance.
-     * <p>
-     *     By default, the bean named 'defaultEventSourceBuilder' is used.
-     * </p>
-     * @return bean name
-     */
-    String builder() default "defaultEventSourceBuilder";
 
 }

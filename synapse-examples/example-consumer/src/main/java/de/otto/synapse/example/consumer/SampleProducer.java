@@ -8,9 +8,9 @@ import de.otto.synapse.message.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Profile;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.List;
 
 import static java.util.Arrays.asList;
@@ -25,12 +25,7 @@ public class SampleProducer {
     @Autowired
     private MessageSenderEndpoint productMessageSender;
 
-    @PostConstruct
-    public void produceSampleData() {
-        produceBananaSampleData();
-        produceProductsSampleData();
-    }
-
+    @Scheduled(initialDelay = 1000L, fixedRate = 10000L)
     protected void produceBananaSampleData() {
         final List<Message<BananaPayload>> bananaMessages = asList(
                 sampleBananaMessage("1"),
@@ -43,6 +38,7 @@ public class SampleProducer {
         bananaMessageSender.sendBatch(bananaMessages.stream());
     }
 
+    @Scheduled(initialDelay = 1000L, fixedRate = 10000L)
     protected void produceProductsSampleData() {
         final List<Message<ProductPayload>> productMessages = asList(
                 sampleProductMessage("1"),
