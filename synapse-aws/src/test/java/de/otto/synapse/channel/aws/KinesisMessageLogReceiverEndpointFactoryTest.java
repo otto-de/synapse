@@ -1,9 +1,9 @@
-package de.otto.synapse.eventsource.aws;
+package de.otto.synapse.channel.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.eventsource.EventSource;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import org.junit.Test;
 import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
@@ -16,78 +16,70 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class KinesisEventSourceBuilderTest {
+public class KinesisMessageLogReceiverEndpointFactoryTest {
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+    private final MessageInterceptorRegistry registry = mock(MessageInterceptorRegistry.class);
+    private final KinesisClient kinesisClient = someKinesisClient();
 
     @Test
     public void shouldBuildEventSource() {
         // given
-        final ObjectMapper objectMapper = new ObjectMapper();
-        final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
-        final MessageInterceptorRegistry registry = mock(MessageInterceptorRegistry.class);
-        final KinesisClient kinesisClient = someKinesisClient();
-        final KinesisEventSourceBuilder builder = new KinesisEventSourceBuilder(objectMapper, eventPublisher, kinesisClient, registry);
+        final KinesisMessageLogReceiverEndpointFactory factory = new KinesisMessageLogReceiverEndpointFactory(registry, kinesisClient, objectMapper, eventPublisher);
         // when
-        final EventSource eventSource = builder.buildEventSource("Horst", "some-channel");
+        final MessageLogReceiverEndpoint endpoint = factory.create("some-channel");
         // then
-        assertThat(eventSource, is(instanceOf(KinesisEventSource.class)));
-        assertThat(eventSource.getName(), is("Horst"));
-        assertThat(eventSource.getChannelName(), is("some-channel"));
-        assertThat(eventSource.getMessageDispatcher(), is(notNullValue()));
+        assertThat(endpoint, is(instanceOf(KinesisMessageLogReceiverEndpoint.class)));
+        assertThat(endpoint.getChannelName(), is("some-channel"));
+        assertThat(endpoint.getMessageDispatcher(), is(notNullValue()));
     }
 
     @Test
     public void shouldRegisterInterceptors() {
         // given
-        final ObjectMapper objectMapper = new ObjectMapper();
-        final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
         final MessageInterceptor interceptor = mock(MessageInterceptor.class);
         final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
-        registry.register(matchingReceiverChannelsWith("some-channel", interceptor));
-        final KinesisClient kinesisClient = someKinesisClient();
-        final KinesisEventSourceBuilder builder = new KinesisEventSourceBuilder(objectMapper, eventPublisher, kinesisClient, registry);
         // when
-        final KinesisEventSource eventSource = (KinesisEventSource) builder.buildEventSource("Horst", "some-channel");
+        registry.register(matchingReceiverChannelsWith("some-channel", interceptor));
+        final KinesisMessageLogReceiverEndpointFactory factory = new KinesisMessageLogReceiverEndpointFactory(registry, kinesisClient, objectMapper, eventPublisher);
+        final MessageLogReceiverEndpoint endpoint = factory.create("some-channel");
         // then
-        assertThat(eventSource.getMessageLogReceiverEndpoint().getInterceptorChain().getInterceptors(), contains(interceptor));
+        assertThat(endpoint.getInterceptorChain().getInterceptors(), contains(interceptor));
 
     }
 
     @Test
     public void shouldRegisterOnlyReceiverInterceptors() {
         // given
-        final ObjectMapper objectMapper = new ObjectMapper();
-        final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
         final MessageInterceptor receiverInterceptor = mock(MessageInterceptor.class);
         final MessageInterceptor senderInterceptor = mock(MessageInterceptor.class);
-        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        // when
         registry.register(matchingReceiverChannelsWith("some-channel", receiverInterceptor));
         registry.register(matchingSenderChannelsWith("some-channel", senderInterceptor));
-        final KinesisClient kinesisClient = someKinesisClient();
-        final KinesisEventSourceBuilder builder = new KinesisEventSourceBuilder(objectMapper, eventPublisher, kinesisClient, registry);
-        // when
-        final KinesisEventSource eventSource = (KinesisEventSource) builder.buildEventSource("Horst", "some-channel");
+        final KinesisMessageLogReceiverEndpointFactory factory = new KinesisMessageLogReceiverEndpointFactory(registry, kinesisClient, objectMapper, eventPublisher);
+        final MessageLogReceiverEndpoint endpoint = factory.create("some-channel");
+
         // then
-        assertThat(eventSource.getMessageLogReceiverEndpoint().getInterceptorChain().getInterceptors(), contains(receiverInterceptor));
+        assertThat(endpoint.getInterceptorChain().getInterceptors(), contains(receiverInterceptor));
 
     }
 
     @Test
     public void shouldRegisterOnlyReceiverInterceptorsMatchingChannelName() {
         // given
-        final ObjectMapper objectMapper = new ObjectMapper();
-        final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
         final MessageInterceptor someInterceptor = mock(MessageInterceptor.class);
         final MessageInterceptor someOtherInterceptor = mock(MessageInterceptor.class);
-        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        // when
         registry.register(matchingChannelsWith("some-channel", someInterceptor));
         registry.register(matchingChannelsWith("some-other-channel", someOtherInterceptor));
-        final KinesisClient kinesisClient = someKinesisClient();
-        final KinesisEventSourceBuilder builder = new KinesisEventSourceBuilder(objectMapper, eventPublisher, kinesisClient, registry);
-        // when
-        final KinesisEventSource eventSource = (KinesisEventSource) builder.buildEventSource("Horst", "some-channel");
+        final KinesisMessageLogReceiverEndpointFactory factory = new KinesisMessageLogReceiverEndpointFactory(registry, kinesisClient, objectMapper, eventPublisher);
+        final MessageLogReceiverEndpoint endpoint = factory.create("some-channel");
+
         // then
-        assertThat(eventSource.getMessageLogReceiverEndpoint().getInterceptorChain().getInterceptors(), contains(someInterceptor));
+        assertThat(endpoint.getInterceptorChain().getInterceptors(), contains(someInterceptor));
     }
 
     private KinesisClient someKinesisClient() {

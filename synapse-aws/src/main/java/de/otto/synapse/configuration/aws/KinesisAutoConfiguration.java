@@ -3,6 +3,7 @@ package de.otto.synapse.configuration.aws;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.aws.configuration.AwsProperties;
 import de.otto.synapse.channel.aws.KinesisMessageLogReceiverEndpoint;
+import de.otto.synapse.channel.aws.KinesisMessageLogReceiverEndpointFactory;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
@@ -17,6 +18,8 @@ import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.core.auth.AwsCredentialsProvider;
 import software.amazon.awssdk.core.regions.Region;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
+
+import javax.annotation.Nonnull;
 
 @Configuration
 @EnableConfigurationProperties(AwsProperties.class)
@@ -56,11 +59,7 @@ public class KinesisAutoConfiguration {
                                                                                final ObjectMapper objectMapper,
                                                                                final KinesisClient kinesisClient,
                                                                                final ApplicationEventPublisher eventPublisher) {
-        return (channelName) -> {
-            final MessageLogReceiverEndpoint messageLog = new KinesisMessageLogReceiverEndpoint(channelName, kinesisClient, objectMapper, eventPublisher);
-            messageLog.registerInterceptorsFrom(interceptorRegistry);
-            return messageLog;
-        };
+        return new KinesisMessageLogReceiverEndpointFactory(interceptorRegistry, kinesisClient, objectMapper, eventPublisher);
     }
 
 }

@@ -6,6 +6,7 @@ import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.messagestore.MessageStore;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -16,6 +17,9 @@ import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
+import static de.otto.synapse.messagestore.MessageStores.emptyMessageStore;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -24,8 +28,9 @@ public class DefaultEventSourceTest {
     @Test
     public void shouldReadMessagesFromMessageStore() {
         // given
-        final MessageStore messageStore = mock(MessageStore.class);
-        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, mock(MessageLogReceiverEndpoint.class));
+        final MessageStore messageStore = mockMessageStore(fromHorizon());
+        final MessageLogReceiverEndpoint messageLog = mockMessageLogReceiverEndpoint();
+        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
 
         // when
         eventSource.consume();
@@ -37,9 +42,8 @@ public class DefaultEventSourceTest {
     @Test
     public void shouldReadMessagesFromMessageLog() {
         // given
-        final MessageStore messageStore = mock(MessageStore.class);
-        when(messageStore.getLatestChannelPosition()).thenReturn(fromHorizon());
-        final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
+        final MessageStore messageStore = mockMessageStore(fromHorizon());
+        final MessageLogReceiverEndpoint messageLog = mockMessageLogReceiverEndpoint();
         final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
 
         // when
@@ -61,6 +65,8 @@ public class DefaultEventSourceTest {
         final InterceptorChain interceptorChain = mock(InterceptorChain.class);
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
         when(messageLog.getInterceptorChain()).thenReturn(interceptorChain);
+        when(messageLog.consumeUntil(any(ChannelPosition.class), any(Instant.class))).thenReturn(fromHorizon());
+
         // and our famous DefaultEventSource:
         final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
 
@@ -86,6 +92,7 @@ public class DefaultEventSourceTest {
         interceptorChain.register((m)->null);
         // and some MessageLogReceiverEndpoint with our InterceptorChain:
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
+        when(messageLog.consumeUntil(any(ChannelPosition.class), any(Instant.class))).thenReturn(fromHorizon());
         when(messageLog.getInterceptorChain()).thenReturn(interceptorChain);
         final MessageDispatcher messageDispatcher = mock(MessageDispatcher.class);
         when(messageLog.getMessageDispatcher()).thenReturn(messageDispatcher);
@@ -110,6 +117,7 @@ public class DefaultEventSourceTest {
         // and some MessageLogReceiverEndpoint with our InterceptorChain:
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
         when(messageLog.getInterceptorChain()).thenReturn(new InterceptorChain());
+        when(messageLog.consumeUntil(any(ChannelPosition.class), any(Instant.class))).thenReturn(fromHorizon());
         final MessageDispatcher messageDispatcher = mock(MessageDispatcher.class);
         when(messageLog.getMessageDispatcher()).thenReturn(messageDispatcher);
         // and our famous DefaultEventSource:
@@ -127,10 +135,9 @@ public class DefaultEventSourceTest {
         // given
         final ChannelPosition expectedChannelPosition = channelPosition(fromPosition("bar", "42"));
         // and some message store having a single message
-        final MessageStore messageStore = mock(MessageStore.class);
-        when(messageStore.getLatestChannelPosition()).thenReturn(expectedChannelPosition);
+        final MessageStore messageStore = mockMessageStore(expectedChannelPosition);
         // and some MessageLogReceiverEndpoint with our InterceptorChain:
-        final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
+        final MessageLogReceiverEndpoint messageLog = mockMessageLogReceiverEndpoint();
         // and our famous DefaultEventSource:
         final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
 
@@ -144,13 +151,41 @@ public class DefaultEventSourceTest {
     @Test
     public void shouldCloseMessageStore() throws Exception {
         // given
-        final MessageStore messageStore = mock(MessageStore.class);
-        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, mock(MessageLogReceiverEndpoint.class));
+        final MessageStore messageStore = mockMessageStore(fromHorizon());
+        final MessageLogReceiverEndpoint messageLog = mockMessageLogReceiverEndpoint();
+        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
 
         // when
         eventSource.consume();
 
         // then
         verify(messageStore).close();
+    }
+
+    @Test
+    public void shouldStopMessageLogReceiverEndpoint() throws Exception {
+        // given
+        final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
+        final DefaultEventSource eventSource = new DefaultEventSource("foo", emptyMessageStore(), messageLog);
+
+        // when
+        eventSource.stop();
+
+        // then
+        verify(messageLog).stop();
+        assertThat(eventSource.isStopping(), is(true));
+    }
+
+    private MessageLogReceiverEndpoint mockMessageLogReceiverEndpoint() {
+        final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
+        when(messageLog.consumeUntil(any(ChannelPosition.class), any(Instant.class))).thenReturn(fromHorizon());
+        return messageLog;
+    }
+
+    private MessageStore mockMessageStore(final ChannelPosition expectedChannelPosition) {
+        final MessageStore messageStore = mock(MessageStore.class);
+        when(messageStore.getLatestChannelPosition()).thenReturn(expectedChannelPosition);
+        when(messageStore.stream()).thenReturn(Stream.empty());
+        return messageStore;
     }
 }

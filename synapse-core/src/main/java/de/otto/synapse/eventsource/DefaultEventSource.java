@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import javax.annotation.Nonnull;
 import java.time.Instant;
 
+import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class DefaultEventSource extends AbstractEventSource {
@@ -30,14 +31,19 @@ public class DefaultEventSource extends AbstractEventSource {
                                         final @Nonnull Instant until) {
 
         try {
-            messageStore.stream().forEach(message -> {
-                final Message<String> interceptedMessage = getMessageLogReceiverEndpoint().getInterceptorChain().intercept(message);
-                if (interceptedMessage != null) {
-                    getMessageLogReceiverEndpoint().getMessageDispatcher().accept(interceptedMessage);
-                }
-            });
-
-            return getMessageLogReceiverEndpoint().consumeUntil(messageStore.getLatestChannelPosition(), until);
+            final ChannelPosition messageLogStartPosition;
+            if (startFrom.equals(fromHorizon())) {
+                messageStore.stream().forEach(message -> {
+                    final Message<String> interceptedMessage = getMessageLogReceiverEndpoint().getInterceptorChain().intercept(message);
+                    if (interceptedMessage != null) {
+                        getMessageLogReceiverEndpoint().getMessageDispatcher().accept(interceptedMessage);
+                    }
+                });
+                messageLogStartPosition = messageStore.getLatestChannelPosition();
+            } else {
+                messageLogStartPosition = startFrom;
+            }
+            return getMessageLogReceiverEndpoint().consumeUntil(messageLogStartPosition, until);
         } finally {
             try {
                 messageStore.close();

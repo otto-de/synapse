@@ -10,6 +10,7 @@ import de.otto.synapse.channel.aws.KinesisStreamSetupUtils;
 import de.otto.synapse.configuration.aws.TestMessageInterceptor;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.eventsource.DefaultEventSource;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.TestStreamSource;
@@ -44,6 +45,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
+import static de.otto.synapse.messagestore.MessageStores.emptyMessageStore;
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -91,12 +93,11 @@ public class KinesisEventSourceIntegrationTest {
 
     private EventSource integrationEventSource;
 
-    private List<Message<String>> messages = synchronizedList(new ArrayList<Message<String>>());
+    private List<Message<String>> messages = synchronizedList(new ArrayList<>());
 
     @Before
     public void before() {
         messages.clear();
-
     }
 
     @PostConstruct
@@ -111,21 +112,8 @@ public class KinesisEventSourceIntegrationTest {
          */
         final KinesisMessageLogReceiverEndpoint kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(TEST_CHANNEL, kinesisClient, objectMapper, null);
         kinesisMessageLog.registerInterceptorsFrom(messageInterceptorRegistry);
-        this.integrationEventSource = new KinesisEventSource("integrationEventSource", kinesisMessageLog);
+        this.integrationEventSource = new DefaultEventSource("integrationEventSource", emptyMessageStore(), kinesisMessageLog);
         this.integrationEventSource.register(MessageConsumer.of(".*", String.class, (message) -> messages.add(message)));
-    }
-
-    @Test
-    @Ignore("test consumption from actual kinesis productfeed stream - disable KinesisTestConfiguration and log in to aws to use real kinesis")
-    public void shouldConsumeDataFromExistingStream() {
-        EventSource productStreamEventSource = new KinesisEventSourceBuilder(objectMapper, eventPublisher, kinesisClient, new MessageInterceptorRegistry()).buildEventSource("promo-productfeed-develop", "promo-productfeed-develop");
-        productStreamEventSource.register(MessageConsumer.of(".*", String.class, (message) -> messages.add(message)));
-
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
-        productStreamEventSource.consumeUntil(fromHorizon(), now().plus(20, SECONDS));
-        stopWatch.stop();
-        System.out.println(stopWatch.prettyPrint());
     }
 
     @Test
