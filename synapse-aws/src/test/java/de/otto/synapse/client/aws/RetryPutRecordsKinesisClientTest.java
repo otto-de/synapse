@@ -3,6 +3,7 @@ package de.otto.synapse.client.aws;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequestEntry;
@@ -111,4 +112,36 @@ public class RetryPutRecordsKinesisClientTest {
         verifyNoMoreInteractions(kinesisClient);
     }
 
+    @Test
+    public void shouldRetryOnKinesisException() throws Exception {
+        // given
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class)))
+                .thenThrow(new SdkClientException("Unable to execute HTTP request: The target server failed to respond"))
+                .thenReturn(PutRecordsResponse.builder().failedRecordCount(0).records(emptyList()).build());
+
+        // when
+        PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder().records(emptyList()).build();
+        retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
+
+        // then
+        verify(kinesisClient, times(2)).putRecords(putRecordsRequest);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void shouldRetryThreeTimeMaxOnKinesisException() throws Exception {
+        // given
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class)))
+                .thenThrow(new SdkClientException("Unable to execute HTTP request: The target server failed to respond"));
+
+        // when
+        PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder().records(emptyList()).build();
+        try {
+            retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
+        } catch (Exception e) {
+            // then
+            verify(kinesisClient, times(3)).putRecords(putRecordsRequest);
+            throw e;
+        }
+        fail();
+    }
 }
