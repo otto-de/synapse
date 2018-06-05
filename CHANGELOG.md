@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.6.7
+* Introduced interfaces for MessageEndpoint, MessageReceiverEndpoint, MessageLogReceiverEndpoint and 
+  MessageQueueReceiverEndpoints.
+* Refactored the creation of EventSources: The associated MessageLogReceiverEndpoints are now registered in the 
+  ApplicationContext, so it is possible to inject these into other beans.
+  
 ## 0.6.6
 * Removed `EnableEventSource#builder()` and replaced it by an 
   auto-configuration of the new `MessageSenderEndpointFactory` and 
