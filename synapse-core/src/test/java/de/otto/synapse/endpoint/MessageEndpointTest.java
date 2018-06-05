@@ -3,6 +3,8 @@ package de.otto.synapse.endpoint;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 
+import javax.annotation.Nonnull;
+
 import static de.otto.synapse.endpoint.EndpointType.SENDER;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.senderChannelsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -20,18 +22,20 @@ public class MessageEndpointTest {
 
     @Test(expected = RuntimeException.class)
     public void shouldFailToCreateWithNullChannelName() {
-        new MessageEndpoint(null) {
+        new AbstractMessageEndpoint(null) {
+            @Nonnull
             @Override
-            protected EndpointType getEndpointType() {
+            public EndpointType getEndpointType() {
                 return SENDER;
             }
         };
     }
     @Test
     public void shouldReturnChannelName() {
-        final MessageEndpoint endpoint = new MessageEndpoint("foo") {
+        final AbstractMessageEndpoint endpoint = new AbstractMessageEndpoint("foo") {
+            @Nonnull
             @Override
-            protected EndpointType getEndpointType() {
+            public EndpointType getEndpointType() {
                 return SENDER;
             }
         };
@@ -46,9 +50,10 @@ public class MessageEndpointTest {
      */
     @Test(expected = RuntimeException.class)
     public void shouldFailToRegisterFromNullRegistry() {
-        MessageEndpoint messageEndpoint = new MessageEndpoint("foo") {
+        AbstractMessageEndpoint messageEndpoint = new AbstractMessageEndpoint("foo") {
+            @Nonnull
             @Override
-            protected EndpointType getEndpointType() {
+            public EndpointType getEndpointType() {
                 return SENDER;
             }
         };
@@ -58,9 +63,10 @@ public class MessageEndpointTest {
     @Test
     public void shouldInterceptMessages() {
         final MessageInterceptor interceptor = mock(MessageInterceptor.class);
-        final MessageEndpoint endpoint = new MessageEndpoint("foo") {
+        final AbstractMessageEndpoint endpoint = new AbstractMessageEndpoint("foo") {
+            @Nonnull
             @Override
-            protected EndpointType getEndpointType() {
+            public EndpointType getEndpointType() {
                 return SENDER;
             }
         };
@@ -75,9 +81,10 @@ public class MessageEndpointTest {
     @Test
     @SuppressWarnings("unchecked")
     public void shouldReturnMessageWithoutInterceptor() {
-        final MessageEndpoint messageEndpoint = new MessageEndpoint("foo") {
+        final AbstractMessageEndpoint messageEndpoint = new AbstractMessageEndpoint("foo") {
+            @Nonnull
             @Override
-            protected EndpointType getEndpointType() {
+            public EndpointType getEndpointType() {
                 return SENDER;
             }
         };

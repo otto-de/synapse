@@ -16,7 +16,6 @@ import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.TestStreamSource;
 import org.awaitility.Awaitility;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +25,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.util.StopWatch;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordRequest;
 
@@ -44,11 +42,9 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.messagestore.MessageStores.emptyMessageStore;
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.MILLIS;
-import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Collections.synchronizedList;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -112,7 +108,7 @@ public class KinesisEventSourceIntegrationTest {
          */
         final KinesisMessageLogReceiverEndpoint kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(TEST_CHANNEL, kinesisClient, objectMapper, null);
         kinesisMessageLog.registerInterceptorsFrom(messageInterceptorRegistry);
-        this.integrationEventSource = new DefaultEventSource("integrationEventSource", emptyMessageStore(), kinesisMessageLog);
+        this.integrationEventSource = new DefaultEventSource(emptyMessageStore(), kinesisMessageLog);
         this.integrationEventSource.register(MessageConsumer.of(".*", String.class, (message) -> messages.add(message)));
     }
 

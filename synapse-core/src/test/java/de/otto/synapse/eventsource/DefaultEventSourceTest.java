@@ -6,7 +6,6 @@ import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.messagestore.MessageStore;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.time.Instant;
@@ -30,7 +29,7 @@ public class DefaultEventSourceTest {
         // given
         final MessageStore messageStore = mockMessageStore(fromHorizon());
         final MessageLogReceiverEndpoint messageLog = mockMessageLogReceiverEndpoint();
-        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
+        final DefaultEventSource eventSource = new DefaultEventSource(messageStore, messageLog);
 
         // when
         eventSource.consume();
@@ -44,7 +43,7 @@ public class DefaultEventSourceTest {
         // given
         final MessageStore messageStore = mockMessageStore(fromHorizon());
         final MessageLogReceiverEndpoint messageLog = mockMessageLogReceiverEndpoint();
-        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
+        final DefaultEventSource eventSource = new DefaultEventSource(messageStore, messageLog);
 
         // when
         eventSource.consume();
@@ -68,7 +67,7 @@ public class DefaultEventSourceTest {
         when(messageLog.consumeUntil(any(ChannelPosition.class), any(Instant.class))).thenReturn(fromHorizon());
 
         // and our famous DefaultEventSource:
-        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
+        final DefaultEventSource eventSource = new DefaultEventSource(messageStore, messageLog);
 
         // when
         eventSource.consume();
@@ -97,7 +96,7 @@ public class DefaultEventSourceTest {
         final MessageDispatcher messageDispatcher = mock(MessageDispatcher.class);
         when(messageLog.getMessageDispatcher()).thenReturn(messageDispatcher);
         // and our famous DefaultEventSource:
-        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
+        final DefaultEventSource eventSource = new DefaultEventSource(messageStore, messageLog);
 
         // when
         eventSource.consume();
@@ -121,7 +120,7 @@ public class DefaultEventSourceTest {
         final MessageDispatcher messageDispatcher = mock(MessageDispatcher.class);
         when(messageLog.getMessageDispatcher()).thenReturn(messageDispatcher);
         // and our famous DefaultEventSource:
-        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
+        final DefaultEventSource eventSource = new DefaultEventSource(messageStore, messageLog);
 
         // when
         eventSource.consume();
@@ -139,7 +138,7 @@ public class DefaultEventSourceTest {
         // and some MessageLogReceiverEndpoint with our InterceptorChain:
         final MessageLogReceiverEndpoint messageLog = mockMessageLogReceiverEndpoint();
         // and our famous DefaultEventSource:
-        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
+        final DefaultEventSource eventSource = new DefaultEventSource(messageStore, messageLog);
 
         // when
         eventSource.consume();
@@ -153,7 +152,7 @@ public class DefaultEventSourceTest {
         // given
         final MessageStore messageStore = mockMessageStore(fromHorizon());
         final MessageLogReceiverEndpoint messageLog = mockMessageLogReceiverEndpoint();
-        final DefaultEventSource eventSource = new DefaultEventSource("foo", messageStore, messageLog);
+        final DefaultEventSource eventSource = new DefaultEventSource(messageStore, messageLog);
 
         // when
         eventSource.consume();
@@ -166,7 +165,7 @@ public class DefaultEventSourceTest {
     public void shouldStopMessageLogReceiverEndpoint() throws Exception {
         // given
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
-        final DefaultEventSource eventSource = new DefaultEventSource("foo", emptyMessageStore(), messageLog);
+        final DefaultEventSource eventSource = new DefaultEventSource(emptyMessageStore(), messageLog);
 
         // when
         eventSource.stop();

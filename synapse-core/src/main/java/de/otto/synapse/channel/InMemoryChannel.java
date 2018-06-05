@@ -3,7 +3,7 @@ package de.otto.synapse.channel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.Iterables;
-import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
+import de.otto.synapse.endpoint.receiver.AbstractMessageLogReceiverEndpoint;
 import de.otto.synapse.info.MessageReceiverStatus;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
@@ -26,7 +26,7 @@ import static java.time.Instant.now;
 import static java.util.Collections.synchronizedList;
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class InMemoryChannel extends MessageLogReceiverEndpoint {
+public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint {
 
     private static final Logger LOG = getLogger(InMemoryChannel.class);
     private final List<Message<String>> eventQueue;

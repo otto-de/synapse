@@ -1,5 +1,8 @@
 package de.otto.synapse.endpoint;
 
+import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
+import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
+
 import javax.annotation.Nonnull;
 import java.util.EnumSet;
 import java.util.Objects;
@@ -22,8 +25,8 @@ public class MessageInterceptorRegistration {
 
     /**
      * Creates a MessageInterceptorRegistration that is used to register a {@link MessageInterceptor} in all channels,
-     * at the {@link de.otto.synapse.endpoint.sender.MessageSenderEndpoint sender-side} as well as at the
-     * {@link de.otto.synapse.endpoint.receiver.MessageReceiverEndpoint receiver-side}.
+     * at the {@link AbstractMessageSenderEndpoint sender-side} as well as at the
+     * {@link AbstractMessageReceiverEndpoint receiver-side}.
      *
      * @param interceptor the MessageInterceptor used to intercept messages
      * @return MessageInterceptorRegistration
@@ -35,8 +38,8 @@ public class MessageInterceptorRegistration {
     /**
      * Creates a MessageInterceptorRegistration that is used to register a {@link MessageInterceptor} in all channels
      * with names matching the {@code channelNamePattern},
-     * at the {@link de.otto.synapse.endpoint.sender.MessageSenderEndpoint sender-side} as well as at the
-     * {@link de.otto.synapse.endpoint.receiver.MessageReceiverEndpoint receiver-side}.
+     * at the {@link AbstractMessageSenderEndpoint sender-side} as well as at the
+     * {@link AbstractMessageReceiverEndpoint receiver-side}.
      *
      * @param channelNamePattern the regexp used to match channel names. Only channels with matching names will be intercepted.
      * @param interceptor the MessageInterceptor used to intercept messages
@@ -49,7 +52,7 @@ public class MessageInterceptorRegistration {
 
     /**
      * Creates a MessageInterceptorRegistration that is used to register a {@link MessageInterceptor} at the
-     * {@link de.otto.synapse.endpoint.receiver.MessageReceiverEndpoint receiver-side} of all channels.
+     * {@link AbstractMessageReceiverEndpoint receiver-side} of all channels.
      *
      * @param interceptor the MessageInterceptor used to intercept messages
      * @return MessageInterceptorRegistration
@@ -60,7 +63,7 @@ public class MessageInterceptorRegistration {
 
     /**
      * Creates a MessageInterceptorRegistration that is used to register a {@link MessageInterceptor} at the
-     * {@link de.otto.synapse.endpoint.receiver.MessageReceiverEndpoint receiver-side} of all channels
+     * {@link AbstractMessageReceiverEndpoint receiver-side} of all channels
      * with names matching the {@code channelNamePattern}.
      *
      * @param channelNamePattern the regexp used to match channel names. Only channels with matching names will be intercepted.
@@ -74,7 +77,7 @@ public class MessageInterceptorRegistration {
 
     /**
      * Creates a MessageInterceptorRegistration that is used to register a {@link MessageInterceptor} at the
-     * {@link de.otto.synapse.endpoint.sender.MessageSenderEndpoint sender-side} of all channels.
+     * {@link AbstractMessageSenderEndpoint sender-side} of all channels.
      *
      * @param interceptor the MessageInterceptor used to intercept messages
      * @return MessageInterceptorRegistration
@@ -85,7 +88,7 @@ public class MessageInterceptorRegistration {
 
     /**
      * Creates a MessageInterceptorRegistration that is used to register a {@link MessageInterceptor} at the
-     * {@link de.otto.synapse.endpoint.sender.MessageSenderEndpoint sender-side} of all channels
+     * {@link AbstractMessageSenderEndpoint sender-side} of all channels
      * with names matching the {@code channelNamePattern}.
      *
      * @param channelNamePattern the regexp used to match channel names. Only channels with matching names will be intercepted.

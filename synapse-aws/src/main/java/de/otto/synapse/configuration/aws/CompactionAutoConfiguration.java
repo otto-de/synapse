@@ -2,6 +2,7 @@ package de.otto.synapse.configuration.aws;
 
 import de.otto.synapse.compaction.aws.CompactionService;
 import de.otto.synapse.compaction.aws.SnapshotWriteService;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import de.otto.synapse.eventsource.EventSourceBuilder;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;
 import de.otto.synapse.state.StateRepository;
@@ -28,7 +29,8 @@ public class CompactionAutoConfiguration {
     @ConditionalOnProperty(prefix = "synapse.compaction", name = "enabled", havingValue = "true")
     public CompactionService compactionService(final SnapshotWriteService snapshotWriteService,
                                                final StateRepository<String> compactionStateRepository,
-                                               final EventSourceBuilder eventSourceBuilder) {
-        return new CompactionService(snapshotWriteService, compactionStateRepository, eventSourceBuilder);
+                                               final EventSourceBuilder eventSourceBuilder,
+                                               final MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory) {
+        return new CompactionService(snapshotWriteService, compactionStateRepository, eventSourceBuilder, messageLogReceiverEndpointFactory);
     }
 }

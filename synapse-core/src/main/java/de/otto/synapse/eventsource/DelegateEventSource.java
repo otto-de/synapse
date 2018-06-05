@@ -4,6 +4,7 @@ import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
+import org.springframework.context.ApplicationContext;
 
 import javax.annotation.Nonnull;
 import java.time.Instant;
@@ -13,15 +14,11 @@ public class DelegateEventSource implements EventSource {
 
     private final EventSource delegate;
 
-    public DelegateEventSource(final String name,
-                               final String channelName,
-                               final EventSourceBuilder eventSourceBuilder) {
-        this.delegate = eventSourceBuilder.buildEventSource(name, channelName);
-    }
-
-    @Override
-    public String getName() {
-        return delegate.getName();
+    public DelegateEventSource(final String messageLogBeanName,
+                               final EventSourceBuilder eventSourceBuilder,
+                               final ApplicationContext applicationContext) {
+        final MessageLogReceiverEndpoint messageLogReceiverEndpoint = applicationContext.getBean(messageLogBeanName, MessageLogReceiverEndpoint.class);
+        this.delegate = eventSourceBuilder.buildEventSource(messageLogReceiverEndpoint);
     }
 
     public EventSource getDelegate() {

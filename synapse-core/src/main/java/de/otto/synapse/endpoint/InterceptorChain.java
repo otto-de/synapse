@@ -1,7 +1,7 @@
 package de.otto.synapse.endpoint;
 
 import com.google.common.collect.ImmutableList;
-import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
+import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 
@@ -21,7 +21,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * <p>
  *     Just like any other {@link MessageInterceptor}, the InterceptorChain is used to process
  *     a message before it is consumed by {@link de.otto.synapse.consumer.MessageConsumer message consumers}
- *     on the receiver-side, or before it is sent by a {@link MessageSenderEndpoint message sender}
+ *     on the receiver-side, or before it is sent by a {@link AbstractMessageSenderEndpoint message sender}
  *     to the channel infrastructure.
  * </p>
  * <p>
@@ -71,7 +71,7 @@ public final class InterceptorChain implements MessageInterceptor {
      *     has returned null.
      * </p>
      * <p>
-     *     If {@code null} is returned, the message must be dropped by the {@link MessageEndpoint}.
+     *     If {@code null} is returned, the message must be dropped by the {@link AbstractMessageEndpoint}.
      * </p>
      * <p>
      *     Every interceptor may transform the message, or may take additional actions like, for example,

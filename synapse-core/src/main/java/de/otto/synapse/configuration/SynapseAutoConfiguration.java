@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.otto.synapse.annotation.EventSourceConsumerBeanPostProcessor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
-import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import de.otto.synapse.eventsource.DefaultEventSource;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
@@ -40,12 +38,10 @@ public class SynapseAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public EventSourceBuilder eventSourceBuilder(final MessageStoreFactory<MessageStore> snapshotMessageStoreFactory,
-                                                 final MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory) {
-        return (name, channelName) -> {
-            final MessageStore messageStore = snapshotMessageStoreFactory.createMessageStoreFor(channelName);
-            final MessageLogReceiverEndpoint messageLog = messageLogReceiverEndpointFactory.create(channelName);
-            return new DefaultEventSource(channelName, messageStore, messageLog);
+    public EventSourceBuilder eventSourceBuilder(final MessageStoreFactory<MessageStore> snapshotMessageStoreFactory) {
+        return (messageLog) -> {
+            final MessageStore messageStore = snapshotMessageStoreFactory.createMessageStoreFor(messageLog.getChannelName());
+            return new DefaultEventSource(messageStore, messageLog);
         };
     }
 

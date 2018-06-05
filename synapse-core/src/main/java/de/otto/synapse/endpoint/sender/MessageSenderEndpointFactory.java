@@ -10,7 +10,7 @@ import javax.annotation.Nonnull;
 public interface MessageSenderEndpointFactory {
 
     /**
-     * Creates and returns a {@link MessageSenderEndpoint} for a messaging channel.
+     * Creates and returns a {@link AbstractMessageSenderEndpoint} for a messaging channel.
      *
      * @param channelName the name of the channel of the created {@code MessageSenderEndpoint}
      * @return MessagerSenderEndpoint

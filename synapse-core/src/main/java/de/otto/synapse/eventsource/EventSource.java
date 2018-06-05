@@ -23,12 +23,6 @@ import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 public interface EventSource {
 
     /**
-     * An event source's name is used to connect event sources to their consumers.
-     * @return the unique name
-     */
-    String getName();
-
-    /**
      * Registers a new EventConsumer at the EventSource.
      *
      * {@link MessageConsumer consumers} have to be thread safe as it may be called from multiple threads

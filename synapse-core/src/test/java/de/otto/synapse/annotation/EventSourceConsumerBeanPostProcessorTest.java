@@ -62,23 +62,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
         context.refresh();
     }
 
-    /**
-     * If there is a Consumer for stream x and the consumer does refer to a single EventSource instance,
-     * registration should succeed, if there are _multiple_ EventSources for stream x with matching name.
-     */
-    @Test
-    public void shouldRegisterConsumerAtSpecifiedEventSource() {
-        context.register(SynapseAutoConfiguration.class);
-        context.register(TwoEventSourcesWithSameStreamAndSecificConsumerConfiguration.class);
-        context.register(InMemoryTestConfiguration.class);
-        context.refresh();
-
-        final DelegateEventSource someStreamEventSource = context.getBean("someTestEventSource", DelegateEventSource.class);
-        final List<MessageConsumer<?>> messageConsumers = someStreamEventSource.getMessageDispatcher().getAll();
-        assertThat(messageConsumers).hasSize(1);
-        assertThat(messageConsumers.get(0)).isInstanceOf(MethodInvokingMessageConsumer.class);
-    }
-
     @Test
     public void shouldCreateEventConsumerWithSpecificPayloadType() {
         context.register(SynapseAutoConfiguration.class);
@@ -123,15 +106,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
         @Bean
         public SingleUnspecificConsumer test() {
             return new SingleUnspecificConsumer();
-        }
-    }
-
-    @EnableEventSource(name = "someTestEventSource", channelName = "some-stream")
-    @EnableEventSource(name = "otherTestEventSource", channelName = "some-stream")
-    static class TwoEventSourcesWithSameStreamAndSecificConsumerConfiguration {
-        @Bean
-        public SingleSpecificConsumer test() {
-            return new SingleSpecificConsumer();
         }
     }
 

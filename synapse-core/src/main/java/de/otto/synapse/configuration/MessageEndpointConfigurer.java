@@ -1,9 +1,10 @@
 package de.otto.synapse.configuration;
 
+import de.otto.synapse.endpoint.AbstractMessageEndpoint;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 
 /**
- * A configurer used to configure {@link de.otto.synapse.endpoint.MessageEndpoint message endpoints}.
+ * A configurer used to configure {@link AbstractMessageEndpoint message endpoints}.
  * <p>
  *     Configurations may implement this interface in order to configure message endpoints. For example:
  * </p>

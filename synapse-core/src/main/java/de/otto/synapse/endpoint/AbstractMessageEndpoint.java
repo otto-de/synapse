@@ -8,6 +8,8 @@ import de.otto.synapse.message.Message;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Endpoint that is used by an application to access the messaging infrastructure to send or receive messages.
  *
@@ -33,7 +35,19 @@ import javax.annotation.Nullable;
  * </p>
  * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageEndpoint.html">EIP: Message Endpoint</a>
  */
-public interface MessageEndpoint {
+public abstract class AbstractMessageEndpoint implements MessageEndpoint {
+
+    private final String channelName;
+    private final InterceptorChain interceptorChain = new InterceptorChain();
+
+    /**
+     * Constructor used to create a new AbstractMessageEndpoint.
+     *
+     * @param channelName the name of the underlying channel / stream / queue / message log.
+     */
+    public AbstractMessageEndpoint(final @Nonnull String channelName) {
+        this.channelName = requireNonNull(channelName, "ChannelName must not be null");
+    }
 
     /**
      * Returns the name of the channel.
@@ -43,8 +57,11 @@ public interface MessageEndpoint {
      * </p>
      * @return name of the channel
      */
+    @Override
     @Nonnull
-    String getChannelName();
+    public final String getChannelName() {
+        return channelName;
+    }
 
     /**
      * Returns the {@link InterceptorChain} of the {@code MessageEndpoint}.
@@ -52,26 +69,27 @@ public interface MessageEndpoint {
      * @return InterceptorChain
      */
     @Nonnull
-    InterceptorChain getInterceptorChain();
+    @Override
+    public final InterceptorChain getInterceptorChain() {
+        return interceptorChain;
+    }
 
     /**
      * Registers all {@code MessageInterceptor} from the {@link MessageInterceptorRegistry registry} that is matching
-     * the {@link #getChannelName() channel name} and {@link #getEndpointType() endpoint type}.
+     * the {@link #channelName} and {@link #getEndpointType()}.
      * <p>
      *     The registered interceptors will be used to intercept {@link Message messages} processed by the endpoint.
      * </p>
      * @param registry the MessageInterceptorRegistry
      */
-    void registerInterceptorsFrom(@Nonnull MessageInterceptorRegistry registry);
+    @Override
+    public final void registerInterceptorsFrom(final @Nonnull MessageInterceptorRegistry registry) {
+        registry.getRegistrations(channelName, getEndpointType())
+                .forEach(reg ->
+                        interceptorChain.register(reg.getInterceptor())
+                );
 
-    /**
-     * Returns the type of the {@code MessageEndpoint}, either {@link EndpointType#SENDER} or
-     * {@link EndpointType#RECEIVER}.
-     *
-     * @return EndpointType
-     */
-    @Nonnull
-    EndpointType getEndpointType();
+    }
 
     /**
      * Intercepts a message using all registered interceptors and returns the resulting message.
@@ -91,6 +109,10 @@ public interface MessageEndpoint {
      * @param message the message to intercept
      * @return the (possibly modified) message, or null if the message should be dropped.
      */
+    @Override
     @Nullable
-    Message<String> intercept(@Nonnull Message<String> message);
+    public final Message<String> intercept(final @Nonnull Message<String> message) {
+        return interceptorChain.intercept(message);
+    }
+
 }

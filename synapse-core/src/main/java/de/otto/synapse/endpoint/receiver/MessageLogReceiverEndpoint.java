@@ -1,16 +1,12 @@
 package de.otto.synapse.endpoint.receiver;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Message;
-import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.time.Instant;
-import java.util.function.Predicate;
 
 /**
  * Receiver-side {@code MessageEndpoint endpoint} of a Message Channel that supports random-access like reading of
@@ -20,14 +16,7 @@ import java.util.function.Predicate;
  *     <img src="http://www.enterpriseintegrationpatterns.com/img/MessageEndpointSolution.gif" alt="Message Endpoint">
  * </p>
  */
-public abstract class MessageLogReceiverEndpoint extends MessageReceiverEndpoint {
-
-    public MessageLogReceiverEndpoint(final @Nonnull String channelName,
-                                      final @Nonnull ObjectMapper objectMapper,
-                                      final @Nullable ApplicationEventPublisher eventPublisher) {
-        super(channelName, objectMapper, eventPublisher);
-    }
-
+public interface MessageLogReceiverEndpoint extends MessageReceiverEndpoint {
     /**
      * Takes zero or more messages from the channel, calls {@link #intercept(Message)} for every message, and notifies
      * the registered consumers with the intercepted message, or drops the message, if {@code intercept} returns null.
@@ -51,7 +40,7 @@ public abstract class MessageLogReceiverEndpoint extends MessageReceiverEndpoint
      * @return ChannelPosition
      */
     @Nonnull
-    public final ChannelPosition consume(@Nonnull ChannelPosition startFrom) {
+    public default ChannelPosition consume(@Nonnull ChannelPosition startFrom) {
         return consumeUntil(startFrom, Instant.MAX);
     }
 
@@ -79,8 +68,11 @@ public abstract class MessageLogReceiverEndpoint extends MessageReceiverEndpoint
      * @return ChannelPosition
      */
     @Nonnull
-    public abstract ChannelPosition consumeUntil(@Nonnull ChannelPosition startFrom,
-                                                 @Nonnull Instant until);
+    ChannelPosition consumeUntil(@Nonnull ChannelPosition startFrom,
+                                 @Nonnull Instant until);
 
-    public abstract void stop();
+    /**
+     * Stops consumption of messages and shuts down the {@code MessageLogReceiverEndpoint}.
+     */
+    void stop();
 }

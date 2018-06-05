@@ -1,6 +1,7 @@
 package de.otto.synapse.edison.trace;
 
 import com.google.common.collect.ImmutableMap;
+import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
 import de.otto.synapse.messagestore.MessageStore;
 
 import java.util.Set;
@@ -20,7 +21,7 @@ public class MessageTraces {
     }
 
     /**
-     * Returns the channel names of the {@link de.otto.synapse.endpoint.receiver.MessageReceiverEndpoint}s, where
+     * Returns the channel names of the {@link AbstractMessageReceiverEndpoint}s, where
      * traces of received messages are available.
      *
      * @return set of channel names
@@ -40,7 +41,7 @@ public class MessageTraces {
     }
 
     /**
-     * Returns the channel names of the {@link de.otto.synapse.endpoint.receiver.MessageReceiverEndpoint}s, where
+     * Returns the channel names of the {@link AbstractMessageReceiverEndpoint}s, where
      * traces of sent messages are available.
      *
      * @return set of channel names

@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 
 /**
  * Message interceptors are used to intercept messages before they are sent or received by
- * {@link MessageEndpoint message endpoints}.
+ * {@link AbstractMessageEndpoint message endpoints}.
  *
  * <p>
  *     MessageInterceptors will usually be chained using a {@link InterceptorChain}.
@@ -36,7 +36,7 @@ public interface MessageInterceptor {
 
     /**
      * Intercept a message and return the same message, a modified version of the incoming message, or null, if
-     * the message should be filtered out and dropped by the {@link MessageEndpoint}
+     * the message should be filtered out and dropped by the {@link AbstractMessageEndpoint}
      *
      * @param message the channel-layer message with payload-type beeing a String
      * @return intercepted version of the message, or null if the message should be dropped.

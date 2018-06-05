@@ -30,7 +30,7 @@ public class MessageSenderEndpointTest {
     @SuppressWarnings("unchecked")
     public void shouldCallSendMessageForBatch() {
         final AtomicInteger numMessagesSent = new AtomicInteger(0);
-        final MessageSenderEndpoint senderEndpoint = new MessageSenderEndpoint("test", (m) -> (Message<String>)m) {
+        final MessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("test", (m) -> (Message<String>)m) {
             @Override
             public void doSend(final @Nonnull Message<String> message) {
                 numMessagesSent.incrementAndGet();
@@ -49,7 +49,7 @@ public class MessageSenderEndpointTest {
         // given
         final MessageTranslator<String> messageTranslator = mock(MessageTranslator.class);
         when(messageTranslator.translate(any(Message.class))).thenReturn(message("translated", null));
-        final MessageSenderEndpoint senderEndpoint = new MessageSenderEndpoint("foo-channel", messageTranslator) {
+        final MessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
             protected void doSend(Message<String> message) { /* no-op */ }
         };
@@ -64,7 +64,7 @@ public class MessageSenderEndpointTest {
     public void shouldRegisterMessageInterceptor() {
         // given
         final MessageTranslator<String> messageTranslator = mock(MessageTranslator.class);
-        final MessageSenderEndpoint senderEndpoint = new MessageSenderEndpoint("foo-channel", messageTranslator) {
+        final MessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
             protected void doSend(Message<String> message) { /* no-op */ }
         };
@@ -85,7 +85,7 @@ public class MessageSenderEndpointTest {
         final MessageInterceptor interceptor = mock(MessageInterceptor.class);
         final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
         registry.register(matchingChannelsWith("foo-channel", interceptor));
-        final MessageSenderEndpoint senderEndpoint = new MessageSenderEndpoint("foo-channel", messageTranslator) {
+        final MessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
             protected void doSend(@Nonnull Message<String> message) { /* no-op */ }
         };
@@ -106,7 +106,7 @@ public class MessageSenderEndpointTest {
         when(interceptor.intercept(any(Message.class))).thenReturn(null);
         final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
         registry.register(matchingChannelsWith("foo-channel", interceptor));
-        final MessageSenderEndpoint senderEndpoint = new MessageSenderEndpoint("foo-channel", messageTranslator) {
+        final MessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
             protected void doSend(@Nonnull Message<String> message) {
                 fail("This should not be called for dropped messages!");
@@ -127,7 +127,7 @@ public class MessageSenderEndpointTest {
         final MessageTranslator<String> messageTranslator = (m) -> message(m.getKey(), "translated");
 
         final AtomicReference<Message<String>> sentMessage = new AtomicReference<>(null);
-        final MessageSenderEndpoint senderEndpoint = new MessageSenderEndpoint("foo-channel", messageTranslator) {
+        final MessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
             protected void doSend(@Nonnull Message<String> message) {
                 sentMessage.set(message);
@@ -151,7 +151,7 @@ public class MessageSenderEndpointTest {
         registry.register(matchingChannelsWith("foo-channel", interceptor));
 
         final AtomicReference<Message<String>> sentMessage = new AtomicReference<>(null);
-        final MessageSenderEndpoint senderEndpoint = new MessageSenderEndpoint("foo-channel", messageTranslator) {
+        final MessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
             protected void doSend(@Nonnull Message<String> message) {
                 sentMessage.set(message);
@@ -176,7 +176,7 @@ public class MessageSenderEndpointTest {
         registry.register(matchingChannelsWith("foo-channel", interceptor));
 
         final List<Message<String>> sentMessages = new ArrayList<>();
-        final MessageSenderEndpoint senderEndpoint = new MessageSenderEndpoint("foo-channel", messageTranslator) {
+        final MessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
             protected void doSend(@Nonnull Message<String> message) {
                 sentMessages.add(message);

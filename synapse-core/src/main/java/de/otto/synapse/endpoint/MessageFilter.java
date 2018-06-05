@@ -27,7 +27,7 @@ public class MessageFilter implements MessageInterceptor {
     }
 
     /**
-     * Creates a {@link MessageFilter} that is used to filter messages from {@link MessageEndpoint message endpoints}.
+     * Creates a {@link MessageFilter} that is used to filter messages from {@link AbstractMessageEndpoint message endpoints}.
      * <p>
      *     Messages will be dropped, if {@code predicate.test(message)} is {@code false}
      * </p>

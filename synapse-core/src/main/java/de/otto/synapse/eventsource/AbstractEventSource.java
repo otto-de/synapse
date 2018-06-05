@@ -16,19 +16,11 @@ public abstract class AbstractEventSource implements EventSource {
 
     private static final Logger LOG = getLogger(AbstractEventSource.class);
 
-    private final String name;
     private final MessageLogReceiverEndpoint messageLog;
     private final AtomicBoolean stopping = new AtomicBoolean(false);
 
-    public AbstractEventSource(final String name,
-                               final MessageLogReceiverEndpoint messageLog) {
-        this.name = name;
+    public AbstractEventSource(final MessageLogReceiverEndpoint messageLog) {
         this.messageLog = messageLog;
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 
     @Override
@@ -38,7 +30,7 @@ public abstract class AbstractEventSource implements EventSource {
 
     @Override
     public void stop() {
-        LOG.info("Stopping EventSource {}", name);
+        LOG.info("Stopping EventSource {}", getChannelName());
         stopping.set(true);
         messageLog.stop();
     }

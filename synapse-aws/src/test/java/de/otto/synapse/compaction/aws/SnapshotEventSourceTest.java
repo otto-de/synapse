@@ -42,7 +42,6 @@ public class SnapshotEventSourceTest {
     @Before
     public void init() {
         snapshotEventSource = new SnapshotEventSource(
-                "snapshotEventSource",
                 STREAM_NAME,
                 snapshotReadService,
                 applicationEventPublisher,

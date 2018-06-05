@@ -2,6 +2,7 @@ package de.otto.synapse.annotation;
 
 import de.otto.synapse.configuration.InMemoryTestConfiguration;
 import de.otto.synapse.configuration.SynapseAutoConfiguration;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.DefaultEventSource;
 import de.otto.synapse.eventsource.DelegateEventSource;
 import de.otto.synapse.eventsource.EventSource;
@@ -28,6 +29,10 @@ public class EventSourceBeanRegistrarTest {
     static class SingleEventSourceTestConfig {
     }
 
+    @EnableEventSource(name = "testEventSource", channelName = "test-stream", messageLogReceiverEndpoint = "testMessageLog")
+    static class SingleEventSourceWithMessageLogTestConfig {
+    }
+
     @EnableEventSource(name = "brokenEventSource", channelName = "some-stream")
     @EnableEventSource(name = "brokenEventSource", channelName = "some-stream")
     static class MultiEventSourceTestConfigWithSameNames {
@@ -51,8 +56,8 @@ public class EventSourceBeanRegistrarTest {
         context.refresh();
     }
 
-    @Test
-    public void shouldRegisterMultipleEventSourcesForSameStreamNameWithDifferentNames() {
+    @Test(expected = BeanCreationException.class)
+    public void shouldFailToRegisterMultipleEventSourcesForSameStream() {
         context.register(SynapseAutoConfiguration.class);
         context.register(MultiEventSourceTestConfigWithDifferentNames .class);
         context.register(InMemoryTestConfiguration.class);
@@ -60,7 +65,6 @@ public class EventSourceBeanRegistrarTest {
 
         assertThat(context.getBean("firstEventSource", EventSource.class).getChannelName()).isEqualTo("some-stream");
         assertThat(context.getBean("secondEventSource", EventSource.class).getChannelName()).isEqualTo("some-stream");
-
     }
 
     @Test
@@ -104,6 +108,30 @@ public class EventSourceBeanRegistrarTest {
         final EventSource second = context.getBean("secondEventSource", DelegateEventSource.class).getDelegate();
         assertThat(second.getChannelName()).isEqualTo("second-stream");
         assertThat(second).isInstanceOf(DefaultEventSource.class);
+    }
+
+    @Test
+    public void shouldRegisterMessageLogReceiverEndpointWithNameDerivedFromChannelName() {
+        context.register(SynapseAutoConfiguration.class);
+        context.register(SingleEventSourceTestConfig.class);
+        context.register(InMemoryTestConfiguration.class);
+        context.refresh();
+
+        assertThat(context.containsBean("testStreamMessageLogReceiverEndpoint")).isTrue();
+        final MessageLogReceiverEndpoint receiverEndpoint = context.getBean("testStreamMessageLogReceiverEndpoint", MessageLogReceiverEndpoint.class);
+        assertThat(receiverEndpoint.getChannelName()).isEqualTo("test-stream");
+    }
+
+    @Test
+    public void shouldRegisterMessageLogReceiverEndpointWithSpecifiedName() {
+        context.register(SynapseAutoConfiguration.class);
+        context.register(SingleEventSourceWithMessageLogTestConfig.class);
+        context.register(InMemoryTestConfiguration.class);
+        context.refresh();
+
+        assertThat(context.containsBean("testMessageLog")).isTrue();
+        final MessageLogReceiverEndpoint receiverEndpoint = context.getBean("testMessageLog", MessageLogReceiverEndpoint.class);
+        assertThat(receiverEndpoint.getChannelName()).isEqualTo("test-stream");
     }
 
 }

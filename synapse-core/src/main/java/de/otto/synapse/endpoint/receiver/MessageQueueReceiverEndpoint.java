@@ -1,13 +1,8 @@
 package de.otto.synapse.endpoint.receiver;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Message;
-import org.springframework.context.ApplicationEventPublisher;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * Receiver-side {@code MessageEndpoint endpoint} of a Message Channel with Queue or FIFO semantics.
@@ -16,13 +11,7 @@ import javax.annotation.Nullable;
  *     <img src="http://www.enterpriseintegrationpatterns.com/img/MessageEndpointSolution.gif" alt="Message Endpoint">
  * </p>
  */
-public abstract class MessageQueueReceiverEndpoint extends MessageReceiverEndpoint {
-
-    public MessageQueueReceiverEndpoint(final @Nonnull String channelName,
-                                        final @Nonnull ObjectMapper objectMapper,
-                                        final @Nullable ApplicationEventPublisher eventPublisher) {
-        super(channelName, objectMapper, eventPublisher);
-    }
+public interface MessageQueueReceiverEndpoint extends MessageReceiverEndpoint {
 
     /**
      * Takes zero or more messages from the channel, calls {@link #intercept(Message)} for every message, and notifies
@@ -40,6 +29,6 @@ public abstract class MessageQueueReceiverEndpoint extends MessageReceiverEndpoi
      * </p>
      *
      */
-    public abstract void consume();
+    void consume();
 
 }

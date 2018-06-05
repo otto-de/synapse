@@ -24,27 +24,19 @@ public class SnapshotEventSource implements EventSource {
 
     private static final Logger LOG = getLogger(SnapshotEventSource.class);
 
-    private final String name;
     private final String channelName;
     private final SnapshotReadService snapshotReadService;
     private final ApplicationEventPublisher eventPublisher;
     private final MessageDispatcher messageDispatcher;
 
-    public SnapshotEventSource(final String name,
-                               final String channelName,
+    public SnapshotEventSource(final String channelName,
                                final SnapshotReadService snapshotReadService,
                                final ApplicationEventPublisher eventPublisher,
                                final ObjectMapper objectMapper) {
-        this.name = name;
         this.channelName = channelName;
         this.snapshotReadService = snapshotReadService;
         this.eventPublisher = eventPublisher;
         this.messageDispatcher = new MessageDispatcher(objectMapper);
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 
     @Override
