@@ -2,8 +2,8 @@ package de.otto.synapse.edison.trace;
 
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
-import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.messagestore.InMemoryRingBufferMessageStore;
 import de.otto.synapse.messagestore.MessageStore;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +17,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.collect.ImmutableBiMap.builder;
-import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingReceiverChannelsWith;
-import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingSenderChannelsWith;
 import static java.util.Collections.emptyList;
 
 @Configuration
@@ -36,29 +34,26 @@ public class MessageTraceAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public MessageTraces traceMessageStore(final Optional<List<EventSource>> eventSources,
+    public MessageTraces traceMessageStore(final Optional<List<MessageLogReceiverEndpoint>> messageLogReceiverEndpoints,
                                            final Optional<List<MessageSenderEndpoint>> senderEndpoints) {
         return new MessageTraces(
-                receiverStoresFor(eventSources.orElse(emptyList())),
+                receiverStoresFor(messageLogReceiverEndpoints.orElse(emptyList())),
                 senderStoresFor(senderEndpoints.orElse(emptyList()))
         );
     }
 
-    private ImmutableMap<String, MessageStore> receiverStoresFor(final List<EventSource> eventSources) {
+    private ImmutableMap<String, MessageStore> receiverStoresFor(final List<MessageLogReceiverEndpoint> messageLogReceiverEndpoints) {
         final ImmutableMap.Builder<String,MessageStore> receiverStores = builder();
-        eventSources
-                .forEach(eventSource -> {
+        messageLogReceiverEndpoints
+                .forEach(messageLogReceiverEndpoint -> {
                     final InMemoryRingBufferMessageStore messageStore = new InMemoryRingBufferMessageStore(capacity);
-                    /*
-                    eventSource.register(matchingReceiverChannelsWith(
-                            eventSource.getChannelName(),
+                    messageLogReceiverEndpoint.getInterceptorChain().register(
                             message -> {
                                 messageStore.add(message);
                                 return message;
                             }
-                    ));
-                    */
-                    receiverStores.put(eventSource.getChannelName(), messageStore);
+                    );
+                    receiverStores.put(messageLogReceiverEndpoint.getChannelName(), messageStore);
                 });
         return receiverStores.build();
     }

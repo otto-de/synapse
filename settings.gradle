@@ -3,4 +3,5 @@ include "synapse-aws"
 include "synapse-edison"
 include "synapse-examples:example-consumer"
 include "synapse-examples:example-producer"
+include "synapse-examples:example-edison"
 

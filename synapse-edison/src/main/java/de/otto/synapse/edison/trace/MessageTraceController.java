@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import static de.otto.edison.navigation.NavBarItem.navBarItem;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 
 @Controller
@@ -25,8 +26,23 @@ public class MessageTraceController {
                            final ManagementServerProperties managementServerProperties) {
         this.messageTraces = messageTraces;
         rightNavBar.register(
-                navBarItem(10, "Message Trace", String.format("%s/message-trace", managementServerProperties.getContextPath()))
+                navBarItem(10, "Message Trace", format("%s/messagetrace", managementServerProperties.getContextPath()))
         );
+    }
+
+    @GetMapping(
+            path = "${management.context-path}/messagetrace",
+            produces = "text/html"
+    )
+    @ResponseBody
+    public String getMessageTrace() {
+        final StringBuilder stringBuilder = new StringBuilder();
+        messageTraces
+                .getReceiverChannels()
+                .forEach(channelName -> {
+                        stringBuilder.append(format("<a href=\"messagetrace/receivers/%s\">Receiver: %s</a><br/>", channelName, channelName));
+                });
+        return stringBuilder.toString();
     }
 
     @GetMapping(
@@ -39,6 +55,6 @@ public class MessageTraceController {
                 .getReceiverTrace(channelName)
                 .stream()
                 .map(Message::toString)
-                .collect(joining("<li>", "<ol>", "</ol>"));
+                .collect(joining("</li>\n<li>", "<ol>\n<li>", "</li>\n</ol>"));
     }
 }

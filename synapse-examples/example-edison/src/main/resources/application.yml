@@ -1,0 +1,20 @@
+edison:
+    application:
+      name: example-edison
+management:
+    context-path: /internal
+
+synapse:
+  consumer-process:
+    enabled: true
+
+exampleservice:
+  product-channel: example-products
+  banana-channel: example-bananas
+
+logging:
+  config: classpath:logback-console.xml
+
+server:
+  context-path: /
+  port: 5555
