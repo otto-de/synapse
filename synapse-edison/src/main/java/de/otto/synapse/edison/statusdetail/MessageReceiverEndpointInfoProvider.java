@@ -80,12 +80,13 @@ public class MessageReceiverEndpointInfoProvider {
                         .build());
                 break;
             case RUNNING:
+                final ChannelDurationBehind durationBehind = notification.getChannelDurationBehind().orElse(unknown());
                 final MessageReceiverEndpointInfo endpointInfo = MessageReceiverEndpointInfo
                         .builder()
                         .withChannelName(channelName)
                         .withStatus(notification.getStatus())
-                        .withChannelDurationBehind(notification.getChannelDurationBehind().orElse(unknown()))
-                        .withMessage(format("Channel is %s behind head.", notification.getChannelDurationBehind()))
+                        .withChannelDurationBehind(durationBehind)
+                        .withMessage(format("Channel is %s behind head.", durationBehind))
                         .build();
                 messageReceiverEndpointInfos.update(channelName, endpointInfo);
                 break;

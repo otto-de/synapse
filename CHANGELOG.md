@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.6.8
+* Fixes bug in MessageReceiverEndpointInfoProvider resulting in a broken presentation of status details. 
+
 ## 0.6.7
 * Introduced interfaces for MessageEndpoint, MessageReceiverEndpoint, MessageLogReceiverEndpoint and 
   MessageQueueReceiverEndpoints.
