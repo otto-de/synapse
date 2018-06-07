@@ -28,10 +28,6 @@ public class MessageReceiverEndpointInfoProvider {
 
 
     private final MessageReceiverEndpointInfos messageReceiverEndpointInfos = new MessageReceiverEndpointInfos();
-
-    private final Set<String> allChannels = new ConcurrentSkipListSet<>();
-    private final Set<String> startedChannels = new ConcurrentSkipListSet<>();
-
     private final Map<String, Instant> channelStartupTimes = new ConcurrentHashMap<>();
     private final Clock clock;
 
@@ -50,10 +46,7 @@ public class MessageReceiverEndpointInfoProvider {
         eventSources.ifPresent(es -> {
             es.stream()
                     .map(EventSource::getChannelName)
-                    .forEach( channelName -> {
-                        allChannels.add(channelName);
-                        messageReceiverEndpointInfos.add(channelName);
-                    });
+                    .forEach(messageReceiverEndpointInfos::add);
         });
         this.clock = clock;
     }

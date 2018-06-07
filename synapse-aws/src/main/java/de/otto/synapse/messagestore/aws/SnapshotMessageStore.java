@@ -18,10 +18,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.time.Instant;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -103,11 +100,15 @@ public class SnapshotMessageStore implements MessageStore {
 
     }
 
-    public void close() throws IOException {
+    public void close() {
         LOG.info("Closing SnapshotMessageStore");
         publishEvent(FINISHED, "Finished to load snapshot from S3.", snapshotTimestamp);
-        if (zipInputStream != null) {
-            zipInputStream.close();
+        try {
+            if (zipInputStream != null) {
+                zipInputStream.close();
+            }
+        } catch (final IOException e) {
+            throw new UncheckedIOException(e.getMessage(), e);
         }
     }
 

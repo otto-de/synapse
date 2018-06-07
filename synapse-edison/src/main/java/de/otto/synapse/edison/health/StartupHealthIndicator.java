@@ -7,6 +7,7 @@ import io.netty.util.internal.ConcurrentSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -20,15 +21,16 @@ import static java.util.stream.Collectors.toSet;
 import static org.springframework.boot.actuate.health.Health.*;
 
 /**
- * A Spring Boot HealthIndicator that is healthy after finishing the first (snapshot)
- * {@link de.otto.synapse.eventsource.EventSource}
+ * A Spring Boot HealthIndicator that is healthy after finishing all events of an
+ * {@link de.otto.synapse.eventsource.EventSource} for the first time.
  */
 @Component
 @ConditionalOnProperty(
-        prefix = "synapse",
-        name = "health-indicator.enabled",
+        prefix = "synapse.edison.health",
+        name = "startup.enabled",
         havingValue = "true",
         matchIfMissing = true)
+@ConditionalOnBean(EventSource.class)
 public class StartupHealthIndicator implements HealthIndicator {
 
     public static final long TEN_SECONDS = 10000L;

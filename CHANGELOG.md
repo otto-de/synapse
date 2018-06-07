@@ -2,7 +2,12 @@
 
 ## 0.6.8
 * Fixes bug in MessageReceiverEndpointInfoProvider resulting in a broken presentation of status details. 
-
+* Disabling of synapse-edison is now more consistent. The different Health Indicators can now be disabled using the
+  following properties:
+  - `StartUpHealthIndicator`: synapse.edison.health.startup.enabled=false
+  - `SnapshotReaderHealthIndicator`: synapse.edison.health.snapshotreader.enabled=false
+  - `MessageReceiverEndpointHealthIndicator`: synapse.edison.health.messagereceiver.enabled=false
+  
 ## 0.6.7
 * Introduced interfaces for MessageEndpoint, MessageReceiverEndpoint, MessageLogReceiverEndpoint and 
   MessageQueueReceiverEndpoints.

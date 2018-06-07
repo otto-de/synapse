@@ -69,6 +69,6 @@ public interface MessageStore extends AutoCloseable {
         return -1;
     }
 
-    default void close() throws Exception {
+    default void close() {
     }
 }
