@@ -31,8 +31,8 @@ public class SnapshotAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    MessageStoreFactory<MessageStore> snapshotMessageStoreFactory(final SnapshotReadService snapshotReadService,
-                                                                  final ApplicationEventPublisher eventPublisher) {
+    MessageStoreFactory<SnapshotMessageStore> snapshotMessageStoreFactory(final SnapshotReadService snapshotReadService,
+                                                                          final ApplicationEventPublisher eventPublisher) {
         return (channelName) -> new SnapshotMessageStore(channelName, snapshotReadService, eventPublisher);
     }
 

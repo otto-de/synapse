@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
+import de.otto.synapse.compaction.aws.SnapshotFileHelper;
 import de.otto.synapse.compaction.aws.SnapshotReadService;
 import de.otto.synapse.info.SnapshotReaderNotification;
 import de.otto.synapse.info.SnapshotReaderStatus;
@@ -58,7 +59,7 @@ public class SnapshotMessageStore implements MessageStore {
         final Optional<File> latestSnapshot = snapshotReadService.retrieveLatestSnapshot(channelName);
             if (latestSnapshot.isPresent()) {
                 final File snapshot = latestSnapshot.get();
-                this.snapshotTimestamp = getSnapshotTimestamp(snapshot.getName());
+                this.snapshotTimestamp = SnapshotFileHelper.getSnapshotTimestamp(snapshot.getName());
                 publishEvent(STARTED, "Retrieve snapshot file from S3.", snapshotTimestamp);
                     zipInputStream = new ZipInputStream(new BufferedInputStream(new FileInputStream(snapshot)));
                     zipInputStream.getNextEntry();
@@ -105,6 +106,10 @@ public class SnapshotMessageStore implements MessageStore {
         } catch (final IOException e) {
             throw new UncheckedIOException(e.getMessage(), e);
         }
+    }
+
+    public Instant getSnapshotTimestamp() {
+        return snapshotTimestamp;
     }
 
     @Override

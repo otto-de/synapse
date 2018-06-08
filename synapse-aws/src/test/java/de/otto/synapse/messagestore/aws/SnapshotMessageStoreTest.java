@@ -14,9 +14,11 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Optional;
 
 import static de.otto.synapse.info.SnapshotReaderNotification.builder;
+import static java.time.Instant.parse;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -43,6 +45,19 @@ public class SnapshotMessageStoreTest {
         new SnapshotMessageStore(STREAM_NAME, snapshotReadService, eventPublisher);
 
         // then expect exception
+    }
+
+    @Test
+    public void shouldGetSnapshotTimestamp() throws IOException {
+        // given
+        final File snapshotFile = new ClassPathResource("compaction-integrationtest-snapshot-2017-09-29T09-02Z-3053797267191232636.json.zip").getFile();
+        when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.of(snapshotFile));
+
+        // when
+        final SnapshotMessageStore messageStore = new SnapshotMessageStore(STREAM_NAME, snapshotReadService, eventPublisher);
+
+        // then
+        assertThat(messageStore.getSnapshotTimestamp(), is(parse("2017-09-29T09:02:00.00Z")));
     }
 
     @Test
