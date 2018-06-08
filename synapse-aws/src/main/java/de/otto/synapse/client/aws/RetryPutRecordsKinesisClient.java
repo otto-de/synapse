@@ -61,7 +61,7 @@ public class RetryPutRecordsKinesisClient {
                     throw new IllegalStateException(String.format("failed to send records after %s retries", MAX_RETRY_COUNT));
                 }
             } catch (SdkServiceException | SdkClientException e) {
-                LOG.warn("Failed to write events to Kinesis: {}", e);
+                LOG.warn("Failed to write events to Kinesis: {}", e.getMessage());
                 if (waitBeforeRetry) {
                     waitDependingOnRetryStep(retryStep);
                 }
