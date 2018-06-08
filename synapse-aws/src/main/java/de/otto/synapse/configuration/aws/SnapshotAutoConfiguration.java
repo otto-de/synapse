@@ -8,6 +8,7 @@ import de.otto.synapse.messagestore.MessageStoreFactory;
 import de.otto.synapse.messagestore.aws.SnapshotMessageStore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,8 +31,9 @@ public class SnapshotAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    MessageStoreFactory<MessageStore> snapshotMessageStoreFactory(final SnapshotReadService snapshotReadService) {
-        return (channelName) -> new SnapshotMessageStore(channelName, snapshotReadService);
+    MessageStoreFactory<MessageStore> snapshotMessageStoreFactory(final SnapshotReadService snapshotReadService,
+                                                                  final ApplicationEventPublisher eventPublisher) {
+        return (channelName) -> new SnapshotMessageStore(channelName, snapshotReadService, eventPublisher);
     }
 
 }

@@ -49,11 +49,6 @@ public class SnapshotMessageStore implements MessageStore {
     private final ApplicationEventPublisher eventPublisher;
 
     public SnapshotMessageStore(final @Nonnull String channelName,
-                                final @Nonnull SnapshotReadService snapshotReadService) {
-        this(channelName, snapshotReadService, null);
-    }
-
-    public SnapshotMessageStore(final @Nonnull String channelName,
                                 final @Nonnull SnapshotReadService snapshotReadService,
                                 final @Nullable ApplicationEventPublisher eventPublisher) {
         this.channelName = channelName;

@@ -16,6 +16,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -66,6 +67,9 @@ public class SnapshotMessageStoreAcceptanceTest {
     @Autowired
     private StateRepository<String> stateRepository;
 
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
     @Before
     public void setup() throws IOException {
         KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, INTEGRATION_TEST_STREAM, 2);
@@ -85,7 +89,7 @@ public class SnapshotMessageStoreAcceptanceTest {
 
     @Test
     public void shouldReadSnapshot() throws Exception {
-        try (final SnapshotMessageStore snapshotMessageStore = new SnapshotMessageStore(INTEGRATION_TEST_STREAM, snapshotReadService)) {
+        try (final SnapshotMessageStore snapshotMessageStore = new SnapshotMessageStore(INTEGRATION_TEST_STREAM, snapshotReadService, eventPublisher)) {
             final List<Message<String>> messages = new ArrayList<>();
             snapshotMessageStore.stream().forEach(messages::add);
             assertThat(messages, hasSize(10));

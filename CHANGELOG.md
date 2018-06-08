@@ -1,6 +1,8 @@
 # Release Notes
 
 ## 0.6.9
+* Fixes bug that SnapshotAutoConfiguration is not injecting the ApplicationEventPublisher into SnapshotMessageStore
+  instances created by the SnapshotMessageStoreFactory.
 * Log message meta data when put to kinesis failed
 
 ## 0.6.8
