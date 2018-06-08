@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
         AwsConfiguration.class,
         S3Configuration.class,
         KinesisAutoConfiguration.class,
-        SnapshotAutoConfiguration.class
+        S3SnapshotAutoConfiguration.class
 })
 @EnableConfigurationProperties(SnapshotProperties.class)
 public class AwsEventSourcingAutoConfiguration {

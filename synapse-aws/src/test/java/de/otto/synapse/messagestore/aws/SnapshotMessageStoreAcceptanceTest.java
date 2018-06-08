@@ -89,7 +89,7 @@ public class SnapshotMessageStoreAcceptanceTest {
 
     @Test
     public void shouldReadSnapshot() throws Exception {
-        try (final SnapshotMessageStore snapshotMessageStore = new SnapshotMessageStore(INTEGRATION_TEST_STREAM, snapshotReadService, eventPublisher)) {
+        try (final S3SnapshotMessageStore snapshotMessageStore = new S3SnapshotMessageStore(INTEGRATION_TEST_STREAM, snapshotReadService, eventPublisher)) {
             final List<Message<String>> messages = new ArrayList<>();
             snapshotMessageStore.stream().forEach(messages::add);
             assertThat(messages, hasSize(10));

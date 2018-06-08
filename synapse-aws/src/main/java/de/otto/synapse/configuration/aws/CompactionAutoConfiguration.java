@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableConfigurationProperties(CompactionProperties.class)
-@ImportAutoConfiguration(SnapshotAutoConfiguration.class)
+@ImportAutoConfiguration(S3SnapshotAutoConfiguration.class)
 public class CompactionAutoConfiguration {
 
     @Bean

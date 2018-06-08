@@ -12,7 +12,7 @@ import de.otto.synapse.compaction.aws.SnapshotReadService;
 import de.otto.synapse.info.SnapshotReaderNotification;
 import de.otto.synapse.info.SnapshotReaderStatus;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.messagestore.MessageStore;
+import de.otto.synapse.messagestore.SnapshotMessageStore;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -31,16 +31,15 @@ import static com.google.common.collect.ImmutableMap.builder;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
-import static de.otto.synapse.compaction.aws.SnapshotFileHelper.getSnapshotTimestamp;
 import static de.otto.synapse.info.SnapshotReaderStatus.*;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @NotThreadSafe
-public class SnapshotMessageStore implements MessageStore {
+public class S3SnapshotMessageStore implements SnapshotMessageStore {
 
-    private static final Logger LOG = getLogger(SnapshotMessageStore.class);
+    private static final Logger LOG = getLogger(S3SnapshotMessageStore.class);
 
     private MessageIterator messageIterator;
     private ChannelPosition channelPosition;
@@ -49,9 +48,9 @@ public class SnapshotMessageStore implements MessageStore {
     private final String channelName;
     private final ApplicationEventPublisher eventPublisher;
 
-    public SnapshotMessageStore(final @Nonnull String channelName,
-                                final @Nonnull SnapshotReadService snapshotReadService,
-                                final @Nullable ApplicationEventPublisher eventPublisher) {
+    public S3SnapshotMessageStore(final @Nonnull String channelName,
+                                  final @Nonnull SnapshotReadService snapshotReadService,
+                                  final @Nullable ApplicationEventPublisher eventPublisher) {
         this.channelName = channelName;
         this.eventPublisher = eventPublisher;
         publishEvent(STARTING, "Retrieve snapshot file from S3.", null);
@@ -108,6 +107,7 @@ public class SnapshotMessageStore implements MessageStore {
         }
     }
 
+    @Override
     public Instant getSnapshotTimestamp() {
         return snapshotTimestamp;
     }

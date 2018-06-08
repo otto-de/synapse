@@ -8,8 +8,8 @@ import de.otto.synapse.eventsource.DefaultEventSource;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
 import de.otto.synapse.eventsource.EventSourceConsumerProcess;
-import de.otto.synapse.messagestore.MessageStore;
 import de.otto.synapse.messagestore.MessageStoreFactory;
+import de.otto.synapse.messagestore.SnapshotMessageStore;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -38,9 +38,9 @@ public class SynapseAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public EventSourceBuilder eventSourceBuilder(final MessageStoreFactory<MessageStore> snapshotMessageStoreFactory) {
+    public EventSourceBuilder eventSourceBuilder(final MessageStoreFactory<SnapshotMessageStore> snapshotMessageStoreFactory) {
         return (messageLog) -> {
-            final MessageStore messageStore = snapshotMessageStoreFactory.createMessageStoreFor(messageLog.getChannelName());
+            final SnapshotMessageStore messageStore = snapshotMessageStoreFactory.createMessageStoreFor(messageLog.getChannelName());
             return new DefaultEventSource(messageStore, messageLog);
         };
     }

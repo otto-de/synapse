@@ -8,8 +8,9 @@ import de.otto.synapse.endpoint.sender.InMemoryMessageSenderFactory;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.eventsource.InMemoryMessageLogReceiverEndpointFactory;
 import de.otto.synapse.messagestore.CompactingInMemoryMessageStore;
-import de.otto.synapse.messagestore.MessageStore;
+import de.otto.synapse.messagestore.DelegatingSnapshotMessageStore;
 import de.otto.synapse.messagestore.MessageStoreFactory;
+import de.otto.synapse.messagestore.SnapshotMessageStore;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 
@@ -42,8 +43,10 @@ public class InMemoryTestConfiguration {
     }
 
     @Bean
-    public MessageStoreFactory<MessageStore> snapshotMessageStoreFactory() {
-        return (channelName -> new CompactingInMemoryMessageStore(true));
+    public MessageStoreFactory<SnapshotMessageStore> snapshotMessageStoreFactory() {
+        return (channelName -> new DelegatingSnapshotMessageStore(
+                new CompactingInMemoryMessageStore(true))
+        );
     }
 
     @Bean
