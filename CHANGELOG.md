@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.6.9
+* Log message meta data when put to kinesis failed
+
 ## 0.6.8
 * Fixes bug in MessageReceiverEndpointInfoProvider resulting in a broken presentation of status details. 
 * Disabling of synapse-edison is now more consistent. The different Health Indicators can now be disabled using the
