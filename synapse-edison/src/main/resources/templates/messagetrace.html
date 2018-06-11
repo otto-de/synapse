@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head th:replace="fragments/head  :: head" />
+
+<body>
+
+    <link rel="stylesheet" type="text/css" th:href="@{/css/panel-actions.css}" />
+
+    <div th:replace="fragments/navigation  :: navigation" />
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title" th:text="${title}">Message Trace</h3>
+                        <ul class="list-inline panel-actions">
+                            <li>
+                                <a class="toggle-fullscreen" href="#" role="button" title="Toggle Fullscreen">
+                                    <span class="glyphicon glyphicon-resize-full"></span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="panel-body">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>Key</th>
+                                <th>Headers</th>
+                                <th>Payload</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="message : ${messages}">
+                                <td class="col-md-2" th:text="${message.key}">key</td>
+                                <td class="col-md-5"><pre><code th:text="${message.header}"></code></pre></td>
+                                <td class="col-md-5"><pre><code th:text="${message.payload}"></code></pre></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- /container -->
+
+    <span th:replace="fragments/footer :: footer" />
+    <script type="text/javascript" th:src="@{/js/init-fullscreen.js}"></script>
+
+</body>
+</html>

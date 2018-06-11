@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.6.11
+* Adds message traces for sender- and receiver endpoints to Edison µServices. 
+
 ## 0.6.9
 * Fixes bug that SnapshotAutoConfiguration is not injecting the ApplicationEventPublisher into SnapshotMessageStore
   instances created by the SnapshotMessageStoreFactory.

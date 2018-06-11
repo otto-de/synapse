@@ -1,6 +1,7 @@
 package de.otto.synapse.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import de.otto.synapse.annotation.EventSourceConsumerBeanPostProcessor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
@@ -56,9 +57,11 @@ public class SynapseAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(ObjectMapper.class)
     public ObjectMapper objectMapper() {
-        return new ObjectMapper().registerModule(new JavaTimeModule());
+        return new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .registerModule(new Jdk8Module());
+
     }
 
     @Bean
