@@ -12,6 +12,7 @@ import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.Lists.partition;
@@ -35,25 +36,28 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
 
     @Override
     protected void doSend(@Nonnull Message<String> message) {
-        final PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder()
-                .streamName(getChannelName())
-                .records(requestEntryFor(message.getKey(), message.getPayload()))
-                .build();
-
-        retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
+        retryPutRecordsKinesisClient.putRecords(() -> createPutRecordRequest(message));
     }
 
     @Override
     protected void doSendBatch(@Nonnull Stream<Message<String>> messageStream) {
-        final List<PutRecordsRequestEntry> entries = messageStream
+        final List<PutRecordsRequestEntry> entries = createPutRecordRequestEntries(messageStream);
+        partition(entries, PUT_RECORDS_BATCH_SIZE)
+                .forEach(batch -> retryPutRecordsKinesisClient.putRecords(() -> createPutRecordRequest(batch))
+                );
+    }
+
+    private PutRecordsRequest createPutRecordRequest(final List<PutRecordsRequestEntry> batch) {
+        return PutRecordsRequest.builder()
+                .streamName(getChannelName())
+                .records(batch)
+                .build();
+    }
+
+    private ArrayList<PutRecordsRequestEntry> createPutRecordRequestEntries(final @Nonnull Stream<Message<String>> messageStream) {
+        return messageStream
                 .map(entry -> requestEntryFor(entry.getKey(), entry.getPayload()))
                 .collect(toCollection(ArrayList::new));
-        partition(entries, PUT_RECORDS_BATCH_SIZE)
-                .forEach(batch -> retryPutRecordsKinesisClient.putRecords(PutRecordsRequest.builder()
-                        .streamName(getChannelName())
-                        .records(batch)
-                        .build())
-                );
     }
 
     private PutRecordsRequestEntry requestEntryFor(final String key,
@@ -66,4 +70,13 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
                 .data(byteBufferPayload)
                 .build();
     }
+
+    private PutRecordsRequest createPutRecordRequest(final @Nonnull Message<String> message) {
+        return PutRecordsRequest.builder()
+                .streamName(getChannelName())
+                .records(requestEntryFor(message.getKey(), message.getPayload()))
+                .build();
+    }
+
+
 }

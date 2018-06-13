@@ -37,7 +37,7 @@ public class RetryPutRecordsKinesisClientTest {
 
         // when
         PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder().build();
-        retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
+        retryPutRecordsKinesisClient.putRecords(() -> putRecordsRequest);
 
         // then
         verify(kinesisClient).putRecords(putRecordsRequest);
@@ -52,7 +52,7 @@ public class RetryPutRecordsKinesisClientTest {
 
         // when
         PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder().records(emptyList()).build();
-        retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
+        retryPutRecordsKinesisClient.putRecords(() -> putRecordsRequest);
 
         // then
         verify(kinesisClient, times(2)).putRecords(putRecordsRequest);
@@ -67,7 +67,7 @@ public class RetryPutRecordsKinesisClientTest {
         // when
         PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder().records(emptyList()).build();
         try {
-            retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
+            retryPutRecordsKinesisClient.putRecords(() -> putRecordsRequest);
         } catch (Exception e) {
             // then
             verify(kinesisClient, times(3)).putRecords(putRecordsRequest);
@@ -104,7 +104,7 @@ public class RetryPutRecordsKinesisClientTest {
         when(kinesisClient.putRecords(expectedRetriedPutRecordsRequest)).thenReturn(putRecordsResponseForRetry);
 
         // when
-        retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
+        retryPutRecordsKinesisClient.putRecords(() -> putRecordsRequest);
 
         // then
         verify(kinesisClient).putRecords(putRecordsRequest);
@@ -121,7 +121,7 @@ public class RetryPutRecordsKinesisClientTest {
 
         // when
         PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder().records(emptyList()).build();
-        retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
+        retryPutRecordsKinesisClient.putRecords(() -> putRecordsRequest);
 
         // then
         verify(kinesisClient, times(2)).putRecords(putRecordsRequest);
@@ -136,7 +136,7 @@ public class RetryPutRecordsKinesisClientTest {
         // when
         PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder().records(emptyList()).build();
         try {
-            retryPutRecordsKinesisClient.putRecords(putRecordsRequest);
+            retryPutRecordsKinesisClient.putRecords(() -> putRecordsRequest);
         } catch (Exception e) {
             // then
             verify(kinesisClient, times(3)).putRecords(putRecordsRequest);

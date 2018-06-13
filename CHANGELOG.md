@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.6.12
+* Fixes bug that don't create a new message when retry with a corrupt byte buffer 
+
 ## 0.6.11
 * Adds message traces for sender- and receiver endpoints to Edison µServices. 
 

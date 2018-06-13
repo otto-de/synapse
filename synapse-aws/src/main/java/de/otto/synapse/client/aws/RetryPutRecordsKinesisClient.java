@@ -1,6 +1,7 @@
 package de.otto.synapse.client.aws;
 
 import com.google.common.collect.ImmutableMap;
+import de.otto.synapse.logging.LogHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.core.exception.SdkClientException;
@@ -13,6 +14,7 @@ import software.amazon.awssdk.services.kinesis.model.PutRecordsResultEntry;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static de.otto.synapse.logging.LogHelper.info;
 
@@ -34,13 +36,13 @@ public class RetryPutRecordsKinesisClient {
         this.waitBeforeRetry = waitBeforeRetry;
     }
 
-    public void putRecords(PutRecordsRequest putRecordsRequest) {
+    public void putRecords(Supplier<PutRecordsRequest> putRecordsRequestSupplier) {
         int retryStep = 0;
+        PutRecordsRequest putRecordsRequest = putRecordsRequestSupplier.get();
         while (retryStep++ < MAX_RETRY_COUNT) {
             final long t1 = System.currentTimeMillis();
-            PutRecordsResponse response = null;
             try {
-                response = kinesisClient.putRecords(putRecordsRequest);
+                final PutRecordsResponse response = kinesisClient.putRecords(putRecordsRequest);
                 final long t2 = System.currentTimeMillis();
                  if (response.failedRecordCount() == 0) {
                     info(LOG, ImmutableMap.of("runtime", (t2-t1)), "Write events to Kinesis", null);
@@ -61,17 +63,22 @@ public class RetryPutRecordsKinesisClient {
                     throw new IllegalStateException(String.format("failed to send records after %s retries", MAX_RETRY_COUNT));
                 }
             } catch (SdkServiceException | SdkClientException e) {
-                LOG.warn("Failed to write events to Kinesis: {}", e.getMessage());
-                if (waitBeforeRetry) {
-                    waitDependingOnRetryStep(retryStep);
-                }
+                LogHelper.warn(LOG, ImmutableMap.of("records", String.valueOf(putRecordsRequest.records()), "recordsSize", String.valueOf(getRecordsSize(putRecordsRequest.records()))), "Failed to write events to Kinesis: %s", new Object[]{e.getMessage()});
                 if (retryStep == MAX_RETRY_COUNT) {
                     LOG.error("Failed to write events to Kinesis: {}", e);
                     throw new IllegalStateException(String.format("failed to send records after %s retries", MAX_RETRY_COUNT));
                 }
+                putRecordsRequest = putRecordsRequestSupplier.get();
+                if (waitBeforeRetry) {
+                    waitDependingOnRetryStep(retryStep);
+                }
             }
 
         }
+    }
+
+    private long getRecordsSize(final List<PutRecordsRequestEntry> records) {
+        return records.stream().map(e->e.data().position()).mapToInt(Number::intValue).sum();
     }
 
     private List<PutRecordsRequestEntry> findFailedRecords(PutRecordsRequest putRecordsRequest, PutRecordsResponse response) {
