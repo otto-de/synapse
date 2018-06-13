@@ -57,6 +57,7 @@ public class SynapseAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean
     public ObjectMapper objectMapper() {
         return new ObjectMapper()
                 .registerModule(new JavaTimeModule())

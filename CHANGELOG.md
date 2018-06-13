@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.6.13
+* Add ConditionalOnMissingBean to ObjectMapper in SynapseAutoConfiguration
+
 ## 0.6.12
 * Fixes bug that don't create a new message when retry with a corrupt byte buffer 
 
