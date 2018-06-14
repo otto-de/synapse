@@ -1,0 +1,6 @@
+management:
+  context-path: /internal
+synapse:
+  edison:
+    history:
+      enabled: true
