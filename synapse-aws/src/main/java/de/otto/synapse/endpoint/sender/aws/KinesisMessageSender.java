@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.sender.aws;
 
-import de.otto.synapse.client.aws.RetryPutRecordsKinesisClient;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;

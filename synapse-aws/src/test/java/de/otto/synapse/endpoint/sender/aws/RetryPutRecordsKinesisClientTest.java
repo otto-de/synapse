@@ -1,4 +1,4 @@
-package de.otto.synapse.client.aws;
+package de.otto.synapse.endpoint.sender.aws;
 
 import org.junit.Before;
 import org.junit.Test;

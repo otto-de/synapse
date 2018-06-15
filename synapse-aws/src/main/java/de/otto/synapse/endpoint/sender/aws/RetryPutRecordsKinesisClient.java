@@ -1,4 +1,4 @@
-package de.otto.synapse.client.aws;
+package de.otto.synapse.endpoint.sender.aws;
 
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.logging.LogHelper;

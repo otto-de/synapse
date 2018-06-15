@@ -1,6 +1,5 @@
-package de.otto.synapse.client.aws;
+package de.otto.synapse.testsupport;
 
-import de.otto.synapse.testsupport.LocalS3Client;
 import org.junit.Before;
 import org.junit.Test;
 import software.amazon.awssdk.core.sync.RequestBody;
