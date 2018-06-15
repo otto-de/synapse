@@ -1,4 +1,4 @@
-package de.otto.synapse.channel.aws;
+package de.otto.synapse.endpoint.receiver.aws;
 
 import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;

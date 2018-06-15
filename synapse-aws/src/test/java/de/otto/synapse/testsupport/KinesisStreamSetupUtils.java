@@ -1,4 +1,4 @@
-package de.otto.synapse.channel.aws;
+package de.otto.synapse.testsupport;
 
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;

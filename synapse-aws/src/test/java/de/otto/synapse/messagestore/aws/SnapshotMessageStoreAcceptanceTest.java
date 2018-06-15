@@ -2,7 +2,7 @@ package de.otto.synapse.messagestore.aws;
 
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.aws.KinesisStreamSetupUtils;
+import de.otto.synapse.testsupport.KinesisStreamSetupUtils;
 import de.otto.synapse.compaction.aws.CompactionService;
 import de.otto.synapse.compaction.aws.SnapshotReadService;
 import de.otto.synapse.compaction.aws.SnapshotWriteService;

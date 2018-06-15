@@ -1,4 +1,4 @@
-package de.otto.synapse.channel.aws;
+package de.otto.synapse.endpoint.receiver.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
@@ -29,7 +29,7 @@ import static de.otto.synapse.channel.ChannelDurationBehind.channelDurationBehin
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
-import static de.otto.synapse.channel.aws.KinesisShardIterator.POISON_SHARD_ITER;
+import static de.otto.synapse.endpoint.receiver.aws.KinesisShardIterator.POISON_SHARD_ITER;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingReceiverChannelsWith;
 import static de.otto.synapse.info.MessageReceiverStatus.*;
 import static java.time.Duration.ZERO;

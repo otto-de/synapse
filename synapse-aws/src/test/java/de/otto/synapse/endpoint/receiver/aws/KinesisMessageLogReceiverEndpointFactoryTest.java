@@ -1,4 +1,4 @@
-package de.otto.synapse.channel.aws;
+package de.otto.synapse.endpoint.receiver.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.endpoint.MessageInterceptor;
