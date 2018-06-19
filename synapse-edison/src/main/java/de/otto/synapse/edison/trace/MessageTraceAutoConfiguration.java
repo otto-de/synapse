@@ -1,6 +1,7 @@
 package de.otto.synapse.edison.trace;
 
 import com.google.common.collect.ImmutableMap;
+import de.otto.synapse.endpoint.MessageEndpoint;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
@@ -37,30 +38,14 @@ public class MessageTraceAutoConfiguration {
     public MessageTraces traceMessageStore(final Optional<List<MessageLogReceiverEndpoint>> messageLogReceiverEndpoints,
                                            final Optional<List<MessageSenderEndpoint>> senderEndpoints) {
         return new MessageTraces(
-                receiverStoresFor(messageLogReceiverEndpoints.orElse(emptyList())),
-                senderStoresFor(senderEndpoints.orElse(emptyList()))
+                messageStoresFor(messageLogReceiverEndpoints.orElse(emptyList())),
+                messageStoresFor(senderEndpoints.orElse(emptyList()))
         );
     }
 
-    private ImmutableMap<String, MessageStore> receiverStoresFor(final List<MessageLogReceiverEndpoint> messageLogReceiverEndpoints) {
-        final ImmutableMap.Builder<String,MessageStore> receiverStores = builder();
-        messageLogReceiverEndpoints
-                .forEach(messageLogReceiverEndpoint -> {
-                    final InMemoryRingBufferMessageStore messageStore = new InMemoryRingBufferMessageStore(capacity);
-                    messageLogReceiverEndpoint.getInterceptorChain().register(
-                            message -> {
-                                messageStore.add(message);
-                                return message;
-                            }
-                    );
-                    receiverStores.put(messageLogReceiverEndpoint.getChannelName(), messageStore);
-                });
-        return receiverStores.build();
-    }
-
-    private ImmutableMap<String, MessageStore> senderStoresFor(final List<MessageSenderEndpoint> senderEndpoints) {
+    private ImmutableMap<String, MessageStore> messageStoresFor(final List<? extends MessageEndpoint> messageEndpoints) {
         final ImmutableMap.Builder<String,MessageStore> senderStores = builder();
-        senderEndpoints
+        messageEndpoints
                 .forEach(senderEndpoint -> {
                     final InMemoryRingBufferMessageStore messageStore = new InMemoryRingBufferMessageStore(capacity);
                     senderEndpoint.getInterceptorChain().register(message -> {
