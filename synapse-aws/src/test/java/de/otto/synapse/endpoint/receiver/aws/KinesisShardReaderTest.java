@@ -9,16 +9,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.function.Consumer;
 
-import static de.otto.synapse.channel.ShardPosition.*;
+import static de.otto.synapse.channel.ShardPosition.fromHorizon;
+import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
@@ -29,10 +28,9 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static software.amazon.awssdk.services.kinesis.model.ShardIteratorType.TRIM_HORIZON;
 
 @RunWith(MockitoJUnitRunner.class)
-public class KinesisShardTest {
+public class KinesisShardReaderTest {
 
     @Mock
     private KinesisClient kinesisClient;
@@ -41,95 +39,18 @@ public class KinesisShardTest {
     private MessageConsumer<String> consumer;
 
     private InterceptorChain interceptorChain;
-    private KinesisShard kinesisShard;
+    private KinesisShardReader kinesisShardReader;
 
     @Before
     public void setUp() {
         interceptorChain = new InterceptorChain();
-        kinesisShard = new KinesisShard("someShard", "someStream", kinesisClient, interceptorChain, Clock.systemDefaultZone());
+        kinesisShardReader = new KinesisShardReader("someStream", "someShard", kinesisClient, interceptorChain, Clock.systemDefaultZone());
 
         GetShardIteratorResponse fakeResponse = GetShardIteratorResponse.builder()
                 .shardIterator("someShardIterator")
                 .build();
 
         when(kinesisClient.getShardIterator(any(GetShardIteratorRequest.class))).thenReturn(fakeResponse);
-    }
-
-    @Test
-    public void shouldReturnTrimHorizonShardIteratorWhenStartingAtHorizon() {
-        // when
-        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromHorizon("someShard"));
-
-        // then
-        assertThat(iterator.getId(), is("someShardIterator"));
-
-        GetShardIteratorRequest expectedRequest = GetShardIteratorRequest.builder()
-                .streamName("someStream")
-                .shardId("someShard")
-                .shardIteratorType(TRIM_HORIZON)
-                .build();
-        verify(kinesisClient).getShardIterator(expectedRequest);
-    }
-
-    @Test
-    public void shouldReturnTrimHorizonShardIteratorWhenRetrieveIteratorFailsWithInvalidArgumentException() {
-        // when
-        when(kinesisClient.getShardIterator(any(GetShardIteratorRequest.class)))
-                .thenAnswer((Answer<GetShardIteratorResponse>) invocation -> {
-                    if ("4711".equals(((GetShardIteratorRequest)invocation.getArgument(0)).startingSequenceNumber())) {
-                        throw InvalidArgumentException.builder().message("Bumm!").build();
-                    }
-                    return GetShardIteratorResponse.builder()
-                            .shardIterator("someShardIterator")
-                            .build();
-                });
-
-        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromPosition("someShard", "4711"));
-
-        // then
-        assertThat(iterator.getId(), is("someShardIterator"));
-
-        GetShardIteratorRequest expectedRequest = GetShardIteratorRequest.builder()
-                .streamName("someStream")
-                .shardId("someShard")
-                .shardIteratorType(TRIM_HORIZON)
-                .build();
-        verify(kinesisClient).getShardIterator(expectedRequest);
-    }
-
-    @Test
-    public void shouldReturnAfterSequenceNumberIterator() {
-        // when
-        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromPosition("someShard", "1"));
-
-        // then
-        assertThat(iterator.getId(), is("someShardIterator"));
-
-        GetShardIteratorRequest expectedRequest = GetShardIteratorRequest.builder()
-                .streamName("someStream")
-                .shardId("someShard")
-                .shardIteratorType(ShardIteratorType.AFTER_SEQUENCE_NUMBER)
-                .startingSequenceNumber("1")
-                .build();
-        verify(kinesisClient).getShardIterator(expectedRequest);
-    }
-
-    @Test
-    public void shouldReturnAtTimestampIterator() {
-        // when
-        final Instant now = now();
-        KinesisShardIterator iterator = kinesisShard.retrieveIterator(fromTimestamp("someShard", now));
-
-        // then
-        assertThat(iterator.getId(), is("someShardIterator"));
-
-        GetShardIteratorRequest expectedRequest = GetShardIteratorRequest.builder()
-                .streamName("someStream")
-                .shardId("someShard")
-                .shardIteratorType(ShardIteratorType.AT_TIMESTAMP)
-                .timestamp(now)
-                .build();
-        verify(kinesisClient).getShardIterator(expectedRequest);
     }
 
     @Test
@@ -156,7 +77,7 @@ public class KinesisShardTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
 
         // when
-        final ShardPosition shardPosition = kinesisShard.consumeShard(fromHorizon("someShard"), now, consumer, (x) -> {});
+        final ShardPosition shardPosition = kinesisShardReader.consumeUntil(fromHorizon("someShard"), now, consumer);
 
         // then
         verify(consumer).accept(kinesisMessage("someShard", record1));
@@ -191,7 +112,7 @@ public class KinesisShardTest {
 
         // when
         interceptorChain.register((m) -> message(m.getKey(), m.getHeader(), "intercepted"));
-        final ShardPosition shardPosition = kinesisShard.consumeShard(fromHorizon("someShard"), now, consumer, (x) -> {});
+        final ShardPosition shardPosition = kinesisShardReader.consumeUntil(fromHorizon("someShard"), now, consumer);
 
         // then
         verify(consumer).accept(message("first", responseHeader(fromPosition("someShard", "1"), future), "intercepted"));
@@ -230,7 +151,7 @@ public class KinesisShardTest {
                         ? null
                         : message(m.getKey(), m.getHeader(), "intercepted")
         );
-        final ShardPosition shardPosition = kinesisShard.consumeShard(fromHorizon("someShard"), now, consumer, (x) -> {});
+        final ShardPosition shardPosition = kinesisShardReader.consumeUntil(fromHorizon("someShard"), now, consumer);
 
         // then
         verify(consumer).accept(message("second", responseHeader(fromPosition("someShard", "2"), future), "intercepted"));
@@ -264,8 +185,8 @@ public class KinesisShardTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
 
         // when
-        kinesisShard.stop();
-        final ShardPosition shardPosition = kinesisShard.consumeShard(fromHorizon("someShard"), now, consumer, (x) -> {});
+        kinesisShardReader.stop();
+        final ShardPosition shardPosition = kinesisShardReader.consumeUntil(fromHorizon("someShard"), now, consumer);
 
         // then
         verify(consumer).accept(kinesisMessage("someShard", record1));
@@ -273,12 +194,26 @@ public class KinesisShardTest {
         verifyNoMoreInteractions(consumer);
 
         assertThat(shardPosition.position(), is("2"));
-        assertThat(kinesisShard.isStopping(), is(true));
+        assertThat(kinesisShardReader.isStopping(), is(true));
     }
 
     @Test
     @SuppressWarnings("unchecked")
     public void shouldCallCallbackForRecords() {
+        final Consumer callback = mock(Consumer.class);
+        kinesisShardReader = new KinesisShardReader("someStream", "someShard", kinesisClient, interceptorChain, Clock.systemDefaultZone()) {
+            @Override
+            public void afterBatch(final GetRecordsResponse response) {
+                callback.accept(response);
+            }
+        };
+
+        GetShardIteratorResponse fakeResponse = GetShardIteratorResponse.builder()
+                .shardIterator("someShardIterator")
+                .build();
+
+        when(kinesisClient.getShardIterator(any(GetShardIteratorRequest.class))).thenReturn(fakeResponse);
+
         final Instant now = now();
         final Instant future = now.plus(1, SECONDS);
         // given
@@ -300,12 +235,12 @@ public class KinesisShardTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
 
         // when
-        kinesisShard.stop();
-        final Consumer callback = mock(Consumer.class);
-        kinesisShard.consumeShard(fromHorizon("someShard"), now, consumer, callback);
+        kinesisShardReader.stop();
+
+        kinesisShardReader.consumeUntil(fromHorizon("someShard"), now, consumer);
 
         // then
-        verify(callback).accept(Duration.ofMillis(1234L));
+        verify(callback).accept(response);
         verifyNoMoreInteractions(callback);
     }
 
@@ -313,6 +248,13 @@ public class KinesisShardTest {
     @SuppressWarnings("unchecked")
     public void shouldCallCallbackWithDurationBehindWithoutRecords() {
         // given
+        final Consumer callback = mock(Consumer.class);
+        kinesisShardReader = new KinesisShardReader("someStream", "someShard", kinesisClient, interceptorChain, Clock.systemDefaultZone()) {
+            @Override
+            public void afterBatch(final GetRecordsResponse response) {
+                callback.accept(response);
+            }
+        };
         final GetRecordsResponse response = GetRecordsResponse.builder()
                 .records()
                 .nextShardIterator("nextShardIterator")
@@ -321,12 +263,11 @@ public class KinesisShardTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
 
         // when
-        kinesisShard.stop();
-        final Consumer callback = mock(Consumer.class);
-        kinesisShard.consumeShard(fromPosition("someShard", "2"), now().minus(1, MILLIS), consumer, callback);
+        kinesisShardReader.stop();
+        kinesisShardReader.consumeUntil(fromPosition("someShard", "2"), now().minus(1, MILLIS), consumer);
 
         // then
-        verify(callback).accept(Duration.ofMillis(1234L));
+        verify(callback).accept(response);
         verifyNoMoreInteractions(callback);
     }
 
@@ -341,7 +282,7 @@ public class KinesisShardTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
 
         // when
-        ShardPosition shardPosition = kinesisShard.consumeShard(fromHorizon("someShard"), now(), consumer, (x) -> {});
+        ShardPosition shardPosition = kinesisShardReader.consumeUntil(fromHorizon("someShard"), now(), consumer);
 
         // then
         assertThat(shardPosition.position(), is(""));
@@ -353,7 +294,7 @@ public class KinesisShardTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenThrow(RuntimeException.class);
 
         // when
-        kinesisShard.consumeShard(fromHorizon("someShard"), Instant.MAX, consumer, (x) -> {});
+        kinesisShardReader.consumeUntil(fromHorizon("someShard"), Instant.MAX, consumer);
 
         // then
         // exception is thrown
@@ -385,7 +326,7 @@ public class KinesisShardTest {
         doThrow(new RuntimeException("forced exception for test")).when(consumer).accept(kinesisMessage);
 
         // when
-        kinesisShard.consumeShard(fromHorizon("someShard"), now, consumer, (x) -> {});
+        kinesisShardReader.consumeUntil(fromHorizon("someShard"), now, consumer);
 
         //then
         verify(consumer).accept(kinesisMessage("someShard", record1));

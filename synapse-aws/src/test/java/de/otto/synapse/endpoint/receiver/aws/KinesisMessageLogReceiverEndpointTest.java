@@ -29,8 +29,8 @@ import static de.otto.synapse.channel.ChannelDurationBehind.channelDurationBehin
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
-import static de.otto.synapse.endpoint.receiver.aws.KinesisShardIterator.POISON_SHARD_ITER;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingReceiverChannelsWith;
+import static de.otto.synapse.endpoint.receiver.aws.KinesisShardIterator.POISON_SHARD_ITER;
 import static de.otto.synapse.info.MessageReceiverStatus.*;
 import static java.time.Duration.ZERO;
 import static java.time.Duration.ofMillis;
@@ -72,7 +72,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper, null);
 
         // when
-        List<KinesisShard> shards = kinesisMessageLog.getCurrentKinesisShards();
+        List<KinesisShardReader> shards = kinesisMessageLog.getCurrentKinesisShards();
 
         // then
         assertThat(shards, hasSize(0));
@@ -85,7 +85,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper, null);
 
         // when
-        List<KinesisShard> shards = kinesisMessageLog.getCurrentKinesisShards();
+        List<KinesisShardReader> shards = kinesisMessageLog.getCurrentKinesisShards();
 
         // then
         assertThat(shards, hasSize(1));
@@ -103,7 +103,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
 
         // when
-        List<KinesisShard> shards = kinesisMessageLog.getCurrentKinesisShards();
+        List<KinesisShardReader> shards = kinesisMessageLog.getCurrentKinesisShards();
 
         // then
         assertThat(shards, hasSize(2));
@@ -124,7 +124,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
 
         // when
-        List<KinesisShard> shards = kinesisMessageLog.getCurrentKinesisShards();
+        List<KinesisShardReader> shards = kinesisMessageLog.getCurrentKinesisShards();
 
         // then
         assertThat(shards, hasSize(4));
@@ -147,7 +147,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
 
         // when
-        List<KinesisShard> shards = kinesisMessageLog.getCurrentKinesisShards();
+        List<KinesisShardReader> shards = kinesisMessageLog.getCurrentKinesisShards();
 
         // then
         assertThat(shards, hasSize(2));
@@ -289,7 +289,7 @@ public class KinesisMessageLogReceiverEndpointTest {
 
         // then
         assertThat(kinesisMessageLog.getCurrentKinesisShards().size(), is(1));
-        kinesisMessageLog.getCurrentKinesisShards().forEach(kinesisShard -> assertThat(kinesisShard.isStopping(), is(true)));
+        kinesisMessageLog.getCurrentKinesisShards().forEach(kinesisShardReader -> assertThat(kinesisShardReader.isStopping(), is(true)));
     }
 
     @Test(expected = RuntimeException.class)

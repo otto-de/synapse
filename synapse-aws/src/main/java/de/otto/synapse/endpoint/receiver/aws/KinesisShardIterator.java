@@ -1,6 +1,7 @@
 package de.otto.synapse.endpoint.receiver.aws;
 
 import com.google.common.collect.ImmutableMap;
+import de.otto.synapse.channel.ShardPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.retry.RetryCallback;
@@ -11,48 +12,82 @@ import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
-import software.amazon.awssdk.services.kinesis.model.GetRecordsRequest;
-import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
-import software.amazon.awssdk.services.kinesis.model.KinesisException;
+import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static de.otto.synapse.channel.ShardPosition.fromHorizon;
+import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.logging.LogHelper.warn;
+import static java.lang.String.format;
+import static software.amazon.awssdk.services.kinesis.model.ShardIteratorType.*;
 
+/**
+ * A helper class used to retrieve and traverse Kinesis Shards.
+ * <p>
+ *     <em>Caution:</em> Creating a KinesisShardIterator is an expensive operation, so instances should be
+ *     reused and messages should be read continuously using by calling {@link #next()} should be preferred.
+ *     Creating a KinesisShardIterator too often may result in a {@link ProvisionedThroughputExceededException}
+ *     coming from the Amazon Kinesis SDK as described
+ *     {@link KinesisClient#getShardIterator(GetShardIteratorRequest) here}.
+ * </p>
+ */
 public class KinesisShardIterator {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShardIterator.class);
 
     public final static String POISON_SHARD_ITER = "__synapse__poison__iter";
 
-    static final Integer FETCH_RECORDS_LIMIT = 10000;
+    public static final Integer FETCH_RECORDS_LIMIT = 10000;
     private static final int RETRY_MAX_ATTEMPTS = 16;
     private static final int RETRY_BACK_OFF_POLICY_INITIAL_INTERVAL = 1000;
     private static final int RETRY_BACK_OFF_POLICY_MAX_INTERVAL = 64000;
     private static final double RETRY_BACK_OFF_POLICY_MULTIPLIER = 2.0;
 
     private final KinesisClient kinesisClient;
+    private final String channelName;
     private String id;
+    private ShardPosition shardPosition;
     private final int fetchRecordLimit;
     private final RetryTemplate retryTemplate;
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
-    public KinesisShardIterator(KinesisClient kinesisClient, String firstId) {
-        this.kinesisClient = kinesisClient;
-        this.id = firstId;
-        this.fetchRecordLimit = FETCH_RECORDS_LIMIT;
-        this.retryTemplate = createRetryTemplate();
+    public KinesisShardIterator(final KinesisClient kinesisClient,
+                                final String channelName,
+                                final ShardPosition shardPosition) {
+        this(kinesisClient, channelName, shardPosition, FETCH_RECORDS_LIMIT);
     }
 
-    public KinesisShardIterator(KinesisClient kinesisClient, String firstId, int fetchRecordLimit) {
+    public KinesisShardIterator(final KinesisClient kinesisClient,
+                                final String channelName,
+                                final ShardPosition shardPosition,
+                                final int fetchRecordLimit) {
         this.kinesisClient = kinesisClient;
-        this.id = firstId;
         this.fetchRecordLimit = fetchRecordLimit;
         this.retryTemplate = createRetryTemplate();
+        this.channelName = channelName;
+        this.shardPosition = shardPosition;
+        GetShardIteratorResponse shardIteratorResponse;
+        // TODO: Warum catch auf InvalidArgumentException? Bei Gelegenheit ausbauen
+        try {
+            shardIteratorResponse = kinesisClient.getShardIterator(
+                    buildIteratorShardRequest(shardPosition)
+            );
+        } catch (final InvalidArgumentException e) {
+            LOG.error(format("invalidShardSequenceNumber in Snapshot %s/%s - reading from HORIZON", channelName, shardPosition.shardName()));
+            shardIteratorResponse = kinesisClient.getShardIterator(
+                    buildIteratorShardRequest(fromHorizon(shardPosition.shardName()))
+            );
+        }
+        this.id = shardIteratorResponse.shardIterator();
     }
 
     public String getId() {
         return this.id;
+    }
+
+    public ShardPosition getShardPosition() {
+        return shardPosition;
     }
 
     /**
@@ -88,12 +123,41 @@ public class KinesisShardIterator {
         }
     }
 
+    private GetShardIteratorRequest buildIteratorShardRequest(final ShardPosition shardPosition) {
+        final GetShardIteratorRequest.Builder shardRequestBuilder = GetShardIteratorRequest
+                .builder()
+                .shardId(shardPosition.shardName())
+                .streamName(channelName);
+
+        switch (shardPosition.startFrom()) {
+            case HORIZON:
+                shardRequestBuilder.shardIteratorType(TRIM_HORIZON);
+                break;
+            case POSITION:
+                shardRequestBuilder.shardIteratorType(AFTER_SEQUENCE_NUMBER);
+                shardRequestBuilder.startingSequenceNumber(shardPosition.position());
+                break;
+            case TIMESTAMP:
+                shardRequestBuilder
+                        .shardIteratorType(AT_TIMESTAMP)
+                        .timestamp(shardPosition.timestamp());
+                break;
+        }
+        return shardRequestBuilder.build();
+    }
+
     private GetRecordsResponse tryNext() {
         GetRecordsResponse response = kinesisClient.getRecords(GetRecordsRequest.builder()
                 .shardIterator(id)
                 .limit(fetchRecordLimit)
                 .build());
         this.id = response.nextShardIterator();
+        if (!response.records().isEmpty()) {
+            this.shardPosition = fromPosition(
+                    shardPosition.shardName(),
+                    response.records().get(response.records().size()-1).sequenceNumber()
+            );
+        }
         return response;
     }
 

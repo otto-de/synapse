@@ -2,9 +2,9 @@ package de.otto.synapse.configuration.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.aws.configuration.AwsProperties;
-import de.otto.synapse.endpoint.receiver.aws.KinesisMessageLogReceiverEndpointFactory;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
+import de.otto.synapse.endpoint.receiver.aws.KinesisMessageLogReceiverEndpointFactory;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.endpoint.sender.aws.KinesisMessageSenderEndpointFactory;
 import org.springframework.beans.factory.annotation.Autowired;

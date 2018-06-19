@@ -52,7 +52,7 @@ artifacts {
 }
 
 task startLocalStack(type:Exec) {
-    commandLine "docker", "run", "--name", "localstack_for_testing", "-d", "-p", "4567-4583:4567-4583", "-p", "8080:8080", "localstack/localstack:latest"
+    commandLine "docker", "run", "--name", "localstack_for_testing", "-d", "-p", "4567-4583:4567-4583", "localstack/localstack:latest"
 }
 task stopLocalStack(type: Exec) {
     commandLine 'docker', 'rm', '-f', 'localstack_for_testing'
