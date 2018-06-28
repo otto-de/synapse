@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint.receiver.aws;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ShardPosition;
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.logging.LogHelper.warn;
 import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static software.amazon.awssdk.services.kinesis.model.ShardIteratorType.*;
 
 /**
@@ -90,6 +92,10 @@ public class KinesisShardIterator {
         return shardPosition;
     }
 
+    public int getFetchRecordLimit() {
+        return fetchRecordLimit;
+    }
+
     /**
      * The shard iterator has returned an id that is matching {@link #POISON_SHARD_ITER}.
      * <p>
@@ -110,14 +116,16 @@ public class KinesisShardIterator {
         stopSignal.set(true);
     }
 
-    public GetRecordsResponse next() {
+    public KinesisShardResponse next() {
         try {
-            return retryTemplate.execute((RetryCallback<GetRecordsResponse, Throwable>) context -> {
+            final Stopwatch stopwatch = Stopwatch.createStarted();
+            final GetRecordsResponse recordsResponse = retryTemplate.execute((RetryCallback<GetRecordsResponse, Throwable>) context -> {
                 if (stopSignal.get()) {
                     context.setExhaustedOnly();
                 }
                 return tryNext();
             });
+            return new KinesisShardResponse(channelName, shardPosition.shardName(), shardPosition, recordsResponse, stopwatch.elapsed(MILLISECONDS));
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }
@@ -152,6 +160,7 @@ public class KinesisShardIterator {
                 .limit(fetchRecordLimit)
                 .build());
         this.id = response.nextShardIterator();
+        LOG.debug("next() with id " + this.id + " returned " + response.records().size() + " records");
         if (!response.records().isEmpty()) {
             this.shardPosition = fromPosition(
                     shardPosition.shardName(),

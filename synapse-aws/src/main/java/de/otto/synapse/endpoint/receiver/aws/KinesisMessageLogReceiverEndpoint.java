@@ -7,16 +7,16 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.otto.synapse.channel.ChannelDurationBehind;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
+import de.otto.synapse.consumer.MessageDispatcher;
+import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.endpoint.receiver.AbstractMessageLogReceiverEndpoint;
-import de.otto.synapse.info.MessageReceiverStatus;
+import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.DescribeStreamRequest;
 import software.amazon.awssdk.services.kinesis.model.DescribeStreamResponse;
-import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 import software.amazon.awssdk.services.kinesis.model.Shard;
 
 import javax.annotation.Nonnull;
@@ -29,15 +29,16 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static de.otto.synapse.channel.ChannelDurationBehind.copyOf;
 import static de.otto.synapse.channel.ChannelDurationBehind.unknown;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
+import static de.otto.synapse.info.MessageReceiverNotification.builder;
 import static de.otto.synapse.info.MessageReceiverStatus.*;
 import static de.otto.synapse.logging.LogHelper.info;
 import static java.lang.String.format;
-import static java.time.Duration.ofMillis;
 import static java.util.Objects.isNull;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.Executors.newFixedThreadPool;
@@ -47,13 +48,60 @@ import static java.util.stream.Collectors.toList;
 public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceiverEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisMessageLogReceiverEndpoint.class);
+    private static class KinesisShardResponseConsumer implements Consumer<KinesisShardResponse> {
 
+
+        private final AtomicReference<ChannelDurationBehind> channelDurationBehind = new AtomicReference<>();
+        private final InterceptorChain interceptorChain;
+        private final MessageDispatcher messageDispatcher;
+        private final ApplicationEventPublisher eventPublisher;
+
+        private KinesisShardResponseConsumer(final List<String> shardNames,
+                                             final InterceptorChain interceptorChain,
+                                             final MessageDispatcher messageDispatcher,
+                                             final ApplicationEventPublisher eventPublisher) {
+            this.interceptorChain = interceptorChain;
+            this.messageDispatcher = messageDispatcher;
+            this.eventPublisher = eventPublisher;
+            channelDurationBehind.set(unknown(shardNames));
+        }
+
+        @Override
+        public void accept(KinesisShardResponse response) {
+            response.getMessages().forEach(message -> {
+                try {
+                    final Message<String> interceptedMessage = interceptorChain.intercept(message);
+                    if (interceptedMessage != null) {
+                        messageDispatcher.accept(message);
+                    }
+                } catch (final Exception e) {
+                    LOG.error("Error processing message: " + e.getMessage(), e);
+                }
+            });
+            channelDurationBehind.updateAndGet(behind -> copyOf(behind)
+                    .with(response.getShardName(), response.getDurationBehind())
+                    .build());
+
+            if (eventPublisher != null) {
+                eventPublisher.publishEvent(builder()
+                        .withChannelName(response.getChannelName())
+                        .withChannelDurationBehind(channelDurationBehind.get())
+                        .withStatus(RUNNING)
+                        .withMessage("Reading from kinesis shard.")
+                        .build());
+            }
+
+        }
+
+
+    }
 
     private final KinesisClient kinesisClient;
     private final Clock clock;
     private List<KinesisShardReader> kinesisShardReaders;
     private ExecutorService executorService;
-    private final AtomicReference<ChannelDurationBehind> channelDurationBehind = new AtomicReference<>();
+    private final ApplicationEventPublisher eventPublisher;
+
 
     public KinesisMessageLogReceiverEndpoint(final String channelName,
                                              final KinesisClient kinesisClient,
@@ -70,6 +118,7 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
         super(channelName, objectMapper, eventPublisher);
         this.kinesisClient = kinesisClient;
         this.clock = clock;
+        this.eventPublisher = eventPublisher;
         initExecutorService();
     }
 
@@ -84,17 +133,17 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
                initExecutorService();
             }
             final List<String> shards = kinesisShardReaders.stream()
-                    .map(KinesisShardReader::getShardId)
+                    .map(KinesisShardReader::getShardName)
                     .collect(toList());
-            channelDurationBehind.set(unknown(shards));
+
 
             publishEvent(STARTED, "Received shards from Kinesis.", null);
 
+            final KinesisShardResponseConsumer consumer = new KinesisShardResponseConsumer(shards, getInterceptorChain(), getMessageDispatcher(), eventPublisher);
+
             final List<CompletableFuture<ShardPosition>> futureShardPositions = kinesisShardReaders
                     .stream()
-                    .map(shard -> supplyAsync(
-                            () -> consumeShard(shard, startFrom.shard(shard.getShardId()), until),
-                            executorService))
+                    .map(shard -> supplyAsync(() -> shard.consumeUntil(startFrom.shard(shard.getShardName()), until, consumer), executorService))
                     .collect(toList());
 
             // don't chain futureShardPositions with CompletableFuture::join as lazy execution will prevent threads from
@@ -139,27 +188,6 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
         }
     }
 
-    private ShardPosition consumeShard(final KinesisShardReader shard,
-                                       final ShardPosition startFrom,
-                                       final Instant until) {
-        MDC.put("channelName", getChannelName());
-        MDC.put("shardId", shard.getShardId());
-        info(LOG, ImmutableMap.of("position", startFrom), "Reading from stream", null);
-        try {
-
-            return shard.consumeUntil(startFrom, until, getMessageDispatcher());
-
-        } catch (final RuntimeException e) {
-            LOG.error("Failed to consume from Kinesis shard {}: {}", getChannelName(), shard.getShardId(), e.getMessage());
-            // Stop all shards and shutdown if this shard is failing:
-            stop();
-            throw e;
-        } finally {
-            MDC.remove("channelName");
-            MDC.remove("shardId");
-        }
-    }
-
     @Override
     public void stop() {
         this.kinesisShardReaders.forEach(KinesisShardReader::stop);
@@ -174,28 +202,8 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
         return retrieveAllShards()
                 .stream()
                 .filter(this::isShardOpen)
-                .map(shard -> new KinesisShardReader(getChannelName(), shard.shardId(), kinesisClient, getInterceptorChain(), clock) {
-                    private volatile long batchStarted;
-
-                    @Override
-                    public void beforeBatch() {
-                        super.beforeBatch();
-                        batchStarted = System.currentTimeMillis();
-                    }
-
-                    @Override
-                    public void afterBatch(final GetRecordsResponse response) {
-                        super.afterBatch(response);
-                        final Duration shardBehindLatest = ofMillis(response.millisBehindLatest());
-                        channelDurationBehind.updateAndGet(behind -> {
-                            return copyOf(behind)
-                                    .with(shard.shardId(), shardBehindLatest)
-                                    .build();
-                        });
-                        final long batchFinished = System.currentTimeMillis();
-                        publishEvent(MessageReceiverStatus.RUNNING, "Reading from kinesis shard.", channelDurationBehind.get());
-                        logInfo(getChannelName(), response, shardBehindLatest, batchFinished - batchStarted);
-                    }
+                .map(shard -> {
+                    return new KinesisShardReader(getChannelName(), shard.shardId(), kinesisClient, clock);
                 })
                 .collect(toImmutableList());
     }
@@ -241,8 +249,8 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
         }
     }
 
-    private void logInfo(String channelName, GetRecordsResponse recordsResponse, Duration durationBehind, long runtime) {
-        int recordCount = recordsResponse.records().size();
+    private static void logInfo(final String channelName, final KinesisShardResponse response, final Duration durationBehind, final long runtime) {
+        int recordCount = response.getMessages().size();
         boolean isBehind = durationBehind.getSeconds() > 0;
         if (recordCount > 0 || isBehind) {
             final String durationString = format("%s days %s hrs %s min %s sec", durationBehind.toDays(), durationBehind.toHours() % 24, durationBehind.toMinutes() % 60, durationBehind.getSeconds() % 60);

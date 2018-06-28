@@ -15,6 +15,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static software.amazon.awssdk.services.kinesis.model.Record.builder;
 import static software.amazon.awssdk.services.kinesis.model.ShardIteratorType.TRIM_HORIZON;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -33,16 +34,20 @@ public class KinesisShardIteratorTest {
     public void shouldGetShardPosition() {
         // given
         GetRecordsResponse response = GetRecordsResponse.builder()
-                .records(Record.builder()
+                .records(builder()
                         .sequenceNumber("someSeqNumber")
+                        .partitionKey("1")
+                        .approximateArrivalTimestamp(now())
                         .build())
+                .millisBehindLatest(42L)
+                .nextShardIterator("next")
                 .build();
         final KinesisClient kinesisClient = someKinesisClient();
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromHorizon("someShard"));
 
         // when
-        GetRecordsResponse fetchedResponse = shardIterator.next();
+        shardIterator.next();
 
         // then
         assertThat(shardIterator.getShardPosition(), is(fromPosition("someShard", "someSeqNumber")));
@@ -53,13 +58,14 @@ public class KinesisShardIteratorTest {
         // given
         GetRecordsResponse response = GetRecordsResponse.builder()
                 .records()
+                .millisBehindLatest(42L)
                 .build();
         final KinesisClient kinesisClient = someKinesisClient();
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromPosition("someShard", "42"));
 
         // when
-        GetRecordsResponse fetchedResponse = shardIterator.next();
+        shardIterator.next();
 
         // then
         assertThat(shardIterator.getShardPosition(), is(fromPosition("someShard", "42")));
@@ -150,8 +156,11 @@ public class KinesisShardIteratorTest {
     public void shouldFetchRecords() {
         // given
         GetRecordsResponse response = GetRecordsResponse.builder()
-                .records(Record.builder()
+                .millisBehindLatest(42L)
+                .records(builder()
                         .sequenceNumber("someSeqNumber")
+                        .partitionKey("foo")
+                        .approximateArrivalTimestamp(now())
                         .build())
                 .build();
         final KinesisClient kinesisClient = someKinesisClient();
@@ -159,10 +168,10 @@ public class KinesisShardIteratorTest {
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromHorizon("someShard"));
 
         // when
-        GetRecordsResponse fetchedResponse = shardIterator.next();
+        final KinesisShardResponse fetchedResponse = shardIterator.next();
 
         // then
-        assertThat(fetchedResponse, is(response));
+        assertThat(fetchedResponse.getShardPosition(), is(fromPosition("someShard", "someSeqNumber")));
         GetRecordsRequest expectedRequest = GetRecordsRequest.builder()
                 .shardIterator("someShardIterator")
                 .limit(KinesisShardIterator.FETCH_RECORDS_LIMIT)
@@ -176,6 +185,7 @@ public class KinesisShardIteratorTest {
         GetRecordsResponse response = GetRecordsResponse.builder()
                 .records()
                 .nextShardIterator("nextIteratorId")
+                .millisBehindLatest(42L)
                 .build();
         KinesisClient kinesisClient = someKinesisClient();
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
@@ -195,6 +205,7 @@ public class KinesisShardIteratorTest {
         GetRecordsResponse response = GetRecordsResponse.builder()
                 .records()
                 .nextShardIterator("nextIteratorId")
+                .millisBehindLatest(42L)
                 .build();
         final KinesisClient kinesisClient = someKinesisClient();
         when(kinesisClient.getRecords(any(GetRecordsRequest.class)))
@@ -212,24 +223,6 @@ public class KinesisShardIteratorTest {
         verify(kinesisClient, times(5)).getRecords(any(GetRecordsRequest.class));
         assertThat(shardIterator.getId(), is("nextIteratorId"));
 
-    }
-
-    @Test
-    public void shouldStopAfterSucessfulResponse() {
-        // given
-        GetRecordsResponse expectedResponse = GetRecordsResponse.builder()
-                .records()
-                .nextShardIterator("nextIteratorId")
-                .build();
-        final KinesisClient kinesisClient = someKinesisClient();
-        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(expectedResponse);
-        final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromHorizon("someShard"));
-
-        // when
-        shardIterator.stop();
-        GetRecordsResponse returnedResponse = shardIterator.next();
-        // then
-        assertThat(returnedResponse, is(expectedResponse));
     }
 
     @Test(expected = RuntimeException.class)

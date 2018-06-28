@@ -90,6 +90,7 @@ public class MessageDispatcher implements MessageConsumer<String> {
     @Override
     @SuppressWarnings({"unchecked", "raw"})
     public void accept(final Message<String> message) {
+        LOG.debug("Accepting message={}", message);
         messageConsumers
                 .stream()
                 .filter(consumer -> matchesKeyPattern(message, consumer.keyPattern()))

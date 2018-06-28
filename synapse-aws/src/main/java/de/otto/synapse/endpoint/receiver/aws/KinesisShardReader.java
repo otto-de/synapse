@@ -1,115 +1,128 @@
 package de.otto.synapse.endpoint.receiver.aws;
 
 import de.otto.synapse.channel.ShardPosition;
-import de.otto.synapse.consumer.MessageConsumer;
-import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
-import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
-import software.amazon.awssdk.services.kinesis.model.Record;
+import software.amazon.awssdk.services.kinesis.model.GetShardIteratorRequest;
+import software.amazon.awssdk.services.kinesis.model.ProvisionedThroughputExceededException;
 
+import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
-import static de.otto.synapse.message.aws.KinesisMessage.kinesisMessage;
+import static de.otto.synapse.endpoint.receiver.aws.KinesisShardIterator.FETCH_RECORDS_LIMIT;
+import static java.util.Optional.ofNullable;
 
 @ThreadSafe
 public class KinesisShardReader {
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShardReader.class);
 
-    private final String shardId;
+    private final String shardName;
     private final String channelName;
     private final KinesisClient kinesisClient;
-    private final InterceptorChain interceptorChain;
-    private final AtomicBoolean stopSignal = new AtomicBoolean(false);
     private final Clock clock;
+    private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
     public KinesisShardReader(final String channelName,
-                              final String shardId,
+                              final String shardName,
                               final KinesisClient kinesisClient,
-                              final InterceptorChain interceptorChain,
                               final Clock clock) {
-        this.shardId = shardId;
+        this.shardName = shardName;
         this.channelName = channelName;
         this.kinesisClient = kinesisClient;
-        this.interceptorChain = interceptorChain;
         this.clock = clock;
     }
 
-    public String getShardId() {
-        return shardId;
+    public String getChannelName() {
+        return channelName;
     }
 
-    public void beforeBatch() {
+    public String getShardName() {
+        return shardName;
     }
 
-    public void afterBatch(final GetRecordsResponse response) {
+    public KinesisShardIterator createIterator(final ShardPosition fromPosition) {
+        return createIterator(fromPosition, FETCH_RECORDS_LIMIT);
     }
 
-    public final ShardPosition consume(final ShardPosition fromPosition,
-                                       final MessageConsumer<String> consumer) {
-        final KinesisShardIterator kinesisShardIterator = new KinesisShardIterator(kinesisClient, channelName, fromPosition);
-        return consume(kinesisShardIterator, consumer);
+    public KinesisShardIterator createIterator(final ShardPosition fromPosition, final int fetchRecordLimit) {
+        return new KinesisShardIterator(kinesisClient, channelName, fromPosition, fetchRecordLimit);
     }
 
-    public final ShardPosition consume(final ShardPosition fromPosition,
-                                       final MessageConsumer<String> consumer,
-                                       final int fetchRecordLimit) {
-        final KinesisShardIterator kinesisShardIterator = new KinesisShardIterator(kinesisClient, channelName, fromPosition, fetchRecordLimit);
+    public final KinesisShardResponse read(final KinesisShardIterator kinesisShardIterator) {
 
-        return consume(kinesisShardIterator, consumer);
+        return kinesisShardIterator.next();
     }
 
-    public final ShardPosition consume(final KinesisShardIterator kinesisShardIterator,
-                                       final MessageConsumer<String> consumer) {
-        beforeBatch();
-
-        final GetRecordsResponse recordsResponse = kinesisShardIterator.next();
-        for (final Record record : recordsResponse.records()) {
-            final Message<String> message = interceptorChain.intercept(kinesisMessage(shardId, record));
-            if (message != null) {
-                consumeMessageSafely(message, consumer);
-            }
-        }
-
-        afterBatch(recordsResponse);
-        return kinesisShardIterator.getShardPosition();
+    /**
+     * Reads a single {@link Message} from a Kinesis shard.
+     * <p>
+     *     The Message is the next message after the specified {@code shardPosition}
+     * </p>
+     * <p>
+     *     <em>Caution:</em> By calling this method, a KinesisShardIterator is created, which is an expensive operation.
+     *     Creating a KinesisShardIterator too often may result in a {@link ProvisionedThroughputExceededException}
+     *     coming from the Amazon Kinesis SDK as described
+     *     {@link KinesisClient#getShardIterator(GetShardIteratorRequest) here}. If calling this method results in
+     *     {@code ProvisionedThroughputExceededExceptions}, you should wait for some time (one second is recommended)
+     *     before trying it again, as Amazon is only allowing 5(!) GetShardIteratorRequests per second.
+     * </p>
+     */
+    @Nonnull
+    public Optional<Message<String>> fetchOne(final ShardPosition shardPosition) {
+        return ofNullable(createIterator(shardPosition, 1).next().getMessages().get(0));
     }
 
-    public final ShardPosition consumeUntil(final ShardPosition fromPosition,
-                                            final Instant until,
-                                            final MessageConsumer<String> consumer) {
-        final KinesisShardIterator kinesisShardIterator = new KinesisShardIterator(kinesisClient, channelName, fromPosition);
-        boolean stopRetrieval;
-        do {
-            /*
-            Poison-Pill injected by a test. This is helpful, if you want to write tests that should terminate
-            after a number of iterated shards.
-             */
-            if (kinesisShardIterator.isPoison()) {
-                LOG.warn("Received Poison-Pill - This should only happen during tests!");
-                break;
-            }
-            consume(kinesisShardIterator, consumer);
+    public ShardPosition consumeUntil(final ShardPosition startFrom,
+                                      final Instant until,
+                                      final Consumer<KinesisShardResponse> responseConsumer) {
 
-            stopRetrieval = !until.isAfter(Instant.now(clock)) || stopSignal.get() || waitABit();
-
-        } while (!stopRetrieval);
-        return kinesisShardIterator.getShardPosition();
-    }
-
-
-    private void consumeMessageSafely(final Message<String> message,
-                                      final MessageConsumer<String> consumer) {
+        MDC.put("channelName", channelName);
+        MDC.put("shardName", shardName);
+        LOG.info("Reading from channel={}, shard={}, position={}", channelName, shardName, startFrom);
         try {
-            consumer.accept(message);
-        } catch (Exception e) {
-            LOG.error("consumer failed while processing {}", message, e);
+            final KinesisShardIterator kinesisShardIterator = new KinesisShardIterator(kinesisClient, channelName, startFrom);
+            boolean stopRetrieval;
+            do {
+                /*
+                Poison-Pill injected by a test. This is helpful, if you want to write tests that should terminate
+                after a number of iterated shards.
+                 */
+                if (kinesisShardIterator.isPoison()) {
+                    LOG.warn("Received Poison-Pill - This should only happen during tests!");
+                    break;
+                }
+                consume(kinesisShardIterator, responseConsumer);
+
+                stopRetrieval = !until.isAfter(Instant.now(clock)) || isStopping() || waitABit();
+
+            } while (!stopRetrieval);
+            return kinesisShardIterator.getShardPosition();
+
+        } catch (final RuntimeException e) {
+            LOG.error("Failed to consume from Kinesis shard {}: {}", channelName, shardName, e.getMessage());
+            // Stop all shards and shutdown if this shard is failing:
+            stop();
+            throw e;
+        } finally {
+            MDC.remove("channelName");
+            MDC.remove("shardName");
         }
+    }
+
+    public ShardPosition consume(final KinesisShardIterator kinesisShardIterator,
+                                 final Consumer<KinesisShardResponse> responseConsumer) {
+
+        final KinesisShardResponse response = kinesisShardIterator.next();
+        responseConsumer.accept(response);
+        return kinesisShardIterator.getShardPosition();
     }
 
     private boolean waitABit() {
@@ -124,11 +137,11 @@ public class KinesisShardReader {
     }
 
     public void stop() {
+        LOG.info("Shard {} received stop signal.", shardName);
         stopSignal.set(true);
     }
 
     public boolean isStopping() {
         return stopSignal.get();
     }
-
 }
