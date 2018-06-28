@@ -69,19 +69,9 @@ public class KinesisShardIterator {
         this.retryTemplate = createRetryTemplate();
         this.channelName = channelName;
         this.shardPosition = shardPosition;
-        GetShardIteratorResponse shardIteratorResponse;
-        // TODO: Warum catch auf InvalidArgumentException? Bei Gelegenheit ausbauen
-        try {
-            shardIteratorResponse = kinesisClient.getShardIterator(
-                    buildIteratorShardRequest(shardPosition)
-            );
-        } catch (final InvalidArgumentException e) {
-            LOG.error(format("invalidShardSequenceNumber in Snapshot %s/%s - reading from HORIZON", channelName, shardPosition.shardName()));
-            shardIteratorResponse = kinesisClient.getShardIterator(
-                    buildIteratorShardRequest(fromHorizon(shardPosition.shardName()))
-            );
-        }
-        this.id = shardIteratorResponse.shardIterator();
+        this.id = kinesisClient
+                .getShardIterator(buildIteratorShardRequest(shardPosition))
+                .shardIterator();
     }
 
     public String getId() {
