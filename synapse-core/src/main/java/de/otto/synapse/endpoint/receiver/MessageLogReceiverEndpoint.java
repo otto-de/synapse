@@ -7,6 +7,7 @@ import de.otto.synapse.message.Message;
 
 import javax.annotation.Nonnull;
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Receiver-side {@code MessageEndpoint endpoint} of a Message Channel that supports random-access like reading of
@@ -40,7 +41,7 @@ public interface MessageLogReceiverEndpoint extends MessageReceiverEndpoint {
      * @return ChannelPosition
      */
     @Nonnull
-    public default ChannelPosition consume(@Nonnull ChannelPosition startFrom) {
+    public default CompletableFuture<ChannelPosition> consume(@Nonnull ChannelPosition startFrom) {
         return consumeUntil(startFrom, Instant.MAX);
     }
 
@@ -49,27 +50,27 @@ public interface MessageLogReceiverEndpoint extends MessageReceiverEndpoint {
      * the registered consumers with the intercepted message, or drops the message, if {@code intercept} returns null.
      *
      * <p>
-     *     Consumption starts with the first message <em>after</em> {@code startFrom} and finishes when either the
-     *     {@code stopCondition} is met, or the application is shutting down.
+     * Consumption starts with the first message <em>after</em> {@code startFrom} and finishes when either the
+     * {@code stopCondition} is met, or the application is shutting down.
      * </p>
      * <p>
-     *     The returned {@code ChannelPosition} is the position of the last message that was processed by the
-     *     {@code MessageLogReceiverEndpoint} - whether it was dropped or consumed.
+     * The returned {@code ChannelPosition} is the position of the last message that was processed by the
+     * {@code MessageLogReceiverEndpoint} - whether it was dropped or consumed.
      * </p>
      * <p>
-     *     The {@link #register(MessageConsumer) registered} {@link MessageConsumer consumers} are used as a
-     *     callback for consumed messages. A {@link MessageDispatcher} can be used as a consumer, if multiple
-     *     consumers, or consumers with {@link Message#getPayload() message payloads} other than {@code String} are
-     *     required.
+     * The {@link #register(MessageConsumer) registered} {@link MessageConsumer consumers} are used as a
+     * callback for consumed messages. A {@link MessageDispatcher} can be used as a consumer, if multiple
+     * consumers, or consumers with {@link Message#getPayload() message payloads} other than {@code String} are
+     * required.
      * </p>
      *
      * @param startFrom the start position used to proceed message consumption
-     * @param until the arrival timestamp until the messages should be consumed
+     * @param until     the arrival timestamp until the messages should be consumed
      * @return ChannelPosition
      */
     @Nonnull
-    ChannelPosition consumeUntil(@Nonnull ChannelPosition startFrom,
-                                 @Nonnull Instant until);
+    CompletableFuture<ChannelPosition> consumeUntil(@Nonnull ChannelPosition startFrom,
+                                                    @Nonnull Instant until);
 
     /**
      * Stops consumption of messages and shuts down the {@code MessageLogReceiverEndpoint}.

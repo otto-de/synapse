@@ -8,6 +8,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.Instant;
+import java.util.concurrent.ExecutionException;
 
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static org.hamcrest.Matchers.is;
@@ -19,12 +20,12 @@ public class InMemoryChannelTest {
     private final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
 
     @Test
-    public void shouldPublishStartedAndFinishedEvents() {
+    public void shouldPublishStartedAndFinishedEvents() throws ExecutionException, InterruptedException {
         // given
         InMemoryChannel inMemoryChannel = new InMemoryChannel("some-stream", objectMapper, eventPublisher);
 
         // when
-        inMemoryChannel.consumeUntil(fromHorizon(), Instant.now());
+        inMemoryChannel.consumeUntil(fromHorizon(), Instant.now()).get();
 
         // then
         ArgumentCaptor<MessageReceiverNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(MessageReceiverNotification.class);

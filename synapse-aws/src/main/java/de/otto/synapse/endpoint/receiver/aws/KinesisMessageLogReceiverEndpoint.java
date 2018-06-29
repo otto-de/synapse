@@ -101,21 +101,18 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
 
     @Override
     @Nonnull
-    public ChannelPosition consumeUntil(final @Nonnull ChannelPosition startFrom,
-                                        final @Nonnull Instant until) {
+    public CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull ChannelPosition startFrom,
+                                                           final @Nonnull Instant until) {
         try {
             publishEvent(STARTING, "Consuming messages from Kinesis.", null);
             final long t1 = System.currentTimeMillis();
-
             final List<String> shards = kinesisMessageLogReader.getOpenShards();
 
             publishEvent(STARTED, "Received shards from Kinesis.", null);
 
             final KinesisShardResponseConsumer consumer = new KinesisShardResponseConsumer(shards, getInterceptorChain(), getMessageDispatcher(), eventPublisher);
 
-            final CompletableFuture<ChannelPosition> futureChannelPosition = kinesisMessageLogReader.consumeUntil(startFrom, until, consumer);
-
-            return futureChannelPosition
+            return kinesisMessageLogReader.consumeUntil(startFrom, until, consumer)
                     .exceptionally((throwable) -> {
                         LOG.error("Failed to consume from Kinesis stream {}: {}", getChannelName(), throwable.getMessage());
                         publishEvent(FAILED, "Failed to consume messages from Kinesis: " + throwable.getMessage(), null);
@@ -129,8 +126,7 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
                         info(LOG, ImmutableMap.of("runtime", (t2-t1)), "Consume events from Kinesis", null);
                         publishEvent(FINISHED, "Finished consuming messages from Kinesis", null);
                         return channelPosition;
-                    }))
-                    .get();
+                    }));
         } catch (final Exception e) {
             LOG.error("Failed to consume from Kinesis stream {}: {}", getChannelName(), e.getMessage());
             publishEvent(FAILED, "Failed to consume messages from Kinesis: " + e.getMessage(), null);

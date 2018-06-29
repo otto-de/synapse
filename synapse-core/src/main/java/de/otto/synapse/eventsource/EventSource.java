@@ -8,6 +8,7 @@ import de.otto.synapse.message.Message;
 
 import javax.annotation.Nonnull;
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -68,7 +69,7 @@ public interface EventSource {
      *
      * @return the new read position
      */
-    default ChannelPosition consume() {
+    default CompletableFuture<ChannelPosition> consume() {
         return consumeUntil(fromHorizon(), Instant.MAX);
     }
 
@@ -83,7 +84,7 @@ public interface EventSource {
      * @param startFrom the read position returned from earlier executions
      * @return the new read position
      */
-    default ChannelPosition consume(ChannelPosition startFrom) {
+    default CompletableFuture<ChannelPosition> consume(final ChannelPosition startFrom) {
         return consumeUntil(startFrom, Instant.MAX);
     }
 
@@ -97,7 +98,7 @@ public interface EventSource {
      * @param until the timestamp until the messages should be consumed
      * @return the new read position
      */
-    default ChannelPosition consumeUntil(final @Nonnull Instant until) {
+    default CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull Instant until) {
         return consumeUntil(fromHorizon(), until);
     }
 
@@ -113,8 +114,8 @@ public interface EventSource {
      * @param until the arrival timestamp until the messages should be consumed
      * @return the new read position
      */
-    @Nonnull ChannelPosition consumeUntil(@Nonnull ChannelPosition startFrom,
-                                          @Nonnull Instant until);
+    @Nonnull CompletableFuture<ChannelPosition> consumeUntil(@Nonnull ChannelPosition startFrom,
+                                                             @Nonnull Instant until);
 
     void stop();
 

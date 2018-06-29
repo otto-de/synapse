@@ -38,7 +38,6 @@ import static de.otto.synapse.endpoint.receiver.aws.KinesisShardIterator.POISON_
 import static de.otto.synapse.info.MessageReceiverStatus.*;
 import static java.time.Duration.ZERO;
 import static java.time.Duration.ofMillis;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
@@ -164,7 +163,7 @@ public class KinesisMessageLogReceiverEndpointTest {
     }
 
     @Test
-    public void shouldConsumeAllEventsFromKinesis() {
+    public void shouldConsumeAllEventsFromKinesis() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
                 ImmutableList.of(
@@ -175,7 +174,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog.register(messageConsumer);
 
         // when
-        ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon());
+        ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon()).get();
 
         // then
         verify(messageConsumer, times(3)).accept(messageArgumentCaptor.capture());
@@ -188,7 +187,7 @@ public class KinesisMessageLogReceiverEndpointTest {
     }
 
     @Test
-    public void shouldConsumeAllMessagesFromMultipleShards() {
+    public void shouldConsumeAllMessagesFromMultipleShards() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
                 ImmutableList.of(
@@ -206,7 +205,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog.register(messageConsumer);
 
 
-        kinesisMessageLog.consume(fromHorizon());
+        kinesisMessageLog.consume(fromHorizon()).get();
 
         // then
         verify(messageConsumer, times(9)).accept(messageArgumentCaptor.capture());
@@ -214,7 +213,7 @@ public class KinesisMessageLogReceiverEndpointTest {
 
 
     @Test
-    public void shouldInterceptMessages() {
+    public void shouldInterceptMessages() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
                 ImmutableList.of(
@@ -236,7 +235,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog.register(messageConsumer);
 
         // when
-        final ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon());
+        final ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon()).get();
 
         // then
         verify(interceptor, atLeast(3)).intercept(any(Message.class));
@@ -251,7 +250,7 @@ public class KinesisMessageLogReceiverEndpointTest {
     }
 
     @Test
-    public void shouldNotConsumeMessagesDroppedByInterceptor() {
+    public void shouldNotConsumeMessagesDroppedByInterceptor() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
                 ImmutableList.of(
@@ -273,7 +272,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog.register(messageConsumer);
 
         // when
-        final ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon());
+        final ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon()).get();
 
         // then
         verify(interceptor, atLeast(3)).intercept(any(Message.class));
@@ -286,7 +285,7 @@ public class KinesisMessageLogReceiverEndpointTest {
     }
 
     @Test
-    public void shouldPublishEvents() {
+    public void shouldPublishEvents() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
                 ImmutableList.of(
@@ -298,7 +297,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog.register(messageConsumer);
 
         // when
-        final ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon());
+        final ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon()).get();
 
         // then
         verify(eventPublisher, times(7)).publishEvent(eventCaptor.capture());
@@ -335,7 +334,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog.register(messageConsumer);
 
         // when
-        final CompletableFuture<ChannelPosition> finalChannelPosition = supplyAsync(() -> kinesisMessageLog.consume(fromHorizon()));
+        final CompletableFuture<ChannelPosition> finalChannelPosition = kinesisMessageLog.consume(fromHorizon());
         Thread.sleep(200);
         kinesisMessageLog.stop();
 
@@ -358,7 +357,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog.register(messageConsumer);
 
         // when
-        final CompletableFuture<ChannelPosition> futureChannelPosition = supplyAsync(() -> kinesisMessageLog.consume(fromHorizon()));
+        final CompletableFuture<ChannelPosition> futureChannelPosition = kinesisMessageLog.consume(fromHorizon());
         kinesisMessageLog.stop();
         futureChannelPosition.get(1, TimeUnit.SECONDS);
         // then
@@ -366,8 +365,8 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog.getCurrentKinesisShards().forEach(kinesisShardReader -> assertThat(kinesisShardReader.isStopping(), is(true)));
     }
 
-    @Test(expected = RuntimeException.class)
-    public void shouldShutdownOnException() {
+    @Test(expected = ExecutionException.class)
+    public void shouldShutdownOnException() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
                 ImmutableList.of(
@@ -381,11 +380,11 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog.register(messageConsumer);
 
         // when
-        kinesisMessageLog.consume(fromHorizon());
+        kinesisMessageLog.consume(fromHorizon()).get();
     }
 
     @Test
-    public void shouldBeAbleToRestartConsumeAfterException() {
+    public void shouldBeAbleToRestartConsumeAfterException() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
                 ImmutableList.of(
@@ -395,8 +394,8 @@ public class KinesisMessageLogReceiverEndpointTest {
         kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
         kinesisMessageLog.register(messageConsumer);
         try {
-            kinesisMessageLog.consume(fromHorizon());
-        } catch (RuntimeException e) {
+            kinesisMessageLog.consume(fromHorizon()).get();
+        } catch (ExecutionException e) {
         }
 
 
@@ -409,7 +408,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         describeRecordsForShard("shard1", true);
         describeRecordsForShard("shard2", true);
 
-        kinesisMessageLog.consume(fromHorizon());
+        kinesisMessageLog.consume(fromHorizon()).get();
 
         // then
         // 6 because of 2xshard1 + 1xshard2 - the failing-shard2 will not get messages

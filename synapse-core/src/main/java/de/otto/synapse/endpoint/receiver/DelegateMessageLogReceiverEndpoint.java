@@ -11,6 +11,7 @@ import de.otto.synapse.message.Message;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
 
 public class DelegateMessageLogReceiverEndpoint implements MessageLogReceiverEndpoint {
 
@@ -23,7 +24,8 @@ public class DelegateMessageLogReceiverEndpoint implements MessageLogReceiverEnd
 
     @Nonnull
     @Override
-    public ChannelPosition consumeUntil(@Nonnull ChannelPosition startFrom, @Nonnull Instant until) {
+    public CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull ChannelPosition startFrom,
+                                                           final @Nonnull Instant until) {
         return delegate.consumeUntil(startFrom, until);
     }
 
@@ -32,9 +34,8 @@ public class DelegateMessageLogReceiverEndpoint implements MessageLogReceiverEnd
         delegate.stop();
     }
 
-    @Nonnull
     @Override
-    public void register(MessageConsumer<?> messageConsumer) {
+    public void register(final MessageConsumer<?> messageConsumer) {
         delegate.register(messageConsumer);
     }
 
@@ -57,7 +58,7 @@ public class DelegateMessageLogReceiverEndpoint implements MessageLogReceiverEnd
     }
 
     @Override
-    public void registerInterceptorsFrom(@Nonnull MessageInterceptorRegistry registry) {
+    public void registerInterceptorsFrom(final @Nonnull MessageInterceptorRegistry registry) {
         delegate.registerInterceptorsFrom(registry);
     }
 
@@ -69,7 +70,7 @@ public class DelegateMessageLogReceiverEndpoint implements MessageLogReceiverEnd
 
     @Nullable
     @Override
-    public Message<String> intercept(@Nonnull Message<String> message) {
+    public Message<String> intercept(final @Nonnull Message<String> message) {
         return delegate.intercept(message);
     }
 }

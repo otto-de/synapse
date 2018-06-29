@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
 
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -26,8 +27,8 @@ public class DefaultEventSource extends AbstractEventSource {
 
     @Nonnull
     @Override
-    public ChannelPosition consumeUntil(final @Nonnull ChannelPosition startFrom,
-                                        final @Nonnull Instant until) {
+    public CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull ChannelPosition startFrom,
+                                                           final @Nonnull Instant until) {
 
         try {
             final ChannelPosition messageLogStartPosition;

@@ -8,6 +8,7 @@ import org.springframework.context.ApplicationContext;
 
 import javax.annotation.Nonnull;
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
 public class DelegateEventSource implements EventSource {
@@ -89,8 +90,8 @@ public class DelegateEventSource implements EventSource {
      */
     @Nonnull
     @Override
-    public ChannelPosition consumeUntil(@Nonnull final ChannelPosition startFrom,
-                                        @Nonnull final Instant until) {
+    public CompletableFuture<ChannelPosition> consumeUntil(@Nonnull final ChannelPosition startFrom,
+                                                           @Nonnull final Instant until) {
         return delegate.consumeUntil(startFrom, until);
     }
 

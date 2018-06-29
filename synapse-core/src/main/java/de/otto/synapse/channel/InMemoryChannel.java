@@ -13,6 +13,7 @@ import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.otto.synapse.channel.ChannelDurationBehind.channelDurationBehind;
@@ -51,44 +52,46 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint {
 
     @Nonnull
     @Override
-    public ChannelPosition consumeUntil(@Nonnull final ChannelPosition startFrom,
-                                        @Nonnull final Instant until) {
-        boolean shouldStop = false;
-        int pos = startFrom.shard(getChannelName()).startFrom() == StartFrom.HORIZON
-                ? -1
-                : valueOf(startFrom.shard(getChannelName()).position());
+    public CompletableFuture<ChannelPosition> consumeUntil(@Nonnull final ChannelPosition startFrom,
+                                                           @Nonnull final Instant until) {
         publishEvent(MessageReceiverStatus.STARTING, "Starting InMemoryChannel " + getChannelName(), null);
         final Message<String> lastMessage = eventQueue.isEmpty() ? null : Iterables.getLast(eventQueue);
         final ChannelDurationBehind durationBehind = lastMessage != null
                 ? channelDurationBehind().with(getChannelName(), between(lastMessage.getHeader().getArrivalTimestamp(), now())).build()
                 : null;
         publishEvent(MessageReceiverStatus.STARTED, "Started InMemoryChannel " + getChannelName(), durationBehind);
-        do {
-            if (hasMessageAfter(pos)) {
-                ++pos;
-                final Message<String> receivedMessage = eventQueue.get(pos);
-                final Message<String> interceptedMessage = intercept(
-                        message(
-                                receivedMessage.getKey(),
-                                responseHeader(null, now()),
-                                receivedMessage.getPayload()
-                        )
-                );
-                if (interceptedMessage != null) {
-                    getMessageDispatcher().accept(interceptedMessage);
-                    shouldStop = !until.isAfter(interceptedMessage.getHeader().getArrivalTimestamp());
+        return CompletableFuture.supplyAsync(() -> {
+            boolean shouldStop = false;
+            int pos = startFrom.shard(getChannelName()).startFrom() == StartFrom.HORIZON
+                    ? -1
+                    : valueOf(startFrom.shard(getChannelName()).position());
+            do {
+                if (hasMessageAfter(pos)) {
+                    ++pos;
+                    final Message<String> receivedMessage = eventQueue.get(pos);
+                    final Message<String> interceptedMessage = intercept(
+                            message(
+                                    receivedMessage.getKey(),
+                                    responseHeader(null, now()),
+                                    receivedMessage.getPayload()
+                            )
+                    );
+                    if (interceptedMessage != null) {
+                        getMessageDispatcher().accept(interceptedMessage);
+                        shouldStop = !until.isAfter(interceptedMessage.getHeader().getArrivalTimestamp());
+                    }
+                } else {
+                    shouldStop = !until.isAfter(now());
+                    try {
+                        Thread.sleep(100);
+                    } catch (final InterruptedException e) {
+                        /* ignore */
+                    }
                 }
-            } else {
-                shouldStop = !until.isAfter(now());
-                try {
-                    Thread.sleep(100);
-                } catch (final InterruptedException e) {
-                    /* ignore */
-                }
-            }
-        } while (!shouldStop && !stopSignal.get());
-        publishEvent(MessageReceiverStatus.FINISHED, "Finished InMemoryChannel " + getChannelName(), durationBehind);
-        return channelPosition(fromPosition(getChannelName(), String.valueOf(pos)));
+            } while (!shouldStop && !stopSignal.get());
+            publishEvent(MessageReceiverStatus.FINISHED, "Finished InMemoryChannel " + getChannelName(), durationBehind);
+            return channelPosition(fromPosition(getChannelName(), String.valueOf(pos)));
+        });
     }
 
     @Override
