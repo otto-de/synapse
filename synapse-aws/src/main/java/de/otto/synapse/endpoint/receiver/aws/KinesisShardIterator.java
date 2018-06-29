@@ -15,12 +15,11 @@ import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
+import javax.annotation.Nonnull;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.logging.LogHelper.warn;
-import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static software.amazon.awssdk.services.kinesis.model.ShardIteratorType.*;
 
@@ -54,15 +53,15 @@ public class KinesisShardIterator {
     private final RetryTemplate retryTemplate;
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
-    public KinesisShardIterator(final KinesisClient kinesisClient,
-                                final String channelName,
-                                final ShardPosition shardPosition) {
+    public KinesisShardIterator(final @Nonnull KinesisClient kinesisClient,
+                                final @Nonnull String channelName,
+                                final @Nonnull ShardPosition shardPosition) {
         this(kinesisClient, channelName, shardPosition, FETCH_RECORDS_LIMIT);
     }
 
-    public KinesisShardIterator(final KinesisClient kinesisClient,
-                                final String channelName,
-                                final ShardPosition shardPosition,
+    public KinesisShardIterator(final @Nonnull KinesisClient kinesisClient,
+                                final @Nonnull String channelName,
+                                final @Nonnull ShardPosition shardPosition,
                                 final int fetchRecordLimit) {
         this.kinesisClient = kinesisClient;
         this.fetchRecordLimit = fetchRecordLimit;
@@ -78,6 +77,7 @@ public class KinesisShardIterator {
         return this.id;
     }
 
+    @Nonnull
     public ShardPosition getShardPosition() {
         return shardPosition;
     }

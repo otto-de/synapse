@@ -3,13 +3,8 @@ package de.otto.synapse.endpoint.receiver.aws;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.consumer.MessageConsumer;
-import de.otto.synapse.endpoint.MessageInterceptor;
-import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.info.MessageReceiverNotification;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.TestClock;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -17,28 +12,26 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.slf4j.Logger;
-import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
-import static de.otto.synapse.channel.ChannelDurationBehind.channelDurationBehind;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
-import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingReceiverChannelsWith;
 import static de.otto.synapse.endpoint.receiver.aws.KinesisShardIterator.POISON_SHARD_ITER;
-import static de.otto.synapse.info.MessageReceiverStatus.*;
-import static java.time.Duration.ZERO;
 import static java.time.Duration.ofMillis;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
@@ -48,9 +41,9 @@ import static org.mockito.Mockito.*;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @RunWith(MockitoJUnitRunner.class)
-public class KinesisMessageLogReceiverEndpointTest {
+public class KinesisMessageLogReaderTest {
 
-    private static final Logger LOG = getLogger(KinesisMessageLogReceiverEndpointTest.class);
+    private static final Logger LOG = getLogger(KinesisMessageLogReaderTest.class);
 
     private static final Pattern MATCH_ALL = Pattern.compile(".*");
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -60,27 +53,21 @@ public class KinesisMessageLogReceiverEndpointTest {
     private KinesisClient kinesisClient;
 
     @Captor
-    private ArgumentCaptor<Message<String>> messageArgumentCaptor;
+    private ArgumentCaptor<KinesisShardResponse> responseArgumentCaptor;
     @Mock
-    private MessageConsumer<String> messageConsumer;
+    private Consumer<KinesisShardResponse> responseConsumer;
 
-    private KinesisMessageLogReceiverEndpoint kinesisMessageLog;
+    private KinesisMessageLogReader logReader;
     private AtomicInteger nextKey = new AtomicInteger(0);
-
-    @Before
-    public void setUp() {
-        when(messageConsumer.keyPattern()).thenReturn(MATCH_ALL);
-        when(messageConsumer.payloadType()).thenReturn(String.class);
-    }
 
     @Test
     public void shouldRetrieveEmptyListOfShards() {
         // given
         describeStreamResponse(ImmutableList.of());
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper, null);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
 
         // when
-        List<KinesisShardReader> shards = kinesisMessageLog.getCurrentKinesisShards();
+        List<KinesisShardReader> shards = logReader.getCurrentKinesisShards();
 
         // then
         assertThat(shards, hasSize(0));
@@ -90,14 +77,32 @@ public class KinesisMessageLogReceiverEndpointTest {
     public void shouldRetrieveSingleOpenShard() {
         // given
         describeStreamResponse(ImmutableList.of(someShard("shard1", true)));
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper, null);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
 
         // when
-        List<KinesisShardReader> shards = kinesisMessageLog.getCurrentKinesisShards();
+        List<KinesisShardReader> shards = logReader.getCurrentKinesisShards();
 
         // then
         assertThat(shards, hasSize(1));
         assertThat(shards.get(0).getShardName(), is("shard1"));
+    }
+
+    @Test
+    public void shouldGetOpenShards() {
+        // given
+        describeStreamResponse(ImmutableList.of(
+                someShard("shard1", true),
+                someShard("shard2", false),
+                someShard("shard3", true)
+        ));
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
+
+        // when
+        List<String> shards = logReader.getOpenShards();
+
+        // then
+        assertThat(shards, hasSize(2));
+        assertThat(shards, containsInAnyOrder("shard1", "shard3"));
     }
 
     @Test
@@ -108,10 +113,10 @@ public class KinesisMessageLogReceiverEndpointTest {
                         someShard("shard1", true),
                         someShard("shard2", false),
                         someShard("shard3", true)));
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
 
         // when
-        List<KinesisShardReader> shards = kinesisMessageLog.getCurrentKinesisShards();
+        List<KinesisShardReader> shards = logReader.getCurrentKinesisShards();
 
         // then
         assertThat(shards, hasSize(2));
@@ -129,10 +134,10 @@ public class KinesisMessageLogReceiverEndpointTest {
                 ImmutableList.of(
                         someShard("shard3", true),
                         someShard("shard4", true)));
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
 
         // when
-        List<KinesisShardReader> shards = kinesisMessageLog.getCurrentKinesisShards();
+        List<KinesisShardReader> shards = logReader.getCurrentKinesisShards();
 
         // then
         assertThat(shards, hasSize(4));
@@ -152,10 +157,10 @@ public class KinesisMessageLogReceiverEndpointTest {
                 ImmutableList.of(
                         someShard("shard3", true),
                         someShard("shard4", true)));
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
 
         // when
-        List<KinesisShardReader> shards = kinesisMessageLog.getCurrentKinesisShards();
+        List<KinesisShardReader> shards = logReader.getCurrentKinesisShards();
 
         // then
         assertThat(shards, hasSize(2));
@@ -164,31 +169,108 @@ public class KinesisMessageLogReceiverEndpointTest {
     }
 
     @Test
-    public void shouldConsumeAllEventsFromKinesis() {
+    public void shouldConsumeAllResponsesFromKinesis() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
                 ImmutableList.of(
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", true);
 
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null, clock);
-        kinesisMessageLog.register(messageConsumer);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
 
         // when
-        ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon());
+        ChannelPosition position = logReader.consumeUntil(fromHorizon(), Instant.MAX, responseConsumer).get();
 
         // then
-        verify(messageConsumer, times(3)).accept(messageArgumentCaptor.capture());
-        List<Message<String>> messages = messageArgumentCaptor.getAllValues();
+        verify(responseConsumer, times(4)).accept(responseArgumentCaptor.capture());
+        List<KinesisShardResponse> responses = responseArgumentCaptor.getAllValues();
 
+        assertThat(responses, hasSize(4));
+        // first response:
+        List<Message<String>> messages = responses.get(0).getMessages();
+        assertThat(messages, is(empty()));
+        // second response:
+        messages = responses.get(1).getMessages();
+        assertThat(messages, hasSize(1));
         assertThat(messages.get(0).getPayload(), is("{\"data\":\"blue\"}"));
-        assertThat(messages.get(1).getPayload(), is(nullValue()));
-        assertThat(messages.get(2).getPayload(), is("{\"data\":\"green\"}"));
-        assertThat(finalChannelPosition.shard("shard1").position(), is("2"));
+        // third response:
+        messages = responses.get(2).getMessages();
+        assertThat(messages, hasSize(2));
+        assertThat(messages.get(0).getPayload(), is(nullValue()));
+        assertThat(messages.get(1).getPayload(), is("{\"data\":\"green\"}"));
+        // fourth response:
+        messages = responses.get(3).getMessages();
+        assertThat(messages, is(empty()));
     }
 
     @Test
-    public void shouldConsumeAllMessagesFromMultipleShards() {
+    public void shouldIterateResponses() throws ExecutionException, InterruptedException {
+        // given
+        describeStreamResponse(
+                ImmutableList.of(
+                        someShard("shard1", true)));
+        describeRecordsForShard("shard1", true);
+
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
+
+        // when
+        final KinesisMessageLogIterator iterator = logReader.getMessageLogIterator(fromHorizon());
+        KinesisMessageLogResponse response = logReader.read(iterator).get();
+        // then
+        assertThat(response.getMessages(), hasSize(0));
+        // when
+        response = logReader.read(iterator).get();
+        // then
+        assertThat(response.getMessages(), hasSize(1));
+        // when
+        response = logReader.read(iterator).get();
+        // then
+        assertThat(response.getMessages(), hasSize(2));
+        // when
+        response = logReader.read(iterator).get();
+        // then
+        assertThat(response.getMessages(), hasSize(0));
+    }
+
+    @Test
+    public void shouldIterateResponsesWithMultipleShards() throws ExecutionException, InterruptedException {
+        // given
+        describeStreamResponse(
+                ImmutableList.of(
+                        someShard("shard1", true),
+                        someShard("shard2", true)));
+        describeRecordsForShard("shard1", false);
+        describeRecordsForShard("shard2", false);
+
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
+
+        // when
+        final KinesisMessageLogIterator iterator = logReader.getMessageLogIterator(fromHorizon());
+        KinesisMessageLogResponse response = logReader.read(iterator).get();
+        // then
+        assertThat(response.getMessages(), hasSize(0));
+        assertThat(response.getShardNames(), containsInAnyOrder("shard1", "shard2"));
+        assertThat(response.getChannelDurationBehind().getDurationBehind(), is(ofMillis(555L)));
+        // when
+        response = logReader.read(iterator).get();
+        // then
+        assertThat(response.getMessages(), hasSize(2));
+        assertThat(response.getShardNames(), containsInAnyOrder("shard1", "shard2"));
+        assertThat(response.getChannelDurationBehind().getDurationBehind(), is(ofMillis(1234L)));
+        // when
+        response = logReader.read(iterator).get();
+        // then
+        assertThat(response.getMessages(), hasSize(4));
+        assertThat(response.getShardNames(), containsInAnyOrder("shard1", "shard2"));
+        assertThat(response.getChannelDurationBehind().getDurationBehind(), is(ofMillis(0L)));
+        // when
+        response = logReader.read(iterator).get();
+        // then
+        assertThat(response.getMessages(), hasSize(0));
+    }
+
+    @Test
+    public void shouldConsumeAllMessagesFromMultipleShards() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
                 ImmutableList.of(
@@ -202,124 +284,20 @@ public class KinesisMessageLogReceiverEndpointTest {
 
 
         // when
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
-        kinesisMessageLog.register(messageConsumer);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
 
-
-        kinesisMessageLog.consume(fromHorizon());
-
-        // then
-        verify(messageConsumer, times(9)).accept(messageArgumentCaptor.capture());
-    }
-
-
-    @Test
-    public void shouldInterceptMessages() {
-        // given
-        describeStreamResponse(
-                ImmutableList.of(
-                        someShard("shard1", true)));
-        describeRecordsForShard("shard1", true);
-
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("testStream", kinesisClient, objectMapper,null);
-        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
-        // no lambda used in order to make Mockito happy...
-        final MessageInterceptor interceptor = spy(new MessageInterceptor() {
-            @Override
-            public Message<String> intercept(Message<String> message) {
-                return message;
-            }
-        });
-
-        registry.register(matchingReceiverChannelsWith("testStream", interceptor));
-        kinesisMessageLog.registerInterceptorsFrom(registry);
-        kinesisMessageLog.register(messageConsumer);
-
-        // when
-        final ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon());
+        final CompletableFuture<ChannelPosition> futurePosition = logReader.consumeUntil(fromHorizon(), Instant.MAX, responseConsumer);
+        futurePosition.get();
 
         // then
-        verify(interceptor, atLeast(3)).intercept(any(Message.class));
+        verify(responseConsumer, times(12)).accept(responseArgumentCaptor.capture());
 
-        verify(messageConsumer, atLeast(3)).accept(messageArgumentCaptor.capture());
-        List<Message<String>> messages = messageArgumentCaptor.getAllValues();
-
-        assertThat(messages.get(0).getPayload(), is("{\"data\":\"blue\"}"));
-        assertThat(messages.get(1).getPayload(), is(nullValue()));
-        assertThat(messages.get(2).getPayload(), is("{\"data\":\"green\"}"));
-        assertThat(finalChannelPosition.shard("shard1").position(), is("2"));
-    }
-
-    @Test
-    public void shouldNotConsumeMessagesDroppedByInterceptor() {
-        // given
-        describeStreamResponse(
-                ImmutableList.of(
-                        someShard("shard1", true)));
-        describeRecordsForShard("shard1", true);
-
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("testStream", kinesisClient, objectMapper,null);
-        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
-        // no lambda used in order to make Mockito happy...
-        final MessageInterceptor interceptor = spy(new MessageInterceptor() {
-            @Override
-            public Message<String> intercept(Message<String> message) {
-                return null;
-            }
-        });
-
-        registry.register(matchingReceiverChannelsWith("testStream", interceptor));
-        kinesisMessageLog.registerInterceptorsFrom(registry);
-        kinesisMessageLog.register(messageConsumer);
-
-        // when
-        final ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon());
-
-        // then
-        verify(interceptor, atLeast(3)).intercept(any(Message.class));
-
-        verifyZeroInteractions(messageConsumer);
-        List<Message<String>> messages = messageArgumentCaptor.getAllValues();
-
-        assertThat(messages, is(empty()));
-        assertThat(finalChannelPosition.shard("shard1").position(), is("2"));
-    }
-
-    @Test
-    public void shouldPublishEvents() {
-        // given
-        describeStreamResponse(
-                ImmutableList.of(
-                        someShard("shard1", true)));
-        describeRecordsForShard("shard1", true);
-        ArgumentCaptor<MessageReceiverNotification> eventCaptor = ArgumentCaptor.forClass(MessageReceiverNotification.class);
-        final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("testStream", kinesisClient, objectMapper,eventPublisher);
-        kinesisMessageLog.register(messageConsumer);
-
-        // when
-        final ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon());
-
-        // then
-        verify(eventPublisher, times(7)).publishEvent(eventCaptor.capture());
-        List<MessageReceiverNotification> events = eventCaptor.getAllValues();
-
-        assertThat(events.get(0).getStatus(), is(STARTING));
-        assertThat(events.get(0).getChannelDurationBehind().isPresent(), is(false));
-        assertThat(events.get(1).getStatus(), is(STARTED));
-        assertThat(events.get(1).getChannelDurationBehind().isPresent(), is(false));
-        assertThat(events.get(2).getStatus(), is(RUNNING)); // first emtpy record response, we dont evaluate millis behind latest from record response with zero records
-        assertThat(events.get(2).getChannelDurationBehind().orElse(null), is(channelDurationBehind().with("shard1", ofMillis(555L)).build()));
-        assertThat(events.get(3).getStatus(), is(RUNNING));
-        assertThat(events.get(3).getChannelDurationBehind().orElse(null), is(channelDurationBehind().with("shard1", ofMillis(1234L)).build()));
-        assertThat(events.get(4).getStatus(), is(RUNNING));
-        assertThat(events.get(4).getChannelDurationBehind().orElse(null), is(channelDurationBehind().with("shard1", ZERO).build()));
-        assertThat(events.get(5).getStatus(), is(RUNNING));
-        assertThat(events.get(5).getChannelDurationBehind().orElse(null), is(channelDurationBehind().with("shard1", ZERO).build()));
-        assertThat(events.get(6).getStatus(), is(FINISHED));
-        assertThat(events.get(6).getChannelDurationBehind().isPresent(), is(false));
-
-        assertThat(finalChannelPosition.shard("shard1").position(), is("2"));
+        final Set<String> shardNames = responseArgumentCaptor
+                .getAllValues()
+                .stream()
+                .map(KinesisShardResponse::getShardName)
+                .collect(toSet());
+        assertThat(shardNames, containsInAnyOrder("shard1", "shard2", "shard3"));
     }
 
     @Test
@@ -330,19 +308,17 @@ public class KinesisMessageLogReceiverEndpointTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", false);
 
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
-
-        kinesisMessageLog.register(messageConsumer);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
 
         // when
-        final CompletableFuture<ChannelPosition> finalChannelPosition = supplyAsync(() -> kinesisMessageLog.consume(fromHorizon()));
+        final CompletableFuture<ChannelPosition> finalChannelPosition = logReader.consumeUntil(fromHorizon(), Instant.MAX, responseConsumer);
         Thread.sleep(200);
-        kinesisMessageLog.stop();
+        logReader.stop();
 
         // then
         finalChannelPosition.get(1, TimeUnit.SECONDS);
         assertThat(finalChannelPosition.isDone(), is(true));
-        assertThat(kinesisMessageLog.getCurrentKinesisShards().get(0).isStopping(), is(true));
+        assertThat(logReader.getCurrentKinesisShards().get(0).isStopping(), is(true));
     }
 
     @Test
@@ -353,21 +329,20 @@ public class KinesisMessageLogReceiverEndpointTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", false);
 
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
 
-        kinesisMessageLog.register(messageConsumer);
 
         // when
-        final CompletableFuture<ChannelPosition> futureChannelPosition = supplyAsync(() -> kinesisMessageLog.consume(fromHorizon()));
-        kinesisMessageLog.stop();
+        final CompletableFuture<ChannelPosition> futureChannelPosition = logReader.consumeUntil(fromHorizon(), Instant.MAX, responseConsumer);
+        logReader.stop();
         futureChannelPosition.get(1, TimeUnit.SECONDS);
         // then
-        assertThat(kinesisMessageLog.getCurrentKinesisShards().size(), is(1));
-        kinesisMessageLog.getCurrentKinesisShards().forEach(kinesisShardReader -> assertThat(kinesisShardReader.isStopping(), is(true)));
+        assertThat(logReader.getCurrentKinesisShards().size(), is(1));
+        logReader.getCurrentKinesisShards().forEach(kinesisShardReader -> assertThat(kinesisShardReader.isStopping(), is(true)));
     }
 
-    @Test(expected = RuntimeException.class)
-    public void shouldShutdownOnException() {
+    @Test(expected = ExecutionException.class)
+    public void shouldShutdownOnException() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
                 ImmutableList.of(
@@ -376,27 +351,24 @@ public class KinesisMessageLogReceiverEndpointTest {
         );
         describeRecordsForShard("shard1", true);
         describeRecordsForShard("failing-shard2", true);
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
-
-        kinesisMessageLog.register(messageConsumer);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
 
         // when
-        kinesisMessageLog.consume(fromHorizon());
+        logReader.consumeUntil(fromHorizon(), Instant.MAX, responseConsumer).get();
     }
 
     @Test
-    public void shouldBeAbleToRestartConsumeAfterException() {
+    public void shouldBeAbleToRestartConsumeAfterException() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
                 ImmutableList.of(
                         someShard("failing-shard", true))
         );
         describeRecordsForShard("failing-shard", true);
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
-        kinesisMessageLog.register(messageConsumer);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
         try {
-            kinesisMessageLog.consume(fromHorizon());
-        } catch (RuntimeException e) {
+            logReader.consumeUntil(fromHorizon(), Instant.MAX, responseConsumer).get();
+        } catch (ExecutionException e) {
         }
 
 
@@ -409,11 +381,10 @@ public class KinesisMessageLogReceiverEndpointTest {
         describeRecordsForShard("shard1", true);
         describeRecordsForShard("shard2", true);
 
-        kinesisMessageLog.consume(fromHorizon());
+        logReader.consumeUntil(fromHorizon(), Instant.MAX, responseConsumer).get();
 
         // then
-        // 6 because of 2xshard1 + 1xshard2 - the failing-shard2 will not get messages
-        verify(messageConsumer, times(6)).accept(messageArgumentCaptor.capture());
+        verify(responseConsumer, times(8)).accept(responseArgumentCaptor.capture());
     }
 
     private Shard someShard(String shardId, boolean open) {
