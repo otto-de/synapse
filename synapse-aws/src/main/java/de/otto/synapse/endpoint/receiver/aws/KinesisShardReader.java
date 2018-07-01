@@ -99,7 +99,9 @@ public class KinesisShardReader {
                     LOG.warn("Received Poison-Pill - This should only happen during tests!");
                     break;
                 }
-                consume(kinesisShardIterator, responseConsumer);
+
+                final KinesisShardResponse response = kinesisShardIterator.next();
+                responseConsumer.accept(response);
 
                 stopRetrieval = !until.isAfter(Instant.now(clock)) || isStopping() || waitABit();
 
@@ -115,14 +117,6 @@ public class KinesisShardReader {
             MDC.remove("channelName");
             MDC.remove("shardName");
         }
-    }
-
-    public ShardPosition consume(final KinesisShardIterator kinesisShardIterator,
-                                 final Consumer<KinesisShardResponse> responseConsumer) {
-
-        final KinesisShardResponse response = kinesisShardIterator.next();
-        responseConsumer.accept(response);
-        return kinesisShardIterator.getShardPosition();
     }
 
     private boolean waitABit() {
