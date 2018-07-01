@@ -10,9 +10,6 @@ import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
-
-import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 
 /**
  * An event source of {@link Message events}.
@@ -70,22 +67,7 @@ public interface EventSource {
      * @return the new read position
      */
     default CompletableFuture<ChannelPosition> consume() {
-        return consumeUntil(fromHorizon(), Instant.MAX);
-    }
-
-    /**
-     * Consumes all events from the EventSource, beginning with {@link ChannelPosition startFrom}, until
-     * the (current) end of the stream is reached.
-     * <p>
-     *     The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
-     *     the number of events retrieved from the EventSource.
-     * </p>
-     *
-     * @param startFrom the read position returned from earlier executions
-     * @return the new read position
-     */
-    default CompletableFuture<ChannelPosition> consume(final ChannelPosition startFrom) {
-        return consumeUntil(startFrom, Instant.MAX);
+        return consumeUntil(Instant.MAX);
     }
 
     /**
@@ -98,24 +80,8 @@ public interface EventSource {
      * @param until the timestamp until the messages should be consumed
      * @return the new read position
      */
-    default CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull Instant until) {
-        return consumeUntil(fromHorizon(), until);
-    }
+    @Nonnull CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull Instant until);
 
-    /**
-     * Consumes all events from the EventSource, beginning with {@link ChannelPosition startFrom}, until
-     * the {@link Predicate stopCondition} is met.
-     * <p>
-     *     The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
-     *     the number of events retrieved from the EventSource.
-     * </p>
-     *
-     * @param startFrom the read position returned from earlier executions
-     * @param until the arrival timestamp until the messages should be consumed
-     * @return the new read position
-     */
-    @Nonnull CompletableFuture<ChannelPosition> consumeUntil(@Nonnull ChannelPosition startFrom,
-                                                             @Nonnull Instant until);
 
     void stop();
 

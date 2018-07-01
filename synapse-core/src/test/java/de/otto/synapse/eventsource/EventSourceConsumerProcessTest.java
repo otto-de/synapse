@@ -5,19 +5,12 @@ import de.otto.synapse.consumer.TestMessageConsumer;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static de.otto.synapse.consumer.TestMessageConsumer.testEventConsumer;
 import static de.otto.synapse.messagestore.MessageStores.emptyMessageStore;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.awaitility.Awaitility.await;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.*;
 
 public class EventSourceConsumerProcessTest {
@@ -31,27 +24,6 @@ public class EventSourceConsumerProcessTest {
         process.stop();
 
         verify(eventSource).stop();
-    }
-
-    @Test
-    public void shouldConsumeEventSourcesInDifferentThreads() {
-        final Set<String> threads = Collections.synchronizedSet(new HashSet<>());
-        final EventSource first = mock(EventSource.class);
-        when(first.consume()).then(invocation -> {
-            threads.add(Thread.currentThread().getName());
-            return null;
-        });
-        final EventSource second = mock(EventSource.class);
-        when(second.consume()).then(invocation -> {
-            threads.add(Thread.currentThread().getName());
-            return null;
-        });
-
-        final EventSourceConsumerProcess process = new EventSourceConsumerProcess(asList(first, second));
-        process.start();
-        process.stop();
-        assertThat(threads.size(), is(2));
-        assertThat(threads, containsInAnyOrder("synapse-consumer-1", "synapse-consumer-2"));
     }
 
     @Test

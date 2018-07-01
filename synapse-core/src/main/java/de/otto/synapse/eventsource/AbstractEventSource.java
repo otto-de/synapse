@@ -1,14 +1,11 @@
 package de.otto.synapse.eventsource;
 
-import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
-import java.time.Instant;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -67,13 +64,6 @@ public abstract class AbstractEventSource implements EventSource {
     @Nonnull
     public MessageLogReceiverEndpoint getMessageLogReceiverEndpoint() {
         return messageLog;
-    }
-
-    @Nonnull
-    @Override
-    public CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull ChannelPosition startFrom,
-                                                           final @Nonnull Instant until) {
-        return messageLog.consumeUntil(startFrom, until);
     }
 
 }

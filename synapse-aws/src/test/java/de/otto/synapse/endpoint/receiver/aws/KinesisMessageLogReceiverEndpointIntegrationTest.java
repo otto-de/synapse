@@ -1,16 +1,11 @@
-package de.otto.synapse.eventsource.aws;
+package de.otto.synapse.endpoint.receiver.aws;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.configuration.aws.TestMessageInterceptor;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.endpoint.receiver.aws.KinesisMessageLogReceiverEndpoint;
-import de.otto.synapse.endpoint.receiver.aws.KinesisShardIterator;
-import de.otto.synapse.eventsource.DefaultEventSource;
-import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.KinesisStreamSetupUtils;
 import de.otto.synapse.testsupport.TestStreamSource;
@@ -21,7 +16,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -33,22 +27,21 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.UUID;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-import static de.otto.synapse.messagestore.MessageStores.emptyMessageStore;
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static java.util.Collections.synchronizedList;
+import static java.util.Collections.synchronizedSet;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -60,16 +53,15 @@ import static org.hamcrest.core.IsNot.not;
 @ActiveProfiles("test")
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
-@SpringBootTest(classes = KinesisEventSourceIntegrationTest.class)
-public class KinesisEventSourceIntegrationTest {
+@SpringBootTest(classes = KinesisMessageLogReceiverEndpointIntegrationTest.class)
+public class KinesisMessageLogReceiverEndpointIntegrationTest {
 
     private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.wrap(new byte[]{});
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET = 10;
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET = 10;
-    private static final int EXPECTED_NUMBER_OF_SHARDS = 1;
-    private static final String TEST_CHANNEL = "synapse-test-channel";
+    private static final int EXPECTED_NUMBER_OF_SHARDS = 2;
+    private static final String TEST_CHANNEL = "synapse-test-channel-2";
     // from application-test.yml:
-    private static final String INTEGRATION_TEST_BUCKET = "de-otto-promo-compaction-test-snapshots";
 
     @Autowired
     private KinesisClient kinesisClient;
@@ -78,20 +70,14 @@ public class KinesisEventSourceIntegrationTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private ApplicationEventPublisher eventPublisher;
-
-    @Autowired
-    private S3Service s3Service;
-
-    @Autowired
     private MessageInterceptorRegistry messageInterceptorRegistry;
 
     @Autowired
     private TestMessageInterceptor testMessageInterceptor;
 
-    private EventSource integrationEventSource;
-
     private List<Message<String>> messages = synchronizedList(new ArrayList<>());
+    private Set<String> threads = synchronizedSet(new HashSet<>());
+    private KinesisMessageLogReceiverEndpoint kinesisMessageLog;
 
     @Before
     public void before() {
@@ -101,31 +87,46 @@ public class KinesisEventSourceIntegrationTest {
     @PostConstruct
     public void setup() throws IOException {
         KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
-        deleteSnapshotFilesFromTemp();
-        s3Service.createBucket(INTEGRATION_TEST_BUCKET);
-        s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
 
         /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
            when initializing it via @EnableEventSource
          */
-        final KinesisMessageLogReceiverEndpoint kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(TEST_CHANNEL, kinesisClient, objectMapper, null);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(TEST_CHANNEL, kinesisClient, objectMapper, null);
         kinesisMessageLog.registerInterceptorsFrom(messageInterceptorRegistry);
-        this.integrationEventSource = new DefaultEventSource(emptyMessageStore(), kinesisMessageLog);
-        this.integrationEventSource.register(MessageConsumer.of(".*", String.class, (message) -> messages.add(message)));
+        kinesisMessageLog.register(MessageConsumer.of(".*", String.class, (message) -> {
+            messages.add(message);
+            threads.add(Thread.currentThread().getName());
+        }));
     }
 
     @Test
-    public void consumeDataFromKinesisStream() throws ExecutionException, InterruptedException {
+    public void consumeDataFromKinesis() throws ExecutionException, InterruptedException {
         // when
         ChannelPosition startFrom = writeToStream("users_small1.txt").getFirstReadPosition();
 
         // then
-        integrationEventSource.consumeUntil(
-                now().plus(20, MILLIS)
+        kinesisMessageLog.consumeUntil(
+                startFrom,
+                now().plus(200, MILLIS)
         ).get();
 
         assertThat(messages, not(empty()));
-        assertThat(messages, hasSize(greaterThanOrEqualTo(EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET)));
+        assertThat(messages, hasSize(EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET));
+    }
+
+    @Test
+    public void runInSeparateThreads() throws ExecutionException, InterruptedException {
+        // when
+        ChannelPosition startFrom = writeToStream("users_small1.txt").getFirstReadPosition();
+
+        // then
+        kinesisMessageLog.consumeUntil(
+                startFrom,
+                now().plus(200, MILLIS)
+        ).get();
+
+        assertThat(threads, not(empty()));
+        assertThat(threads, containsInAnyOrder("kinesis-message-log-0", "kinesis-message-log-1"));
     }
 
     @Test
@@ -135,31 +136,32 @@ public class KinesisEventSourceIntegrationTest {
         ChannelPosition startFrom = writeToStream("users_small1.txt").getFirstReadPosition();
 
         // then
-        integrationEventSource.consumeUntil(
+        kinesisMessageLog.consumeUntil(
+                startFrom,
                 now().plus(20, MILLIS)
         ).get();
 
         final List<Message<String>> interceptedMessages = testMessageInterceptor.getInterceptedMessages();
         assertThat(interceptedMessages, not(empty()));
-        assertThat(interceptedMessages, hasSize(greaterThanOrEqualTo(EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET)));
+        assertThat(interceptedMessages, hasSize(EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET));
     }
 
     @Test
-    public void shouldStopEventSource() throws InterruptedException, ExecutionException, TimeoutException {
+    public void shouldStopMessageLog() throws InterruptedException, ExecutionException, TimeoutException {
         try {
             // given
-            writeToStream("users_small1.txt");
+            final ChannelPosition startFrom = writeToStream("users_small1.txt").getFirstReadPosition();
 
             // only fetch 2 records per iterator to be able to check against stop condition which is only evaluated after
             // retrieving new iterator
             setStaticFinalField(KinesisShardIterator.class, "FETCH_RECORDS_LIMIT", 2);
 
-            final CompletableFuture<ChannelPosition> completableFuture = integrationEventSource.consume();
+            final CompletableFuture<ChannelPosition> completableFuture = kinesisMessageLog.consume(startFrom);
 
             Awaitility.await().atMost(2, TimeUnit.SECONDS).until(() -> messages.size() > 0);
 
             // when
-            integrationEventSource.stop();
+            kinesisMessageLog.stop();
 
             // then
             assertThat(completableFuture.get(2L, TimeUnit.SECONDS), is(notNullValue()));
@@ -184,21 +186,50 @@ public class KinesisEventSourceIntegrationTest {
     }
 
     @Test
-    public void consumeDeleteMessagesFromKinesisStream() throws ExecutionException, InterruptedException {
+    public void consumeDeleteMessagesFromKinesis() throws ExecutionException, InterruptedException {
         // given
-        writeToStream("users_small1.txt");
-        final String partitionKey = "deleteEvent-"+UUID.randomUUID().toString();
-        kinesisClient.putRecord(PutRecordRequest.builder().streamName(TEST_CHANNEL).partitionKey(partitionKey).data(EMPTY_BYTE_BUFFER).build());
+        final ChannelPosition startFrom = writeToStream("users_small1.txt").getLastStreamPosition();
+        kinesisClient.putRecord(PutRecordRequest.builder().streamName(TEST_CHANNEL).partitionKey("deleteEvent").data(EMPTY_BYTE_BUFFER).build());
         // when
-        integrationEventSource.consumeUntil(
-                now().plus(500, MILLIS)
+        kinesisMessageLog.consumeUntil(
+                startFrom,
+                now().plus(20, MILLIS)
         ).get();
 
         // then
         assertThat(messages, hasSize(greaterThanOrEqualTo(1)));
-        final Message<String> message = messages.get(messages.size() - 1);
-        assertThat(message.getKey(), is(partitionKey));
-        assertThat(message.getPayload(), is(nullValue()));
+        assertThat(messages.get(messages.size()-1).getKey(), is("deleteEvent"));
+        assertThat(messages.get(messages.size()-1).getPayload(), is(nullValue()));
+    }
+
+    @Test
+    public void consumerShouldReadNoMoreAfterStartingPoint() throws ExecutionException, InterruptedException {
+        // when
+        writeToStream("users_small1.txt");
+        ChannelPosition startFrom = writeToStream("users_small2.txt").getFirstReadPosition();
+
+        // then
+        ChannelPosition nextChannelPosition = kinesisMessageLog.consumeUntil(
+                startFrom,
+                now().plus(20, MILLIS)
+        ).get();
+
+        assertThat(nextChannelPosition.shards(), hasSize(EXPECTED_NUMBER_OF_SHARDS));
+        assertThat(messages, hasSize(EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET));
+        assertThat(messages.stream().map(Message::getKey).sorted().collect(Collectors.toList()), is(expectedListOfKeys()));
+    }
+
+    @Test
+    public void consumerShouldResumeAtStartingPoint() throws ExecutionException, InterruptedException {
+        // when
+        ChannelPosition startFrom = writeToStream("users_small1.txt").getLastStreamPosition();
+        writeToStream("users_small2.txt");
+
+        // then
+        ChannelPosition next = kinesisMessageLog.consumeUntil(startFrom, now().plus(10, MILLIS)).get();
+
+        assertThat(messages, hasSize(EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET + 2)); // +2 because of two Fake Records
+        assertThat(next.shards(), hasSize(EXPECTED_NUMBER_OF_SHARDS));
     }
 
     private TestStreamSource writeToStream(String filename) {
@@ -207,20 +238,8 @@ public class KinesisEventSourceIntegrationTest {
         return streamSource;
     }
 
-    private void deleteSnapshotFilesFromTemp() throws IOException {
-        getSnapshotFilePaths()
-                .forEach(path -> {
-                    try {
-                        Files.deleteIfExists(path);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+    private List<String> expectedListOfKeys() {
+        return IntStream.range(EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET + 1, EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET + EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET + 1).mapToObj(String::valueOf).collect(Collectors.toList());
     }
 
-    private List<Path> getSnapshotFilePaths() throws IOException {
-        return Files.list(Paths.get(System.getProperty("java.io.tmpdir")))
-                .filter(p -> p.toFile().getName().startsWith("compaction-promo-compaction-test-snapshot-"))
-                .collect(Collectors.toList());
-    }
 }

@@ -9,6 +9,7 @@ import de.otto.synapse.messagestore.MessageStore;
 import org.junit.Test;
 
 import java.time.Instant;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
@@ -26,35 +27,35 @@ import static org.mockito.Mockito.*;
 public class DefaultEventSourceTest {
 
     @Test
-    public void shouldReadMessagesFromMessageStore() {
+    public void shouldReadMessagesFromMessageStore() throws ExecutionException, InterruptedException {
         // given
         final MessageStore messageStore = mockMessageStore(fromHorizon());
         final MessageLogReceiverEndpoint messageLog = mockMessageLogReceiverEndpoint();
         final DefaultEventSource eventSource = new DefaultEventSource(messageStore, messageLog);
 
         // when
-        eventSource.consume();
+        eventSource.consume().get();
 
         // then
         verify(messageStore).stream();
     }
 
     @Test
-    public void shouldReadMessagesFromMessageLog() {
+    public void shouldReadMessagesFromMessageLog() throws ExecutionException, InterruptedException {
         // given
         final MessageStore messageStore = mockMessageStore(fromHorizon());
         final MessageLogReceiverEndpoint messageLog = mockMessageLogReceiverEndpoint();
         final DefaultEventSource eventSource = new DefaultEventSource(messageStore, messageLog);
 
         // when
-        eventSource.consume();
+        eventSource.consume().get();
 
         // then
         verify(messageLog).consumeUntil(fromHorizon(), Instant.MAX);
     }
 
     @Test
-    public void shouldInterceptMessagesFromMessageStore() {
+    public void shouldInterceptMessagesFromMessageStore() throws ExecutionException, InterruptedException {
         // given
         final Instant arrivalTimestamp = Instant.now();
         // and some message store having a single message
@@ -71,7 +72,7 @@ public class DefaultEventSourceTest {
         final DefaultEventSource eventSource = new DefaultEventSource(messageStore, messageLog);
 
         // when
-        eventSource.consume();
+        eventSource.consume().get();
 
         // then
         verify(interceptorChain).intercept(
@@ -80,7 +81,7 @@ public class DefaultEventSourceTest {
     }
 
     @Test
-    public void shouldDropNullMessagesInterceptedFromMessageStore() {
+    public void shouldDropNullMessagesInterceptedFromMessageStore() throws ExecutionException, InterruptedException {
         // given
         final Instant arrivalTimestamp = Instant.now();
         // and some message store having a single message
@@ -100,14 +101,14 @@ public class DefaultEventSourceTest {
         final DefaultEventSource eventSource = new DefaultEventSource(messageStore, messageLog);
 
         // when
-        eventSource.consume();
+        eventSource.consume().get();
 
         // then
         verify(messageDispatcher, never()).accept(any(Message.class));
     }
 
     @Test
-    public void shouldDispatchMessagesFromMessageStore() {
+    public void shouldDispatchMessagesFromMessageStore() throws ExecutionException, InterruptedException {
         // given
         final Instant arrivalTimestamp = Instant.now();
         // and some message store having a single message
@@ -124,14 +125,14 @@ public class DefaultEventSourceTest {
         final DefaultEventSource eventSource = new DefaultEventSource(messageStore, messageLog);
 
         // when
-        eventSource.consume();
+        eventSource.consume().get();
 
         // then
         verify(messageDispatcher).accept(message("1", responseHeader(null, arrivalTimestamp), null));
     }
 
     @Test
-    public void shouldContinueWithChannelPositionFromMessageStore() {
+    public void shouldContinueWithChannelPositionFromMessageStore() throws ExecutionException, InterruptedException {
         // given
         final ChannelPosition expectedChannelPosition = channelPosition(fromPosition("bar", "42"));
         // and some message store having a single message
@@ -142,7 +143,7 @@ public class DefaultEventSourceTest {
         final DefaultEventSource eventSource = new DefaultEventSource(messageStore, messageLog);
 
         // when
-        eventSource.consume();
+        eventSource.consume().get();
 
         // then
         verify(messageLog).consumeUntil(expectedChannelPosition, Instant.MAX);
@@ -156,7 +157,7 @@ public class DefaultEventSourceTest {
         final DefaultEventSource eventSource = new DefaultEventSource(messageStore, messageLog);
 
         // when
-        eventSource.consume();
+        eventSource.consume().get();
 
         // then
         verify(messageStore).close();

@@ -5,12 +5,14 @@ import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.messagestore.MessageStore;
 import org.slf4j.Logger;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadFactory;
 
-import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
+import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class DefaultEventSource extends AbstractEventSource {
@@ -27,30 +29,33 @@ public class DefaultEventSource extends AbstractEventSource {
 
     @Nonnull
     @Override
-    public CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull ChannelPosition startFrom,
-                                                           final @Nonnull Instant until) {
-
-        try {
-            final ChannelPosition messageLogStartPosition;
-            if (startFrom.equals(fromHorizon())) {
-                messageStore.stream().forEach(message -> {
-                    final Message<String> interceptedMessage = getMessageLogReceiverEndpoint().getInterceptorChain().intercept(message);
-                    if (interceptedMessage != null) {
-                        getMessageLogReceiverEndpoint().getMessageDispatcher().accept(interceptedMessage);
+    public CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull Instant until) {
+        return consumeMessageStore()
+                .thenCompose((messageLogStartPosition) -> getMessageLogReceiverEndpoint().consumeUntil(messageLogStartPosition, until))
+                .handle((channelPosition, throwable) -> {
+                    if (throwable != null) {
+                        LOG.error("Failed to start consuming from EventSource {}: {}. Closing MessageStore.", getChannelName(), throwable.getMessage(), throwable);
                     }
+                    try {
+                        messageStore.close();
+                    } catch (final Exception e) {
+                        LOG.error("Unable to close() MessageStore: " + e.getMessage(), e);
+                    }
+                    return channelPosition;
                 });
-                messageLogStartPosition = messageStore.getLatestChannelPosition();
-            } else {
-                messageLogStartPosition = startFrom;
-            }
-            return getMessageLogReceiverEndpoint().consumeUntil(messageLogStartPosition, until);
-        } finally {
-            try {
-                messageStore.close();
-            } catch (final Exception e) {
-                LOG.error("Unable to close() MessageStore: " + e.getMessage(), e);
-            }
-        }
+    }
+
+    private CompletableFuture<ChannelPosition> consumeMessageStore() {
+        final ThreadFactory threadFactory = new CustomizableThreadFactory("kinesis-eventsource-");
+        return CompletableFuture.supplyAsync(() -> {
+            messageStore.stream().forEach(message -> {
+                final Message<String> interceptedMessage = getMessageLogReceiverEndpoint().getInterceptorChain().intercept(message);
+                if (interceptedMessage != null) {
+                    getMessageLogReceiverEndpoint().getMessageDispatcher().accept(interceptedMessage);
+                }
+            });
+            return messageStore.getLatestChannelPosition();
+        }, newSingleThreadExecutor(threadFactory));
     }
 
 }

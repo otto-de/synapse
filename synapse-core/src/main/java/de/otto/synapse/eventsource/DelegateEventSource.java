@@ -9,7 +9,6 @@ import org.springframework.context.ApplicationContext;
 import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Predicate;
 
 public class DelegateEventSource implements EventSource {
 
@@ -77,22 +76,33 @@ public class DelegateEventSource implements EventSource {
     }
 
     /**
-     * Consumes all events from the EventSource, beginning with {@link ChannelPosition startFrom}, until
-     * the {@link Predicate stopCondition} is met.
+     * Consumes all events from the EventSource, until the (current) end of the stream is reached.
      * <p>
      *     The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
      *     the number of events retrieved from the EventSource.
      * </p>
      *
-     * @param startFrom the read position returned from earlier executions
-     * @param until the arrival timestamp until the messages should be consumed
+     * @return the new read position
+     */
+    @Override
+    public CompletableFuture<ChannelPosition> consume() {
+        return delegate.consume();
+    }
+
+    /**
+     * Consumes all events from the EventSource until the timestamp is reached.
+     * <p>
+     *     The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
+     *     the number of events retrieved from the EventSource.
+     * </p>
+     *
+     * @param until the timestamp until the messages should be consumed
      * @return the new read position
      */
     @Nonnull
     @Override
-    public CompletableFuture<ChannelPosition> consumeUntil(@Nonnull final ChannelPosition startFrom,
-                                                           @Nonnull final Instant until) {
-        return delegate.consumeUntil(startFrom, until);
+    public CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull Instant until) {
+        return delegate.consumeUntil(until);
     }
 
     @Override

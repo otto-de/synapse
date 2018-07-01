@@ -3,10 +3,8 @@ package de.otto.synapse.eventsource;
 
 import org.slf4j.Logger;
 import org.springframework.context.SmartLifecycle;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import java.util.List;
-import java.util.concurrent.ThreadFactory;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -45,7 +43,6 @@ public class EventSourceConsumerProcess implements SmartLifecycle {
         if (eventSourceCount > 0) {
             LOG.info("Initializing EventSourceConsumerProcess with {} EventSources", eventSourceCount);
             running = true;
-            final ThreadFactory threadFactory = new CustomizableThreadFactory(THREAD_NAME_PREFIX);
             eventSources.forEach(eventSource -> {
                 try {
                     LOG.info("Starting {}...", eventSource.getChannelName());
