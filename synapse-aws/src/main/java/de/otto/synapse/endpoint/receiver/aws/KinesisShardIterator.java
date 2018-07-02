@@ -115,7 +115,7 @@ public class KinesisShardIterator {
                 }
                 return tryNext();
             });
-            return new KinesisShardResponse(channelName, shardPosition.shardName(), shardPosition, recordsResponse, stopwatch.elapsed(MILLISECONDS));
+            return new KinesisShardResponse(channelName, shardPosition, recordsResponse, stopwatch.elapsed(MILLISECONDS));
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }

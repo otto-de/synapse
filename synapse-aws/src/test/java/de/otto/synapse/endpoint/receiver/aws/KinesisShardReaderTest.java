@@ -89,7 +89,6 @@ public class KinesisShardReaderTest {
         // then
         verify(consumer).accept(new KinesisShardResponse(
                 "someChannel",
-                "someShard",
                 fromPosition("someShard", "2"),
                 response, 0
         ));

@@ -14,25 +14,22 @@ import static java.util.stream.Collectors.toList;
 
 public class KinesisShardResponse {
     private final String channelName;
-    private final String shardName;
     private final Duration durationBehind;
     private final long runtime;
     private final ShardPosition shardPosition;
     private final List<Message<String>> messages;
 
     public KinesisShardResponse(final String channelName,
-                                final String shardName,
                                 final ShardPosition shardPosition,
                                 final GetRecordsResponse recordsResponse,
                                 final long runtime) {
         this.channelName = channelName;
-        this.shardName = shardName;
         this.shardPosition = shardPosition;
         this.runtime = runtime;
         this.durationBehind = ofMillis(recordsResponse.millisBehindLatest());
         this.messages = recordsResponse.records()
                 .stream()
-                .map(record -> kinesisMessage(shardName, record))
+                .map(record -> kinesisMessage(shardPosition.shardName(), record))
                 .collect(toList());
     }
 
@@ -41,7 +38,7 @@ public class KinesisShardResponse {
     }
 
     public String getShardName() {
-        return shardName;
+        return shardPosition.shardName();
     }
 
     public ShardPosition getShardPosition() {
@@ -67,7 +64,6 @@ public class KinesisShardResponse {
         KinesisShardResponse response = (KinesisShardResponse) o;
         return runtime == response.runtime &&
                 Objects.equals(channelName, response.channelName) &&
-                Objects.equals(shardName, response.shardName) &&
                 Objects.equals(durationBehind, response.durationBehind) &&
                 Objects.equals(shardPosition, response.shardPosition) &&
                 Objects.equals(messages, response.messages);
@@ -76,14 +72,13 @@ public class KinesisShardResponse {
     @Override
     public int hashCode() {
 
-        return Objects.hash(channelName, shardName, durationBehind, runtime, shardPosition, messages);
+        return Objects.hash(channelName, durationBehind, runtime, shardPosition, messages);
     }
 
     @Override
     public String toString() {
         return "KinesisShardResponse{" +
                 "channelName='" + channelName + '\'' +
-                ", shardName='" + shardName + '\'' +
                 ", durationBehind=" + durationBehind +
                 ", runtime=" + runtime +
                 ", shardPosition=" + shardPosition +
