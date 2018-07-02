@@ -7,6 +7,11 @@ import java.util.Map;
 
 public class LogHelper {
 
+    public static void trace(final Logger logger, final Map<String, Object> contexts,
+                            final String message, final Object[] msgParams) {
+        log(logger, LogLevel.TRACE, contexts, message, msgParams, null);
+    }
+
     public static void info(final Logger logger, final Map<String, Object> contexts,
                                  final String message, final Object[] msgParams) {
         log(logger, LogLevel.INFO, contexts, message, msgParams, null);
