@@ -9,7 +9,7 @@ import java.util.Objects;
  * The history of a single entity that is aggregated from {@link Message messages} and stored in a
  * {@link de.otto.synapse.state.StateRepository}.
  * <p>
- *     A {@code History} consists of an {@code entityId}, and a list of {@@link HistoryEntry history entries}.
+ *     A {@code History} consists of an {@code entityId}, and a list of {@link HistoryEntry history entries}.
  * </p>
  * <p>
  *     The {@code entityId} corresponds to the {@code key} of an entry in the {@code StateRepository} that is used
