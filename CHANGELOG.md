@@ -1,7 +1,8 @@
 # Release Notes
 
 ## 0.7.0
-* New KinesisMessageLogReader and KinesisShardReader for low-level polling of Kinesis messages.
+* Added support for AWS SQS with SqsMessageSender and SqsMessageQueueReceiverEndpoint
+* New KinesisMessageLogReader for low-level polling of Kinesis messages.
 * Refactored interfaces for `EventSource` and `MessageLogReceiverEndpoint`. The interfaces now immediately return a 
 CompletedFuture instead of blocking forever.
 * Add StartFrom AT-POSITION to access entries in the stream directly
