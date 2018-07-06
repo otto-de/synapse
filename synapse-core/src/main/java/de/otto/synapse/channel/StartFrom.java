@@ -10,6 +10,10 @@ public enum StartFrom {
      */
     POSITION,
     /**
+     * Start consumption of messages at the specified position.
+     */
+    AT_POSITION,
+    /**
      * Start consumption of messages at first message at the specified timestamp.
      */
     TIMESTAMP

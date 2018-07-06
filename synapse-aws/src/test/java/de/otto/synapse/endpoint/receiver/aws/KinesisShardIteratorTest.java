@@ -35,6 +35,14 @@ public class KinesisShardIteratorTest {
     }
 
     @Test
+    public void shouldCreateShardIteratorAtPosition() {
+        final KinesisShardIterator iterator = new KinesisShardIterator(someKinesisClient(), "", atPosition("someShard", "42"));
+        assertThat(iterator.getShardPosition(), is(atPosition("someShard", "42")));
+        assertThat(iterator.getId(), is("someShardIterator"));
+        assertThat(iterator.getFetchRecordLimit(), is(10000));
+    }
+
+    @Test
     public void shouldCreateShardIteratorWithFetchRecordLimit() {
         final KinesisShardIterator iterator = new KinesisShardIterator(someKinesisClient(), "", fromPosition("someShard", "42"), 1);
         assertThat(iterator.getShardPosition(), is(fromPosition("someShard", "42")));

@@ -135,6 +135,10 @@ public class KinesisShardIterator {
                 shardRequestBuilder.shardIteratorType(AFTER_SEQUENCE_NUMBER);
                 shardRequestBuilder.startingSequenceNumber(shardPosition.position());
                 break;
+            case AT_POSITION:
+                shardRequestBuilder.shardIteratorType(AT_SEQUENCE_NUMBER);
+                shardRequestBuilder.startingSequenceNumber(shardPosition.position());
+                break;
             case TIMESTAMP:
                 shardRequestBuilder
                         .shardIteratorType(AT_TIMESTAMP)
