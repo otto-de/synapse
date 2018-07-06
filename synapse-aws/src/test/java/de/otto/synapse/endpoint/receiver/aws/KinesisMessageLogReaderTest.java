@@ -28,7 +28,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
+import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
+import static de.otto.synapse.channel.ShardPosition.fromHorizon;
+import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.endpoint.receiver.aws.KinesisShardIterator.POISON_SHARD_ITER;
 import static java.time.Duration.ofMillis;
 import static java.util.stream.Collectors.toSet;
@@ -251,22 +254,42 @@ public class KinesisMessageLogReaderTest {
         assertThat(response.getMessages(), hasSize(0));
         assertThat(response.getShardNames(), containsInAnyOrder("shard1", "shard2"));
         assertThat(response.getChannelDurationBehind().getDurationBehind(), is(ofMillis(555L)));
+        assertThat(response.getChannelPosition(), is(
+                channelPosition(
+                        fromHorizon("shard1"),
+                        fromHorizon("shard2"))
+        ));
         // when
         response = logReader.read(iterator).get();
         // then
         assertThat(response.getMessages(), hasSize(2));
         assertThat(response.getShardNames(), containsInAnyOrder("shard1", "shard2"));
         assertThat(response.getChannelDurationBehind().getDurationBehind(), is(ofMillis(1234L)));
+        assertThat(response.getChannelPosition(), is(
+                channelPosition(
+                        fromPosition("shard1", "0"),
+                        fromPosition("shard2", "3"))
+        ));
         // when
         response = logReader.read(iterator).get();
         // then
         assertThat(response.getMessages(), hasSize(4));
         assertThat(response.getShardNames(), containsInAnyOrder("shard1", "shard2"));
         assertThat(response.getChannelDurationBehind().getDurationBehind(), is(ofMillis(0L)));
+        assertThat(response.getChannelPosition(), is(
+                channelPosition(
+                        fromPosition("shard1", "2"),
+                        fromPosition("shard2", "5"))
+        ));
         // when
         response = logReader.read(iterator).get();
         // then
         assertThat(response.getMessages(), hasSize(0));
+        assertThat(response.getChannelPosition(), is(
+                channelPosition(
+                        fromPosition("shard1", "2"),
+                        fromPosition("shard2", "5"))
+        ));
     }
 
     @Test
@@ -435,7 +458,7 @@ public class KinesisMessageLogReaderTest {
                 .build();
         GetRecordsResponse response3 = withPoison
                 ? GetRecordsResponse.builder().records().millisBehindLatest(0L).nextShardIterator(POISON_SHARD_ITER).build()
-                : GetRecordsResponse.builder().records().millisBehindLatest(0L).nextShardIterator(shardName + "-pos4").build();
+                : GetRecordsResponse.builder().records().millisBehindLatest(0L).nextShardIterator(shardName + "-pos3").build();
 
         when(kinesisClient.getRecords(argThat((GetRecordsRequest req) -> isFailingShardIter(shardName, req))))
                 .thenThrow(new RuntimeException("boo!"));
