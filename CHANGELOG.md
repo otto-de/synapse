@@ -4,6 +4,7 @@
 * New KinesisMessageLogReader and KinesisShardReader for low-level polling of Kinesis messages.
 * Refactored interfaces for `EventSource` and `MessageLogReceiverEndpoint`. The interfaces now immediately return a 
 CompletedFuture instead of blocking forever.
+* Add StartFrom AT-POSITION to access entries in the stream directly
 
 ## 0.6.13
 * Add ConditionalOnMissingBean to ObjectMapper in SynapseAutoConfiguration
