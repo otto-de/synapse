@@ -19,6 +19,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static java.util.Objects.isNull;
@@ -96,10 +97,10 @@ public class KinesisMessageLogReader {
                             },
                             executorService))
                     .collect(toList());
-            return supplyAsync(() -> new KinesisMessageLogResponse(futureShardPositions
+            return supplyAsync(() -> new KinesisMessageLogResponse(channelName, futureShardPositions
                     .stream()
                     .map(CompletableFuture::join)
-                    .collect(toList())), executorService);
+                    .collect(toImmutableList())), executorService);
         } catch (final RuntimeException e) {
             shutdownExecutor();
             throw e;
