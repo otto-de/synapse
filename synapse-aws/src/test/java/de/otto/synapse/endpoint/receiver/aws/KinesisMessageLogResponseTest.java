@@ -1,17 +1,34 @@
 package de.otto.synapse.endpoint.receiver.aws;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.consumer.MessageDispatcher;
+import de.otto.synapse.message.Message;
+import de.otto.synapse.translator.MessageTranslator;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
+import javax.annotation.Nonnull;
+import javax.validation.Payload;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.time.Instant;
+import java.util.List;
+import java.util.Objects;
+import java.util.regex.Pattern;
 
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
+import static java.nio.charset.Charset.forName;
 import static java.time.Instant.now;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -19,8 +36,7 @@ import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class KinesisMessageLogResponseTest {
 
@@ -57,6 +73,62 @@ public class KinesisMessageLogResponseTest {
                 message("b", responseHeader(fromPosition("foo", "2"), now), null)));
     }
 
+    @Test
+    public void shouldGetTranslatedMessages() {
+        final GetRecordsResponse recordsResponse = mock(GetRecordsResponse.class);
+        now = now();
+        when(recordsResponse.records()).thenReturn(asList(
+                Record.builder()
+                        .partitionKey("a")
+                        .sequenceNumber("1")
+                        .approximateArrivalTimestamp(now)
+                        .data(ByteBuffer.wrap("{\"foo\":\"first\"}".getBytes(forName("UTF8"))))
+                        .build(),
+                Record.builder()
+                        .partitionKey("b")
+                        .sequenceNumber("2")
+                        .approximateArrivalTimestamp(now)
+                        .data(ByteBuffer.wrap("{\"foo\":\"second\"}".getBytes(forName("UTF8"))))
+                        .build()
+        ));
+        final KinesisMessageLogResponse response = new KinesisMessageLogResponse(
+                singletonList(
+                        new KinesisShardResponse("foo", fromHorizon("foo"), recordsResponse, 1000)
+                )
+        );
+        final MessageTranslator<TestPayload> messageTranslator = MessageTranslator.of((payload -> {
+            try {
+                final String json = Objects.toString(payload, "{}");
+                return new ObjectMapper().readValue(json, TestPayload.class);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }));
+        assertThat(response.getMessages(messageTranslator), contains(
+                message("a", responseHeader(fromPosition("foo", "1"), now), new TestPayload("first")),
+                message("b", responseHeader(fromPosition("foo", "2"), now), new TestPayload("second"))
+        ));
+    }
+
+    @Test
+    public void shouldDispatchMessages() {
+        final GetRecordsResponse recordsResponse = mock(GetRecordsResponse.class);
+        now = now();
+        when(recordsResponse.records()).thenReturn(asList(
+                Record.builder().partitionKey("a").sequenceNumber("1").approximateArrivalTimestamp(now).data(ByteBuffer.wrap("{\"foo\":\"first\"}".getBytes(forName("UTF8")))).build(),
+                Record.builder().partitionKey("b").sequenceNumber("2").approximateArrivalTimestamp(now).data(ByteBuffer.wrap("{\"foo\":\"second\"}".getBytes(forName("UTF8")))).build()
+        ));
+        final KinesisMessageLogResponse response = new KinesisMessageLogResponse(
+                singletonList(
+                        new KinesisShardResponse("foo", fromHorizon("foo"), recordsResponse, 1000)
+                )
+        );
+        final MessageConsumer<TestPayload> consumer = spy(testMessageConsumer());
+        response.dispatchMessages(new MessageDispatcher(new ObjectMapper(), singletonList(consumer)));
+        verify(consumer).accept(message("a", responseHeader(fromPosition("foo", "1"), now), new TestPayload("first")));
+        verify(consumer).accept(message("b", responseHeader(fromPosition("foo", "2"), now), new TestPayload("second")));
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void shouldFailToCreateResponseWithoutAnyShardResponses() {
         final GetRecordsResponse recordsResponse = mock(GetRecordsResponse.class);
@@ -77,4 +149,59 @@ public class KinesisMessageLogResponseTest {
                 )
         );
     }
+
+    private MessageConsumer<TestPayload> testMessageConsumer() {
+        return new MessageConsumer<TestPayload>() {
+            @Nonnull
+            @Override
+            public Class<TestPayload> payloadType() {
+                return TestPayload.class;
+            }
+
+            @Nonnull
+            @Override
+            public Pattern keyPattern() {
+                return Pattern.compile(".*");
+            }
+
+            @Override
+            public void accept(Message<TestPayload> message) {
+            }
+        };
+    }
+
+    private static class TestPayload {
+        @JsonProperty
+        public String foo;
+
+        public TestPayload() {
+        }
+
+        public TestPayload(final String foo) {
+            this.foo = foo;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            TestPayload that = (TestPayload) o;
+            return Objects.equals(foo, that.foo);
+        }
+
+        @Override
+        public int hashCode() {
+
+            return Objects.hash(foo);
+        }
+
+        @Override
+        public String toString() {
+            return "TestPayload{" +
+                    "foo='" + foo + '\'' +
+                    '}';
+        }
+    }
+
 }
+
