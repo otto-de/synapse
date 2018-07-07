@@ -3,27 +3,27 @@ package de.otto.synapse.endpoint.receiver.aws;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.synapse.channel.ChannelDurationBehind;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
 import javax.annotation.Nonnull;
-import javax.validation.Payload;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+import static com.google.common.collect.ImmutableList.of;
+import static de.otto.synapse.channel.ChannelDurationBehind.channelDurationBehind;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
@@ -35,7 +35,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
 
 public class KinesisMessageLogResponseTest {
@@ -47,7 +47,8 @@ public class KinesisMessageLogResponseTest {
         final GetRecordsResponse recordsResponse = mock(GetRecordsResponse.class);
         when(recordsResponse.records()).thenReturn(emptyList());
         final KinesisMessageLogResponse response = new KinesisMessageLogResponse(
-                asList(
+                "foo",
+                of(
                         new KinesisShardResponse("foo", fromHorizon("foo"), recordsResponse, 1000),
                         new KinesisShardResponse("foo", fromPosition("bar", "42"), recordsResponse, 1000)
                 )
@@ -64,7 +65,8 @@ public class KinesisMessageLogResponseTest {
                 Record.builder().partitionKey("b").sequenceNumber("2").approximateArrivalTimestamp(now).build()
         ));
         final KinesisMessageLogResponse response = new KinesisMessageLogResponse(
-                singletonList(
+                "foo",
+                of(
                         new KinesisShardResponse("foo", fromHorizon("foo"), recordsResponse, 1000)
                 )
         );
@@ -92,7 +94,8 @@ public class KinesisMessageLogResponseTest {
                         .build()
         ));
         final KinesisMessageLogResponse response = new KinesisMessageLogResponse(
-                singletonList(
+                "foo",
+                of(
                         new KinesisShardResponse("foo", fromHorizon("foo"), recordsResponse, 1000)
                 )
         );
@@ -119,7 +122,8 @@ public class KinesisMessageLogResponseTest {
                 Record.builder().partitionKey("b").sequenceNumber("2").approximateArrivalTimestamp(now).data(ByteBuffer.wrap("{\"foo\":\"second\"}".getBytes(forName("UTF8")))).build()
         ));
         final KinesisMessageLogResponse response = new KinesisMessageLogResponse(
-                singletonList(
+                "foo",
+                of(
                         new KinesisShardResponse("foo", fromHorizon("foo"), recordsResponse, 1000)
                 )
         );
@@ -133,9 +137,7 @@ public class KinesisMessageLogResponseTest {
     public void shouldFailToCreateResponseWithoutAnyShardResponses() {
         final GetRecordsResponse recordsResponse = mock(GetRecordsResponse.class);
         when(recordsResponse.records()).thenReturn(emptyList());
-        new KinesisMessageLogResponse(
-                emptyList()
-        );
+        new KinesisMessageLogResponse("foo", of());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -143,11 +145,47 @@ public class KinesisMessageLogResponseTest {
         final GetRecordsResponse recordsResponse = mock(GetRecordsResponse.class);
         when(recordsResponse.records()).thenReturn(emptyList());
         new KinesisMessageLogResponse(
-                asList(
+                "foo",
+                of(
                         new KinesisShardResponse("foo", fromHorizon("foo"), recordsResponse, 1000),
                         new KinesisShardResponse("bar", fromHorizon("bar"), recordsResponse, 1000)
                 )
         );
+    }
+
+    @Test
+    public void shouldCalculateDurationBehind() {
+        final KinesisMessageLogResponse response = new KinesisMessageLogResponse("foo", of(
+                someShardResponse("first", 42000L),
+                someShardResponse("second", 0L))
+        );
+
+        final ChannelDurationBehind expectedDurationBehind = channelDurationBehind()
+                .with("first", Duration.ofSeconds(42))
+                .with("second", Duration.ofSeconds(0))
+                .build();
+        assertThat(response.getChannelDurationBehind(), is(expectedDurationBehind));
+    }
+
+    @Test
+    public void shouldReturnShardNames() {
+        final KinesisMessageLogResponse response = new KinesisMessageLogResponse("foo", of(
+                someShardResponse("first", 0L),
+                someShardResponse("second", 0L))
+        );
+
+        assertThat(response.getShardNames(), containsInAnyOrder("first", "second"));
+    }
+
+    private KinesisShardResponse someShardResponse(final String shardName,
+                                                   final long millisBehind) {
+        final GetRecordsResponse recordsResponse = mock(GetRecordsResponse.class);
+        when(recordsResponse.millisBehindLatest()).thenReturn(millisBehind);
+        return new KinesisShardResponse(
+                "foo",
+                fromPosition(shardName, "5"),
+
+                recordsResponse, 0L);
     }
 
     private MessageConsumer<TestPayload> testMessageConsumer() {

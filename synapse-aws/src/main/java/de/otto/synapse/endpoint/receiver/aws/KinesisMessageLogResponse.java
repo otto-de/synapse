@@ -1,21 +1,17 @@
 package de.otto.synapse.endpoint.receiver.aws;
 
+import com.google.common.collect.ImmutableList;
 import de.otto.synapse.channel.ChannelDurationBehind;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
-import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.google.common.collect.Maps.uniqueIndex;
-import static de.otto.synapse.channel.ChannelDurationBehind.channelDurationBehind;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -23,17 +19,17 @@ import static java.util.stream.Collectors.toSet;
 public class KinesisMessageLogResponse {
 
     private final String channelName;
-    private final Map<String, KinesisShardResponse> shardResponses;
+    private final ImmutableList<KinesisShardResponse> shardResponses;
 
-    public KinesisMessageLogResponse(final List<KinesisShardResponse> shardResponses) {
+    public KinesisMessageLogResponse(final String channelName,
+                                     final ImmutableList<KinesisShardResponse> shardResponses) {
         if (shardResponses.isEmpty()) {
             throw new IllegalArgumentException("Unable to create KinesisMessageLogResponse without KinesisShardResponses");
         }
-        if (shardResponses.stream().map(KinesisShardResponse::getChannelName).distinct().count() > 1) {
+        if (shardResponses.stream().anyMatch(response -> !response.getChannelName().equals(channelName))) {
             throw new IllegalArgumentException("Unable to create KinesisMessageLogResponse from KinesisShardResponses returned by different message channels");
-        }
-        this.channelName = shardResponses.get(0).getChannelName();
-        this.shardResponses = uniqueIndex(shardResponses, KinesisShardResponse::getShardName);
+        }        this.channelName = channelName;
+        this.shardResponses = shardResponses;
     }
 
     public String getChannelName() {
@@ -41,14 +37,13 @@ public class KinesisMessageLogResponse {
     }
 
     public ChannelDurationBehind getChannelDurationBehind() {
-        final ChannelDurationBehind.Builder durationBehind = channelDurationBehind();
-        shardResponses.forEach((key, value) -> durationBehind.with(key, value.getDurationBehind()));
+        final ChannelDurationBehind.Builder durationBehind = ChannelDurationBehind.channelDurationBehind();
+        shardResponses.forEach((response) -> durationBehind.with(response.getShardName(), response.getDurationBehind()));
         return durationBehind.build();
     }
 
     public List<Message<String>> getMessages() {
         return shardResponses
-                .values()
                 .stream()
                 .flatMap(response -> response.getMessages().stream())
                 .collect(toList());
@@ -64,7 +59,6 @@ public class KinesisMessageLogResponse {
      */
     public <P> List<Message<P>> getMessages(final MessageTranslator<P> messageTranslator) {
         return shardResponses
-                .values()
                 .stream()
                 .flatMap(response -> response.getMessages().stream().map(messageTranslator::translate))
                 .collect(toList());
@@ -85,7 +79,6 @@ public class KinesisMessageLogResponse {
      */
     public void dispatchMessages(final MessageConsumer<String> messageConsumer) {
         shardResponses
-                .values()
                 .stream()
                 .flatMap(response -> response.getMessages().stream())
                 .forEach(messageConsumer);
@@ -93,18 +86,17 @@ public class KinesisMessageLogResponse {
 
     public Set<String> getShardNames() {
         return shardResponses
-                .values()
                 .stream()
                 .map(KinesisShardResponse::getShardName)
                 .collect(toSet());
     }
 
-    public Collection<KinesisShardResponse> getShardResponses() {
-        return shardResponses.values();
+    public ImmutableList<KinesisShardResponse> getShardResponses() {
+        return shardResponses;
     }
 
     public ChannelPosition getChannelPosition() {
-        return channelPosition(shardResponses.values()
+        return channelPosition(shardResponses
                 .stream()
                 .map(KinesisShardResponse::getShardPosition)
                 .collect(Collectors.toList()));
