@@ -96,7 +96,7 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
                                              final Clock clock) {
         super(channelName, objectMapper, eventPublisher);
         this.eventPublisher = eventPublisher;
-        this.kinesisMessageLogReader = new KinesisMessageLogReader(channelName, kinesisClient, clock);
+        this.kinesisMessageLogReader = new KinesisMessageLogReader(channelName, kinesisClient, clock, true);
     }
 
     @Override
