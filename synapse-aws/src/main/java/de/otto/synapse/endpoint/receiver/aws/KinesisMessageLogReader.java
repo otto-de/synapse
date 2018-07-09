@@ -41,14 +41,10 @@ public class KinesisMessageLogReader {
 
     public KinesisMessageLogReader(final String channelName,
                                    final KinesisClient kinesisClient,
-                                   final Clock clock,
-                                   final boolean initExecutorServiceOnStartup) {
+                                   final Clock clock) {
         this.channelName = channelName;
         this.kinesisClient = kinesisClient;
         this.clock = clock;
-        if (initExecutorServiceOnStartup) {
-            initExecutorService();
-        }
     }
 
     public String getChannelName() {
@@ -225,6 +221,9 @@ public class KinesisMessageLogReader {
 
     @VisibleForTesting
     List<KinesisShardReader> getCurrentKinesisShards() {
+        if (isNull(executorService)) {
+            initExecutorService();
+        }
         return kinesisShardReaders;
     }
 }
