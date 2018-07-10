@@ -6,10 +6,10 @@ edison:
     enabled: false
 
 synapse:
-  snapshot:
-    bucket-name: de-otto-promo-compaction-test-snapshots
-  compaction:
-    enabled: true
+    snapshot:
+        bucket-name: de-otto-promo-compaction-test-snapshots
+    compaction:
+        enabled: true
 
 service:
   encryption:

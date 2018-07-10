@@ -19,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -36,15 +37,17 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
-@ActiveProfiles("test")
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
 @SpringBootTest(classes = SnapshotMessageStoreAcceptanceTest.class)
+@TestPropertySource(properties = {
+        "synapse.snapshot.bucket-name=de-otto-promo-compaction-test-snapshots",
+        "synapse.compaction.enabled=true"}
+)
 public class SnapshotMessageStoreAcceptanceTest {
 
     private static final String INTEGRATION_TEST_STREAM = "promo-compaction-test";
     private static final String INTEGRATION_TEST_BUCKET = "de-otto-promo-compaction-test-snapshots";
-    private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.wrap(new byte[]{});
 
     @Autowired
     private KinesisClient kinesisClient;

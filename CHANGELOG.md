@@ -1,6 +1,7 @@
 # Release Notes
 
 ## 0.7.0
+* Updated to AWS SDK preview 10
 * Added support for AWS SQS with SqsMessageSender and SqsMessageQueueReceiverEndpoint
 * New KinesisMessageLogReader for low-level polling of Kinesis messages.
 * Refactored interfaces for `EventSource` and `MessageLogReceiverEndpoint`. The interfaces now immediately return a 

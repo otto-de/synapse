@@ -2,8 +2,8 @@ package de.otto.synapse.testsupport;
 
 import org.junit.Before;
 import org.junit.Test;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.core.sync.ResponseInputStream;
 import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.utils.IoUtils;
 
@@ -35,7 +35,7 @@ public class LocalS3ClientTest {
                 .bucket("someBucket")
                 .key("someObject")
                 .build();
-        RequestBody requestBody = RequestBody.of("content");
+        RequestBody requestBody = RequestBody.fromString("content");
         testee.putObject(putObjectRequest, requestBody);
         // when
         ListObjectsV2Request listObjectsV2Request = ListObjectsV2Request.builder()
@@ -55,7 +55,7 @@ public class LocalS3ClientTest {
                 .bucket("someBucket")
                 .key("someObject")
                 .build();
-        RequestBody requestBody = RequestBody.of("content");
+        RequestBody requestBody = RequestBody.fromString("content");
         testee.putObject(putObjectRequest, requestBody);
         testee.deleteObjects(DeleteObjectsRequest.builder().bucket("someBucket").delete(Delete.builder().objects
                 (ObjectIdentifier.builder().key("someObject").build()).build()).build());
@@ -101,7 +101,7 @@ public class LocalS3ClientTest {
                         .bucket("someBucket")
                         .key("someKey")
                         .build(),
-                RequestBody.of("testdata"));
+                RequestBody.fromString("testdata"));
         //when
         Path tempFile = Files.createTempFile("test", "tmp");
         testee.getObject(GetObjectRequest.builder()
@@ -122,7 +122,7 @@ public class LocalS3ClientTest {
                         .bucket("someBucket")
                         .key("someKey")
                         .build(),
-                RequestBody.of("testdata"));
+                RequestBody.fromString("testdata"));
         //when
         ResponseInputStream<GetObjectResponse> inputStream = testee.getObject(GetObjectRequest.builder()
                 .bucket("someBucket")

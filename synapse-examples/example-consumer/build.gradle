@@ -37,7 +37,7 @@ dependencies {
 
     testImplementation "org.springframework.boot:spring-boot-test"
     testImplementation "org.springframework:spring-test:4.3.12.RELEASE"
-    testImplementation "com.jayway.awaitility:awaitility:1.7.0"
+    testImplementation "org.awaitility:awaitility:3.1.1"
 }
 
 // Define the main class for the application

@@ -14,6 +14,7 @@ import static de.otto.synapse.channel.ShardPosition.*;
 import static java.time.Duration.ofMillis;
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.HOURS;
+import static java.util.Collections.emptyList;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
@@ -104,7 +105,7 @@ public class KinesisShardIteratorTest {
     public void shouldKeepShardPositionAfterEmptyResponse() {
         // given
         GetRecordsResponse response = GetRecordsResponse.builder()
-                .records()
+                .records(emptyList())
                 .millisBehindLatest(42L)
                 .build();
         final KinesisClient kinesisClient = someKinesisClient();
@@ -230,7 +231,7 @@ public class KinesisShardIteratorTest {
     public void shouldIterateToNextId() {
         // given
         GetRecordsResponse response = GetRecordsResponse.builder()
-                .records()
+                .records(emptyList())
                 .nextShardIterator("nextIteratorId")
                 .millisBehindLatest(42L)
                 .build();
@@ -250,7 +251,7 @@ public class KinesisShardIteratorTest {
     public void shouldRetryReadingIteratorOnKinesisException() {
         // given
         GetRecordsResponse response = GetRecordsResponse.builder()
-                .records()
+                .records(emptyList())
                 .nextShardIterator("nextIteratorId")
                 .millisBehindLatest(42L)
                 .build();

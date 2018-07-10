@@ -47,15 +47,15 @@ public class ExampleConfiguration implements MessageEndpointConfigurer {
     }
 
     @Bean
-    public MessageSenderEndpoint bananaMessageSender(final MessageSenderEndpointFactory messageSenderFactory,
+    public MessageSenderEndpoint bananaMessageSender(final MessageSenderEndpointFactory inMemoryMessageSenderEndpointFactory,
                                                      final MyServiceProperties properties) {
-        return messageSenderFactory.create(properties.getBananaChannel());
+        return inMemoryMessageSenderEndpointFactory.create(properties.getBananaChannel());
     }
 
     @Bean
-    public MessageSenderEndpoint productMessageSender(final MessageSenderEndpointFactory messageSenderFactory,
+    public MessageSenderEndpoint productMessageSender(final MessageSenderEndpointFactory inMemoryMessageSenderEndpointFactory,
                                                       final MyServiceProperties properties) {
-        return messageSenderFactory.create(properties.getProductChannel());
+        return inMemoryMessageSenderEndpointFactory.create(properties.getProductChannel());
     }
 
 }

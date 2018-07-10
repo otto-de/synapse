@@ -44,7 +44,6 @@ public class SqsMessageQueueIntegrationTest {
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET = 10;
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET = 10;
     private static final String TEST_CHANNEL = "synapse-test-channel-2";
-    // from application-test.yml:
 
     @Autowired
     private SQSAsyncClient sqsAsyncClient;

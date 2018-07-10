@@ -13,8 +13,6 @@ import software.amazon.awssdk.services.sqs.model.*;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.otto.synapse.message.Message.message;
@@ -109,7 +107,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
 
     private void process(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
         try {
-            LOG.debug("Processing message from channel={}: messageId={} receiptHandle={}, attributes={}, messageAttributes={}", getChannelName(), sqsMessage.messageId(), sqsMessage.receiptHandle(), sqsMessage.attributesStrings());
+            LOG.debug("Processing message from channel={}: messageId={} receiptHandle={}, attributes={}, messageAttributes={}", getChannelName(), sqsMessage.messageId(), sqsMessage.receiptHandle(), sqsMessage.attributesAsStrings());
 /*            final MessageAttributeValue key = sqsMessage.messageAttributes().get("key");
             final Message<String> message = key != null
                     ? message(key.stringValue(), sqsMessage.body())
