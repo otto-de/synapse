@@ -2,15 +2,12 @@ package de.otto.synapse.endpoint.receiver.aws;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.configuration.aws.TestMessageInterceptor;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.testsupport.KinesisTestStreamSource;
 import de.otto.synapse.testsupport.SqsChannelSetupUtils;
 import de.otto.synapse.testsupport.SqsTestStreamSource;
-import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,30 +19,19 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.sqs.SQSAsyncClient;
-import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
-import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import static java.time.Instant.now;
-import static java.util.Collections.singletonMap;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.synchronizedSet;
-import static org.awaitility.Awaitility.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.hamcrest.collection.IsEmptyCollection.empty;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
+import static org.awaitility.Awaitility.await;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
@@ -108,20 +94,6 @@ public class SqsMessageQueueReceiverEndpointIntegrationTest {
                 .atMost(Duration.FIVE_SECONDS)
                 .until(() -> messages.size() >= EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET);
         sqsMessageQueue.stop();
-    }
-
-    @Test
-    public void runInSeparateThreads() throws ExecutionException, InterruptedException {
-        // when
-        writeToStream("users_small1.txt");
-
-        // then
-        sqsMessageQueue.consume();
-        await()
-                .atMost(Duration.FIVE_SECONDS)
-                .until(() -> threads.size() == 1);
-
-        assertThat(threads, containsInAnyOrder("sqs-message-log-0"));
     }
 
     @Test
