@@ -37,8 +37,8 @@ import static org.awaitility.Awaitility.await;
 @ActiveProfiles("test")
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
-@SpringBootTest(classes = SqsMessageQueueReceiverEndpointIntegrationTest.class)
-public class SqsMessageQueueReceiverEndpointIntegrationTest {
+@SpringBootTest(classes = SqsMessageQueueIntegrationTest.class)
+public class SqsMessageQueueIntegrationTest {
 
     private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.wrap(new byte[]{});
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET = 10;
