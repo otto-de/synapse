@@ -111,6 +111,9 @@ public class KinesisMessageLogReader {
         }
     }
 
+    /**
+     * @deprecated to be removed soon
+     */
     public CompletableFuture<ChannelPosition> consumeUntil(final ChannelPosition startFrom,
                                                            final Instant until,
                                                            final Consumer<KinesisShardResponse> consumer) {

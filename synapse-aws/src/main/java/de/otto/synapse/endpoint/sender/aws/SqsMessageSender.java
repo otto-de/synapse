@@ -33,14 +33,13 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
 
     @Override
     protected void doSend(@Nonnull Message<String> message) {
+        if (!message.getKey().isEmpty()) {
+            // TODO: key als message attribute o.ä. senden - bug in localstack
+            throw new IllegalArgumentException("Unable to send messages with a message-key");
+        }
         sqsAsyncClient.sendMessage(
                 SendMessageRequest.builder()
                         .queueUrl(queueUrl)
-                        .messageGroupId(getChannelName())
-                        .messageAttributes(of("key", MessageAttributeValue
-                                .builder()
-                                .stringValue(message.getKey())
-                                .build()))
                         .messageBody(message.getPayload())
                         .build()
         );

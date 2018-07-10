@@ -16,6 +16,13 @@ import java.util.concurrent.CompletableFuture;
  * <p>
  *     <img src="http://www.enterpriseintegrationpatterns.com/img/MessageEndpointSolution.gif" alt="Message Endpoint">
  * </p>
+ * <p>
+ *     MessageLogReceiverEndpoints are endpoints for Publish-Subscribe Channels:
+ * </p>
+ * <p>
+ *     <img src="http://www.enterpriseintegrationpatterns.com/img/PublishSubscribeSolution.gif" alt="Publish-Subscribe Channel">
+ * </p>
+ * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/PublishSubscribeChannel.html">EIP: Publish-Subscribe Channel</a>
  */
 public interface MessageLogReceiverEndpoint extends MessageReceiverEndpoint {
     /**

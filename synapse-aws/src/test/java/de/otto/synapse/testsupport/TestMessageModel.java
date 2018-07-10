@@ -24,7 +24,7 @@ import java.io.Serializable;
  * This is the data model for the objects being sent through the Amazon Kinesis streams in the samples
  * 
  */
-public class KinesisMessageModel implements Serializable {
+public class TestMessageModel implements Serializable {
 
     public int userid;
     public String username;
@@ -48,7 +48,7 @@ public class KinesisMessageModel implements Serializable {
     /**
      * Default constructor for Jackson JSON mapper - uses bean pattern.
      */
-    public KinesisMessageModel() {
+    public TestMessageModel() {
 
     }
 
@@ -91,24 +91,24 @@ public class KinesisMessageModel implements Serializable {
      * @param likemusicals
      *        Sample boolean data field
      */
-    public KinesisMessageModel(int userid,
-            String username,
-            String firstname,
-            String lastname,
-            String city,
-            String state,
-            String email,
-            String phone,
-            boolean likesports,
-            boolean liketheatre,
-            boolean likeconcerts,
-            boolean likejazz,
-            boolean likeclassical,
-            boolean likeopera,
-            boolean likerock,
-            boolean likevegas,
-            boolean likebroadway,
-            boolean likemusicals) {
+    public TestMessageModel(int userid,
+                            String username,
+                            String firstname,
+                            String lastname,
+                            String city,
+                            String state,
+                            String email,
+                            String phone,
+                            boolean likesports,
+                            boolean liketheatre,
+                            boolean likeconcerts,
+                            boolean likejazz,
+                            boolean likeclassical,
+                            boolean likeopera,
+                            boolean likerock,
+                            boolean likevegas,
+                            boolean likebroadway,
+                            boolean likemusicals) {
         this.userid = userid;
         this.username = username;
         this.firstname = firstname;
@@ -513,10 +513,10 @@ public class KinesisMessageModel implements Serializable {
         if (obj == null) {
             return false;
         }
-        if (!(obj instanceof KinesisMessageModel)) {
+        if (!(obj instanceof TestMessageModel)) {
             return false;
         }
-        KinesisMessageModel other = (KinesisMessageModel) obj;
+        TestMessageModel other = (TestMessageModel) obj;
         if (city == null) {
             if (other.city != null) {
                 return false;

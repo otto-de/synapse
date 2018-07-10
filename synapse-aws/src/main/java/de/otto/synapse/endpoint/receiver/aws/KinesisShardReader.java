@@ -14,6 +14,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+/**
+ * @deprecated to be removed soon
+ */
 @ThreadSafe
 public class KinesisShardReader {
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShardReader.class);

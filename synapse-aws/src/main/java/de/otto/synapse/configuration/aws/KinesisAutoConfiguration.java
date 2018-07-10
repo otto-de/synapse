@@ -43,7 +43,7 @@ public class KinesisAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public MessageSenderEndpointFactory messageSenderEndpointFactory(final MessageInterceptorRegistry registry,
+    public MessageSenderEndpointFactory kinesisSenderEndpointFactory(final MessageInterceptorRegistry registry,
                                                                      final ObjectMapper objectMapper,
                                                                      final KinesisClient kinesisClient) {
         return new KinesisMessageSenderEndpointFactory(registry, objectMapper, kinesisClient);
@@ -51,10 +51,10 @@ public class KinesisAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
-                                                                               final ObjectMapper objectMapper,
-                                                                               final KinesisClient kinesisClient,
-                                                                               final ApplicationEventPublisher eventPublisher) {
+    public MessageLogReceiverEndpointFactory kinesisReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
+                                                                            final ObjectMapper objectMapper,
+                                                                            final KinesisClient kinesisClient,
+                                                                            final ApplicationEventPublisher eventPublisher) {
         return new KinesisMessageLogReceiverEndpointFactory(interceptorRegistry, kinesisClient, objectMapper, eventPublisher);
     }
 

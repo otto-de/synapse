@@ -7,8 +7,8 @@ import de.otto.synapse.configuration.aws.TestMessageInterceptor;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.testsupport.KinesisStreamSetupUtils;
-import de.otto.synapse.testsupport.TestStreamSource;
+import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
+import de.otto.synapse.testsupport.KinesisTestStreamSource;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
@@ -86,7 +86,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
 
     @PostConstruct
     public void setup() throws IOException {
-        KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
+        KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
 
         /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
            when initializing it via @EnableEventSource
@@ -232,8 +232,8 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
         assertThat(next.shards(), hasSize(EXPECTED_NUMBER_OF_SHARDS));
     }
 
-    private TestStreamSource writeToStream(String filename) {
-        TestStreamSource streamSource = new TestStreamSource(kinesisClient, TEST_CHANNEL, filename);
+    private KinesisTestStreamSource writeToStream(String filename) {
+        KinesisTestStreamSource streamSource = new KinesisTestStreamSource(kinesisClient, TEST_CHANNEL, filename);
         streamSource.writeToStream();
         return streamSource;
     }

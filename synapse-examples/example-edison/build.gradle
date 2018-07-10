@@ -22,7 +22,7 @@ dependencies {
     compile project(':synapse-aws:')
     compile project(':synapse-core:')
     compile project(':synapse-edison:')
-    compile "de.otto.edison:edison-aws-s3:0.2.3"
+    compile "de.otto.edison:edison-aws-s3:${edisonAwsVersion}"
     compile "software.amazon.awssdk:kinesis:${awsSdkVersion}"
 
     compile("org.springframework.boot:spring-boot-starter-web") {

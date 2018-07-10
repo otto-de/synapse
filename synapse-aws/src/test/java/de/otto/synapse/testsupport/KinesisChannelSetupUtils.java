@@ -5,11 +5,11 @@ import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.util.List;
 
-public class KinesisStreamSetupUtils {
+public class KinesisChannelSetupUtils {
 
     private static final int MAX_RETRIES = 10;
 
-    static boolean doesStreamExist(KinesisClient kinesisClient, String channelName, String from) {
+    static boolean doesChannelExist(KinesisClient kinesisClient, String channelName, String from) {
         ListStreamsRequest.Builder builder = ListStreamsRequest.builder().exclusiveStartStreamName(from);
         if (from != null) {
             builder.exclusiveStartStreamName(from);
@@ -19,13 +19,13 @@ public class KinesisStreamSetupUtils {
         if (streamNames.stream().anyMatch(channelName::equals)) {
             return true;
         } else if (listStreamsResponse.hasMoreStreams()) {
-            return doesStreamExist(kinesisClient, channelName, streamNames.get(streamNames.size() - 1));
+            return doesChannelExist(kinesisClient, channelName, streamNames.get(streamNames.size() - 1));
         }
         return false;
     }
 
-    public static void createStreamIfNotExists(KinesisClient kinesisClient, String channelName, int numberOfShards) {
-        if (!doesStreamExist(kinesisClient, channelName, null)) {
+    public static void createChannelIfNotExists(KinesisClient kinesisClient, String channelName, int numberOfShards) {
+        if (!doesChannelExist(kinesisClient, channelName, null)) {
             kinesisClient.createStream(CreateStreamRequest.builder()
                     .streamName(channelName)
                     .shardCount(numberOfShards)

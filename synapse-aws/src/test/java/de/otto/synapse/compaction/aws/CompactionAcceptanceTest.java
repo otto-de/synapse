@@ -5,9 +5,9 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.testsupport.KinesisStreamSetupUtils;
+import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
 import de.otto.synapse.state.StateRepository;
-import de.otto.synapse.testsupport.TestStreamSource;
+import de.otto.synapse.testsupport.KinesisTestStreamSource;
 import net.minidev.json.JSONArray;
 import org.junit.After;
 import org.junit.Before;
@@ -73,7 +73,7 @@ public class CompactionAcceptanceTest {
 
     @Before
     public void setup() throws IOException {
-        KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, INTEGRATION_TEST_STREAM, 2);
+        KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, INTEGRATION_TEST_STREAM, 2);
         deleteSnapshotFilesFromTemp();
         s3Service.createBucket(INTEGRATION_TEST_BUCKET);
         s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
@@ -158,8 +158,8 @@ public class CompactionAcceptanceTest {
         assertThat(jsonArray.isEmpty(), is(true));
     }
 
-    private TestStreamSource writeToStream(String channelName, String fileName) {
-        TestStreamSource streamSource = new TestStreamSource(kinesisClient, channelName, fileName);
+    private KinesisTestStreamSource writeToStream(String channelName, String fileName) {
+        KinesisTestStreamSource streamSource = new KinesisTestStreamSource(kinesisClient, channelName, fileName);
         streamSource.writeToStream();
         return streamSource;
     }
