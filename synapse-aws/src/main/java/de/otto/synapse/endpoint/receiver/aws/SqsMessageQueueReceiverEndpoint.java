@@ -47,7 +47,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
         super(channelName, objectMapper, eventPublisher);
         this.sqsAsyncClient = sqsAsyncClient;
         try {
-            queueUrl = sqsAsyncClient.getQueueUrl(GetQueueUrlRequest
+            this.queueUrl = sqsAsyncClient.getQueueUrl(GetQueueUrlRequest
                     .builder()
                     .queueName(channelName)
                     .build())
