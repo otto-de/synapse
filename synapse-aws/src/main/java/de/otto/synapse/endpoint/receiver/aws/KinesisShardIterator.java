@@ -1,6 +1,7 @@
 package de.otto.synapse.endpoint.receiver.aws;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ShardPosition;
 import org.slf4j.Logger;
@@ -16,6 +17,7 @@ import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
 import javax.annotation.Nonnull;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
@@ -187,7 +189,10 @@ public class KinesisShardIterator {
         @Override
         public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable t) {
 
-            warn(LOG, ImmutableMap.of("retryCount", context.getRetryCount(), "errorMessage", t.getMessage()), "fail to iterate on shard", null);
+            warn(
+                    LOG,
+                    ImmutableMap.of("retryCount", context.getRetryCount(), "errorMessage", Strings.nullToEmpty(t.getMessage())),
+                    "fail to iterate on shard", null);
         }
     }
 

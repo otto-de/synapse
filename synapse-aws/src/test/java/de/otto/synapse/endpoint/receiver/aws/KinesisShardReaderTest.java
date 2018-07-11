@@ -24,6 +24,7 @@ import static java.time.Duration.ofMillis;
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.SECONDS;
+import static java.util.Collections.emptyList;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.hamcrest.Matchers.hasSize;
@@ -104,7 +105,7 @@ public class KinesisShardReaderTest {
         final Instant future = now.plus(1, SECONDS);
         // given
         final GetRecordsResponse response = GetRecordsResponse.builder()
-                .records()
+                .records(emptyList())
                 .nextShardIterator("nextShardIterator")
                 .millisBehindLatest(1234L)
                 .build();
@@ -176,7 +177,7 @@ public class KinesisShardReaderTest {
     public void shouldReturnPositionWhenThereAreNoRecords() throws ExecutionException, InterruptedException {
         // given
         GetRecordsResponse response = GetRecordsResponse.builder()
-                .records()
+                .records(emptyList())
                 .nextShardIterator("nextShardIterator")
                 .millisBehindLatest(1234L)
                 .build();

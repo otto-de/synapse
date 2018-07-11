@@ -12,8 +12,8 @@ import de.otto.synapse.endpoint.receiver.aws.KinesisShardIterator;
 import de.otto.synapse.eventsource.DefaultEventSource;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.testsupport.KinesisStreamSetupUtils;
-import de.otto.synapse.testsupport.TestStreamSource;
+import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
+import de.otto.synapse.testsupport.KinesisTestStreamSource;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Test;
@@ -100,7 +100,7 @@ public class KinesisEventSourceIntegrationTest {
 
     @PostConstruct
     public void setup() throws IOException {
-        KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
+        KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
         deleteSnapshotFilesFromTemp();
         s3Service.createBucket(INTEGRATION_TEST_BUCKET);
         s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
@@ -201,8 +201,8 @@ public class KinesisEventSourceIntegrationTest {
         assertThat(message.getPayload(), is(nullValue()));
     }
 
-    private TestStreamSource writeToStream(String filename) {
-        TestStreamSource streamSource = new TestStreamSource(kinesisClient, TEST_CHANNEL, filename);
+    private KinesisTestStreamSource writeToStream(String filename) {
+        KinesisTestStreamSource streamSource = new KinesisTestStreamSource(kinesisClient, TEST_CHANNEL, filename);
         streamSource.writeToStream();
         return streamSource;
     }

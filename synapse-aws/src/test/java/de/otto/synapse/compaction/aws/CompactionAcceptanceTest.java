@@ -5,9 +5,9 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.testsupport.KinesisStreamSetupUtils;
 import de.otto.synapse.state.StateRepository;
-import de.otto.synapse.testsupport.TestStreamSource;
+import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
+import de.otto.synapse.testsupport.KinesisTestStreamSource;
 import net.minidev.json.JSONArray;
 import org.junit.After;
 import org.junit.Before;
@@ -18,8 +18,9 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
-import software.amazon.awssdk.core.sync.ResponseInputStream;
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordRequest;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -43,10 +44,13 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
-@ActiveProfiles("test")
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
 @SpringBootTest(classes = CompactionAcceptanceTest.class)
+@TestPropertySource(properties = {
+        "synapse.snapshot.bucket-name=de-otto-promo-compaction-test-snapshots",
+        "synapse.compaction.enabled=true"}
+)
 public class CompactionAcceptanceTest {
 
     private static final String INTEGRATION_TEST_STREAM = "promo-compaction-test";
@@ -73,7 +77,7 @@ public class CompactionAcceptanceTest {
 
     @Before
     public void setup() throws IOException {
-        KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, INTEGRATION_TEST_STREAM, 2);
+        KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, INTEGRATION_TEST_STREAM, 2);
         deleteSnapshotFilesFromTemp();
         s3Service.createBucket(INTEGRATION_TEST_BUCKET);
         s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
@@ -158,8 +162,8 @@ public class CompactionAcceptanceTest {
         assertThat(jsonArray.isEmpty(), is(true));
     }
 
-    private TestStreamSource writeToStream(String channelName, String fileName) {
-        TestStreamSource streamSource = new TestStreamSource(kinesisClient, channelName, fileName);
+    private KinesisTestStreamSource writeToStream(String channelName, String fileName) {
+        KinesisTestStreamSource streamSource = new KinesisTestStreamSource(kinesisClient, channelName, fileName);
         streamSource.writeToStream();
         return streamSource;
     }

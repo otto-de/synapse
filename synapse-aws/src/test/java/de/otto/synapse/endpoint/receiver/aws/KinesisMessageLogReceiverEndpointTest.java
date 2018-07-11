@@ -38,6 +38,7 @@ import static de.otto.synapse.endpoint.receiver.aws.KinesisShardIterator.POISON_
 import static de.otto.synapse.info.MessageReceiverStatus.*;
 import static java.time.Duration.ZERO;
 import static java.time.Duration.ofMillis;
+import static java.util.Collections.emptyList;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
@@ -444,7 +445,7 @@ public class KinesisMessageLogReceiverEndpointTest {
                 .thenReturn(GetShardIteratorResponse.builder().shardIterator(shardName + "-iter").build());
 
         GetRecordsResponse response0 = GetRecordsResponse.builder()
-                .records()
+                .records(emptyList())
                 .millisBehindLatest(555L)
                 .nextShardIterator(shardName + "-pos1")
                 .build();
@@ -462,8 +463,8 @@ public class KinesisMessageLogReceiverEndpointTest {
                 .nextShardIterator(shardName + "-pos3")
                 .build();
         GetRecordsResponse response3 = withPoison
-                ? GetRecordsResponse.builder().records().millisBehindLatest(0L).nextShardIterator(POISON_SHARD_ITER).build()
-                : GetRecordsResponse.builder().records().millisBehindLatest(0L).nextShardIterator(shardName + "-pos4").build();
+                ? GetRecordsResponse.builder().records(emptyList()).millisBehindLatest(0L).nextShardIterator(POISON_SHARD_ITER).build()
+                : GetRecordsResponse.builder().records(emptyList()).millisBehindLatest(0L).nextShardIterator(shardName + "-pos4").build();
 
         when(kinesisClient.getRecords(argThat((GetRecordsRequest req) -> isFailingShardIter(shardName, req))))
                 .thenThrow(new RuntimeException("boo!"));

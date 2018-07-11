@@ -2,13 +2,13 @@ package de.otto.synapse.messagestore.aws;
 
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.testsupport.KinesisStreamSetupUtils;
+import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
 import de.otto.synapse.compaction.aws.CompactionService;
 import de.otto.synapse.compaction.aws.SnapshotReadService;
 import de.otto.synapse.compaction.aws.SnapshotWriteService;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.state.StateRepository;
-import de.otto.synapse.testsupport.TestStreamSource;
+import de.otto.synapse.testsupport.KinesisTestStreamSource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,6 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -36,15 +37,17 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
-@ActiveProfiles("test")
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
 @SpringBootTest(classes = SnapshotMessageStoreAcceptanceTest.class)
+@TestPropertySource(properties = {
+        "synapse.snapshot.bucket-name=de-otto-promo-compaction-test-snapshots",
+        "synapse.compaction.enabled=true"}
+)
 public class SnapshotMessageStoreAcceptanceTest {
 
     private static final String INTEGRATION_TEST_STREAM = "promo-compaction-test";
     private static final String INTEGRATION_TEST_BUCKET = "de-otto-promo-compaction-test-snapshots";
-    private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.wrap(new byte[]{});
 
     @Autowired
     private KinesisClient kinesisClient;
@@ -72,7 +75,7 @@ public class SnapshotMessageStoreAcceptanceTest {
 
     @Before
     public void setup() throws IOException {
-        KinesisStreamSetupUtils.createStreamIfNotExists(kinesisClient, INTEGRATION_TEST_STREAM, 2);
+        KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, INTEGRATION_TEST_STREAM, 2);
         deleteSnapshotFilesFromTemp();
         s3Service.createBucket(INTEGRATION_TEST_BUCKET);
         s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
@@ -104,8 +107,8 @@ public class SnapshotMessageStoreAcceptanceTest {
         snapshotWriteService.writeSnapshot(INTEGRATION_TEST_STREAM, startSequenceNumbers, stateRepository);
     }
 
-    private TestStreamSource writeToStream(String channelName, String fileName) {
-        TestStreamSource streamSource = new TestStreamSource(kinesisClient, channelName, fileName);
+    private KinesisTestStreamSource writeToStream(String channelName, String fileName) {
+        KinesisTestStreamSource streamSource = new KinesisTestStreamSource(kinesisClient, channelName, fileName);
         streamSource.writeToStream();
         return streamSource;
     }

@@ -22,7 +22,7 @@ dependencies {
     compile project(':synapse-aws:')
     compile project(':synapse-core:')
     compile project(':synapse-edison:')
-    compile "de.otto.edison:edison-aws-s3:0.2.3"
+    compile "de.otto.edison:edison-aws-s3:${edisonAwsVersion}"
     compile "software.amazon.awssdk:kinesis:${awsSdkVersion}"
 
     compile("org.springframework.boot:spring-boot-starter-web") {
@@ -38,7 +38,7 @@ dependencies {
 
     testImplementation "org.springframework.boot:spring-boot-test"
     testImplementation "org.springframework:spring-test:4.3.12.RELEASE"
-    testImplementation "com.jayway.awaitility:awaitility:1.7.0"
+    testImplementation "org.awaitility:awaitility:3.0.0"
 }
 
 // Define the main class for the application

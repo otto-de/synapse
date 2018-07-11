@@ -29,9 +29,9 @@ import static de.otto.synapse.channel.ShardPosition.fromPosition;
  * input file specified in the constructor and emits them by calling String.getBytes() into the
  * stream defined in the KinesisConnectorConfiguration.
  */
-public class TestStreamSource {
+public class KinesisTestStreamSource {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TestStreamSource.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KinesisTestStreamSource.class);
 
     private final String channelName;
     private final KinesisClient kinesisClient;
@@ -42,11 +42,11 @@ public class TestStreamSource {
     private final Map<String, String> mapShardIdToLastWrittenSequence = new HashMap<>();
 
     /**
-     * Creates a new TestStreamSource.
+     * Creates a new KinesisTestStreamSource.
      *
      * @param inputFile File containing record data to emit on each line
      */
-    public TestStreamSource(KinesisClient kinesisClient, String channelName, String inputFile) {
+    public KinesisTestStreamSource(KinesisClient kinesisClient, String channelName, String inputFile) {
         this.kinesisClient = kinesisClient;
         this.inputFile = inputFile;
         this.objectMapper = new ObjectMapper();
@@ -89,7 +89,7 @@ public class TestStreamSource {
     /**
      * Process the input file and send PutRecordRequests to Amazon Kinesis.
      * <p>
-     * This function serves to Isolate TestStreamSource logic so subclasses
+     * This function serves to Isolate KinesisTestStreamSource logic so subclasses
      * can process input files differently.
      *
      * @param inputStream the input stream to process
@@ -102,10 +102,10 @@ public class TestStreamSource {
             List<PutRecordsRequestEntry> records = new ArrayList<>(100);
 
             while ((line = br.readLine()) != null) {
-                KinesisMessageModel kinesisMessageModel = objectMapper.readValue(line, KinesisMessageModel.class);
+                TestMessageModel testMessageModel = objectMapper.readValue(line, TestMessageModel.class);
                 records.add(PutRecordsRequestEntry.builder()
                         .data(ByteBuffer.wrap(line.getBytes()))
-                        .partitionKey(Integer.toString(kinesisMessageModel.getUserid()))
+                        .partitionKey(Integer.toString(testMessageModel.getUserid()))
                         .build());
                 lines++;
                 if (lines % 100 == 0) {

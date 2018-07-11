@@ -10,6 +10,15 @@ import de.otto.synapse.message.Message;
  * <p>
  *     <img src="http://www.enterpriseintegrationpatterns.com/img/MessageEndpointSolution.gif" alt="Message Endpoint">
  * </p>
+ * <p>
+ *     {@code MessageQueueReceiverEndpoints} are Message Endpoints for Point-to-Point Channels:
+ * </p>
+ * <p>
+ *     <img src="http://www.enterpriseintegrationpatterns.com/img/PointToPointSolution.gif" alt="Point-to-Point Channel">
+ * </p>
+ *
+ * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageEndpoint.html">EIP: Message Endpoint</a>
+ * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/PointToPointChannel.html">EIP: Point-to-Point Channel</a>
  */
 public interface MessageQueueReceiverEndpoint extends MessageReceiverEndpoint {
 
@@ -30,5 +39,10 @@ public interface MessageQueueReceiverEndpoint extends MessageReceiverEndpoint {
      *
      */
     void consume();
+
+    /**
+     * Stops consumption of messages and shuts down the {@code MessageQueueReceiverEndpoint}.
+     */
+    void stop();
 
 }

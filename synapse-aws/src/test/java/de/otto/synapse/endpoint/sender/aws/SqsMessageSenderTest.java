@@ -50,7 +50,7 @@ public class SqsMessageSenderTest {
     @Test
     public void shouldSendEvent() throws Exception {
         // given
-        final Message<ExampleJsonObject> message = message("someKey", new ExampleJsonObject("banana"));
+        final Message<ExampleJsonObject> message = message("", new ExampleJsonObject("banana"));
 
         when(sqsAsyncClient.sendMessage(any(SendMessageRequest.class))).thenReturn(completedFuture(SendMessageResponse.builder()
                 .sequenceNumber("42")
@@ -65,16 +65,14 @@ public class SqsMessageSenderTest {
         final SendMessageRequest caputuredRequest = requestArgumentCaptor.getValue();
 
         assertThat(caputuredRequest.queueUrl(), is("https://example.com/test"));
-        assertThat(caputuredRequest.messageGroupId(), is("test"));
         assertThat(caputuredRequest.messageBody(), is("{\"value\":\"banana\"}"));
-        assertThat(caputuredRequest.messageAttributes().get("key").stringValue(), is("someKey"));
 
     }
 
     @Test
     public void shouldInterceptMessages() throws IOException {
         // given
-        final Message<ExampleJsonObject> message = message("someKey", new ExampleJsonObject("banana"));
+        final Message<ExampleJsonObject> message = message("", new ExampleJsonObject("banana"));
 
         when(sqsAsyncClient.sendMessage(any(SendMessageRequest.class))).thenReturn(completedFuture(SendMessageResponse.builder()
                 .sequenceNumber("42")
@@ -98,7 +96,7 @@ public class SqsMessageSenderTest {
     @Test
     public void shouldNotSendMessagesDroppedByInterceptor() throws IOException {
         // given
-        final Message<ExampleJsonObject> message = message("someKey", new ExampleJsonObject("banana"));
+        final Message<ExampleJsonObject> message = message("", new ExampleJsonObject("banana"));
 
         final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
         registry.register(allChannelsWith((m) -> null));
@@ -182,7 +180,7 @@ public class SqsMessageSenderTest {
                 .build()));
 
         //when
-        sqsMessageSender.send(message("someKey", null));
+        sqsMessageSender.send(message("", null));
 
         //then
         verify(sqsAsyncClient).sendMessage(requestArgumentCaptor.capture());

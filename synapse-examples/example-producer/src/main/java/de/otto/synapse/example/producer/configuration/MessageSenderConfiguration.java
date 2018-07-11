@@ -30,9 +30,9 @@ public class MessageSenderConfiguration implements MessageEndpointConfigurer {
     }
 
     @Bean
-    public MessageSenderEndpoint productMessageSender(final MessageSenderEndpointFactory messageSenderFactory,
+    public MessageSenderEndpoint productMessageSender(final MessageSenderEndpointFactory inMemoryMessageSenderEndpointFactory,
                                                       final MyServiceProperties properties) {
-        return messageSenderFactory.create(properties.getProductChannelName());
+        return inMemoryMessageSenderEndpointFactory.create(properties.getProductChannelName());
 
     }
 }

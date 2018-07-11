@@ -1,10 +1,10 @@
 package de.otto.synapse.example.producer;
 
-import com.jayway.awaitility.Awaitility;
 import de.otto.synapse.annotation.EnableEventSource;
 import de.otto.synapse.annotation.EventSourceConsumer;
 import de.otto.synapse.example.producer.payload.ProductPayload;
 import de.otto.synapse.message.Message;
+import org.awaitility.Awaitility;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

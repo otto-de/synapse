@@ -13,8 +13,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import software.amazon.awssdk.core.auth.AwsCredentialsProvider;
-import software.amazon.awssdk.core.regions.Region;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 
 @Configuration
@@ -43,7 +43,7 @@ public class KinesisAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public MessageSenderEndpointFactory messageSenderEndpointFactory(final MessageInterceptorRegistry registry,
+    public MessageSenderEndpointFactory kinesisSenderEndpointFactory(final MessageInterceptorRegistry registry,
                                                                      final ObjectMapper objectMapper,
                                                                      final KinesisClient kinesisClient) {
         return new KinesisMessageSenderEndpointFactory(registry, objectMapper, kinesisClient);
