@@ -48,6 +48,11 @@ public final class ChannelDurationBehind implements Serializable {
                 .orElse(MAX_DURATION);
     }
 
+    @Nonnull
+    public ImmutableMap<String, Duration> getShardDurationsBehind() {
+        return ImmutableMap.copyOf(shardDurationBehind);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
