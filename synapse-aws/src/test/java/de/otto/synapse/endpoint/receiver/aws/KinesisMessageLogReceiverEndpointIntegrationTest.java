@@ -10,6 +10,7 @@ import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
 import de.otto.synapse.testsupport.KinesisTestStreamSource;
 import org.awaitility.Awaitility;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,7 +61,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET = 10;
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET = 10;
     private static final int EXPECTED_NUMBER_OF_SHARDS = 2;
-    private static final String TEST_CHANNEL = "synapse-test-channel-2";
+    private static final String TEST_CHANNEL = "kinesis-ml-test-channel";
 
     @Autowired
     private KinesisClient kinesisClient;
@@ -81,12 +82,6 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
     @Before
     public void before() {
         messages.clear();
-    }
-
-    @PostConstruct
-    public void setup() throws IOException {
-        KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
-
         /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
            when initializing it via @EnableEventSource
          */
@@ -96,6 +91,17 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
             messages.add(message);
             threads.add(Thread.currentThread().getName());
         }));
+
+    }
+
+    @After
+    public void after() {
+        kinesisMessageLog.stop();
+    }
+
+    @PostConstruct
+    public void setup() throws IOException {
+        KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
     }
 
     @Test

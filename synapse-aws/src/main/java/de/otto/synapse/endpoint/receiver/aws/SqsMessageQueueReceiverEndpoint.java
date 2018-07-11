@@ -94,15 +94,18 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
                     "rejected with an error response for some reason: " + e.getMessage(), e);
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
-
         }
     }
 
     private void process(ReceiveMessageResponse response) {
-        LOG.debug("Received {} messages from SQS.", response.messages().size());
-        response
-                .messages()
-                .forEach(this::process);
+        if (response.messages() != null) {
+            LOG.debug("Received {} messages from SQS.", response.messages().size());
+            response
+                    .messages()
+                    .forEach(this::process);
+        } else {
+            LOG.warn("No messages in ReceiveMessageResponse: " + response.toString());
+        }
     }
 
     private void process(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {

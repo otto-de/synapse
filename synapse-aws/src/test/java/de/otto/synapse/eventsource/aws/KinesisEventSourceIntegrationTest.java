@@ -15,6 +15,7 @@ import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
 import de.otto.synapse.testsupport.KinesisTestStreamSource;
 import org.awaitility.Awaitility;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -67,7 +68,7 @@ public class KinesisEventSourceIntegrationTest {
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET = 10;
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET = 10;
     private static final int EXPECTED_NUMBER_OF_SHARDS = 1;
-    private static final String TEST_CHANNEL = "synapse-test-channel";
+    private static final String TEST_CHANNEL = "kinesis-es-test-channel";
     // from application-test.yml:
     private static final String INTEGRATION_TEST_BUCKET = "de-otto-promo-compaction-test-snapshots";
 
@@ -96,14 +97,6 @@ public class KinesisEventSourceIntegrationTest {
     @Before
     public void before() {
         messages.clear();
-    }
-
-    @PostConstruct
-    public void setup() throws IOException {
-        KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
-        deleteSnapshotFilesFromTemp();
-        s3Service.createBucket(INTEGRATION_TEST_BUCKET);
-        s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
 
         /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
            when initializing it via @EnableEventSource
@@ -112,6 +105,19 @@ public class KinesisEventSourceIntegrationTest {
         kinesisMessageLog.registerInterceptorsFrom(messageInterceptorRegistry);
         this.integrationEventSource = new DefaultEventSource(emptyMessageStore(), kinesisMessageLog);
         this.integrationEventSource.register(MessageConsumer.of(".*", String.class, (message) -> messages.add(message)));
+    }
+
+    @After
+    public void after() {
+        integrationEventSource.stop();
+    }
+
+    @PostConstruct
+    public void setup() throws IOException {
+        KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
+        deleteSnapshotFilesFromTemp();
+        s3Service.createBucket(INTEGRATION_TEST_BUCKET);
+        s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
     }
 
     @Test

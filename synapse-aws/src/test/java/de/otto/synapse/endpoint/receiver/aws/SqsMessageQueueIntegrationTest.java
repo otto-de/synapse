@@ -9,6 +9,7 @@ import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.SqsChannelSetupUtils;
 import de.otto.synapse.testsupport.SqsTestStreamSource;
 import org.awaitility.Duration;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,7 +44,7 @@ public class SqsMessageQueueIntegrationTest {
     private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.wrap(new byte[]{});
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET = 10;
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET = 10;
-    private static final String TEST_CHANNEL = "synapse-test-channel-2";
+    private static final String TEST_CHANNEL = "sqs-test-channel";
 
     @Autowired
     private SQSAsyncClient sqsAsyncClient;
@@ -64,12 +65,6 @@ public class SqsMessageQueueIntegrationTest {
     @Before
     public void before() {
         messages.clear();
-    }
-
-    @PostConstruct
-    public void setup() throws IOException {
-        SqsChannelSetupUtils.createChannelIfNotExists(sqsAsyncClient, TEST_CHANNEL);
-
         /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
            when initializing it via @EnableEventSource
          */
@@ -79,6 +74,16 @@ public class SqsMessageQueueIntegrationTest {
             messages.add(message);
             threads.add(Thread.currentThread().getName());
         }));
+    }
+
+    @After
+    public void after() {
+        sqsMessageQueue.stop();
+    }
+
+    @PostConstruct
+    public void setup() throws IOException {
+        SqsChannelSetupUtils.createChannelIfNotExists(sqsAsyncClient, TEST_CHANNEL);
     }
 
     @Test
