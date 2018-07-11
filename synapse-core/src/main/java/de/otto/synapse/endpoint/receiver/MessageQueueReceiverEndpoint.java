@@ -4,6 +4,8 @@ import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Message;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * Receiver-side {@code MessageEndpoint endpoint} of a Message Channel with Queue or FIFO semantics.
  *
@@ -38,7 +40,7 @@ public interface MessageQueueReceiverEndpoint extends MessageReceiverEndpoint {
      * </p>
      *
      */
-    void consume();
+    CompletableFuture<Void> consume();
 
     /**
      * Stops consumption of messages and shuts down the {@code MessageQueueReceiverEndpoint}.

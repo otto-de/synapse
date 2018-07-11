@@ -6,7 +6,6 @@ import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
-import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.sqs.SQSAsyncClient;
 import software.amazon.awssdk.services.sqs.model.*;
 
@@ -59,20 +58,21 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
     }
 
     @Override
-    public void consume() {
+    public CompletableFuture<Void> consume() {
         getMessageDispatcher().getAll().forEach(messageConsumer -> {
             if (!messageConsumer.keyPattern().pattern().equals(".*")) {
                 // TODO: key als message attribute o.ä. senden - bug in localstack
                 throw new IllegalStateException("Unable to select messages using key pattern");
             }
         });
-        CompletableFuture.<Void>supplyAsync(() -> {
+        CompletableFuture<Void> consumerFuture = CompletableFuture.<Void>supplyAsync(() -> {
             do {
                 LOG.debug("Sending receiveMessage request...");
                 receiveAndProcess();
             } while (!stopSignal.get());
             return null;
         });
+        return consumerFuture;
     }
 
     private void receiveAndProcess() {
@@ -82,77 +82,44 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
                     .visibilityTimeout(VISIBILITY_TIMEOUT)
                     .waitTimeSeconds(WAIT_TIME_SECONDS)
                     .build()
-            ).thenAccept(this::process).get();
-        } catch (final SdkClientException e) {
-            LOG.error("Caught an SdkClientException, which means " +
-                    "the client encountered a serious internal problem while " +
-                    "trying to communicate with Amazon SQS, such as not " +
-                    "being able to access the network: " + e.getMessage(), e);
-        } catch (final SQSException e) {
-            LOG.error("Caught an SQSException, which means " +
-                    "your request made it to Amazon SQS, but was " +
-                    "rejected with an error response for some reason: " + e.getMessage(), e);
+            ).thenAccept(this::processResponse).get();
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
+            throw new RuntimeException(e);
         }
     }
 
-    private void process(ReceiveMessageResponse response) {
-        if (response.messages() != null) {
-            LOG.debug("Received {} messages from SQS.", response.messages().size());
-            response
-                    .messages()
-                    .forEach(this::process);
-        } else {
-            LOG.warn("No messages in ReceiveMessageResponse: " + response.toString());
-        }
+    private void processResponse(ReceiveMessageResponse response) {
+        LOG.debug("Received {} messages from SQS.", response.messages().size());
+        response
+                .messages()
+                .forEach(this::processMessage);
     }
 
-    private void process(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
+    private void processMessage(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
+        LOG.debug("Processing message from channel={}: messageId={} receiptHandle={}, attributes={}, messageAttributes={}", getChannelName(), sqsMessage.messageId(), sqsMessage.receiptHandle(), sqsMessage.attributesAsStrings());
+        final Message<String> message = message("", sqsMessage.body());
+
+        final Message<String> interceptedMessage = intercept(message);
+        if (interceptedMessage != null) {
+            LOG.debug("Dispatching message " + interceptedMessage);
+            getMessageDispatcher().accept(interceptedMessage);
+        }
+        deleteMessage(sqsMessage);
+    }
+
+    private void deleteMessage(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
         try {
-            LOG.debug("Processing message from channel={}: messageId={} receiptHandle={}, attributes={}, messageAttributes={}", getChannelName(), sqsMessage.messageId(), sqsMessage.receiptHandle(), sqsMessage.attributesAsStrings());
-/*            final MessageAttributeValue key = sqsMessage.messageAttributes().get("key");
-            final Message<String> message = key != null
-                    ? message(key.stringValue(), sqsMessage.body())
-                    : message("", sqsMessage.body());
-*/
-            final Message<String> message = message("", sqsMessage.body());
-
-            final Message<String> interceptedMessage = intercept(message);
-            if (interceptedMessage != null) {
-                LOG.debug("Dispatching message " + message);
-                getMessageDispatcher().accept(message);
-            }
             LOG.debug("Deleting message with receiptHandle={}", sqsMessage.receiptHandle());
-        } catch (RuntimeException e) {
-            // TODO: ein Error-Channel wäre hier eine feine Sache!
-            // TODO: StatusDetailIndicator -> warn
-            LOG.error(format("Error processing message %s: %s. Message will be ignored.", sqsMessage, e.getMessage()), e);
-        }
-        delete(sqsMessage);
-    }
-
-    private void delete(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
-        try {
             sqsAsyncClient.deleteMessage(
                     DeleteMessageRequest.builder()
                             .queueUrl(queueUrl)
                             .receiptHandle(sqsMessage.receiptHandle())
                             .build()
             );
-        } catch (final InvalidIdFormatException e) {
-            LOG.error("Error deleting message after processing it: The receipt handle isn't valid for the current version. " + e.getMessage(), e);
-        } catch (final ReceiptHandleIsInvalidException e) {
-            LOG.error("Error deleting message after processing it: The receipt handle provided isn't valid. " + e.getMessage(), e);
-        } catch (final SdkClientException e) {
-            LOG.error("Caught an SdkClientException, which means " +
-                    "the client encountered a serious internal problem while " +
-                    "trying to communicate with Amazon SQS, such as not " +
-                    "being able to access the network: " + e.getMessage(), e);
-        } catch (final SQSException e) {
-            LOG.error("Caught an SQSException, which means " +
-                    "your request made it to Amazon SQS, but was " +
-                    "rejected with an error response for some reason: " + e.getMessage(), e);
+        } catch (final RuntimeException e) {
+            LOG.error("Error deleting message: " + e.getMessage(), e);
+            throw e;
         }
     }
 
