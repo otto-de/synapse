@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.7.1
+* Update dependency to edison-aws 0.4.1 which works with AWS SDK preview 10
+
 ## 0.7.0
 * Updated to AWS SDK preview 10
 * Added support for AWS SQS with SqsMessageSender and SqsMessageQueueReceiverEndpoint
