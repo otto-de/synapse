@@ -65,14 +65,13 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
                 throw new IllegalStateException("Unable to select messages using key pattern");
             }
         });
-        CompletableFuture<Void> consumerFuture = CompletableFuture.<Void>supplyAsync(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             do {
                 LOG.debug("Sending receiveMessage request...");
                 receiveAndProcess();
             } while (!stopSignal.get());
             return null;
         });
-        return consumerFuture;
     }
 
     private void receiveAndProcess() {
@@ -102,7 +101,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
 
         final Message<String> interceptedMessage = intercept(message);
         if (interceptedMessage != null) {
-            LOG.debug("Dispatching message " + interceptedMessage);
+            LOG.debug("Dispatching message {} ", interceptedMessage);
             getMessageDispatcher().accept(interceptedMessage);
         }
         deleteMessage(sqsMessage);

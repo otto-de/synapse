@@ -31,12 +31,12 @@ public class ExampleConfiguration implements MessageEndpointConfigurer {
 
     @Override
     public void configureMessageInterceptors(final MessageInterceptorRegistry registry) {
-        registry.register(receiverChannelsWith((m) -> {
-            LOG.info("[receiver] Intercepted message " + m);
+        registry.register(receiverChannelsWith(m -> {
+            LOG.info("[receiver] Intercepted message {}", m);
             return m;
         }));
         registry.register(senderChannelsWith((m) -> {
-            LOG.info("[sender] Intercepted message " + m);
+            LOG.info("[sender] Intercepted message {}", m);
             return m;
         }));
     }

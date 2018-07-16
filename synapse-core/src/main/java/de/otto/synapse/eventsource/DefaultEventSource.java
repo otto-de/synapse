@@ -31,7 +31,7 @@ public class DefaultEventSource extends AbstractEventSource {
     @Override
     public CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull Instant until) {
         return consumeMessageStore()
-                .thenCompose((messageLogStartPosition) -> getMessageLogReceiverEndpoint().consumeUntil(messageLogStartPosition, until))
+                .thenCompose(messageLogStartPosition -> getMessageLogReceiverEndpoint().consumeUntil(messageLogStartPosition, until))
                 .handle((channelPosition, throwable) -> {
                     if (throwable != null) {
                         LOG.error("Failed to start consuming from EventSource {}: {}. Closing MessageStore.", getChannelName(), throwable.getMessage(), throwable);

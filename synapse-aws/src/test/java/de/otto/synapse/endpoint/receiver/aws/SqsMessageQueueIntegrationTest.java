@@ -22,13 +22,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.sqs.SQSAsyncClient;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.synchronizedSet;
@@ -41,9 +38,7 @@ import static org.awaitility.Awaitility.await;
 @SpringBootTest(classes = SqsMessageQueueIntegrationTest.class)
 public class SqsMessageQueueIntegrationTest {
 
-    private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.wrap(new byte[]{});
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET = 10;
-    private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET = 10;
     private static final String TEST_CHANNEL = "sqs-test-channel";
 
     @Autowired
@@ -82,12 +77,12 @@ public class SqsMessageQueueIntegrationTest {
     }
 
     @PostConstruct
-    public void setup() throws IOException {
+    public void setup() {
         SqsChannelSetupUtils.createChannelIfNotExists(sqsAsyncClient, TEST_CHANNEL);
     }
 
     @Test
-    public void consumeDataFromSqs() throws ExecutionException, InterruptedException {
+    public void consumeDataFromSqs() {
         // when
         writeToStream("users_small1.txt");
 
@@ -101,7 +96,7 @@ public class SqsMessageQueueIntegrationTest {
     }
 
     @Test
-    public void registerInterceptorAndInterceptMessages() throws ExecutionException, InterruptedException {
+    public void registerInterceptorAndInterceptMessages() {
         // when
         testMessageInterceptor.clear();
         writeToStream("users_small1.txt");

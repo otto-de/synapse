@@ -40,7 +40,7 @@ public class ExampleConsumer {
                     .withColor(message.getPayload().getColor())
                     .build();
         });
-        LOG.info("Updated StateRepository using BananaPayload: " + valueOf(stateRepository.get(message.getKey()).orElse(null)));
+        LOG.info("Updated StateRepository using BananaPayload: {}", valueOf(stateRepository.get(message.getKey()).orElse(null)));
     }
 
     @EventSourceConsumer(
@@ -57,6 +57,6 @@ public class ExampleConsumer {
                     .withPrice(message.getPayload().getPrice())
                     .build();
         });
-        LOG.info("Updated StateRepository using ProductPayload: " + valueOf(stateRepository.get(message.getKey()).orElse(null)));
+        LOG.info("Updated StateRepository using ProductPayload: {}", valueOf(stateRepository.get(message.getKey()).orElse(null)));
     }
 }
