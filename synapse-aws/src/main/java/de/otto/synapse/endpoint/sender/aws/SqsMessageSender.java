@@ -3,6 +3,8 @@ package de.otto.synapse.endpoint.sender.aws;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.sqs.SQSAsyncClient;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
@@ -16,6 +18,8 @@ import static java.lang.String.valueOf;
 import static java.util.stream.Collectors.toList;
 
 public class SqsMessageSender extends AbstractMessageSenderEndpoint {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SqsMessageSender.class);
 
     private final String queueUrl;
     private final SQSAsyncClient sqsAsyncClient;
@@ -40,7 +44,11 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
                         .queueUrl(queueUrl)
                         .messageBody(message.getPayload())
                         .build()
-        );
+        ).whenComplete((result, exception) -> {
+            if (exception != null) {
+                LOG.error(String.format("Failed to send message %s", message), exception);
+            }
+        });
     }
 
     @Override
