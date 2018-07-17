@@ -44,7 +44,7 @@ public class InMemoryTestConfiguration {
     }
 
     @Bean
-    public MessageSenderEndpointFactory inMemoryMessageSenderEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
+    public MessageSenderEndpointFactory kinesisSenderEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
                                                                              final InMemoryChannels inMemoryChannels, final ObjectMapper objectMapper) {
         LOG.warn("Creating InMemoryMessageSenderFactory. This should only be used in tests");
         return new InMemoryMessageSenderFactory(interceptorRegistry, inMemoryChannels, objectMapper);
