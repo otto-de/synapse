@@ -16,7 +16,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import software.amazon.awssdk.services.sqs.SQSAsyncClient;
 import software.amazon.awssdk.services.sqs.model.*;
 
-import java.io.IOException;
 import java.util.stream.Stream;
 
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.allChannelsWith;
@@ -48,7 +47,7 @@ public class SqsMessageSenderTest {
     }
 
     @Test
-    public void shouldSendEvent() throws Exception {
+    public void shouldSendEvent() {
         // given
         final Message<ExampleJsonObject> message = message("", new ExampleJsonObject("banana"));
 
@@ -62,15 +61,15 @@ public class SqsMessageSenderTest {
 
         // then
         verify(sqsAsyncClient).sendMessage(requestArgumentCaptor.capture());
-        final SendMessageRequest caputuredRequest = requestArgumentCaptor.getValue();
+        final SendMessageRequest capturedRequest = requestArgumentCaptor.getValue();
 
-        assertThat(caputuredRequest.queueUrl(), is("https://example.com/test"));
-        assertThat(caputuredRequest.messageBody(), is("{\"value\":\"banana\"}"));
+        assertThat(capturedRequest.queueUrl(), is("https://example.com/test"));
+        assertThat(capturedRequest.messageBody(), is("{\"value\":\"banana\"}"));
 
     }
 
     @Test
-    public void shouldInterceptMessages() throws IOException {
+    public void shouldInterceptMessages() {
         // given
         final Message<ExampleJsonObject> message = message("", new ExampleJsonObject("banana"));
 
@@ -88,13 +87,13 @@ public class SqsMessageSenderTest {
 
         // then
         verify(sqsAsyncClient).sendMessage(requestArgumentCaptor.capture());
-        final SendMessageRequest caputuredRequest = requestArgumentCaptor.getValue();
+        final SendMessageRequest capturedRequest = requestArgumentCaptor.getValue();
 
-        assertThat(caputuredRequest.messageBody(), is("{\"value\":\"apple\"}"));
+        assertThat(capturedRequest.messageBody(), is("{\"value\":\"apple\"}"));
     }
 
     @Test
-    public void shouldNotSendMessagesDroppedByInterceptor() throws IOException {
+    public void shouldNotSendMessagesDroppedByInterceptor() {
         // given
         final Message<ExampleJsonObject> message = message("", new ExampleJsonObject("banana"));
 
@@ -111,7 +110,7 @@ public class SqsMessageSenderTest {
 
 
     @Test
-    public void shouldSendBatch() throws Exception {
+    public void shouldSendBatch() {
         // given
         ExampleJsonObject bananaObject = new ExampleJsonObject("banana");
         ExampleJsonObject appleObject = new ExampleJsonObject("apple");
@@ -131,15 +130,15 @@ public class SqsMessageSenderTest {
 
         // then
         verify(sqsAsyncClient).sendMessageBatch(batchRequestArgumentCaptor.capture());
-        final SendMessageBatchRequest caputuredRequest = batchRequestArgumentCaptor.getValue();
+        final SendMessageBatchRequest capturedRequest = batchRequestArgumentCaptor.getValue();
 
-        assertThat(caputuredRequest.entries(), hasSize(2));
-        assertThat(caputuredRequest.entries().get(0).messageBody(), is("{\"value\":\"banana\"}"));
-        assertThat(caputuredRequest.entries().get(1).messageBody(), is("{\"value\":\"apple\"}"));
+        assertThat(capturedRequest.entries(), hasSize(2));
+        assertThat(capturedRequest.entries().get(0).messageBody(), is("{\"value\":\"banana\"}"));
+        assertThat(capturedRequest.entries().get(1).messageBody(), is("{\"value\":\"apple\"}"));
     }
 
     @Test
-    public void shouldSendBatchAndInterceptMessages() throws Exception {
+    public void shouldSendBatchAndInterceptMessages() {
         // given
         ExampleJsonObject bananaObject = new ExampleJsonObject("banana");
         ExampleJsonObject appleObject = new ExampleJsonObject("apple");
@@ -164,11 +163,11 @@ public class SqsMessageSenderTest {
 
         // then
         verify(sqsAsyncClient).sendMessageBatch(batchRequestArgumentCaptor.capture());
-        final SendMessageBatchRequest caputuredRequest = batchRequestArgumentCaptor.getValue();
+        final SendMessageBatchRequest capturedRequest = batchRequestArgumentCaptor.getValue();
 
-        assertThat(caputuredRequest.entries(), hasSize(2));
-        assertThat(caputuredRequest.entries().get(0).messageBody(), is("{\"value\" : \"Lovely day for a Guinness\"}"));
-        assertThat(caputuredRequest.entries().get(1).messageBody(), is("{\"value\" : \"Lovely day for a Guinness\"}"));
+        assertThat(capturedRequest.entries(), hasSize(2));
+        assertThat(capturedRequest.entries().get(0).messageBody(), is("{\"value\" : \"Lovely day for a Guinness\"}"));
+        assertThat(capturedRequest.entries().get(1).messageBody(), is("{\"value\" : \"Lovely day for a Guinness\"}"));
     }
 
     @Test
