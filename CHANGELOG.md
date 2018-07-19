@@ -1,7 +1,10 @@
 # Release Notes
 
-## 0.7.2
+## 0.7.3
 * Fix bug in KinesisShardIterator. Read next record when there is no data near the part of the shard pointed to by the ShardIterator. See https://docs.aws.amazon.com/streams/latest/dev/troubleshooting-consumers.html#getrecords-returns-empty.
+
+## 0.7.2
+* Fix name for InMemoryMessageSenderFactory in InMemoryTestConfiguration to override kinesisSenderEndpointFactory in autowiring 
 
 ## 0.7.1
 * Update dependency to edison-aws 0.4.1 which works with AWS SDK preview 10
