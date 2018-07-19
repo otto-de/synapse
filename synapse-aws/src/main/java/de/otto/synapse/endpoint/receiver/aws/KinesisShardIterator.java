@@ -155,6 +155,7 @@ public class KinesisShardIterator {
                 .shardIterator(id)
                 .limit(fetchRecordLimit)
                 .build());
+        final String currentId = id;
         this.id = response.nextShardIterator();
         LOG.debug("next() with id " + this.id + " returned " + response.records().size() + " records");
         if (!response.records().isEmpty()) {
@@ -162,6 +163,8 @@ public class KinesisShardIterator {
                     shardPosition.shardName(),
                     response.records().get(response.records().size()-1).sequenceNumber()
             );
+        } else if (id != null && !Objects.equals(id, currentId)) {
+            return tryNext();
         }
         return response;
     }
