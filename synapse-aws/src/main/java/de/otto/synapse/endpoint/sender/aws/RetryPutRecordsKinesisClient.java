@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.kinesis.model.PutRecordsResultEntry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static de.otto.synapse.logging.LogHelper.trace;
 
@@ -45,7 +46,7 @@ public class RetryPutRecordsKinesisClient {
                 final PutRecordsResponse response = kinesisClient.putRecords(putRecordsRequest);
                 final long t2 = System.currentTimeMillis();
                 if (response.failedRecordCount() == 0) {
-                    trace(LOG, ImmutableMap.of("runtime", (t2 - t1)), "Write events to Kinesis", null);
+                    trace(LOG, ImmutableMap.of("runtime", (t2 - t1), "shardName", String.join(",", getShardIds(response.records()))), "Write events to Kinesis", null);
                     return;
                 } else {
                     LOG.warn("Failed to write events to Kinesis: {}", response.toString());
@@ -75,6 +76,10 @@ public class RetryPutRecordsKinesisClient {
             }
 
         }
+    }
+
+    private List<String> getShardIds(final List<PutRecordsResultEntry> records) {
+        return records.stream().map(e->e.shardId()).collect(Collectors.toList());
     }
 
     private long getRecordsSize(final List<PutRecordsRequestEntry> records) {
