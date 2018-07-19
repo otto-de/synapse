@@ -115,7 +115,7 @@ public class KinesisShardIterator {
                 if (stopSignal.get()) {
                     context.setExhaustedOnly();
                 }
-                return tryNext();
+                return tryNext(RETRY_MAX_ATTEMPTS);
             });
             return new KinesisShardResponse(channelName, shardPosition, recordsResponse, stopwatch.elapsed(MILLISECONDS));
         } catch (Throwable t) {
@@ -150,7 +150,7 @@ public class KinesisShardIterator {
         return shardRequestBuilder.build();
     }
 
-    private GetRecordsResponse tryNext() {
+    private GetRecordsResponse tryNext(int retries) {
         GetRecordsResponse response = kinesisClient.getRecords(GetRecordsRequest.builder()
                 .shardIterator(id)
                 .limit(fetchRecordLimit)
@@ -163,8 +163,8 @@ public class KinesisShardIterator {
                     shardPosition.shardName(),
                     response.records().get(response.records().size()-1).sequenceNumber()
             );
-        } else if (id != null && !Objects.equals(id, currentId)) {
-            return tryNext();
+        } else if (id != null && !Objects.equals(id, currentId) && retries > 0) {
+            return tryNext(--retries);
         }
         return response;
     }
