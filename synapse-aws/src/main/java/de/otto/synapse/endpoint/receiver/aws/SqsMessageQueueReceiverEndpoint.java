@@ -65,12 +65,11 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
                 throw new IllegalStateException("Unable to select messages using key pattern");
             }
         });
-        return CompletableFuture.supplyAsync(() -> {
+        return CompletableFuture.runAsync(() -> {
             do {
                 LOG.debug("Sending receiveMessage request...");
                 receiveAndProcess();
             } while (!stopSignal.get());
-            return null;
         });
     }
 
@@ -90,9 +89,10 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
 
     private void processResponse(ReceiveMessageResponse response) {
         LOG.debug("Received {} messages from SQS.", response.messages().size());
-        response
-                .messages()
-                .forEach(this::processMessage);
+        if (response.messages() != null) {
+            response.messages()
+                    .forEach(this::processMessage);
+        }
     }
 
     private void processMessage(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {

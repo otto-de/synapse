@@ -25,7 +25,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class SnapshotMessageStoreTest {
+public class S3SnapshotMessageStoreTest {
 
     private static final String STREAM_NAME = "test-stream";
 

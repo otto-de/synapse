@@ -2,12 +2,12 @@ package de.otto.synapse.messagestore.aws;
 
 import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
 import de.otto.synapse.compaction.aws.CompactionService;
 import de.otto.synapse.compaction.aws.SnapshotReadService;
 import de.otto.synapse.compaction.aws.SnapshotWriteService;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.state.StateRepository;
+import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
 import de.otto.synapse.testsupport.KinesisTestStreamSource;
 import org.junit.After;
 import org.junit.Before;
@@ -18,14 +18,11 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
-import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,21 +36,18 @@ import static org.junit.Assert.assertThat;
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
-@SpringBootTest(classes = SnapshotMessageStoreAcceptanceTest.class)
+@SpringBootTest(classes = S3SnapshotMessageStoreAcceptanceTest.class)
 @TestPropertySource(properties = {
         "synapse.snapshot.bucket-name=de-otto-promo-compaction-test-snapshots",
         "synapse.compaction.enabled=true"}
 )
-public class SnapshotMessageStoreAcceptanceTest {
+public class S3SnapshotMessageStoreAcceptanceTest {
 
     private static final String INTEGRATION_TEST_STREAM = "promo-compaction-test";
     private static final String INTEGRATION_TEST_BUCKET = "de-otto-promo-compaction-test-snapshots";
 
     @Autowired
     private KinesisClient kinesisClient;
-
-    @Autowired
-    private S3Client s3Client;
 
     @Autowired
     private SnapshotWriteService snapshotWriteService;
@@ -79,10 +73,6 @@ public class SnapshotMessageStoreAcceptanceTest {
         deleteSnapshotFilesFromTemp();
         s3Service.createBucket(INTEGRATION_TEST_BUCKET);
         s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
-
-        final ChannelPosition startSequenceNumbers = writeToStream(INTEGRATION_TEST_STREAM, "users_small1.txt").getFirstReadPosition();
-        createInitialEmptySnapshotWithSequenceNumbers(startSequenceNumbers);
-        compactionService.compact(INTEGRATION_TEST_STREAM);
     }
 
     @After
@@ -91,7 +81,14 @@ public class SnapshotMessageStoreAcceptanceTest {
     }
 
     @Test
-    public void shouldReadSnapshot() throws Exception {
+    public void shouldWriteIntoMessageStoreFromStream() throws IOException {
+        final ChannelPosition startSequenceNumbers = writeToStream(INTEGRATION_TEST_STREAM, "users_small1.txt").getFirstReadPosition();
+        createInitialEmptySnapshotWithSequenceNumbers(startSequenceNumbers);
+
+        //when
+        compactionService.compact(INTEGRATION_TEST_STREAM);
+
+        //then
         try (final S3SnapshotMessageStore snapshotMessageStore = new S3SnapshotMessageStore(INTEGRATION_TEST_STREAM, snapshotReadService, eventPublisher)) {
             final List<Message<String>> messages = new ArrayList<>();
             snapshotMessageStore.stream().forEach(messages::add);

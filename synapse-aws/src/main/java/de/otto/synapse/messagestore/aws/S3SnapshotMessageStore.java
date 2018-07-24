@@ -55,31 +55,31 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
         this.eventPublisher = eventPublisher;
         publishEvent(STARTING, "Retrieve snapshot file from S3.", null);
         try {
-        final Optional<File> latestSnapshot = snapshotReadService.retrieveLatestSnapshot(channelName);
+            final Optional<File> latestSnapshot = snapshotReadService.retrieveLatestSnapshot(channelName);
             if (latestSnapshot.isPresent()) {
                 final File snapshot = latestSnapshot.get();
                 this.snapshotTimestamp = SnapshotFileHelper.getSnapshotTimestamp(snapshot.getName());
                 publishEvent(STARTED, "Retrieve snapshot file from S3.", snapshotTimestamp);
-                    zipInputStream = new ZipInputStream(new BufferedInputStream(new FileInputStream(snapshot)));
-                    zipInputStream.getNextEntry();
-                    JsonFactory jsonFactory = new JsonFactory();
-                    final JsonParser jsonParser = jsonFactory.createParser(zipInputStream);
-                    while (!jsonParser.isClosed() && messageIterator == null) {
-                        JsonToken currentToken = jsonParser.nextToken();
-                        if (currentToken == JsonToken.FIELD_NAME) {
-                            switch (jsonParser.getValueAsString()) {
-                                case "startSequenceNumbers":
-                                    channelPosition = processSequenceNumbers(jsonParser);
-                                    break;
-                                case "data":
-                                    // TODO: This expects "startSequenceNumbers" to come _before_ "data"
-                                    messageIterator = new MessageIterator(jsonParser);
-                                    break;
-                                default:
-                                    break;
-                            }
+                zipInputStream = new ZipInputStream(new BufferedInputStream(new FileInputStream(snapshot)));
+                zipInputStream.getNextEntry();
+                JsonFactory jsonFactory = new JsonFactory();
+                final JsonParser jsonParser = jsonFactory.createParser(zipInputStream);
+                while (!jsonParser.isClosed() && messageIterator == null) {
+                    JsonToken currentToken = jsonParser.nextToken();
+                    if (currentToken == JsonToken.FIELD_NAME) {
+                        switch (jsonParser.getValueAsString()) {
+                            case "startSequenceNumbers":
+                                channelPosition = processSequenceNumbers(jsonParser);
+                                break;
+                            case "data":
+                                // TODO: This expects "startSequenceNumbers" to come _before_ "data"
+                                messageIterator = new MessageIterator(jsonParser);
+                                break;
+                            default:
+                                break;
                         }
                     }
+                }
             } else {
                 LOG.info("No Snapshot available. Returning emptyMessageStore MessageStore.");
             }
@@ -148,7 +148,7 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
                     break;
                 case END_OBJECT:
                     if (shardName != null) {
-                        final ShardPosition shardPosition = sequenceNumber != null && !sequenceNumber.equals("")
+                        final ShardPosition shardPosition = ((sequenceNumber != null) && !sequenceNumber.equals("") && !sequenceNumber.equals("0"))
                                 ? fromPosition(shardName, sequenceNumber)
                                 : ShardPosition.fromHorizon(shardName);
                         shardPositions.put(shardName, shardPosition);
