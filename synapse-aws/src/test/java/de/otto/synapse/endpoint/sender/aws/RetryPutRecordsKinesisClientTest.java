@@ -33,10 +33,13 @@ public class RetryPutRecordsKinesisClientTest {
     public void shouldNotRetryOnSuccess() throws Exception {
         // given
         when(kinesisClient.putRecords(any(PutRecordsRequest.class)))
-                .thenReturn(PutRecordsResponse.builder().failedRecordCount(0).build());
+                .thenReturn(PutRecordsResponse.builder()
+                        .records(PutRecordsResultEntry.builder().build())
+                        .failedRecordCount(0).build());
 
         // when
-        PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder().build();
+        PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder()
+                .build();
         retryPutRecordsKinesisClient.putRecords(() -> putRecordsRequest);
 
         // then
