@@ -359,7 +359,7 @@ public class KinesisMessageLogReaderTest {
         // when
         final CompletableFuture<ChannelPosition> futureChannelPosition = logReader.consumeUntil(fromHorizon(), Instant.MAX, responseConsumer);
         logReader.stop();
-        futureChannelPosition.get(1, TimeUnit.SECONDS);
+        futureChannelPosition.get(3, TimeUnit.SECONDS);
         // then
         assertThat(logReader.getCurrentKinesisShards().size(), is(1));
         logReader.getCurrentKinesisShards().forEach(kinesisShardReader -> assertThat(kinesisShardReader.isStopping(), is(true)));

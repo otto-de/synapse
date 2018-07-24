@@ -1,7 +1,8 @@
 include "synapse-core"
 include "synapse-aws"
 include "synapse-edison"
-include "synapse-examples:example-consumer"
+include "synapse-examples:example-eventsource-consumer"
+include "synapse-examples:example-messagequeue-consumer"
 include "synapse-examples:example-producer"
 include "synapse-examples:example-edison"
 

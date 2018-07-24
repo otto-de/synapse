@@ -270,7 +270,6 @@ public class KinesisShardIteratorTest {
         // then
         verify(kinesisClient, times(5)).getRecords(any(GetRecordsRequest.class));
         assertThat(shardIterator.getId(), is("nextIteratorId"));
-
     }
 
     @Test(expected = RuntimeException.class)

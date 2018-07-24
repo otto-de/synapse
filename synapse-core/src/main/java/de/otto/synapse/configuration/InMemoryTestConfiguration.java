@@ -4,14 +4,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.InMemoryChannels;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
+import de.otto.synapse.endpoint.receiver.MessageQueueConsumerProcess;
+import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpointFactory;
 import de.otto.synapse.endpoint.sender.InMemoryMessageSenderFactory;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.eventsource.InMemoryMessageLogReceiverEndpointFactory;
+import de.otto.synapse.messagequeue.InMemoryMessageQueueReceiverEndpointFactory;
+import de.otto.synapse.messagequeue.InMemoryMessageQueueSenderFactory;
+import de.otto.synapse.messagequeue.InMemoryQueueChannel;
+import de.otto.synapse.messagequeue.InMemoryQueueChannels;
 import de.otto.synapse.messagestore.CompactingInMemoryMessageStore;
 import de.otto.synapse.messagestore.DelegatingSnapshotMessageStore;
 import de.otto.synapse.messagestore.MessageStoreFactory;
 import de.otto.synapse.messagestore.SnapshotMessageStore;
 import org.slf4j.Logger;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 
@@ -69,6 +76,18 @@ public class InMemoryTestConfiguration {
                                                                                final InMemoryChannels inMemoryChannels) {
         LOG.warn("Creating InMemoryMessageLogReceiverEndpointFactory. This should only be used in tests");
         return new InMemoryMessageLogReceiverEndpointFactory(interceptorRegistry, inMemoryChannels);
+    }
+
+    @Bean
+    public MessageQueueReceiverEndpointFactory sqsReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
+                                                                          final InMemoryQueueChannels inMemoryQueueChannels) {
+        LOG.warn("Creating InMemoryMessageLogReceiverEndpointFactory. This should only be used in tests");
+        return new InMemoryMessageQueueReceiverEndpointFactory(interceptorRegistry, inMemoryQueueChannels);
+    }
+
+    @Bean
+    public InMemoryQueueChannels inMemoryQueueChannels(final ObjectMapper objectMapper, final ApplicationEventPublisher eventPublisher) {
+        return new InMemoryQueueChannels(objectMapper, eventPublisher);
     }
 
 }

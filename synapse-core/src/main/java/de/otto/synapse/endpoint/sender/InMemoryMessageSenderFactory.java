@@ -22,7 +22,7 @@ public class InMemoryMessageSenderFactory implements MessageSenderEndpointFactor
     }
 
     @Override
-    public MessageSenderEndpoint create(@Nonnull final String channelName) {
+    public InMemoryMessageSender create(@Nonnull final String channelName) {
         final InMemoryMessageSender messageSender = new InMemoryMessageSender(
                 new JsonStringMessageTranslator(objectMapper),
                 inMemoryChannels.getChannel(channelName));

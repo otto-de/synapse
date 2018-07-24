@@ -36,7 +36,7 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
     @Override
     protected void doSend(@Nonnull Message<String> message) {
         if (!message.getKey().isEmpty()) {
-            // TODO: key als message attribute o.ä. senden - bug in localstack
+            // TODO: key als message attribute o.ä. senden - funktionalität in localstack und sqs nicht vorhanden
             throw new IllegalArgumentException("Unable to send messages with a message-key");
         }
         sqsAsyncClient.sendMessage(
