@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequestEntry;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsResponse;
+import software.amazon.awssdk.services.kinesis.model.PutRecordsResultEntry;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -57,6 +58,7 @@ public class KinesisMessageSenderTest {
 
         when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(PutRecordsResponse.builder()
                 .failedRecordCount(0)
+                .records(PutRecordsResultEntry.builder().build())
                 .build());
 
         // when
@@ -83,6 +85,7 @@ public class KinesisMessageSenderTest {
 
         when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(PutRecordsResponse.builder()
                 .failedRecordCount(0)
+                .records(PutRecordsResultEntry.builder().build())
                 .build());
         // and especially
         final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
@@ -110,6 +113,7 @@ public class KinesisMessageSenderTest {
 
         when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(PutRecordsResponse.builder()
                 .failedRecordCount(0)
+                .records(PutRecordsResultEntry.builder().build())
                 .build());
 
         // and especially
@@ -153,6 +157,7 @@ public class KinesisMessageSenderTest {
 
         when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(PutRecordsResponse.builder()
                 .failedRecordCount(0)
+                .records(PutRecordsResultEntry.builder().build())
                 .build());
 
         // when
@@ -188,6 +193,7 @@ public class KinesisMessageSenderTest {
         // given
         PutRecordsResponse putRecordsResponse = PutRecordsResponse.builder()
                 .failedRecordCount(0)
+                .records(PutRecordsResultEntry.builder().build())
                 .build();
         when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(putRecordsResponse);
 
@@ -203,6 +209,7 @@ public class KinesisMessageSenderTest {
         // given
         when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(PutRecordsResponse.builder()
                 .failedRecordCount(0)
+                .records(PutRecordsResultEntry.builder().build())
                 .build());
 
         //when

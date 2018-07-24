@@ -46,6 +46,7 @@ public class KinesisShardIterator {
     private static final int RETRY_BACK_OFF_POLICY_INITIAL_INTERVAL = 1000;
     private static final int RETRY_BACK_OFF_POLICY_MAX_INTERVAL = 64000;
     private static final double RETRY_BACK_OFF_POLICY_MULTIPLIER = 2.0;
+    public static final int SKIP_NEXT_PARTS = 0;
 
     private final KinesisClient kinesisClient;
     private final String channelName;
@@ -115,7 +116,7 @@ public class KinesisShardIterator {
                 if (stopSignal.get()) {
                     context.setExhaustedOnly();
                 }
-                return tryNext(RETRY_MAX_ATTEMPTS);
+                return tryNext(SKIP_NEXT_PARTS);
             });
             return new KinesisShardResponse(channelName, shardPosition, recordsResponse, stopwatch.elapsed(MILLISECONDS));
         } catch (Throwable t) {
