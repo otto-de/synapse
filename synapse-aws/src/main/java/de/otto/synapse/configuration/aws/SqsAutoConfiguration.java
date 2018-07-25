@@ -38,17 +38,16 @@ public class SqsAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean
-    public SqsMessageSenderEndpointFactory sqsSenderEndpointFactory(final MessageInterceptorRegistry registry,
+    @ConditionalOnMissingBean(name = "sqsMessageSenderEndpointFactory")
+    public MessageSenderEndpointFactory sqsMessageSenderEndpointFactory(final MessageInterceptorRegistry registry,
                                                                  final ObjectMapper objectMapper,
                                                                  final SQSAsyncClient sqsAsyncClient) {
         return new SqsMessageSenderEndpointFactory(registry, objectMapper, sqsAsyncClient);
     }
 
-    // TODO Should return SqsMessageQueueReceiverEndpoint, @ConditionalOnMissingBean checks for existing MessageQueueReceiverEndpointFactory and skips SQS when Kinesis already registerd
     @Bean
-    @ConditionalOnMissingBean
-    public MessageQueueReceiverEndpointFactory sqsReceiverEndpointFactory(final MessageInterceptorRegistry registry,
+    @ConditionalOnMissingBean(name = "sqsMessageQueueReceiverEndpointFactory")
+    public MessageQueueReceiverEndpointFactory sqsMessageQueueReceiverEndpointFactory(final MessageInterceptorRegistry registry,
                                                                           final ObjectMapper objectMapper,
                                                                           final SQSAsyncClient sqsAsyncClient,
                                                                           final ApplicationEventPublisher eventPublisher) {

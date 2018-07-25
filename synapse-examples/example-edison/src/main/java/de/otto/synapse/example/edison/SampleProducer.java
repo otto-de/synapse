@@ -1,6 +1,7 @@
 package de.otto.synapse.example.edison;
 
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
+import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.example.edison.configuration.MyServiceProperties;
 import de.otto.synapse.example.edison.payload.BananaPayload;
 import de.otto.synapse.example.edison.payload.ProductPayload;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 import static java.util.Arrays.asList;
@@ -24,6 +26,12 @@ public class SampleProducer {
     private MessageSenderEndpoint bananaMessageSender;
     @Autowired
     private MessageSenderEndpoint productMessageSender;
+
+    @Autowired
+    private MessageSenderEndpointFactory kinesisMessageSenderEndpointFactory;
+
+    @Autowired
+    private MessageSenderEndpointFactory sqsMessageSenderEndpointFactory;
 
 
     @Scheduled(initialDelay = 1000L, fixedRate = 1000L)

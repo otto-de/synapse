@@ -3,7 +3,6 @@ package de.otto.synapse.configuration.aws;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.aws.configuration.AwsProperties;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import de.otto.synapse.endpoint.receiver.aws.KinesisMessageLogReceiverEndpointFactory;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.endpoint.sender.aws.KinesisMessageSenderEndpointFactory;
@@ -43,9 +42,9 @@ public class KinesisAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public KinesisMessageSenderEndpointFactory kinesisSenderEndpointFactory(final MessageInterceptorRegistry registry,
-                                                                     final ObjectMapper objectMapper,
-                                                                     final KinesisClient kinesisClient) {
+    public MessageSenderEndpointFactory kinesisMessageSenderEndpointFactory(final MessageInterceptorRegistry registry,
+                                                                            final ObjectMapper objectMapper,
+                                                                            final KinesisClient kinesisClient) {
         return new KinesisMessageSenderEndpointFactory(registry, objectMapper, kinesisClient);
     }
 

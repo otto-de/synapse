@@ -1,5 +1,12 @@
 # Release Notes
 
+## 0.8.0
+**Breaking Change**: Beans need to be qualified.
+* Register two MessageSenderEndpointFactories: 
+  * kinesisMessageSenderEndpointFactory for Kinesis
+  * sqsMessageSenderEndpointFactory for SQS
+
+
 ## 0.7.3
 * Fix bug in KinesisShardIterator. Read next record when there is no data near the part of the shard pointed to by the ShardIterator. See https://docs.aws.amazon.com/streams/latest/dev/troubleshooting-consumers.html#getrecords-returns-empty.
 

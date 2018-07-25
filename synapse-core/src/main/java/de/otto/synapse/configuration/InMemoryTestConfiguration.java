@@ -21,8 +21,8 @@ import static org.slf4j.LoggerFactory.getLogger;
  * Configuration used to implement tests. Use this, if you want to bypass Kinesis and other hard-to-test
  * infrastructures and replace them by in-memory implementations.
  * <p>
- *     {@code InMemoryTestConfiguration} can be activated by {@link org.springframework.boot.autoconfigure.ImportAutoConfiguration importing} it
- *     into some other {@code Configuration} class:
+ * {@code InMemoryTestConfiguration} can be activated by {@link org.springframework.boot.autoconfigure.ImportAutoConfiguration importing} it
+ * into some other {@code Configuration} class:
  * </p>
  * <pre><code>
  * &#64;Configuration
@@ -44,9 +44,16 @@ public class InMemoryTestConfiguration {
     }
 
     @Bean
-    public MessageSenderEndpointFactory kinesisSenderEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
-                                                                             final InMemoryChannels inMemoryChannels, final ObjectMapper objectMapper) {
-        LOG.warn("Creating InMemoryMessageSenderFactory. This should only be used in tests");
+    public MessageSenderEndpointFactory kinesisMessageSenderEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
+                                                                            final InMemoryChannels inMemoryChannels, final ObjectMapper objectMapper) {
+        LOG.warn("Creating InMemoryMessageSenderEndpointFactory. This should only be used in tests");
+        return new InMemoryMessageSenderFactory(interceptorRegistry, inMemoryChannels, objectMapper);
+    }
+
+    @Bean
+    public MessageSenderEndpointFactory sqsMessageSenderEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
+                                                                        final InMemoryChannels inMemoryChannels, final ObjectMapper objectMapper) {
+        LOG.warn("Creating InMemoryMessageSenderEndpointFactory. This should only be used in tests");
         return new InMemoryMessageSenderFactory(interceptorRegistry, inMemoryChannels, objectMapper);
     }
 
