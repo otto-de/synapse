@@ -14,6 +14,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -39,6 +40,8 @@ public class KinesisMessageLogReader {
     private final Clock clock;
     private List<KinesisShardReader> kinesisShardReaders;
     private ExecutorService executorService;
+
+    public static final int SKIP_NEXT_PARTS = 8;
 
     public KinesisMessageLogReader(final String channelName,
                                    final KinesisClient kinesisClient,
@@ -93,7 +96,7 @@ public class KinesisMessageLogReader {
                     .map(shardReader -> supplyAsync(
                             () -> {
                                 final KinesisShardIterator shardIterator = iterator.getShardIterator(shardReader.getShardName());
-                                return shardIterator.next();
+                                return fetchNext(shardIterator, SKIP_NEXT_PARTS);
                             },
                             executorService))
                     .collect(toList());
@@ -105,6 +108,15 @@ public class KinesisMessageLogReader {
             shutdownExecutor();
             throw e;
         }
+    }
+
+    private KinesisShardResponse fetchNext(final KinesisShardIterator shardIterator, int skipNextParts) {
+        final String id = shardIterator.getId();
+        final KinesisShardResponse shardResponse = shardIterator.next();
+        if(shardResponse.getMessages().isEmpty() && !shardIterator.isPoison() && !Objects.equals(shardIterator.getId(), id) && skipNextParts > 0) {
+            return fetchNext(shardIterator, --skipNextParts);
+        }
+        return shardResponse;
     }
 
     /**
