@@ -2,6 +2,7 @@ package de.otto.synapse.example.edison.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.annotation.EnableEventSource;
+import de.otto.synapse.annotation.messagequeue.EnableMessageQueueReceiverEndpoint;
 import de.otto.synapse.channel.InMemoryChannels;
 import de.otto.synapse.configuration.InMemoryTestConfiguration;
 import de.otto.synapse.endpoint.sender.InMemoryMessageSender;
@@ -22,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
 @ImportAutoConfiguration(InMemoryTestConfiguration.class)
 @EnableEventSource(name = "bananaSource",  channelName = "${exampleservice.banana-channel}")
 @EnableEventSource(name = "productSource", channelName = "${exampleservice.product-channel}")
+@EnableMessageQueueReceiverEndpoint(name = "bananaQueue", channelName = "banana-queue")
 public class ExampleConfiguration {
 
     @Bean

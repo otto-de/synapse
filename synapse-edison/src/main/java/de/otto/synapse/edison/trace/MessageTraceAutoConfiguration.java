@@ -3,7 +3,7 @@ package de.otto.synapse.edison.trace;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.endpoint.MessageEndpoint;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
+import de.otto.synapse.endpoint.receiver.MessageReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.messagestore.InMemoryRingBufferMessageStore;
 import de.otto.synapse.messagestore.MessageStore;
@@ -35,10 +35,10 @@ public class MessageTraceAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public MessageTraces traceMessageStore(final Optional<List<MessageLogReceiverEndpoint>> messageLogReceiverEndpoints,
+    public MessageTraces traceMessageStore(final Optional<List<MessageReceiverEndpoint>> messageReceiverEndpoints,
                                            final Optional<List<MessageSenderEndpoint>> senderEndpoints) {
         return new MessageTraces(
-                messageStoresFor(messageLogReceiverEndpoints.orElse(emptyList())),
+                messageStoresFor(messageReceiverEndpoints.orElse(emptyList())),
                 messageStoresFor(senderEndpoints.orElse(emptyList()))
         );
     }
