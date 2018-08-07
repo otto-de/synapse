@@ -8,6 +8,7 @@ import de.otto.synapse.message.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Profile;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,7 @@ import static java.util.Arrays.asList;
 
 @Component
 @EnableConfigurationProperties(MyServiceProperties.class)
+@EnableScheduling
 @Profile("!test")
 public class SampleProducer {
 
