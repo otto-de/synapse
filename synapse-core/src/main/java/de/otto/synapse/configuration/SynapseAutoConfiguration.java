@@ -3,6 +3,7 @@ package de.otto.synapse.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import de.otto.synapse.annotation.EventSourceConsumerBeanPostProcessor;
+import de.otto.synapse.annotation.messagequeue.MessageQueueConsumerBeanPostProcessor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.eventsource.DefaultEventSource;
 import de.otto.synapse.eventsource.EventSource;
@@ -83,6 +84,12 @@ public class SynapseAutoConfiguration {
     @Role(ROLE_INFRASTRUCTURE)
     public EventSourceConsumerBeanPostProcessor eventSourceConsumerAnnotationBeanPostProcessor() {
         return new EventSourceConsumerBeanPostProcessor();
+    }
+
+    @Bean
+    @Role(ROLE_INFRASTRUCTURE)
+    public MessageQueueConsumerBeanPostProcessor messageQueueConsumerAnnotationBeanPostProcessor() {
+        return new MessageQueueConsumerBeanPostProcessor();
     }
 
 }

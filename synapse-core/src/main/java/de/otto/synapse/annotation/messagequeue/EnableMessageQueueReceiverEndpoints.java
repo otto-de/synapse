@@ -7,7 +7,7 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Import(EnableMessageQueueReceiverEndpointBeanRegistrar.class)
+@Import(MessageQueueReceiverEndpointBeanRegistrar.class)
 public @interface EnableMessageQueueReceiverEndpoints {
     EnableMessageQueueReceiverEndpoint[] value();
 }

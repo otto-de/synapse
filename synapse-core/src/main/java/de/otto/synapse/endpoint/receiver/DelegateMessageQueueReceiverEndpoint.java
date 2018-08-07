@@ -1,25 +1,28 @@
 package de.otto.synapse.endpoint.receiver;
 
-import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
+import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
+
+import static org.slf4j.LoggerFactory.getLogger;
 
 public class DelegateMessageQueueReceiverEndpoint implements MessageQueueReceiverEndpoint {
 
+    private static final Logger LOG = getLogger(DelegateMessageQueueReceiverEndpoint.class);
     private final MessageQueueReceiverEndpoint delegate;
 
     public DelegateMessageQueueReceiverEndpoint(final @Nonnull String channelName,
                                                 final @Nonnull MessageQueueReceiverEndpointFactory messageQueueReceiverEndpointFactory) {
         this.delegate = messageQueueReceiverEndpointFactory.create(channelName);
+        LOG.info("Created MessageQueueReceiverEndpoint for channelName={}", channelName);
     }
 
 

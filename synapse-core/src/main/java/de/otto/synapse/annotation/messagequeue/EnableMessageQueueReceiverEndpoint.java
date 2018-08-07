@@ -11,7 +11,7 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Import(EnableMessageQueueReceiverEndpointBeanRegistrar.class)
+@Import(MessageQueueReceiverEndpointBeanRegistrar.class)
 @Repeatable(EnableMessageQueueReceiverEndpoints.class)
 public @interface EnableMessageQueueReceiverEndpoint {
 
@@ -49,9 +49,9 @@ public @interface EnableMessageQueueReceiverEndpoint {
      * bean name "myChannelMessageLogReceiverEndpoint".
      * </p>
      * <p>
-     * The {@link EnableMessageQueueReceiverEndpointBeanRegistrar} is responsible for creating the {@code EventSources} specified by this
+     * The {@link MessageQueueReceiverEndpointBeanRegistrar} is responsible for creating the {@code EventSources} specified by this
      * annotation. The bean name, either specified or derived from the {@code channelName}, will be used by the
-     * {@link EnableMessageQueueReceiverEndpointBeanRegistrar} as the name of the registered message log bean. If a bean having this name
+     * {@link MessageQueueReceiverEndpointBeanRegistrar} as the name of the registered message log bean. If a bean having this name
      * already exists, a {@link BeanCreationException} will be thrown during startup.
      * </p>
      *

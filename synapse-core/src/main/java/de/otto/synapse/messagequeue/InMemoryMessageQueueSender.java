@@ -9,12 +9,12 @@ import javax.annotation.Nonnull;
 
 public class InMemoryMessageQueueSender extends AbstractMessageSenderEndpoint {
 
-    private final InMemoryQueueChannel channel;
+    private final InMemoryChannel channel;
 
     public InMemoryMessageQueueSender(final MessageTranslator<String> messageTranslator,
-                                      final InMemoryQueueChannel inMemoryQueueChannel) {
-        super(inMemoryQueueChannel.getChannelName(), messageTranslator);
-        this.channel = inMemoryQueueChannel;
+                                      final InMemoryChannel inMemoryChannel) {
+        super(inMemoryChannel.getChannelName(), messageTranslator);
+        this.channel = inMemoryChannel;
     }
 
     @Override

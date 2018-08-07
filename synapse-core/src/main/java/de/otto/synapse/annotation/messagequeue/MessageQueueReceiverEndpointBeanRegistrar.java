@@ -1,7 +1,6 @@
 package de.otto.synapse.annotation.messagequeue;
 
 import de.otto.synapse.endpoint.receiver.DelegateMessageQueueReceiverEndpoint;
-import de.otto.synapse.endpoint.receiver.MessageReceiverEndpoint;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -27,9 +26,9 @@ import static org.springframework.beans.factory.support.BeanDefinitionBuilder.ge
  *
  * @see EnableMessageQueueReceiverEndpoint
  */
-public class EnableMessageQueueReceiverEndpointBeanRegistrar implements ImportBeanDefinitionRegistrar, EnvironmentAware {
+public class MessageQueueReceiverEndpointBeanRegistrar implements ImportBeanDefinitionRegistrar, EnvironmentAware {
 
-    private static final Logger LOG = getLogger(EnableMessageQueueReceiverEndpointBeanRegistrar.class);
+    private static final Logger LOG = getLogger(MessageQueueReceiverEndpointBeanRegistrar.class);
 
     private Environment environment;
 

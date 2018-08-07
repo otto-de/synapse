@@ -2,7 +2,6 @@ package de.otto.synapse.configuration.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.edison.aws.configuration.AwsProperties;
-import de.otto.synapse.annotation.messagequeue.MessageQueueConsumerBeanPostProcessor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageQueueConsumerProcess;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
@@ -17,16 +16,11 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Role;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SQSAsyncClient;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
-
-import static org.springframework.beans.factory.config.BeanDefinition.ROLE_INFRASTRUCTURE;
 
 @Configuration
 @EnableConfigurationProperties(AwsProperties.class)
@@ -52,19 +46,19 @@ public class SqsAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(name = "sqsMessageSenderEndpointFactory")
-    public MessageSenderEndpointFactory sqsMessageSenderEndpointFactory(final MessageInterceptorRegistry registry,
-                                                                        final ObjectMapper objectMapper,
-                                                                        final SQSAsyncClient sqsAsyncClient) {
+    @ConditionalOnMissingBean(name = "messageQueueSenderEndpointFactory")
+    public MessageSenderEndpointFactory messageQueueSenderEndpointFactory(final MessageInterceptorRegistry registry,
+                                                                          final ObjectMapper objectMapper,
+                                                                          final SQSAsyncClient sqsAsyncClient) {
         return new SqsMessageSenderEndpointFactory(registry, objectMapper, sqsAsyncClient);
     }
 
     @Bean
-    @ConditionalOnMissingBean(name = "sqsMessageQueueReceiverEndpointFactory")
-    public MessageQueueReceiverEndpointFactory sqsMessageQueueReceiverEndpointFactory(final MessageInterceptorRegistry registry,
-                                                                          final ObjectMapper objectMapper,
-                                                                          final SQSAsyncClient sqsAsyncClient,
-                                                                          final ApplicationEventPublisher eventPublisher) {
+    @ConditionalOnMissingBean(name = "messageQueueReceiverEndpointFactory")
+    public MessageQueueReceiverEndpointFactory messageQueueReceiverEndpointFactory(final MessageInterceptorRegistry registry,
+                                                                                   final ObjectMapper objectMapper,
+                                                                                   final SQSAsyncClient sqsAsyncClient,
+                                                                                   final ApplicationEventPublisher eventPublisher) {
 
         return (String channelName) -> {
             final SqsMessageQueueReceiverEndpoint endpoint = new SqsMessageQueueReceiverEndpoint(channelName, sqsAsyncClient, objectMapper, eventPublisher);
@@ -82,13 +76,6 @@ public class SqsAutoConfiguration {
             matchIfMissing = true)
     public MessageQueueConsumerProcess messageQueueConsumerProcess() {
         return new MessageQueueConsumerProcess(messageQueueReceiverEndpoints);
-    }
-
-
-    @Bean
-    @Role(ROLE_INFRASTRUCTURE)
-    public MessageQueueConsumerBeanPostProcessor messageQueueConsumerAnnotationBeanPostProcessor() {
-        return new MessageQueueConsumerBeanPostProcessor();
     }
 
 }

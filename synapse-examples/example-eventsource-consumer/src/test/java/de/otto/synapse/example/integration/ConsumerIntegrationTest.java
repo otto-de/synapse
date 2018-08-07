@@ -1,18 +1,15 @@
 package de.otto.synapse.example.integration;
 
-import org.awaitility.Awaitility;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
-import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.example.consumer.Server;
 import de.otto.synapse.example.consumer.configuration.MyServiceProperties;
 import de.otto.synapse.example.consumer.payload.BananaPayload;
 import de.otto.synapse.example.consumer.state.BananaProduct;
 import de.otto.synapse.state.StateRepository;
-import org.junit.Before;
+import org.awaitility.Awaitility;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -35,7 +32,7 @@ public class ConsumerIntegrationTest {
     @Autowired
     MyServiceProperties properties;
 
-    @Autowired @Qualifier("bananaMessageSender")
+    @Autowired
     private MessageSenderEndpoint bananaMessageSender;
 
     @Test

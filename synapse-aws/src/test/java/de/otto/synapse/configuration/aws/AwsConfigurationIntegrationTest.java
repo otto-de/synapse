@@ -25,10 +25,10 @@ import static org.junit.Assert.assertThat;
 public class AwsConfigurationIntegrationTest {
 
     @Autowired
-    private MessageSenderEndpointFactory sqsMessageSenderEndpointFactory;
+    private MessageSenderEndpointFactory messageQueueSenderEndpointFactory;
 
     @Autowired
-    private MessageSenderEndpointFactory kinesisMessageSenderEndpointFactory;
+    private MessageSenderEndpointFactory messageLogSenderEndpointFactory;
 
     @Autowired
     private MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory;
@@ -36,10 +36,10 @@ public class AwsConfigurationIntegrationTest {
 
     @Test
     public void shouldInjectQualifiedMessageSenderEndpointFactories() {
-        assertThat(sqsMessageSenderEndpointFactory, is(notNullValue()));
-        assertThat(sqsMessageSenderEndpointFactory, instanceOf(SqsMessageSenderEndpointFactory.class));
-        assertThat(kinesisMessageSenderEndpointFactory, is(notNullValue()));
-        assertThat(kinesisMessageSenderEndpointFactory, instanceOf(KinesisMessageSenderEndpointFactory.class));
+        assertThat(messageQueueSenderEndpointFactory, is(notNullValue()));
+        assertThat(messageQueueSenderEndpointFactory, instanceOf(SqsMessageSenderEndpointFactory.class));
+        assertThat(messageLogSenderEndpointFactory, is(notNullValue()));
+        assertThat(messageLogSenderEndpointFactory, instanceOf(KinesisMessageSenderEndpointFactory.class));
         assertThat(messageLogReceiverEndpointFactory, is(notNullValue()));
         assertThat(messageLogReceiverEndpointFactory, instanceOf(MessageLogReceiverEndpointFactory.class));
 

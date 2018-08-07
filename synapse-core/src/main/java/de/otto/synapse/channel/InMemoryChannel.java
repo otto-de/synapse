@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.Iterables;
 import de.otto.synapse.endpoint.receiver.AbstractMessageLogReceiverEndpoint;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
+import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import de.otto.synapse.info.MessageReceiverStatus;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
@@ -27,7 +29,7 @@ import static java.time.Instant.now;
 import static java.util.Collections.synchronizedList;
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint {
+public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implements MessageLogReceiverEndpoint, MessageQueueReceiverEndpoint {
 
     private static final Logger LOG = getLogger(InMemoryChannel.class);
     private final List<Message<String>> eventQueue;
@@ -91,6 +93,41 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint {
             } while (!shouldStop && !stopSignal.get());
             publishEvent(MessageReceiverStatus.FINISHED, "Finished InMemoryChannel " + getChannelName(), durationBehind);
             return channelPosition(fromPosition(getChannelName(), String.valueOf(pos)));
+        });
+    }
+
+    @Override
+    public CompletableFuture<Void> consume() {
+        publishEvent(MessageReceiverStatus.STARTING, "Starting InMemoryChannel " + getChannelName(), null);
+        final Message<String> lastMessage = eventQueue.isEmpty() ? null : Iterables.getLast(eventQueue);
+        final ChannelDurationBehind durationBehind = lastMessage != null
+                ? channelDurationBehind().with(getChannelName(), between(lastMessage.getHeader().getArrivalTimestamp(), now())).build()
+                : null;
+        publishEvent(MessageReceiverStatus.STARTED, "Started InMemoryChannel " + getChannelName(), durationBehind);
+        return CompletableFuture.supplyAsync(() -> {
+            do {
+                if (!eventQueue.isEmpty()) {
+                    final Message<String> receivedMessage = eventQueue.remove(0);
+                    final Message<String> interceptedMessage = intercept(
+                            message(
+                                    receivedMessage.getKey(),
+                                    responseHeader(null, now()),
+                                    receivedMessage.getPayload()
+                            )
+                    );
+                    if (interceptedMessage != null) {
+                        getMessageDispatcher().accept(interceptedMessage);
+                    }
+                } else {
+                    try {
+                        Thread.sleep(100);
+                    } catch (final InterruptedException e) {
+                        /* ignore */
+                    }
+                }
+            } while (!stopSignal.get());
+            publishEvent(MessageReceiverStatus.FINISHED, "Finished InMemoryChannel " + getChannelName(), durationBehind);
+            return null;
         });
     }
 

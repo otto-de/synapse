@@ -4,8 +4,6 @@ import de.otto.synapse.annotation.EnableEventSource;
 import de.otto.synapse.configuration.InMemoryTestConfiguration;
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.endpoint.sender.InMemoryMessageSender;
-import de.otto.synapse.endpoint.sender.InMemoryMessageSenderFactory;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.example.consumer.state.BananaProduct;
@@ -49,15 +47,15 @@ public class ExampleConfiguration implements MessageEndpointConfigurer {
     }
 
     @Bean
-    public InMemoryMessageSender bananaMessageSender(final InMemoryMessageSenderFactory kinesisSenderEndpointFactory,
+    public MessageSenderEndpoint bananaMessageSender(final MessageSenderEndpointFactory messageLogSenderEndpointFactory,
                                                      final MyServiceProperties properties) {
-        return kinesisSenderEndpointFactory.create(properties.getBananaChannel());
+        return messageLogSenderEndpointFactory.create(properties.getBananaChannel());
     }
 
     @Bean
-    public InMemoryMessageSender productMessageSender(final InMemoryMessageSenderFactory kinesisSenderEndpointFactory,
+    public MessageSenderEndpoint productMessageSender(final MessageSenderEndpointFactory messageLogSenderEndpointFactory,
                                                       final MyServiceProperties properties) {
-        return kinesisSenderEndpointFactory.create(properties.getProductChannel());
+        return messageLogSenderEndpointFactory.create(properties.getProductChannel());
     }
 
 }

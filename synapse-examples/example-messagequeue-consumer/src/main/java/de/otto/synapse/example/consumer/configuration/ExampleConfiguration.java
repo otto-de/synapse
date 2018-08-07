@@ -4,15 +4,9 @@ import de.otto.synapse.annotation.messagequeue.EnableMessageQueueReceiverEndpoin
 import de.otto.synapse.configuration.InMemoryTestConfiguration;
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.endpoint.sender.InMemoryMessageSender;
-import de.otto.synapse.endpoint.sender.InMemoryMessageSenderFactory;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
-import de.otto.synapse.endpoint.sender.aws.SqsMessageSender;
-import de.otto.synapse.endpoint.sender.aws.SqsMessageSenderEndpointFactory;
 import de.otto.synapse.example.consumer.state.BananaProduct;
-import de.otto.synapse.messagequeue.InMemoryMessageQueueSender;
-import de.otto.synapse.messagequeue.InMemoryMessageQueueSenderFactory;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import org.slf4j.Logger;
@@ -20,11 +14,6 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import software.amazon.awssdk.auth.credentials.AwsCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.services.sqs.SQSAsyncClient;
-
-import java.net.URI;
 
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.receiverChannelsWith;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.senderChannelsWith;
@@ -57,15 +46,15 @@ public class ExampleConfiguration implements MessageEndpointConfigurer {
     }
 
     @Bean
-    public InMemoryMessageQueueSender bananaMessageSender(final InMemoryMessageQueueSenderFactory inMemoryMessageQueueSenderFactory,
+    public MessageSenderEndpoint bananaMessageSender(final MessageSenderEndpointFactory messageQueueSenderEndpointFactory,
                                                      final MyServiceProperties properties) {
-        return inMemoryMessageQueueSenderFactory.create(properties.getBananaChannel());
+        return messageQueueSenderEndpointFactory.create(properties.getBananaChannel());
     }
 
     @Bean
-    public InMemoryMessageQueueSender productMessageSender(final InMemoryMessageQueueSenderFactory inMemoryMessageQueueSenderFactory,
-                                                                  final MyServiceProperties properties) {
-        return inMemoryMessageQueueSenderFactory.create(properties.getProductChannel());
+    public MessageSenderEndpoint productMessageSender(final MessageSenderEndpointFactory messageQueueSenderEndpointFactory,
+                                                      final MyServiceProperties properties) {
+        return messageQueueSenderEndpointFactory.create(properties.getProductChannel());
     }
 
 }

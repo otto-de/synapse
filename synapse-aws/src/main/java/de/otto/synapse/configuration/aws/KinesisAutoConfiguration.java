@@ -41,19 +41,19 @@ public class KinesisAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean
-    public MessageSenderEndpointFactory kinesisMessageSenderEndpointFactory(final MessageInterceptorRegistry registry,
-                                                                            final ObjectMapper objectMapper,
-                                                                            final KinesisClient kinesisClient) {
+    @ConditionalOnMissingBean(name = "messageLogSenderEndpointFactory")
+    public MessageSenderEndpointFactory messageLogSenderEndpointFactory(final MessageInterceptorRegistry registry,
+                                                                        final ObjectMapper objectMapper,
+                                                                        final KinesisClient kinesisClient) {
         return new KinesisMessageSenderEndpointFactory(registry, objectMapper, kinesisClient);
     }
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(name = "messageLogReceiverEndpointFactory")
     public KinesisMessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
-                                                                               final ObjectMapper objectMapper,
-                                                                               final KinesisClient kinesisClient,
-                                                                               final ApplicationEventPublisher eventPublisher) {
+                                                                                      final ObjectMapper objectMapper,
+                                                                                      final KinesisClient kinesisClient,
+                                                                                      final ApplicationEventPublisher eventPublisher) {
         return new KinesisMessageLogReceiverEndpointFactory(interceptorRegistry, kinesisClient, objectMapper, eventPublisher);
     }
 
