@@ -1,6 +1,6 @@
 package de.otto.synapse.annotation;
 
-import de.otto.synapse.configuration.InMemoryTestConfiguration;
+import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
 import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MethodInvokingMessageConsumer;
@@ -39,7 +39,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
     public void shouldRegisterMultipleEventConsumers() {
         context.register(SynapseAutoConfiguration.class);
         context.register(ThreeConsumersAtTwoEventSourcesConfiguration.class);
-        context.register(InMemoryTestConfiguration.class);
+        context.register(InMemoryMessageLogTestConfiguration.class);
         context.refresh();
 
         final DelegateEventSource someStreamEventSource = context.getBean("testEventSource", DelegateEventSource.class);
@@ -58,7 +58,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
     public void shouldFailToRegisterConsumerBecauseOfMissingEventSource() {
         context.register(SynapseAutoConfiguration.class);
         context.register(TestConfigurationWithMissingEventSource.class);
-        context.register(InMemoryTestConfiguration.class);
+        context.register(InMemoryMessageLogTestConfiguration.class);
         context.refresh();
     }
 
@@ -66,7 +66,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
     public void shouldCreateEventConsumerWithSpecificPayloadType() {
         context.register(SynapseAutoConfiguration.class);
         context.register(TestConfigurationDifferentPayload.class);
-        context.register(InMemoryTestConfiguration.class);
+        context.register(InMemoryMessageLogTestConfiguration.class);
         context.refresh();
 
         final DelegateEventSource someStreamEventSource = context.getBean("testEventSource", DelegateEventSource.class);
@@ -81,7 +81,7 @@ public class EventSourceConsumerBeanPostProcessorTest {
     public void shouldRegisterEventConsumerWithSpecificKeyPattern() {
         context.register(SynapseAutoConfiguration.class);
         context.register(TestConfigurationDifferentPayload.class);
-        context.register(InMemoryTestConfiguration.class);
+        context.register(InMemoryMessageLogTestConfiguration.class);
         context.refresh();
 
         final DelegateEventSource someStreamEventSource = context.getBean("testEventSource", DelegateEventSource.class);

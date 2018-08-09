@@ -1,7 +1,7 @@
 package de.otto.synapse.example.consumer.configuration;
 
 import de.otto.synapse.annotation.messagequeue.EnableMessageQueueReceiverEndpoint;
-import de.otto.synapse.configuration.InMemoryTestConfiguration;
+import de.otto.synapse.configuration.InMemoryMessageQueueTestConfiguration;
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
@@ -20,7 +20,7 @@ import static de.otto.synapse.endpoint.MessageInterceptorRegistration.senderChan
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Configuration
-@ImportAutoConfiguration(InMemoryTestConfiguration.class)
+@ImportAutoConfiguration(InMemoryMessageQueueTestConfiguration.class)
 @EnableConfigurationProperties({MyServiceProperties.class})
 @EnableMessageQueueReceiverEndpoint(name = "bananaQueue",  channelName = "${exampleservice.banana-channel}")
 @EnableMessageQueueReceiverEndpoint(name = "productQueue", channelName = "${exampleservice.product-channel}")

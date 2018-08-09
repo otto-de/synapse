@@ -1,10 +1,11 @@
-package de.otto.synapse.eventsource;
+package de.otto.synapse.endpoint.receiver;
 
 import de.otto.synapse.channel.InMemoryChannel;
 import de.otto.synapse.channel.InMemoryChannels;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
+import de.otto.synapse.eventsource.EventSource;
 
 import javax.annotation.Nonnull;
 

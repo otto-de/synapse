@@ -2,10 +2,7 @@ apply plugin: 'java-library'
 
 dependencies {
 
-    // This dependency is exported to consumers, that is to say found on their compile classpath.
-    api 'com.google.guava:guava:23.0'
-    api "org.springframework.boot:spring-boot:${springBootVersion}"
-    api "org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}"
+    implementation project(':synapse-core:')
 
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     implementation "org.springframework:spring-context:${springVersion}"
@@ -20,8 +17,7 @@ dependencies {
         exclude group: "com.intellij", module: "annotations"
     }
 
-    testImplementation project(':synapse-testsupport:')
-
+    // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
     testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
@@ -74,7 +70,7 @@ uploadArchives {
             }
 
             pom.project {
-                name 'synapse-core'
+                name 'synapse-testsupport'
                 packaging 'jar'
                 description 'A library used at otto.de to implement Spring Boot based event-sourcing microserivces.'
                 url 'http://github.com/otto-de/edison-eventsourcing'

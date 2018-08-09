@@ -81,9 +81,9 @@ uploadArchives {
                 url 'http://github.com/otto-de/edison-eventsourcing'
 
                 scm {
-                    url 'scm:git@github.com:otto-de/edison-eventsourcing.git'
-                    connection 'scm:git@github.com:otto-de/edison-eventsourcing.git'
-                    developerConnection 'scm:git@github.com:otto-de/edison-eventsourcing.git'
+                    url 'scm:git@github.com:otto-de/synapse.git'
+                    connection 'scm:git@github.com:otto-de/synapse.git'
+                    developerConnection 'scm:git@github.com:otto-de/synapse.git'
                 }
 
                 licenses {

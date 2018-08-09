@@ -1,4 +1,4 @@
-package de.otto.synapse.messagequeue;
+package de.otto.synapse.endpoint.receiver;
 
 import de.otto.synapse.channel.InMemoryChannel;
 import de.otto.synapse.channel.InMemoryChannels;

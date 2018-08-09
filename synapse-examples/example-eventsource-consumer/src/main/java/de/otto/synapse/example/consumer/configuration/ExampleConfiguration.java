@@ -1,7 +1,7 @@
 package de.otto.synapse.example.consumer.configuration;
 
 import de.otto.synapse.annotation.EnableEventSource;
-import de.otto.synapse.configuration.InMemoryTestConfiguration;
+import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
@@ -21,7 +21,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 
 @Configuration
-@ImportAutoConfiguration(InMemoryTestConfiguration.class)
+@ImportAutoConfiguration(InMemoryMessageLogTestConfiguration.class)
 @EnableConfigurationProperties({MyServiceProperties.class})
 @EnableEventSource(name = "bananaSource", channelName = "${exampleservice.banana-channel}")
 @EnableEventSource(name = "productSource", channelName = "${exampleservice.product-channel}")

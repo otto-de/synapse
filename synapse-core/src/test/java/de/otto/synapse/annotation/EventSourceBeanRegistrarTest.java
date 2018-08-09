@@ -1,6 +1,6 @@
 package de.otto.synapse.annotation;
 
-import de.otto.synapse.configuration.InMemoryTestConfiguration;
+import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
 import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.DefaultEventSource;
@@ -52,7 +52,7 @@ public class EventSourceBeanRegistrarTest {
     public void shouldFailToRegisterMultipleEventSourcesForSameStreamNameWithSameName() {
         context.register(SynapseAutoConfiguration.class);
         context.register(MultiEventSourceTestConfigWithSameNames.class);
-        context.register(InMemoryTestConfiguration.class);
+        context.register(InMemoryMessageLogTestConfiguration.class);
         context.refresh();
     }
 
@@ -60,7 +60,7 @@ public class EventSourceBeanRegistrarTest {
     public void shouldFailToRegisterMultipleEventSourcesForSameStream() {
         context.register(SynapseAutoConfiguration.class);
         context.register(MultiEventSourceTestConfigWithDifferentNames .class);
-        context.register(InMemoryTestConfiguration.class);
+        context.register(InMemoryMessageLogTestConfiguration.class);
         context.refresh();
 
         assertThat(context.getBean("firstEventSource", EventSource.class).getChannelName()).isEqualTo("some-stream");
@@ -71,7 +71,7 @@ public class EventSourceBeanRegistrarTest {
     public void shouldRegisterEventSource() {
         context.register(SynapseAutoConfiguration.class);
         context.register(SingleEventSourceTestConfig.class);
-        context.register(InMemoryTestConfiguration.class);
+        context.register(InMemoryMessageLogTestConfiguration.class);
         context.refresh();
 
         assertThat(context.containsBean("testEventSource")).isTrue();
@@ -80,7 +80,7 @@ public class EventSourceBeanRegistrarTest {
     @Test
     public void shouldRegisterEventSourceWithDefaultType() {
         context.register(SynapseAutoConfiguration.class);
-        context.register(InMemoryTestConfiguration.class);
+        context.register(InMemoryMessageLogTestConfiguration.class);
         context.register(RepeatableMultiEventSourceTestConfig.class);
         context.refresh();
 
@@ -91,7 +91,7 @@ public class EventSourceBeanRegistrarTest {
     @Test
     public void shouldRegisterMultipleEventSources() {
         context.register(RepeatableMultiEventSourceTestConfig.class);
-        context.register(InMemoryTestConfiguration.class);
+        context.register(InMemoryMessageLogTestConfiguration.class);
         context.register(SynapseAutoConfiguration.class);
         addEnvironment(this.context,
                 "test.stream-name=second-stream"
@@ -114,7 +114,7 @@ public class EventSourceBeanRegistrarTest {
     public void shouldRegisterMessageLogReceiverEndpointWithNameDerivedFromChannelName() {
         context.register(SynapseAutoConfiguration.class);
         context.register(SingleEventSourceTestConfig.class);
-        context.register(InMemoryTestConfiguration.class);
+        context.register(InMemoryMessageLogTestConfiguration.class);
         context.refresh();
 
         assertThat(context.containsBean("testStreamMessageLogReceiverEndpoint")).isTrue();
@@ -126,7 +126,7 @@ public class EventSourceBeanRegistrarTest {
     public void shouldRegisterMessageLogReceiverEndpointWithSpecifiedName() {
         context.register(SynapseAutoConfiguration.class);
         context.register(SingleEventSourceWithMessageLogTestConfig.class);
-        context.register(InMemoryTestConfiguration.class);
+        context.register(InMemoryMessageLogTestConfiguration.class);
         context.refresh();
 
         assertThat(context.containsBean("testMessageLog")).isTrue();

@@ -1,9 +1,8 @@
-package de.otto.synapse.messagequeue;
+package de.otto.synapse.endpoint.sender;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.InMemoryChannels;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 
 import javax.annotation.Nonnull;
@@ -23,8 +22,8 @@ public class InMemoryMessageQueueSenderFactory implements MessageSenderEndpointF
     }
 
     @Override
-    public InMemoryMessageQueueSender create(@Nonnull final String channelName) {
-        final InMemoryMessageQueueSender messageSender = new InMemoryMessageQueueSender(
+    public InMemoryMessageSender create(@Nonnull final String channelName) {
+        final InMemoryMessageSender messageSender = new InMemoryMessageSender(
                 new JsonStringMessageTranslator(objectMapper),
                 inMemoryChannels.getChannel(channelName));
         messageSender.registerInterceptorsFrom(registry);

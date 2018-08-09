@@ -4,7 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.annotation.EnableEventSource;
 import de.otto.synapse.annotation.messagequeue.EnableMessageQueueReceiverEndpoint;
 import de.otto.synapse.channel.InMemoryChannels;
-import de.otto.synapse.configuration.InMemoryTestConfiguration;
+import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
+import de.otto.synapse.configuration.InMemoryMessageQueueTestConfiguration;
 import de.otto.synapse.endpoint.sender.InMemoryMessageSender;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.example.edison.state.BananaProduct;
@@ -20,7 +21,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableConfigurationProperties({MyServiceProperties.class})
-@ImportAutoConfiguration(InMemoryTestConfiguration.class)
+@ImportAutoConfiguration({InMemoryMessageLogTestConfiguration.class,InMemoryMessageQueueTestConfiguration.class})
 @EnableEventSource(name = "bananaSource",  channelName = "${exampleservice.banana-channel}")
 @EnableEventSource(name = "productSource", channelName = "${exampleservice.product-channel}")
 @EnableMessageQueueReceiverEndpoint(name = "bananaQueue", channelName = "banana-queue")

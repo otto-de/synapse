@@ -1,6 +1,6 @@
 package de.otto.synapse.example.producer.configuration;
 
-import de.otto.synapse.configuration.InMemoryTestConfiguration;
+import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
@@ -15,7 +15,7 @@ import static de.otto.synapse.endpoint.MessageInterceptorRegistration.receiverCh
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Configuration
-@ImportAutoConfiguration(InMemoryTestConfiguration.class)
+@ImportAutoConfiguration(InMemoryMessageLogTestConfiguration.class)
 @EnableConfigurationProperties(MyServiceProperties.class)
 public class MessageSenderConfiguration implements MessageEndpointConfigurer {
 
