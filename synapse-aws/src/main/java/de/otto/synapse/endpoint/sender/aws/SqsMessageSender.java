@@ -6,20 +6,25 @@ import de.otto.synapse.translator.MessageTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.sqs.SQSAsyncClient;
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 import javax.annotation.Nonnull;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static java.lang.String.valueOf;
 import static java.util.stream.Collectors.toList;
 
 public class SqsMessageSender extends AbstractMessageSenderEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(SqsMessageSender.class);
+
+    public static final String MSG_KEY_ATTR = "synapse_msg_key";
 
     private final String queueUrl;
     private final SQSAsyncClient sqsAsyncClient;
@@ -35,13 +40,10 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
 
     @Override
     protected void doSend(@Nonnull Message<String> message) {
-        if (!message.getKey().isEmpty()) {
-            // TODO: key als message attribute o.ä. senden - funktionalität in localstack und sqs nicht vorhanden
-            throw new IllegalArgumentException("Unable to send messages with a message-key");
-        }
         sqsAsyncClient.sendMessage(
                 SendMessageRequest.builder()
                         .queueUrl(queueUrl)
+                        .messageAttributes(Collections.singletonMap(MSG_KEY_ATTR, MessageAttributeValue.builder().dataType("String").stringValue(message.getKey()).build()))
                         .messageBody(message.getPayload())
                         .build()
         ).whenComplete((result, exception) -> {
@@ -59,12 +61,11 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
                 .entries(
                         messageStream.map(message -> SendMessageBatchRequestEntry.builder()
                                 .id(valueOf(id.getAndIncrement()))
-/*                                .messageGroupId(getChannelName())
-                                .messageAttributes(of("key", MessageAttributeValue
+                                .messageAttributes(of(MSG_KEY_ATTR, MessageAttributeValue
                                         .builder()
+                                        .dataType("String")
                                         .stringValue(message.getKey())
                                         .build()))
-                                        */
                                 .messageBody(message.getPayload())
                                 .build()).collect(toList())
                 )

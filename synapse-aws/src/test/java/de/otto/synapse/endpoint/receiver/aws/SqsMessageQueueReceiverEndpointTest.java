@@ -3,7 +3,6 @@ package de.otto.synapse.endpoint.receiver.aws;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.consumer.MessageConsumer;
-import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.message.Message;
 import org.awaitility.Duration;
 import org.junit.After;
@@ -14,7 +13,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
-import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.sqs.SQSAsyncClient;
 import software.amazon.awssdk.services.sqs.model.*;
 
@@ -23,6 +21,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import static de.otto.synapse.endpoint.sender.aws.SqsMessageSender.MSG_KEY_ATTR;
+import static java.util.Collections.singletonMap;
 import static java.util.Collections.synchronizedList;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.awaitility.Awaitility.await;
@@ -69,18 +69,6 @@ public class SqsMessageQueueReceiverEndpointTest {
         sqsQueueReceiver.stop();
     }
 
-    /**
-     * Currently, the SQS implementation is not able to use message keys, so it is not possible to use
-     * MessageConsumers with key filters other than .*
-     * This should be changed, as soon as localstack is able to handle message attributes without returning HTTP 500.
-     */
-    @Test(expected = IllegalStateException.class)
-    public void shouldFailToFilterMessagesByKey() {
-        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", sqsAsyncClient, objectMapper, null);
-        sqsQueueReceiver.register(MessageConsumer.of("somekeyFilter", String.class, (message) -> messages.add(message)));
-        sqsQueueReceiver.consume();
-    }
-
     @Test(expected = RuntimeException.class)
     public void shouldShutdownOnRuntimeExceptionOnGetQueueUrl() {
 
@@ -96,9 +84,9 @@ public class SqsMessageQueueReceiverEndpointTest {
     public void shouldConsumeMessages() {
         // given:
         addSqsMessagesToQueue(
-                sqsMessage(PAYLOAD_1),
-                sqsMessage(PAYLOAD_2),
-                sqsMessage(PAYLOAD_3));
+                sqsMessage("first", PAYLOAD_1),
+                sqsMessage("second", PAYLOAD_2),
+                sqsMessage("third", PAYLOAD_3));
 
         // when: consumption is started
         sqsQueueReceiver.consume();
@@ -112,18 +100,48 @@ public class SqsMessageQueueReceiverEndpointTest {
         // and:
         // expect the payload to be the added messages
         assertThat(messages.size(), is(3));
+        assertThat(messages.get(0).getKey(), is("first"));
         assertThat(messages.get(0).getPayload(), is(PAYLOAD_1));
+        assertThat(messages.get(1).getKey(), is("second"));
         assertThat(messages.get(1).getPayload(), is(PAYLOAD_2));
+        assertThat(messages.get(2).getKey(), is("third"));
         assertThat(messages.get(2).getPayload(), is(PAYLOAD_3));
+    }
+
+    @Test
+    public void shouldOnlyConsumeMessagesWithMatchingKey() {
+        // given:
+        addSqsMessagesToQueue(
+                sqsMessage("matching-key", PAYLOAD_1),
+                sqsMessage("matching-key", PAYLOAD_2),
+                sqsMessage("non-matching-key", PAYLOAD_3));
+
+        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", sqsAsyncClient, objectMapper, null);
+        sqsQueueReceiver.register(MessageConsumer.of("matching-key", String.class, (message) -> messages.add(message)));
+
+        // when: consumption is started
+        sqsQueueReceiver.consume();
+
+        // then:
+        // wait some time
+        await()
+                .atMost(Duration.FIVE_SECONDS)
+                .until(() -> messages.size() >= EXPECTED_NUMBER_OF_ENTRIES-1);
+
+        // and:
+        // expect the payload to be the added messages
+        assertThat(messages.size(), is(2));
+        assertThat(messages.get(0).getKey(), is("matching-key"));
+        assertThat(messages.get(1).getKey(), is("matching-key"));
     }
 
     @Test
     public void shouldDeleteMessageAfterConsume() {
         //given
         addSqsMessagesToQueue(
-                sqsMessage(PAYLOAD_1),
-                sqsMessage(PAYLOAD_2),
-                sqsMessage(PAYLOAD_3));
+                sqsMessage("some key", PAYLOAD_1),
+                sqsMessage("some key", PAYLOAD_2),
+                sqsMessage("some key", PAYLOAD_3));
 
         ArgumentCaptor<DeleteMessageRequest> deleteRequestCaptor = ArgumentCaptor.forClass(DeleteMessageRequest.class);
 
@@ -150,7 +168,7 @@ public class SqsMessageQueueReceiverEndpointTest {
     @Test
     public void shouldInterceptMessages() {
         // given:
-        addSqsMessagesToQueue(sqsMessage(PAYLOAD_1));
+        addSqsMessagesToQueue(sqsMessage("some key", PAYLOAD_1));
 
         sqsQueueReceiver.getInterceptorChain().register((message -> Message.message(message.getKey(), message.getHeader(), INTERCEPTED_PAYLOAD)));
 
@@ -172,7 +190,7 @@ public class SqsMessageQueueReceiverEndpointTest {
     @Test
     public void shouldNotConsumeMessagesDroppedByInterceptor() {
         // given:
-        addSqsMessagesToQueue(sqsMessage(PAYLOAD_1), sqsMessage(PAYLOAD_2));
+        addSqsMessagesToQueue(sqsMessage("some key", PAYLOAD_1), sqsMessage("some key", PAYLOAD_2));
 
         sqsQueueReceiver.getInterceptorChain().register((message ->
                 message.getPayload().equals(PAYLOAD_1) ? null : message));
@@ -205,7 +223,7 @@ public class SqsMessageQueueReceiverEndpointTest {
     @Test(expected = RuntimeException.class)
     public void shouldShutdownServiceOnRuntimeExceptionOnDelete() throws Throwable {
         //given
-        addSqsMessagesToQueue(sqsMessage(PAYLOAD_1));
+        addSqsMessagesToQueue(sqsMessage("some key", PAYLOAD_1));
         when(sqsAsyncClient.deleteMessage(any(DeleteMessageRequest.class))).thenThrow(RuntimeException.class); // could be SdkException, SQSException etc.
 
         //then
@@ -256,9 +274,10 @@ public class SqsMessageQueueReceiverEndpointTest {
                 .thenReturn(CompletableFuture.completedFuture(emptyResponse));
     }
 
-    private software.amazon.awssdk.services.sqs.model.Message sqsMessage(String body) {
+    private software.amazon.awssdk.services.sqs.model.Message sqsMessage(String key, String body) {
         return software.amazon.awssdk.services.sqs.model.Message
                 .builder()
+                .messageAttributes(singletonMap(MSG_KEY_ATTR, MessageAttributeValue.builder().dataType("String").stringValue(key).build()))
                 .body(body)
                 .build();
     }

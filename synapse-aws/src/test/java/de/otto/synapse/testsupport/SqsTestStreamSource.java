@@ -9,12 +9,14 @@ import software.amazon.awssdk.services.kinesis.model.*;
 import software.amazon.awssdk.services.sqs.SQSAsyncClient;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
+import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
+import static de.otto.synapse.endpoint.sender.aws.SqsMessageSender.MSG_KEY_ATTR;
 import static java.util.Collections.singletonMap;
 
 /**
@@ -38,12 +41,10 @@ public class SqsTestStreamSource {
     private final String channelName;
     private final SQSAsyncClient sqsAsyncClient;
     private final String inputFile;
-    private final ObjectMapper objectMapper;
 
     public SqsTestStreamSource(SQSAsyncClient sqsAsyncClient, String channelName, String inputFile) {
         this.sqsAsyncClient = sqsAsyncClient;
         this.inputFile = inputFile;
-        this.objectMapper = new ObjectMapper();
         this.channelName = channelName;
     }
 
@@ -55,12 +56,8 @@ public class SqsTestStreamSource {
         }
         try {
             processInputStream(channelName, inputStream);
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.error("Encountered exception while putting data in source stream.", e);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
         }
     }
 
@@ -69,16 +66,18 @@ public class SqsTestStreamSource {
             String line;
             while ((line = br.readLine()) != null) {
                 final String queueUrl = SqsChannelSetupUtils.getQueueUrl(sqsAsyncClient, channelName);
-                sqsAsyncClient.sendMessage(SendMessageRequest.builder()
+                final SendMessageResponse response = sqsAsyncClient.sendMessage(SendMessageRequest.builder()
                         .queueUrl(queueUrl)
-/*                        .messageGroupId(channelName)
-                        .messageAttributes(singletonMap(
-                                "key", MessageAttributeValue.builder()
-                                        .stringValue("deleteMessageKey").build()))
-*/
+                        .messageAttributes(
+                                singletonMap(MSG_KEY_ATTR, MessageAttributeValue.builder().dataType("String").stringValue("some-key").build()))
                         .messageBody(line)
                         .build()
+                ).exceptionally(e -> {
+                    LOG.error(e.getMessage(), e);
+                    return null;
+                        }
                 ).get();
+                LOG.debug("Received SendMessageResponse={}", response);
             }
         }
     }

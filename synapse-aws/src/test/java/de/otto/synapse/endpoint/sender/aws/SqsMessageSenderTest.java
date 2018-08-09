@@ -49,7 +49,7 @@ public class SqsMessageSenderTest {
     @Test
     public void shouldSendEvent() {
         // given
-        final Message<ExampleJsonObject> message = message("", new ExampleJsonObject("banana"));
+        final Message<ExampleJsonObject> message = message("some-key", new ExampleJsonObject("banana"));
 
         when(sqsAsyncClient.sendMessage(any(SendMessageRequest.class))).thenReturn(completedFuture(SendMessageResponse.builder()
                 .sequenceNumber("42")
@@ -64,8 +64,8 @@ public class SqsMessageSenderTest {
         final SendMessageRequest capturedRequest = requestArgumentCaptor.getValue();
 
         assertThat(capturedRequest.queueUrl(), is("https://example.com/test"));
+        assertThat(capturedRequest.messageAttributes(), hasEntry("synapse_msg_key", MessageAttributeValue.builder().dataType("String").stringValue("some-key").build()));
         assertThat(capturedRequest.messageBody(), is("{\"value\":\"banana\"}"));
-
     }
 
     @Test
@@ -108,7 +108,6 @@ public class SqsMessageSenderTest {
         verifyZeroInteractions(sqsAsyncClient);
     }
 
-
     @Test
     public void shouldSendBatch() {
         // given
@@ -133,7 +132,9 @@ public class SqsMessageSenderTest {
         final SendMessageBatchRequest capturedRequest = batchRequestArgumentCaptor.getValue();
 
         assertThat(capturedRequest.entries(), hasSize(2));
+        assertThat(capturedRequest.entries().get(0).messageAttributes(), hasEntry("synapse_msg_key", MessageAttributeValue.builder().dataType("String").stringValue("b").build()));
         assertThat(capturedRequest.entries().get(0).messageBody(), is("{\"value\":\"banana\"}"));
+        assertThat(capturedRequest.entries().get(1).messageAttributes(), hasEntry("synapse_msg_key", MessageAttributeValue.builder().dataType("String").stringValue("a").build()));
         assertThat(capturedRequest.entries().get(1).messageBody(), is("{\"value\":\"apple\"}"));
     }
 

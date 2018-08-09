@@ -33,6 +33,8 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
      * Duration for long-polling calls to the SQS service
      */
     private static final int WAIT_TIME_SECONDS = 10;
+    public static final MessageAttributeValue EMPTY_STRING_ATTR = MessageAttributeValue.builder().dataType("String").stringValue("").build();
+    public static final String MSG_KEY_ATTR = "synapse_msg_key";
 
     @Nonnull
     private final SQSAsyncClient sqsAsyncClient;
@@ -59,12 +61,6 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
 
     @Override
     public CompletableFuture<Void> consume() {
-        getMessageDispatcher().getAll().forEach(messageConsumer -> {
-            if (!messageConsumer.keyPattern().pattern().equals(".*")) {
-                // TODO: key als message attribute o.ä. senden - bug in localstack
-                throw new IllegalStateException("Unable to select messages using key pattern");
-            }
-        });
         return CompletableFuture.runAsync(() -> {
             do {
                 LOG.debug("Sending receiveMessage request...");
@@ -97,7 +93,10 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
 
     private void processMessage(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
         LOG.debug("Processing message from channel={}: messageId={} receiptHandle={}, attributes={}, messageAttributes={}", getChannelName(), sqsMessage.messageId(), sqsMessage.receiptHandle(), sqsMessage.attributesAsStrings());
-        final Message<String> message = message("", sqsMessage.body());
+        final String key = sqsMessage.messageAttributes() != null
+                ? sqsMessage.messageAttributes().getOrDefault(MSG_KEY_ATTR, EMPTY_STRING_ATTR).stringValue()
+                : "";
+        final Message<String> message = message(key, sqsMessage.body());
 
         final Message<String> interceptedMessage = intercept(message);
         if (interceptedMessage != null) {
