@@ -1,6 +1,7 @@
 package de.otto.synapse.annotation.messagequeue;
 
 import de.otto.synapse.consumer.MethodInvokingMessageConsumer;
+import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageReceiverEndpoint;
 import org.slf4j.Logger;
 import org.springframework.aop.support.AopUtils;
@@ -47,6 +48,11 @@ public class MessageQueueConsumerBeanPostProcessor implements BeanPostProcessor,
 
     @Override
     public Object postProcessBeforeInitialization(final Object bean, final String beanName) {
+        return bean;
+    }
+
+    @Override
+    public Object postProcessAfterInitialization(final Object bean, final String beanName) {
         if (!this.nonAnnotatedClasses.contains(bean.getClass())) {
             final Class<?> targetClass = AopUtils.getTargetClass(bean);
             final Map<Method, Set<MessageQueueConsumer>> annotatedMethods = findMethodsAnnotatedWithMessageQueueConsumer(targetClass);
@@ -57,11 +63,6 @@ public class MessageQueueConsumerBeanPostProcessor implements BeanPostProcessor,
                 registerMessageQueueConsumers(bean, beanName, annotatedMethods);
             }
         }
-        return bean;
-    }
-
-    @Override
-    public Object postProcessAfterInitialization(final Object bean, final String beanName) {
         return bean;
     }
 
@@ -105,7 +106,7 @@ public class MessageQueueConsumerBeanPostProcessor implements BeanPostProcessor,
     }
 
     private MessageReceiverEndpoint matchingMessageQueueReceiverEndpointFor(final MessageQueueConsumer annotation) {
-        return applicationContext.getBean(annotation.endpointName(), MessageReceiverEndpoint.class);
+        return applicationContext.getBean(annotation.endpointName(), MessageQueueReceiverEndpoint.class);
     }
 
 }

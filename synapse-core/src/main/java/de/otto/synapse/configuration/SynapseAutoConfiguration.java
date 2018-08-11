@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import de.otto.synapse.annotation.EventSourceConsumerBeanPostProcessor;
 import de.otto.synapse.annotation.messagequeue.MessageQueueConsumerBeanPostProcessor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.endpoint.receiver.MessageQueueConsumerProcess;
+import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import de.otto.synapse.eventsource.DefaultEventSource;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
@@ -35,7 +37,19 @@ public class SynapseAutoConfiguration {
 
     @Autowired(required = false)
     private List<EventSource> eventSources;
+    @Autowired(required = false)
+    private List<MessageQueueReceiverEndpoint> messageQueueReceiverEndpoints;
+
     private MessageInterceptorRegistry registry;
+
+    @Bean
+    @ConditionalOnMissingBean
+    public ObjectMapper objectMapper() {
+        final ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.findAndRegisterModules();
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        return objectMapper;
+    }
 
     @Bean
     @ConditionalOnMissingBean
@@ -57,12 +71,13 @@ public class SynapseAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean
-    public ObjectMapper objectMapper() {
-        final ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.findAndRegisterModules();
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        return objectMapper;
+    @ConditionalOnProperty(
+            prefix = "synapse",
+            name = "consumer-process.enabled",
+            havingValue = "true",
+            matchIfMissing = true)
+    public MessageQueueConsumerProcess messageQueueConsumerProcess() {
+        return new MessageQueueConsumerProcess(messageQueueReceiverEndpoints);
     }
 
     @Bean
