@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.configuration.aws.TestMessageInterceptor;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.endpoint.SqsClientHelper;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.testsupport.SqsChannelSetupUtils;
 import de.otto.synapse.testsupport.SqsTestStreamSource;
 import org.awaitility.Duration;
 import org.junit.After;
@@ -78,7 +78,7 @@ public class SqsMessageQueueIntegrationTest {
 
     @PostConstruct
     public void setup() {
-        SqsChannelSetupUtils.createChannelIfNotExists(sqsAsyncClient, TEST_CHANNEL);
+        new SqsClientHelper(sqsAsyncClient).createChannelIfNotExists(TEST_CHANNEL);
     }
 
     @Test
@@ -110,7 +110,7 @@ public class SqsMessageQueueIntegrationTest {
     }
 
     private SqsTestStreamSource writeToStream(String filename) {
-        SqsTestStreamSource streamSource = new SqsTestStreamSource(sqsAsyncClient, TEST_CHANNEL, filename);
+        SqsTestStreamSource streamSource = new SqsTestStreamSource(new SqsClientHelper(sqsAsyncClient), TEST_CHANNEL, filename);
         streamSource.writeToStream();
         return streamSource;
     }

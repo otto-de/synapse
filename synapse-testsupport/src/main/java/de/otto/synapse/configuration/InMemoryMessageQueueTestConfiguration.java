@@ -31,8 +31,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 @ImportAutoConfiguration(InMemoryChannelTestConfiguration.class)
 public class InMemoryMessageQueueTestConfiguration {
 
-    // TODO: in eine testsupport lib verschieben
-
     private static final Logger LOG = getLogger(InMemoryMessageQueueTestConfiguration.class);
 
     @Bean

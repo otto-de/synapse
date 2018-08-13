@@ -9,8 +9,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 public class InMemoryChannelTestConfiguration {
 
-    // TODO: in eine testsupport lib verschieben
-
     @Bean
     public InMemoryChannels inMemoryChannels(final ObjectMapper objectMapper, final ApplicationEventPublisher eventPublisher) {
         return new InMemoryChannels(objectMapper, eventPublisher);
