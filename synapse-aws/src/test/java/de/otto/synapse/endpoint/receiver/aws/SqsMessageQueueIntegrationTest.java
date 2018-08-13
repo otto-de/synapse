@@ -106,7 +106,7 @@ public class SqsMessageQueueIntegrationTest {
 
         await()
                 .atMost(Duration.FIVE_SECONDS)
-                .until(() -> testMessageInterceptor.getInterceptedMessages().size() == EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET);
+                .until(() -> testMessageInterceptor.getInterceptedMessages().size() >= EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET);
     }
 
     private SqsTestStreamSource writeToStream(String filename) {
