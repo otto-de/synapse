@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -50,6 +51,9 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
             if (exception != null) {
                 LOG.error(String.format("Failed to send message %s", message), exception);
             }
+            if (result != null) {
+                LOG.debug("Successfully sent message ", result);
+            }
         });
     }
 
@@ -69,7 +73,20 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
                                 .messageBody(message.getPayload())
                                 .build()).collect(toList())
                 )
-                .build());
+                .build())
+                .whenComplete((result, exception) -> {
+                        if (exception != null) {
+                            LOG.error("Failed to send batch of messages: " + exception.getMessage(), exception);
+                        }
+                        if (result != null) {
+                            if (!result.successful().isEmpty()) {
+                                LOG.debug("Successfully sent {} messages in a batch", result.successful().size());
+                            }
+                            if (!result.failed().isEmpty()) {
+                                LOG.error("Failed to sent {} messages in a batch: {}", result.failed().size(), result.failed());
+                            }
+                        }
+                });
     }
 
 }

@@ -36,12 +36,17 @@ public class JsonStringMessageTranslator implements MessageTranslator<String> {
      */
     @Override
     @Nonnull
+    @SuppressWarnings("unchecked")
     public Message<String> translate(final @Nonnull Message<?> message) {
         try {
-            final String payload = message.getPayload() != null
-                    ? objectMapper.writeValueAsString(message.getPayload())
-                    : null;
-            return stringMessage(message.getKey(), message.getHeader(), payload);
+            if (message.getPayload() instanceof String) {
+                return (Message<String>) message;
+            } else {
+                final String payload = message.getPayload() != null
+                        ? objectMapper.writeValueAsString(message.getPayload())
+                        : null;
+                return stringMessage(message.getKey(), message.getHeader(), payload);
+            }
         } catch (JsonProcessingException e) {
             throw new IllegalStateException(e.getMessage(), e);
         }

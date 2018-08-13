@@ -15,7 +15,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.otto.synapse.message.Message.message;
-import static java.lang.String.format;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndpoint implements MessageQueueReceiverEndpoint {
