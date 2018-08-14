@@ -16,12 +16,15 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static de.otto.synapse.message.Header.responseHeader;
 import static java.time.Duration.between;
 import static java.time.Instant.now;
 import static java.util.Collections.synchronizedList;
+import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implements MessageLogReceiverEndpoint, MessageQueueReceiverEndpoint {
@@ -42,8 +45,8 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
         this.eventQueue = synchronizedList(new ArrayList<>());
     }
 
-    public void send(final Message<String> message) {
-        LOG.info("Sending {} to {}", message, getChannelName());
+    public synchronized void send(final Message<String> message) {
+        LOG.info("Sending {} to {} at position{}", message, getChannelName(), eventQueue.size());
         eventQueue.add(message);
     }
 
@@ -59,13 +62,14 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
         publishEvent(MessageReceiverStatus.STARTED, "Started InMemoryChannel " + getChannelName(), durationBehind);
         return CompletableFuture.supplyAsync(() -> {
             boolean shouldStop = false;
-            int pos = startFrom.shard(getChannelName()).startFrom() == StartFrom.HORIZON
+            AtomicInteger pos = new AtomicInteger(startFrom.shard(getChannelName()).startFrom() == StartFrom.HORIZON
                     ? -1
-                    : Integer.valueOf(startFrom.shard(getChannelName()).position());
+                    : Integer.valueOf(startFrom.shard(getChannelName()).position()));
             do {
-                if (hasMessageAfter(pos)) {
-                    ++pos;
-                    final Message<String> receivedMessage = eventQueue.get(pos);
+                if (hasMessageAfter(pos.get())) {
+                    final int index = pos.incrementAndGet();
+                    final Message<String> receivedMessage = eventQueue.get(index);
+                    LOG.info("Received message from channel={} at position={}: message={}", getChannelName(), index, receivedMessage);
                     final Message<String> interceptedMessage = intercept(
                             Message.message(
                                     receivedMessage.getKey(),
@@ -88,7 +92,7 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
             } while (!shouldStop && !stopSignal.get());
             publishEvent(MessageReceiverStatus.FINISHED, "Finished InMemoryChannel " + getChannelName(), durationBehind);
             return ChannelPosition.channelPosition(ShardPosition.fromPosition(getChannelName(), String.valueOf(pos)));
-        });
+        }, newSingleThreadExecutor());
     }
 
     @Override
@@ -123,11 +127,7 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
             } while (!stopSignal.get());
             publishEvent(MessageReceiverStatus.FINISHED, "Finished InMemoryChannel " + getChannelName(), durationBehind);
             return null;
-        });
-    }
-
-    public void clear() {
-        eventQueue.clear();
+        }, Executors.newSingleThreadExecutor());
     }
 
     @Override
@@ -135,7 +135,7 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
         stopSignal.set(true);
     }
 
-    private boolean hasMessageAfter(final int pos) {
+    private synchronized boolean hasMessageAfter(final int pos) {
         return eventQueue.size() > (pos+1);
     }
 }
