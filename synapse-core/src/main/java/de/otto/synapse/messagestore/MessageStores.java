@@ -18,16 +18,19 @@ public class MessageStores {
 
     public static MessageStore emptyMessageStore() {
 
-        return new MessageStore() {
-            @Override
-            public ChannelPosition getLatestChannelPosition() {
-                return fromHorizon();
-            }
-
-            @Override
-            public Stream<Message<String>> stream() {
-                return Stream.empty();
-            }
-        };
+        return EMPTY_MESSAGE_STORE;
     }
+
+    private static final MessageStore EMPTY_MESSAGE_STORE = new MessageStore() {
+
+        @Override
+        public ChannelPosition getLatestChannelPosition() {
+            return fromHorizon();
+        }
+
+        @Override
+        public Stream<Message<String>> stream() {
+            return Stream.empty();
+        }
+    };
 }

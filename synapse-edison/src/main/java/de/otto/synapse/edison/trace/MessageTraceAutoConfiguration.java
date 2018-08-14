@@ -1,13 +1,7 @@
 package de.otto.synapse.edison.trace;
 
-import com.google.common.collect.ImmutableMap;
-import de.otto.synapse.endpoint.MessageEndpoint;
-import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
-import de.otto.synapse.messagestore.InMemoryRingBufferMessageStore;
-import de.otto.synapse.messagestore.MessageStore;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -17,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.List;
 import java.util.Optional;
 
-import static com.google.common.collect.ImmutableBiMap.builder;
+import static com.google.common.collect.Iterables.concat;
 import static java.util.Collections.emptyList;
 
 @Configuration
@@ -28,32 +22,19 @@ import static java.util.Collections.emptyList;
         matchIfMissing = true)
 public class MessageTraceAutoConfiguration {
 
-    @Autowired
-    private MessageInterceptorRegistry interceptorRegistry;
-    @Value("${synapse.edison.trace.capacity:100}")
-    private int capacity = 100;
+    @Value("${synapse.edison.trace.capacity:500}")
+    private int capacity = 500;
 
     @Bean
     @ConditionalOnMissingBean
-    public MessageTraces traceMessageStore(final Optional<List<MessageReceiverEndpoint>> messageReceiverEndpoints,
-                                           final Optional<List<MessageSenderEndpoint>> senderEndpoints) {
-        return new MessageTraces(
-                messageStoresFor(messageReceiverEndpoints.orElse(emptyList())),
-                messageStoresFor(senderEndpoints.orElse(emptyList()))
-        );
-    }
+    public MessageTrace messageTrace(final Optional<List<MessageReceiverEndpoint>> messageReceiverEndpoints,
+                                     final Optional<List<MessageSenderEndpoint>> senderEndpoints) {
 
-    private ImmutableMap<String, MessageStore> messageStoresFor(final List<? extends MessageEndpoint> messageEndpoints) {
-        final ImmutableMap.Builder<String,MessageStore> messageStores = builder();
-        messageEndpoints
-                .forEach(endpoint -> {
-                    final InMemoryRingBufferMessageStore messageStore = new InMemoryRingBufferMessageStore(capacity);
-                    endpoint.getInterceptorChain().register(message -> {
-                        messageStore.add(message);
-                        return message;
-                    });
-                    messageStores.put(endpoint.getChannelName(), messageStore);
-                });
-        return messageStores.build();
+        return new MessageTrace(capacity,
+                concat(
+                        messageReceiverEndpoints.orElse(emptyList()),
+                        senderEndpoints.orElse(emptyList())
+                )
+        );
     }
 }

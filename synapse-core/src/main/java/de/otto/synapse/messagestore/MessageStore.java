@@ -6,9 +6,6 @@ import de.otto.synapse.message.Message;
 
 import java.util.stream.Stream;
 
-import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
-import static java.util.Collections.emptyList;
-
 /**
  * A repository used to store and retrieve Messages in their insertion order.
  *
@@ -33,22 +30,6 @@ import static java.util.Collections.emptyList;
  * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageStore.html">EIP: Message Store</a>
  */
 public interface MessageStore extends AutoCloseable {
-
-    final static MessageStore EMPTY_MESSAGE_STORE = new MessageStore() {
-        @Override
-        public ChannelPosition getLatestChannelPosition() {
-            return fromHorizon();
-        }
-
-        @Override
-        public Stream<Message<String>> stream() {
-            return Stream.empty();
-        }
-    };
-
-    static MessageStore empty() {
-        return EMPTY_MESSAGE_STORE;
-    }
 
     /**
      * Returns the latest {@link ChannelPosition} of the MessageStore.

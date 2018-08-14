@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head th:replace="fragments/head  :: head" />
+
+<body>
+
+    <link rel="stylesheet" type="text/css" th:href="@{/css/panel-actions.css}" />
+
+    <div th:replace="fragments/navigation  :: navigation" />
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title" th:text="${title}">Message Trace</h3>
+                        <ul class="list-inline panel-actions">
+                            <li>
+                                <a class="toggle-fullscreen" href="#" role="button" title="Toggle Fullscreen">
+                                    <span class="glyphicon glyphicon-resize-full"></span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="panel-body">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Meta</th>
+                                <th>Received</th>
+                                <th>Sent</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="traceEntry: ${messages}">
+                                <td class="col-md-1" th:text="${traceEntry.sequenceNumber}">1</td>
+                                <td class="col-md-3">
+                                    <dl>
+                                        <dt>Key</dt>
+                                        <dd th:text="${traceEntry.key}"></dd>
+                                        <dt>Channel</dt>
+                                        <dd th:text="${traceEntry.channelName}"></dd>
+                                        <dt>Headers</dt>
+                                        <dd><pre><code th:text="${traceEntry.header}"></code></pre></dd>
+                                    </dl>
+                                </td>
+                                <td class="col-md-4"><pre th:if="${traceEntry.endpointType == 'RECEIVER'}"><code th:text="${traceEntry.payload}"></code></pre></td>
+                                <td class="col-md-4"><pre th:if="${traceEntry.endpointType == 'SENDER'}"><code th:text="${traceEntry.payload}"></code></pre></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- /container -->
+
+    <span th:replace="fragments/footer :: footer" />
+    <script type="text/javascript" th:src="@{/js/init-fullscreen.js}"></script>
+
+</body>
+</html>
