@@ -44,16 +44,16 @@ public class MessageTraceAutoConfiguration {
     }
 
     private ImmutableMap<String, MessageStore> messageStoresFor(final List<? extends MessageEndpoint> messageEndpoints) {
-        final ImmutableMap.Builder<String,MessageStore> senderStores = builder();
+        final ImmutableMap.Builder<String,MessageStore> messageStores = builder();
         messageEndpoints
-                .forEach(senderEndpoint -> {
+                .forEach(endpoint -> {
                     final InMemoryRingBufferMessageStore messageStore = new InMemoryRingBufferMessageStore(capacity);
-                    senderEndpoint.getInterceptorChain().register(message -> {
+                    endpoint.getInterceptorChain().register(message -> {
                         messageStore.add(message);
                         return message;
                     });
-                    senderStores.put(senderEndpoint.getChannelName(), messageStore);
+                    messageStores.put(endpoint.getChannelName(), messageStore);
                 });
-        return senderStores.build();
+        return messageStores.build();
     }
 }

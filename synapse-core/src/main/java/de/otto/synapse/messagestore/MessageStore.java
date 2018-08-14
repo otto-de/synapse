@@ -34,18 +34,20 @@ import static java.util.Collections.emptyList;
  */
 public interface MessageStore extends AutoCloseable {
 
-    static MessageStore empty() {
-        return new MessageStore() {
-            @Override
-            public ChannelPosition getLatestChannelPosition() {
-                return fromHorizon();
-            }
+    final static MessageStore EMPTY_MESSAGE_STORE = new MessageStore() {
+        @Override
+        public ChannelPosition getLatestChannelPosition() {
+            return fromHorizon();
+        }
 
-            @Override
-            public Stream<Message<String>> stream() {
-                return Stream.empty();
-            }
-        };
+        @Override
+        public Stream<Message<String>> stream() {
+            return Stream.empty();
+        }
+    };
+
+    static MessageStore empty() {
+        return EMPTY_MESSAGE_STORE;
     }
 
     /**

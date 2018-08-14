@@ -6,6 +6,7 @@ import com.google.common.collect.Maps;
 import de.otto.edison.navigation.NavBar;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.message.Header;
+import de.otto.synapse.messagestore.MessageStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -52,14 +53,16 @@ public class MessageTraceController {
     )
     public ModelAndView getMessageTrace(final @PathVariable String endpointType,
                                         final @PathVariable String channelName) {
+        final MessageStore messageStore = endpointType.equals("receiver")
+                ? messageTraces.getReceiverTrace(channelName)
+                : messageTraces.getSenderTrace(channelName);
         return new ModelAndView(
                 "messagetrace",
                 ImmutableMap.of(
                         "title", endpointType.equals("receiver") ? "Receiver: " : "Sender: " + channelName,
                         "channelName", channelName,
                         "messages",
-                        messageTraces
-                                .getReceiverTrace(channelName)
+                        messageStore
                                 .stream()
                                 .map(message -> ImmutableMap.of(
                                         "key", message.getKey(),

@@ -2,6 +2,7 @@ package de.otto.synapse.edison.trace;
 
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
+import de.otto.synapse.message.Message;
 import de.otto.synapse.messagestore.MessageStore;
 
 import java.util.Set;
@@ -37,8 +38,7 @@ public class MessageTraces {
      * @return MessageStore or null, if there is no sender trace available for the given channel.
      */
     public MessageStore getReceiverTrace(final String channelName) {
-        final MessageStore messageStore = receiverTraces.get(channelName);
-        return messageStore != null ? messageStore : MessageStore.empty();
+        return receiverTraces.getOrDefault(channelName, MessageStore.empty());
     }
 
     /**
@@ -59,6 +59,6 @@ public class MessageTraces {
      * @return MessageStore or null, if there is no sender trace available for the given channel.
      */
     public MessageStore getSenderTrace(final String channelName) {
-        return senderTraces.get(channelName);
+        return senderTraces.getOrDefault(channelName, MessageStore.empty());
     }
 }
