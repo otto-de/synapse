@@ -22,4 +22,7 @@ public class InMemoryChannels {
         return channels.get(channelName);
     }
 
+    public void clear() {
+        channels.values().forEach(InMemoryChannel::clear);
+    }
 }

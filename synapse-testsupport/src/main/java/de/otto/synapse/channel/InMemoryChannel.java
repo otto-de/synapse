@@ -126,6 +126,10 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
         });
     }
 
+    public void clear() {
+        eventQueue.clear();
+    }
+
     @Override
     public void stop() {
         stopSignal.set(true);
