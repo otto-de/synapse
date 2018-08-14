@@ -37,7 +37,8 @@ public class MessageTraces {
      * @return MessageStore or null, if there is no sender trace available for the given channel.
      */
     public MessageStore getReceiverTrace(final String channelName) {
-        return receiverTraces.get(channelName);
+        final MessageStore messageStore = receiverTraces.get(channelName);
+        return messageStore != null ? messageStore : MessageStore.empty();
     }
 
     /**
