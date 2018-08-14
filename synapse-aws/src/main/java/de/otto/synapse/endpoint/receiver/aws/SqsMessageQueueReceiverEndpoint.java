@@ -83,8 +83,8 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
     }
 
     private void processResponse(ReceiveMessageResponse response) {
-        LOG.debug("Received {} messages from SQS.", response.messages().size());
         if (response.messages() != null) {
+            LOG.debug("Received {} messages from SQS.", response.messages().size());
             response.messages()
                     .forEach(this::processMessage);
         }
