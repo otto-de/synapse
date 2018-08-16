@@ -1,16 +1,21 @@
 package de.otto.synapse.testsupport;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.synapse.configuration.aws.SqsTestConfiguration;
 import de.otto.synapse.endpoint.SqsClientHelper;
+import de.otto.synapse.endpoint.sender.aws.SqsMessageSender;
+import de.otto.synapse.message.Message;
+import de.otto.synapse.translator.JsonStringMessageTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.services.sqs.SQSAsyncClient;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.concurrent.ExecutionException;
-
-import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 
 /**
  * This class is a data source for supplying input to the Amazon Kinesis stream. It reads lines from the
@@ -22,13 +27,18 @@ public class SqsTestStreamSource {
     private static final Logger LOG = LoggerFactory.getLogger(SqsTestStreamSource.class);
 
     private final String channelName;
-    private final SqsClientHelper sqsClient;
     private final String inputFile;
+    private final SqsMessageSender messageSender;
 
-    public SqsTestStreamSource(SqsClientHelper sqsClient, String channelName, String inputFile) {
-        this.sqsClient = sqsClient;
+    public SqsTestStreamSource(String channelName, String inputFile) {
         this.inputFile = inputFile;
         this.channelName = channelName;
+        final SQSAsyncClient sqsAsyncClient = new SqsTestConfiguration().sqsAsyncClient();
+        final URL queueUrl = new SqsClientHelper(sqsAsyncClient).getQueueUrl(channelName);
+        messageSender = new SqsMessageSender(
+                channelName,
+                queueUrl.toString(),
+                new JsonStringMessageTranslator(new ObjectMapper()), sqsAsyncClient, "SqsTestStreamSource");
     }
 
     public void writeToStream() {
@@ -48,7 +58,7 @@ public class SqsTestStreamSource {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
             while ((line = br.readLine()) != null) {
-                sqsClient.sendMessage(channelName, "some-message", line);
+                messageSender.send(Message.message("some-message", line));
             }
         }
     }

@@ -1,6 +1,7 @@
 package de.otto.synapse.endpoint.receiver.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import de.otto.synapse.message.Message;
@@ -11,9 +12,11 @@ import software.amazon.awssdk.services.sqs.model.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -73,6 +76,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
             sqsAsyncClient.receiveMessage(ReceiveMessageRequest.builder()
                     .queueUrl(queueUrl)
                     .visibilityTimeout(VISIBILITY_TIMEOUT)
+                    .messageAttributeNames(".*")
                     .waitTimeSeconds(WAIT_TIME_SECONDS)
                     .build()
             ).thenAccept(this::processResponse).get();
@@ -91,11 +95,11 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
     }
 
     private void processMessage(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
-        LOG.debug("Processing message from channel={}: messageId={} receiptHandle={}, attributes={}, messageAttributes={}", getChannelName(), sqsMessage.messageId(), sqsMessage.receiptHandle(), sqsMessage.attributesAsStrings());
-        final String key = sqsMessage.messageAttributes() != null
-                ? sqsMessage.messageAttributes().getOrDefault(MSG_KEY_ATTR, EMPTY_STRING_ATTR).stringValue()
-                : "";
-        final Message<String> message = message(key, sqsMessage.body());
+        LOG.debug("Processing message from channel={}: messageId={} receiptHandle={}, messageAttributes={}", getChannelName(), sqsMessage.messageId(), sqsMessage.receiptHandle(), sqsMessage.messageAttributes());
+        final Message<String> message = message(
+                messageKeyOf(sqsMessage),
+                responseHeader(null, Instant.now(), messageAttributesOf(sqsMessage)),
+                sqsMessage.body());
 
         final Message<String> interceptedMessage = intercept(message);
         if (interceptedMessage != null) {
@@ -103,6 +107,30 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
             getMessageDispatcher().accept(interceptedMessage);
         }
         deleteMessage(sqsMessage);
+    }
+
+    private String messageKeyOf(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
+        return sqsMessage.messageAttributes() != null
+                ? sqsMessage.messageAttributes().getOrDefault(MSG_KEY_ATTR, EMPTY_STRING_ATTR).stringValue()
+                : "";
+    }
+
+    private ImmutableMap<String, Object> messageAttributesOf(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
+        if (sqsMessage.messageAttributes() != null) {
+            final ImmutableMap.Builder<String, Object> attributeBuilder = ImmutableMap.builder();
+            sqsMessage.messageAttributes().entrySet().forEach(entry -> {
+                switch (entry.getValue().dataType()) {
+                    case "String":
+                        attributeBuilder.put(entry.getKey(), entry.getValue().stringValue());
+                        break;
+                    default:
+                        LOG.warn("Ignoring messageAttribute {} with dataType {}: Not yet implemented this type.", entry.getKey(), entry.getValue().dataType());
+                }
+            });
+            return attributeBuilder.build();
+        } else {
+            return ImmutableMap.of();
+        }
     }
 
     private void deleteMessage(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {

@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint.sender.aws;
 
+import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
@@ -12,8 +13,6 @@ import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 import javax.annotation.Nonnull;
-import java.util.Collections;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -26,17 +25,21 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
     private static final Logger LOG = LoggerFactory.getLogger(SqsMessageSender.class);
 
     public static final String MSG_KEY_ATTR = "synapse_msg_key";
+    public static final String MSG_SENDER_ATTR = "synapse_msg_sender";
 
     private final String queueUrl;
+    private final String messageSender;
     private final SQSAsyncClient sqsAsyncClient;
 
     public SqsMessageSender(final String channelName,
                             final String queueUrl,
                             final MessageTranslator<String> messageTranslator,
-                            final SQSAsyncClient sqsAsyncClient) {
+                            final SQSAsyncClient sqsAsyncClient,
+                            final String messageSender) {
         super(channelName, messageTranslator);
         this.queueUrl = queueUrl;
         this.sqsAsyncClient = sqsAsyncClient;
+        this.messageSender = messageSender;
     }
 
     @Override
@@ -44,7 +47,9 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
         sqsAsyncClient.sendMessage(
                 SendMessageRequest.builder()
                         .queueUrl(queueUrl)
-                        .messageAttributes(Collections.singletonMap(MSG_KEY_ATTR, MessageAttributeValue.builder().dataType("String").stringValue(message.getKey()).build()))
+                        .messageAttributes(ImmutableMap.of(
+                                MSG_KEY_ATTR, MessageAttributeValue.builder().dataType("String").stringValue(message.getKey()).build(),
+                                MSG_SENDER_ATTR, MessageAttributeValue.builder().dataType("String").stringValue(messageSender).build()))
                         .messageBody(message.getPayload())
                         .build()
         ).whenComplete((result, exception) -> {

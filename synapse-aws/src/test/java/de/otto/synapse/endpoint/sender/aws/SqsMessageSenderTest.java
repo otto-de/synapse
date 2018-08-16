@@ -43,7 +43,7 @@ public class SqsMessageSenderTest {
 
     @Before
     public void setUp() {
-        sqsMessageSender = new SqsMessageSender("test", "https://example.com/test", messageTranslator, sqsAsyncClient);
+        sqsMessageSender = new SqsMessageSender("test", "https://example.com/test", messageTranslator, sqsAsyncClient, "test");
     }
 
     @Test
@@ -65,6 +65,7 @@ public class SqsMessageSenderTest {
 
         assertThat(capturedRequest.queueUrl(), is("https://example.com/test"));
         assertThat(capturedRequest.messageAttributes(), hasEntry("synapse_msg_key", MessageAttributeValue.builder().dataType("String").stringValue("some-key").build()));
+        assertThat(capturedRequest.messageAttributes(), hasEntry("synapse_msg_sender", MessageAttributeValue.builder().dataType("String").stringValue("test").build()));
         assertThat(capturedRequest.messageBody(), is("{\"value\":\"banana\"}"));
     }
 

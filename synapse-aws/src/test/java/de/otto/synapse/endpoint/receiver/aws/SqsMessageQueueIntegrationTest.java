@@ -22,14 +22,15 @@ import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.sqs.SQSAsyncClient;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.synchronizedSet;
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
@@ -93,6 +94,11 @@ public class SqsMessageQueueIntegrationTest {
                 .atMost(Duration.FIVE_SECONDS)
                 .until(() -> messages.size() >= EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET);
         sqsMessageQueue.stop();
+        assertThat(messages.get(0).getKey(), is("some-message"));
+        assertThat(messages.get(0).getHeader().getShardPosition(), is(Optional.empty()));
+        assertThat(messages.get(0).getHeader().getArrivalTimestamp(), is(notNullValue()));
+        assertThat(messages.get(0).getHeader().getAttribute("synapse_msg_key"), is("some-message"));
+        assertThat(messages.get(0).getHeader().getAttribute("synapse_msg_sender"), is("SqsTestStreamSource"));
     }
 
     @Test
@@ -109,8 +115,8 @@ public class SqsMessageQueueIntegrationTest {
                 .until(() -> testMessageInterceptor.getInterceptedMessages().size() >= EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET);
     }
 
-    private SqsTestStreamSource writeToStream(String filename) {
-        SqsTestStreamSource streamSource = new SqsTestStreamSource(new SqsClientHelper(sqsAsyncClient), TEST_CHANNEL, filename);
+    private SqsTestStreamSource writeToStream(final String filename) {
+        final SqsTestStreamSource streamSource = new SqsTestStreamSource(TEST_CHANNEL, filename);
         streamSource.writeToStream();
         return streamSource;
     }

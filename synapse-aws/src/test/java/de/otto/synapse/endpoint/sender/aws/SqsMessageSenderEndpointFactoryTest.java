@@ -25,7 +25,7 @@ public class SqsMessageSenderEndpointFactoryTest {
         final SQSAsyncClient sqsAsyncClient = mock(SQSAsyncClient.class);
         when(sqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl("http://example.com").build()));
 
-        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, sqsAsyncClient);
+        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, sqsAsyncClient, "test");
 
         final MessageSenderEndpoint sender = factory.create("foo-stream");
         assertThat(sender.getChannelName(), is("foo-stream"));
@@ -42,7 +42,7 @@ public class SqsMessageSenderEndpointFactoryTest {
         final MessageInterceptor interceptor = mock(MessageInterceptor.class);
         registry.register(MessageInterceptorRegistration.allChannelsWith(interceptor));
 
-        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(registry, objectMapper, sqsAsyncClient);
+        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(registry, objectMapper, sqsAsyncClient, "test");
 
         final MessageSenderEndpoint sender = factory.create("foo-stream");
 

@@ -8,6 +8,7 @@ import de.otto.synapse.endpoint.receiver.aws.SqsMessageQueueReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.endpoint.sender.aws.SqsMessageSenderEndpointFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
@@ -41,8 +42,9 @@ public class SqsAutoConfiguration {
     @ConditionalOnMissingBean(name = "messageQueueSenderEndpointFactory")
     public MessageSenderEndpointFactory messageQueueSenderEndpointFactory(final MessageInterceptorRegistry registry,
                                                                           final ObjectMapper objectMapper,
-                                                                          final SQSAsyncClient sqsAsyncClient) {
-        return new SqsMessageSenderEndpointFactory(registry, objectMapper, sqsAsyncClient);
+                                                                          final SQSAsyncClient sqsAsyncClient,
+                                                                          final @Value("${spring.application.name:Synapse Service}") String messageSenderName) {
+        return new SqsMessageSenderEndpointFactory(registry, objectMapper, sqsAsyncClient, messageSenderName);
     }
 
     @Bean
