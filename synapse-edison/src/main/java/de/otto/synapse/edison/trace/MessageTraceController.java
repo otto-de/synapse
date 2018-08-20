@@ -40,16 +40,12 @@ public class MessageTraceController {
         rightNavBar.register(
                 navBarItem(10, "Message Trace", format("%s/messagetrace", managementServerProperties.getContextPath()))
         );
-        messageTrace.getSenderChannels().forEach(channelName -> {
-            rightNavBar.register(
-                    navBarItem(11, "Sender: " + channelName, format("%s/messagetrace/sender/%s", managementServerProperties.getContextPath(), channelName))
-            );
-        });
-        messageTrace.getReceiverChannels().forEach(channelName -> {
-            rightNavBar.register(
-                    navBarItem(12, "Receiver: " + channelName, format("%s/messagetrace/receiver/%s", managementServerProperties.getContextPath(), channelName))
-            );
-        });
+        messageTrace.getSenderChannels().forEach(channelName -> rightNavBar.register(
+                navBarItem(11, "Sender: " + channelName, format("%s/messagetrace/sender/%s", managementServerProperties.getContextPath(), channelName))
+        ));
+        messageTrace.getReceiverChannels().forEach(channelName -> rightNavBar.register(
+                navBarItem(12, "Receiver: " + channelName, format("%s/messagetrace/receiver/%s", managementServerProperties.getContextPath(), channelName))
+        ));
     }
 
     @GetMapping(

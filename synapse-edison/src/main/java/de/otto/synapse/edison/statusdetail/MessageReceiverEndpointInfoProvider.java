@@ -16,9 +16,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 
 import static de.otto.synapse.channel.ChannelDurationBehind.unknown;
 import static java.lang.String.format;
