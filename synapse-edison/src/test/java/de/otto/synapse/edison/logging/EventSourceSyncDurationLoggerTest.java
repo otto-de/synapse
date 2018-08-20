@@ -1,31 +1,54 @@
 package de.otto.synapse.edison.logging;
 
 import de.otto.edison.testsupport.util.TestClock;
-import de.otto.synapse.edison.logging.EventSourceSyncDurationLogger;
+import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.info.MessageReceiverNotification;
 import de.otto.synapse.info.MessageReceiverStatus;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
+import static com.google.common.collect.ImmutableList.of;
 import static de.otto.synapse.channel.ChannelDurationBehind.channelDurationBehind;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class EventSourceSyncDurationLoggerTest {
 
     private EventSourceSyncDurationLogger eventSourceSyncDurationLogger;
     private TestClock testClock;
+    private List<String> logMessages = new ArrayList<>();
+
 
     @Before
     public void setUp() {
+        logMessages.clear();
         testClock = TestClock.now();
-        eventSourceSyncDurationLogger = new EventSourceSyncDurationLogger();
+        EventSource eventSourceA = withMockEventSource("channelA");
+        EventSource eventSourceB = withMockEventSource("channelB");
+
+        eventSourceSyncDurationLogger = new EventSourceSyncDurationLogger(of(eventSourceA, eventSourceB)) {
+            @Override
+            void log(String message) {
+                logMessages.add(message);
+            }
+        };
         eventSourceSyncDurationLogger.setClock(testClock);
+    }
+
+    private EventSource withMockEventSource(String channelName) {
+        EventSource eventSource = mock(EventSource.class);
+        when(eventSource.getChannelName()).thenReturn(channelName);
+        return eventSource;
     }
 
     @Test
@@ -34,10 +57,10 @@ public class EventSourceSyncDurationLoggerTest {
         startingEvent("channelA");
         testClock.proceed(5, MINUTES);
         testClock.proceed(2, SECONDS);
-        String message = inSyncEvent("channelA");
+        inSyncEvent("channelA");
 
         //then
-        assertThat(message, is("KinesisEventSource 'channelA' duration for getting in sync : PT5M2S"));
+        assertThat(logMessages.get(0), is("KinesisEventSource 'channelA' duration for getting in sync: PT5M2S"));
     }
 
 
@@ -48,25 +71,30 @@ public class EventSourceSyncDurationLoggerTest {
         testClock.proceed(1, MINUTES);
         startingEvent("channelB");
         testClock.proceed(5, MINUTES);
-        String messageA = inSyncEvent("channelA");
-        String messageB = inSyncEvent("channelB");
+        inSyncEvent("channelA");
+        inSyncEvent("channelB");
 
         //then
-        assertThat(messageA, is("KinesisEventSource 'channelA' duration for getting in sync : PT6M"));
-        assertThat(messageB, is("KinesisEventSource 'channelB' duration for getting in sync : PT5M"));
+        assertThat(logMessages, hasSize(3));
+        assertThat(logMessages.get(0), is("KinesisEventSource 'channelA' duration for getting in sync: PT6M"));
+        assertThat(logMessages.get(1), is("KinesisEventSource 'channelB' duration for getting in sync: PT5M"));
+        assertThat(logMessages.get(2), is("All channels up to date after PT6M"));
+
+
     }
 
     @Test
     public void shouldPrintEventSourceDurationForMultipleChannelsAndIgnoreFutureNotifications() {
         shouldPrintEventSourceDurationForMultipleChannels();
+        logMessages.clear();
 
-        String message = inSyncEvent("channelB");
+        inSyncEvent("channelB");
 
-        assertThat(message, isEmptyString());
+        assertThat(logMessages, hasSize(0));
     }
 
-    private String inSyncEvent(String channelName) {
-        return this.eventSourceSyncDurationLogger.on(MessageReceiverNotification.builder()
+    private void inSyncEvent(String channelName) {
+        this.eventSourceSyncDurationLogger.on(MessageReceiverNotification.builder()
                 .withStatus(MessageReceiverStatus.RUNNING)
                 .withChannelDurationBehind(channelDurationBehind().with("shard1", Duration.ofSeconds(1)).build())
                 .withChannelName(channelName)

@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.9.3
+* Log times required to consume streams at startup   
+
 ## 0.9.0
 * Adds annotation @EnableMessageQueueReceiverEndpoint to auto-configure SQS message-queue receivers
 * Adds annotation @MessageQueueConsumer to auto-configure SQS message-queue listeners
