@@ -10,6 +10,7 @@ import org.junit.Test;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static com.google.common.collect.ImmutableList.of;
 import static de.otto.synapse.channel.ChannelDurationBehind.channelDurationBehind;
@@ -35,8 +36,8 @@ public class EventSourceSyncDurationLoggerTest {
         testClock = TestClock.now();
         EventSource eventSourceA = withMockEventSource("channelA");
         EventSource eventSourceB = withMockEventSource("channelB");
-
-        eventSourceSyncDurationLogger = new EventSourceSyncDurationLogger(of(eventSourceA, eventSourceB)) {
+        Optional<List<EventSource>> optionalList = Optional.of(of(eventSourceA, eventSourceB));
+        eventSourceSyncDurationLogger = new EventSourceSyncDurationLogger(optionalList) {
             @Override
             void log(String message) {
                 logMessages.add(message);
@@ -92,6 +93,22 @@ public class EventSourceSyncDurationLoggerTest {
 
         assertThat(logMessages, hasSize(0));
     }
+
+
+    @Test
+    public void shouldIgnoreNotificationsOnMissingEventSources() {
+        // given
+        eventSourceSyncDurationLogger = new EventSourceSyncDurationLogger(Optional.empty());
+
+        // when
+        startingEvent("unknown");
+        testClock.proceed(1, MINUTES);
+        inSyncEvent("unknown");
+
+        // then
+        assertThat(logMessages, hasSize(0));
+    }
+
 
     private void inSyncEvent(String channelName) {
         this.eventSourceSyncDurationLogger.on(MessageReceiverNotification.builder()
