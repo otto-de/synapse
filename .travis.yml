@@ -1,7 +1,15 @@
+sudo: required
+
 language: java
 
 jdk:
   - oraclejdk8
+
+services:
+  - docker
+
+before_install:
+  - docker pull localstack/localstack
 
 install: /bin/true # skip gradle assemble
 
