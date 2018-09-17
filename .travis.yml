@@ -10,6 +10,8 @@ services:
 
 before_install:
   - docker pull localstack/localstack
+  - export AWS_ACCESS_KEY_ID=localstack
+  - export AWS_SECRET_ACCESS_KEY=localstack
 
 install: /bin/true # skip gradle assemble
 
