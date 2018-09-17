@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Primary;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 
 import java.net.URI;
@@ -44,6 +45,7 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
         if (testEnvironment.equals("local")) {
             return builder()
                     .endpointOverride(URI.create("http://localhost:4568"))
+                    .region(Region.EU_CENTRAL_1)
                     .credentialsProvider(StaticCredentialsProvider.create(
                             AwsCredentials.create("foobar", "foobar")))
                     .build();
