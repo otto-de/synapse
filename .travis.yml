@@ -5,4 +5,4 @@ jdk:
 
 install: /bin/true # skip gradle assemble
 
-script: gradlew check
+script: ./gradlew check
