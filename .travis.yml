@@ -15,4 +15,4 @@ before_install:
 
 install: /bin/true # skip gradle assemble
 
-script: ./gradlew check
+script: ./gradlew check --info
