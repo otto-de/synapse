@@ -66,8 +66,6 @@ public class CompactionAcceptanceTest {
     @Autowired
     private SnapshotWriteService snapshotWriteService;
 
-    @Autowired
-    private S3Service s3Service;
 
     @Autowired
     private CompactionService compactionService;
@@ -75,10 +73,13 @@ public class CompactionAcceptanceTest {
     @Autowired
     private StateRepository<String> stateRepository;
 
+    private S3Service s3Service;
+
     @Before
     public void setup() throws IOException {
         KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, INTEGRATION_TEST_STREAM, 2);
         deleteSnapshotFilesFromTemp();
+        s3Service = new S3Service(s3Client);
         s3Service.createBucket(INTEGRATION_TEST_BUCKET);
         s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
     }
