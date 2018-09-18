@@ -34,7 +34,6 @@ public class SnapshotParserTest {
         Map<String, Map> allData = new HashMap<>();
         //when
         final MessageConsumer<Map> messageConsumer = MessageConsumer.of(".*", Map.class, (event) -> {
-            System.out.println(event.getPayload());
             allData.put(event.getKey(), event.getPayload());
         });
         final ChannelPosition shardPositions = testee.parse(

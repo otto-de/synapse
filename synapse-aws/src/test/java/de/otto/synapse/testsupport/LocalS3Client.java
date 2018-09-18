@@ -1,5 +1,6 @@
 package de.otto.synapse.testsupport;
 
+import org.slf4j.Logger;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -21,9 +22,11 @@ import java.util.stream.Collectors;
 
 import static com.google.common.io.ByteStreams.toByteArray;
 import static de.otto.synapse.testsupport.BucketItem.bucketItemBuilder;
+import static org.slf4j.LoggerFactory.getLogger;
 
 public class LocalS3Client implements S3Client {
 
+    private static final Logger LOG = getLogger(LocalS3Client.class);
     private static final Instant BUCKET_DEFAULT_CREATION_DATE = Instant.parse("2017-01-01T10:00:00.00Z");
 
     private Map<String, Map<String, BucketItem>> bucketsWithContents;
@@ -126,7 +129,7 @@ public class LocalS3Client implements S3Client {
 
     @Override
     public void close() {
-        System.out.println("s3 closing...");
+        LOG.debug("s3 closing...");
     }
 
     @Override
