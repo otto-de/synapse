@@ -19,13 +19,12 @@ before_install:
   - docker pull localstack/localstack
   - pip install --user awscli # install aws cli w/o sudo
   - export PATH=$PATH:$HOME/.local/bin # put aws in the path
-  - eval $(aws --endpoint-url=http://localhost:4568 kinesis list-streams) #needs AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY envvars
 
 install: /bin/true # skip gradle assemble
 
 script: 
   - ./gradlew startLocalStack
-  - curl http://localhost:4568
+  - eval $(aws --endpoint-url=http://localhost:4568 kinesis list-streams) #needs AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY envvars
   - ./gradlew stopLocalStack
   - ./gradlew check --info
 
