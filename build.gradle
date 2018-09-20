@@ -17,10 +17,11 @@ ext {
     edisonVersion = "1.2.19"
 }
 
+apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'io.codearte.nexus-staging'
-
+apply from: "${rootDir}/jacoco.gradle"
 
 nexusStaging {
     username=sonatypeUsername
@@ -32,6 +33,7 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
     apply plugin: 'eclipse'
+    apply from: "${rootDir}/jacoco.gradle"
 
     version = '0.9.5-SNAPSHOT'
     group = 'de.otto.synapse'
