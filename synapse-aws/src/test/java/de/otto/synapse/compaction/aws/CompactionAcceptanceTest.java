@@ -4,6 +4,7 @@ import com.google.common.base.Charsets;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import de.otto.edison.aws.s3.S3Service;
+import de.otto.synapse.annotation.EnableEventSourcing;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
@@ -50,6 +51,7 @@ import static org.junit.Assert.assertThat;
         "synapse.snapshot.bucket-name=de-otto-promo-compaction-test-snapshots",
         "synapse.compaction.enabled=true"}
 )
+@EnableEventSourcing
 public class CompactionAcceptanceTest {
 
     private static final String INTEGRATION_TEST_STREAM = "promo-compaction-test";

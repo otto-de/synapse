@@ -1,0 +1,106 @@
+package de.otto.synapse.annotation.messagequeue;
+
+import de.otto.synapse.configuration.InMemoryMessageQueueTestConfiguration;
+import de.otto.synapse.endpoint.receiver.DelegateMessageQueueReceiverEndpoint;
+import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
+import org.junit.After;
+import org.junit.Test;
+import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.boot.test.util.EnvironmentTestUtils.addEnvironment;
+
+public class MessageQueueReceiverEndpointBeanRegistrarTest {
+
+    private AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+
+    @After
+    public void close() {
+        if (this.context != null) {
+            this.context.close();
+        }
+    }
+
+    @EnableMessageQueueReceiverEndpoint(name = "testQueue", channelName = "test-channel")
+    private static class SingleQueueTestConfig {
+    }
+
+    @EnableMessageQueueReceiverEndpoint(channelName = "test-channel")
+    private static class SingleUnnamedQueueTestConfig {
+    }
+
+    @EnableMessageQueueReceiverEndpoint(name = "broken", channelName = "some-channel")
+    @EnableMessageQueueReceiverEndpoint(name = "broken", channelName = "some-channel")
+    private static class RepeatableQueueTestConfigWithSameNames {
+    }
+
+    @EnableMessageQueueReceiverEndpoint(channelName = "some-channel")
+    @EnableMessageQueueReceiverEndpoint(channelName = "other-channel")
+    private static class RepeatableUnnamedQueueTestConfigWithDifferentChannels {
+    }
+
+    @EnableMessageQueueReceiverEndpoint(name = "firstQueue", channelName = "first-channel")
+    @EnableMessageQueueReceiverEndpoint(name = "secondQueue", channelName = "${test.channel-name}")
+    private static class RepeatableQueueTestConfig {
+    }
+
+    @Test
+    public void shouldRegisterMessageQueueReceiverEndpointBean() {
+        context.register(SingleQueueTestConfig.class);
+        context.register(InMemoryMessageQueueTestConfiguration.class);
+        context.refresh();
+
+        assertThat(context.containsBean("testQueue")).isTrue();
+    }
+
+    @Test
+    public void shouldRegisterMessageLogReceiverEndpointWithNameDerivedFromChannelName() {
+        context.register(SingleUnnamedQueueTestConfig.class);
+        context.register(InMemoryMessageQueueTestConfiguration.class);
+        context.refresh();
+
+        assertThat(context.containsBean("testChannelMessageQueueReceiverEndpoint")).isTrue();
+        final MessageQueueReceiverEndpoint receiverEndpoint = context.getBean("testChannelMessageQueueReceiverEndpoint", MessageQueueReceiverEndpoint.class);
+        assertThat(receiverEndpoint.getChannelName()).isEqualTo("test-channel");
+    }
+
+    @Test(expected = BeanCreationException.class)
+    public void shouldFailToRegisterMultipleQueuesForSameChannelNameWithSameName() {
+        context.register(RepeatableQueueTestConfigWithSameNames.class);
+        context.register(InMemoryMessageQueueTestConfiguration.class);
+        context.refresh();
+    }
+
+    @Test
+    public void shouldRegisterMultipleUnnamedQueuesForDifferentChannels() {
+        context.register(RepeatableUnnamedQueueTestConfigWithDifferentChannels.class);
+        context.register(InMemoryMessageQueueTestConfiguration.class);
+        context.refresh();
+
+        assertThat(context.getBean("someChannelMessageQueueReceiverEndpoint", MessageQueueReceiverEndpoint.class).getChannelName()).isEqualTo("some-channel");
+        assertThat(context.getBean("otherChannelMessageQueueReceiverEndpoint", MessageQueueReceiverEndpoint.class).getChannelName()).isEqualTo("other-channel");
+    }
+
+    @Test
+    public void shouldRegisterMultipleQueues() {
+        context.register(RepeatableQueueTestConfig.class);
+        context.register(InMemoryMessageQueueTestConfiguration.class);
+        addEnvironment(this.context,
+                "test.channel-name=second-channel"
+        );
+        context.refresh();
+
+        assertThat(context.containsBean("firstQueue")).isTrue();
+        assertThat(context.containsBean("secondQueue")).isTrue();
+
+        final MessageQueueReceiverEndpoint first = context.getBean("firstQueue", MessageQueueReceiverEndpoint.class);
+        assertThat(first.getChannelName()).isEqualTo("first-channel");
+        assertThat(first).isInstanceOf(DelegateMessageQueueReceiverEndpoint.class);
+
+        final MessageQueueReceiverEndpoint second = context.getBean("secondQueue", MessageQueueReceiverEndpoint.class);
+        assertThat(second.getChannelName()).isEqualTo("second-channel");
+        assertThat(second).isInstanceOf(DelegateMessageQueueReceiverEndpoint.class);
+    }
+
+}

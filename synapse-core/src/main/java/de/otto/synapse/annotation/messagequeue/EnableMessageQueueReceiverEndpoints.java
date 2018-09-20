@@ -1,5 +1,6 @@
 package de.otto.synapse.annotation.messagequeue;
 
+import de.otto.synapse.configuration.MessageQueueReceiverEndpointAutoConfiguration;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
@@ -7,7 +8,9 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Import(MessageQueueReceiverEndpointBeanRegistrar.class)
+@Import({
+        MessageQueueReceiverEndpointAutoConfiguration.class,
+        MessageQueueReceiverEndpointBeanRegistrar.class})
 public @interface EnableMessageQueueReceiverEndpoints {
     EnableMessageQueueReceiverEndpoint[] value();
 }

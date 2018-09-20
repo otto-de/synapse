@@ -1,6 +1,7 @@
 package de.otto.synapse.messagestore.aws;
 
 import de.otto.edison.aws.s3.S3Service;
+import de.otto.synapse.annotation.EnableEventSourcing;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.compaction.aws.CompactionService;
 import de.otto.synapse.compaction.aws.SnapshotReadService;
@@ -41,6 +42,7 @@ import static org.junit.Assert.assertThat;
         "synapse.snapshot.bucket-name=de-otto-promo-compaction-test-snapshots",
         "synapse.compaction.enabled=true"}
 )
+@EnableEventSourcing
 public class S3SnapshotMessageStoreAcceptanceTest {
 
     private static final String INTEGRATION_TEST_STREAM = "promo-compaction-test";

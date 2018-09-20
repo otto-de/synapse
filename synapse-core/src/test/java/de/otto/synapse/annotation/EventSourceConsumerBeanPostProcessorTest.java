@@ -37,7 +37,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test
     public void shouldRegisterMultipleEventConsumers() {
-        context.register(SynapseAutoConfiguration.class);
         context.register(ThreeConsumersAtTwoEventSourcesConfiguration.class);
         context.register(InMemoryMessageLogTestConfiguration.class);
         context.refresh();
@@ -56,7 +55,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test(expected = BeanCreationException.class)
     public void shouldFailToRegisterConsumerBecauseOfMissingEventSource() {
-        context.register(SynapseAutoConfiguration.class);
         context.register(TestConfigurationWithMissingEventSource.class);
         context.register(InMemoryMessageLogTestConfiguration.class);
         context.refresh();
@@ -64,7 +62,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test
     public void shouldCreateEventConsumerWithSpecificPayloadType() {
-        context.register(SynapseAutoConfiguration.class);
         context.register(TestConfigurationDifferentPayload.class);
         context.register(InMemoryMessageLogTestConfiguration.class);
         context.refresh();
@@ -79,7 +76,6 @@ public class EventSourceConsumerBeanPostProcessorTest {
 
     @Test
     public void shouldRegisterEventConsumerWithSpecificKeyPattern() {
-        context.register(SynapseAutoConfiguration.class);
         context.register(TestConfigurationDifferentPayload.class);
         context.register(InMemoryMessageLogTestConfiguration.class);
         context.refresh();

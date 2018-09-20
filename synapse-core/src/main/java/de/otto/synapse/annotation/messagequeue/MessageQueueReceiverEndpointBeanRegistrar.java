@@ -66,14 +66,11 @@ public class MessageQueueReceiverEndpointBeanRegistrar implements ImportBeanDefi
                                                                final AnnotationAttributes[] annotationAttributesArr) {
         for (final AnnotationAttributes annotationAttributes : annotationAttributesArr) {
             final String channelName = environment.resolvePlaceholders(annotationAttributes.getString("channelName"));
-            final String messageQueueBeanName = Objects.toString(
-                    emptyToNull(annotationAttributes.getString("name")),
-                    beanNameForMessageQueue(channelName));
             final String messageQueueReceiverEndpointBeanName = Objects.toString(
-                    emptyToNull(annotationAttributes.getString("messageQueueReceiverEndpoint")),
+                    emptyToNull(annotationAttributes.getString("name")),
                     beanNameForMessageQueueReceiverEndpoint(channelName));
             if (!registry.containsBeanDefinition(messageQueueReceiverEndpointBeanName)) {
-                registerMessageQueueReceiverEndpointBeanDefinition(registry, messageQueueBeanName, channelName);
+                registerMessageQueueReceiverEndpointBeanDefinition(registry, messageQueueReceiverEndpointBeanName, channelName);
             } else {
                 throw new BeanCreationException(messageQueueReceiverEndpointBeanName, format("messageQueueReceiverEndpoint %s is already registered.", messageQueueReceiverEndpointBeanName));
             }
@@ -87,16 +84,12 @@ public class MessageQueueReceiverEndpointBeanRegistrar implements ImportBeanDefi
             final String channelName = environment.resolvePlaceholders(
                     messageQueueAttr.getFirst("channelName").toString());
 
-            final String messageQueueBeanName = Objects.toString(
-                    emptyToNull(messageQueueAttr.getFirst("name").toString()),
-                    beanNameForMessageQueue(channelName));
-
             final String messageQueueReceiverEndpointBeanName = Objects.toString(
-                    emptyToNull(messageQueueAttr.getFirst("messageQueueReceiverEndpoint").toString()),
+                    emptyToNull(messageQueueAttr.getFirst("name").toString()),
                     beanNameForMessageQueueReceiverEndpoint(channelName));
 
             if (!registry.containsBeanDefinition(messageQueueReceiverEndpointBeanName)) {
-                registerMessageQueueReceiverEndpointBeanDefinition(registry, messageQueueBeanName, channelName);
+                registerMessageQueueReceiverEndpointBeanDefinition(registry, messageQueueReceiverEndpointBeanName, channelName);
             } else {
                 throw new BeanCreationException(messageQueueReceiverEndpointBeanName, format("MessageQueueReceiverEndpoint %s is already registered.", messageQueueReceiverEndpointBeanName));
             }

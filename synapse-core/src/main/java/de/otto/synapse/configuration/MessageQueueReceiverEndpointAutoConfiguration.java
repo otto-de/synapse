@@ -15,6 +15,7 @@ import de.otto.synapse.messagestore.MessageStoreFactory;
 import de.otto.synapse.messagestore.SnapshotMessageStore;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -29,35 +30,31 @@ import java.util.Map;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.beans.factory.config.BeanDefinition.ROLE_INFRASTRUCTURE;
 
-@Configuration
+@ImportAutoConfiguration(SynapseAutoConfiguration.class)
 @EnableConfigurationProperties(ConsumerProcessProperties.class)
-public class SynapseAutoConfiguration {
+public class MessageQueueReceiverEndpointAutoConfiguration {
 
-    private static final Logger LOG = getLogger(SynapseAutoConfiguration.class);
+    private static final Logger LOG = getLogger(MessageQueueReceiverEndpointAutoConfiguration.class);
+
+    @Autowired(required = false)
+    private List<MessageQueueReceiverEndpoint> messageQueueReceiverEndpoints;
 
     private MessageInterceptorRegistry registry;
 
     @Bean
-    @ConditionalOnMissingBean
-    public ObjectMapper objectMapper() {
-        final ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.findAndRegisterModules();
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        return objectMapper;
+    @ConditionalOnProperty(
+            prefix = "synapse",
+            name = "consumer-process.enabled",
+            havingValue = "true",
+            matchIfMissing = true)
+    public MessageQueueConsumerProcess messageQueueConsumerProcess() {
+        return new MessageQueueConsumerProcess(messageQueueReceiverEndpoints);
     }
 
     @Bean
-    public MessageInterceptorRegistry messageInterceptorRegistry(final ApplicationContext applicationContext) {
-        if (registry == null) {
-            this.registry = new MessageInterceptorRegistry();
-            final Map<String, MessageEndpointConfigurer> configurers = applicationContext.getBeansOfType(MessageEndpointConfigurer.class);
-            if (configurers != null) {
-                configurers.forEach((beanName, bean) -> {
-                    LOG.info("Configuring MessageEndpointConfigurer '" + beanName + "'");
-                    bean.configureMessageInterceptors(registry);
-                });
-            }
-        }
-        return registry;
+    @Role(ROLE_INFRASTRUCTURE)
+    public MessageQueueConsumerBeanPostProcessor messageQueueConsumerAnnotationBeanPostProcessor() {
+        return new MessageQueueConsumerBeanPostProcessor();
     }
+
 }

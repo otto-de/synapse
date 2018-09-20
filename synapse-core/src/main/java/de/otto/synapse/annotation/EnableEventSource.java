@@ -1,5 +1,6 @@
 package de.otto.synapse.annotation;
 
+import de.otto.synapse.configuration.EventSourcingAutoConfiguration;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
@@ -34,6 +35,7 @@ import java.lang.annotation.*;
 @Documented
 @Import(EventSourceBeanRegistrar.class)
 @Repeatable(EnableEventSources.class)
+@EnableEventSourcing
 public @interface EnableEventSource {
 
     /**
