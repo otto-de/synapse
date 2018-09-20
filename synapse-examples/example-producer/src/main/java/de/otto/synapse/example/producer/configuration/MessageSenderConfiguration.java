@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.receiverChannelsWith;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -17,6 +18,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 @Configuration
 @ImportAutoConfiguration(InMemoryMessageLogTestConfiguration.class)
 @EnableConfigurationProperties(MyServiceProperties.class)
+@EnableScheduling
 public class MessageSenderConfiguration implements MessageEndpointConfigurer {
 
     private static final Logger LOG = getLogger(MessageSenderConfiguration.class);
