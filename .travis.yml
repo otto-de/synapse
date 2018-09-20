@@ -10,23 +10,23 @@ services:
 
 env:
   global:
-    - JAVA_HOME=/usr/lib/jvm/java-8-oracle
     - AWS_ACCESS_KEY_ID=localstack
     - AWS_SECRET_ACCESS_KEY=localstack
     - AWS_DEFAULT_REGION=eu-central-1
     
 before_install:
   - docker pull localstack/localstack
-  - pip install --user awscli # install aws cli w/o sudo
-  - export PATH=$PATH:$HOME/.local/bin # put aws in the path
+  #- pip install --user awscli # install aws cli w/o sudo
+  #- export PATH=$PATH:$HOME/.local/bin # put aws in the path
 
 install: /bin/true # skip gradle assemble
 
-script: 
-  - ./gradlew startLocalStack
-  - aws --endpoint-url=http://localhost:4568 kinesis list-streams
-  - ./gradlew stopLocalStack
-  - ./gradlew check --info
+script:
+  # Test reachability of localstack kinesis:
+  #- ./gradlew startLocalStack
+  #- aws --endpoint-url=http://localhost:4568 kinesis list-streams
+  #- ./gradlew stopLocalStack
+  - ./gradlew check # --info
 
 after_success:
   - ./gradlew jacocoRootReport

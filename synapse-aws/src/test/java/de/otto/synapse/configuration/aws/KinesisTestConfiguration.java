@@ -10,13 +10,10 @@ import org.springframework.context.annotation.Primary;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.http.SdkHttpClient;
-import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 
 import java.net.URI;
-import java.time.Duration;
 
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.receiverChannelsWith;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -46,12 +43,7 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
         System.setProperty("aws.cborEnabled", "false");
         LOG.info("kinesis client for local tests");
         if (testEnvironment.equals("local")) {
-            SdkHttpClient.Builder factory = ApacheHttpClient.builder()
-                    .connectionTimeout(Duration.ofSeconds(10))
-                    .socketTimeout(Duration.ofSeconds(10));
-            factory
-                    .build();
-            return builder().httpClientBuilder(ApacheHttpClient.builder())
+            return builder()
                     .endpointOverride(URI.create("http://localhost:4568"))
                     .region(Region.EU_CENTRAL_1)
                     .credentialsProvider(StaticCredentialsProvider.create(

@@ -1,7 +1,6 @@
 # OTTO Synapse
 A library to implement event-sourcing microservices.
 
-[![Build Status](https://travis-ci.org/otto-de/synapse.svg)](https://travis-ci.org/otto-de/synapse) 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.otto.synapse/synapse-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.otto.synapse/synapse-core)
 
 # Setup for Development
