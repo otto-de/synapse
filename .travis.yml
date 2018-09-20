@@ -24,7 +24,7 @@ install: /bin/true # skip gradle assemble
 
 script: 
   - ./gradlew startLocalStack
-  - eval $(aws --endpoint-url=http://localhost:4568 kinesis list-streams) #needs AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY envvars
+  - aws --endpoint-url=http://localhost:4568 kinesis list-streams
   - ./gradlew stopLocalStack
   - ./gradlew check --info
 
