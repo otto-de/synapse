@@ -23,31 +23,31 @@ public class MessageQueueReceiverEndpointBeanRegistrarTest {
     }
 
     @EnableMessageQueueReceiverEndpoint(name = "testQueue", channelName = "test-channel")
-    private static class SingleQueueTestConfig {
+    private static class SingleQueueReceiverConfig {
     }
 
     @EnableMessageQueueReceiverEndpoint(channelName = "test-channel")
-    private static class SingleUnnamedQueueTestConfig {
+    private static class SingleUnnamedQueueReceiverConfig {
     }
 
     @EnableMessageQueueReceiverEndpoint(name = "broken", channelName = "some-channel")
     @EnableMessageQueueReceiverEndpoint(name = "broken", channelName = "some-channel")
-    private static class RepeatableQueueTestConfigWithSameNames {
+    private static class RepeatableQueueReceiverConfigWithSameNames {
     }
 
     @EnableMessageQueueReceiverEndpoint(channelName = "some-channel")
     @EnableMessageQueueReceiverEndpoint(channelName = "other-channel")
-    private static class RepeatableUnnamedQueueTestConfigWithDifferentChannels {
+    private static class RepeatableUnnamedQueueReceiverConfigWithDifferentChannels {
     }
 
     @EnableMessageQueueReceiverEndpoint(name = "firstQueue", channelName = "first-channel")
     @EnableMessageQueueReceiverEndpoint(name = "secondQueue", channelName = "${test.channel-name}")
-    private static class RepeatableQueueTestConfig {
+    private static class RepeatableQueueReceiverConfig {
     }
 
     @Test
     public void shouldRegisterMessageQueueReceiverEndpointBean() {
-        context.register(SingleQueueTestConfig.class);
+        context.register(SingleQueueReceiverConfig.class);
         context.register(InMemoryMessageQueueTestConfiguration.class);
         context.refresh();
 
@@ -55,8 +55,8 @@ public class MessageQueueReceiverEndpointBeanRegistrarTest {
     }
 
     @Test
-    public void shouldRegisterMessageLogReceiverEndpointWithNameDerivedFromChannelName() {
-        context.register(SingleUnnamedQueueTestConfig.class);
+    public void shouldRegisterMessageQueueReceiverEndpointWithNameDerivedFromChannelName() {
+        context.register(SingleUnnamedQueueReceiverConfig.class);
         context.register(InMemoryMessageQueueTestConfiguration.class);
         context.refresh();
 
@@ -67,14 +67,14 @@ public class MessageQueueReceiverEndpointBeanRegistrarTest {
 
     @Test(expected = BeanCreationException.class)
     public void shouldFailToRegisterMultipleQueuesForSameChannelNameWithSameName() {
-        context.register(RepeatableQueueTestConfigWithSameNames.class);
+        context.register(RepeatableQueueReceiverConfigWithSameNames.class);
         context.register(InMemoryMessageQueueTestConfiguration.class);
         context.refresh();
     }
 
     @Test
     public void shouldRegisterMultipleUnnamedQueuesForDifferentChannels() {
-        context.register(RepeatableUnnamedQueueTestConfigWithDifferentChannels.class);
+        context.register(RepeatableUnnamedQueueReceiverConfigWithDifferentChannels.class);
         context.register(InMemoryMessageQueueTestConfiguration.class);
         context.refresh();
 
@@ -84,7 +84,7 @@ public class MessageQueueReceiverEndpointBeanRegistrarTest {
 
     @Test
     public void shouldRegisterMultipleQueues() {
-        context.register(RepeatableQueueTestConfig.class);
+        context.register(RepeatableQueueReceiverConfig.class);
         context.register(InMemoryMessageQueueTestConfiguration.class);
         addEnvironment(this.context,
                 "test.channel-name=second-channel"
