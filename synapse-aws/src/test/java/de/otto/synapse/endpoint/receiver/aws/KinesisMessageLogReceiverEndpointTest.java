@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
+import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
@@ -495,7 +496,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         final Record record = Record.builder()
                 .partitionKey(data)
                 .approximateArrivalTimestamp(clock.instant())
-                .data(ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8)))
+                .data(SdkBytes.fromByteArray(json.getBytes(StandardCharsets.UTF_8)))
                 .sequenceNumber(String.valueOf(nextKey.getAndIncrement()))
                 .build();
         LOG.info("Created Record " + record);
@@ -506,7 +507,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         final Record record = Record.builder()
                 .partitionKey("empty")
                 .approximateArrivalTimestamp(clock.instant())
-                .data(ByteBuffer.allocateDirect(0))
+                .data(SdkBytes.fromByteArray(new byte[] {}))
                 .sequenceNumber(String.valueOf(nextKey.getAndIncrement()))
                 .build();
         LOG.info("Created Record " + record);

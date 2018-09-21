@@ -16,7 +16,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.sqs.SQSAsyncClient;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 @Configuration
 @EnableConfigurationProperties(AwsProperties.class)
@@ -30,9 +31,9 @@ public class SqsAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(SQSAsyncClient.class)
-    public SQSAsyncClient sqsAsyncClient(final AwsCredentialsProvider credentialsProvider) {
-            return SQSAsyncClient.builder()
+    @ConditionalOnMissingBean(SqsAsyncClient.class)
+    public SqsAsyncClient SqsAsyncClient(final AwsCredentialsProvider credentialsProvider) {
+            return SqsAsyncClient.builder()
                     .credentialsProvider(credentialsProvider)
                     .region(Region.of(awsProperties.getRegion()))
                     .build();
@@ -42,20 +43,20 @@ public class SqsAutoConfiguration {
     @ConditionalOnMissingBean(name = "messageQueueSenderEndpointFactory")
     public MessageSenderEndpointFactory messageQueueSenderEndpointFactory(final MessageInterceptorRegistry registry,
                                                                           final ObjectMapper objectMapper,
-                                                                          final SQSAsyncClient sqsAsyncClient,
+                                                                          final SqsAsyncClient SqsAsyncClient,
                                                                           final @Value("${spring.application.name:Synapse Service}") String messageSenderName) {
-        return new SqsMessageSenderEndpointFactory(registry, objectMapper, sqsAsyncClient, messageSenderName);
+        return new SqsMessageSenderEndpointFactory(registry, objectMapper, SqsAsyncClient, messageSenderName);
     }
 
     @Bean
     @ConditionalOnMissingBean(name = "messageQueueReceiverEndpointFactory")
     public MessageQueueReceiverEndpointFactory messageQueueReceiverEndpointFactory(final MessageInterceptorRegistry registry,
                                                                                    final ObjectMapper objectMapper,
-                                                                                   final SQSAsyncClient sqsAsyncClient,
+                                                                                   final SqsAsyncClient SqsAsyncClient,
                                                                                    final ApplicationEventPublisher eventPublisher) {
 
         return (String channelName) -> {
-            final SqsMessageQueueReceiverEndpoint endpoint = new SqsMessageQueueReceiverEndpoint(channelName, sqsAsyncClient, objectMapper, eventPublisher);
+            final SqsMessageQueueReceiverEndpoint endpoint = new SqsMessageQueueReceiverEndpoint(channelName, SqsAsyncClient, objectMapper, eventPublisher);
             endpoint.registerInterceptorsFrom(registry);
             return endpoint;
         };

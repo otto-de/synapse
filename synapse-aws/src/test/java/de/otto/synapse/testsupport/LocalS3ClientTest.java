@@ -130,7 +130,7 @@ public class LocalS3ClientTest {
                 .build());
 
         //then
-        String data = IoUtils.toString(inputStream);
+        String data = IoUtils.toUtf8String(inputStream);
         assertThat(data, is("testdata"));
     }
 

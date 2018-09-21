@@ -6,7 +6,7 @@ import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.services.sqs.SQSAsyncClient;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
@@ -29,22 +29,22 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
 
     private final String queueUrl;
     private final String messageSender;
-    private final SQSAsyncClient sqsAsyncClient;
+    private final SqsAsyncClient SqsAsyncClient;
 
     public SqsMessageSender(final String channelName,
                             final String queueUrl,
                             final MessageTranslator<String> messageTranslator,
-                            final SQSAsyncClient sqsAsyncClient,
+                            final SqsAsyncClient SqsAsyncClient,
                             final String messageSender) {
         super(channelName, messageTranslator);
         this.queueUrl = queueUrl;
-        this.sqsAsyncClient = sqsAsyncClient;
+        this.SqsAsyncClient = SqsAsyncClient;
         this.messageSender = messageSender;
     }
 
     @Override
     protected void doSend(@Nonnull Message<String> message) {
-        sqsAsyncClient.sendMessage(
+        SqsAsyncClient.sendMessage(
                 SendMessageRequest.builder()
                         .queueUrl(queueUrl)
                         .messageAttributes(ImmutableMap.of(
@@ -65,7 +65,7 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
     @Override
     protected void doSendBatch(@Nonnull Stream<Message<String>> messageStream) {
         final AtomicInteger id = new AtomicInteger(0);
-        sqsAsyncClient.sendMessageBatch(SendMessageBatchRequest.builder()
+        SqsAsyncClient.sendMessageBatch(SendMessageBatchRequest.builder()
                 .queueUrl(queueUrl)
                 .entries(
                         messageStream.map(message -> SendMessageBatchRequestEntry.builder()

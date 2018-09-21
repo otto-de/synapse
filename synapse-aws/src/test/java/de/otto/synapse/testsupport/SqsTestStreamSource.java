@@ -8,7 +8,7 @@ import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.services.sqs.SQSAsyncClient;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -33,12 +33,12 @@ public class SqsTestStreamSource {
     public SqsTestStreamSource(String channelName, String inputFile) {
         this.inputFile = inputFile;
         this.channelName = channelName;
-        final SQSAsyncClient sqsAsyncClient = new SqsTestConfiguration().sqsAsyncClient();
-        final URL queueUrl = new SqsClientHelper(sqsAsyncClient).getQueueUrl(channelName);
+        final SqsAsyncClient SqsAsyncClient = new SqsTestConfiguration().SqsAsyncClient();
+        final URL queueUrl = new SqsClientHelper(SqsAsyncClient).getQueueUrl(channelName);
         messageSender = new SqsMessageSender(
                 channelName,
                 queueUrl.toString(),
-                new JsonStringMessageTranslator(new ObjectMapper()), sqsAsyncClient, "SqsTestStreamSource");
+                new JsonStringMessageTranslator(new ObjectMapper()), SqsAsyncClient, "SqsTestStreamSource");
     }
 
     public void writeToStream() {

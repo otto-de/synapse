@@ -10,13 +10,13 @@ import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
 import org.junit.Test;
+import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
@@ -84,13 +84,13 @@ public class KinesisMessageLogResponseTest {
                         .partitionKey("a")
                         .sequenceNumber("1")
                         .approximateArrivalTimestamp(now)
-                        .data(ByteBuffer.wrap("{\"foo\":\"first\"}".getBytes(forName("UTF8"))))
+                        .data(SdkBytes.fromByteArray("{\"foo\":\"first\"}".getBytes(forName("UTF8"))))
                         .build(),
                 Record.builder()
                         .partitionKey("b")
                         .sequenceNumber("2")
                         .approximateArrivalTimestamp(now)
-                        .data(ByteBuffer.wrap("{\"foo\":\"second\"}".getBytes(forName("UTF8"))))
+                        .data(SdkBytes.fromByteArray("{\"foo\":\"second\"}".getBytes(forName("UTF8"))))
                         .build()
         ));
         final KinesisMessageLogResponse response = new KinesisMessageLogResponse(
@@ -118,8 +118,8 @@ public class KinesisMessageLogResponseTest {
         final GetRecordsResponse recordsResponse = mock(GetRecordsResponse.class);
         now = now();
         when(recordsResponse.records()).thenReturn(asList(
-                Record.builder().partitionKey("a").sequenceNumber("1").approximateArrivalTimestamp(now).data(ByteBuffer.wrap("{\"foo\":\"first\"}".getBytes(forName("UTF8")))).build(),
-                Record.builder().partitionKey("b").sequenceNumber("2").approximateArrivalTimestamp(now).data(ByteBuffer.wrap("{\"foo\":\"second\"}".getBytes(forName("UTF8")))).build()
+                Record.builder().partitionKey("a").sequenceNumber("1").approximateArrivalTimestamp(now).data(SdkBytes.fromByteArray("{\"foo\":\"first\"}".getBytes(forName("UTF8")))).build(),
+                Record.builder().partitionKey("b").sequenceNumber("2").approximateArrivalTimestamp(now).data(SdkBytes.fromByteArray("{\"foo\":\"second\"}".getBytes(forName("UTF8")))).build()
         ));
         final KinesisMessageLogResponse response = new KinesisMessageLogResponse(
                 "foo",

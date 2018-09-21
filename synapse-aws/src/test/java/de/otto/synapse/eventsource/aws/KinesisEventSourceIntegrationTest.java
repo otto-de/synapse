@@ -26,6 +26,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordRequest;
 
@@ -64,7 +65,7 @@ import static org.hamcrest.core.IsNot.not;
 @SpringBootTest(classes = KinesisEventSourceIntegrationTest.class)
 public class KinesisEventSourceIntegrationTest {
 
-    private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.wrap(new byte[]{});
+    private static final SdkBytes EMPTY_BYTE_BUFFER = SdkBytes.fromByteArray(new byte[]{});
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET = 10;
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET = 10;
     private static final int EXPECTED_NUMBER_OF_SHARDS = 1;

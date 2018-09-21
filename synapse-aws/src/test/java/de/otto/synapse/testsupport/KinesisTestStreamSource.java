@@ -5,6 +5,7 @@ import com.google.common.base.Charsets;
 import de.otto.synapse.channel.ChannelPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.*;
@@ -13,7 +14,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -104,7 +104,7 @@ public class KinesisTestStreamSource {
             while ((line = br.readLine()) != null) {
                 TestMessageModel testMessageModel = objectMapper.readValue(line, TestMessageModel.class);
                 records.add(PutRecordsRequestEntry.builder()
-                        .data(ByteBuffer.wrap(line.getBytes()))
+                        .data(SdkBytes.fromByteArray(line.getBytes()))
                         .partitionKey(Integer.toString(testMessageModel.getUserid()))
                         .build());
                 lines++;
@@ -126,7 +126,7 @@ public class KinesisTestStreamSource {
         Map<String, String> hashKeysForShards = getStartHashKeysForShards(channelName);
         return hashKeysForShards.entrySet().stream()
                 .map(entry -> PutRecordsRequestEntry.builder()
-                        .data(ByteBuffer.wrap("{}".getBytes(Charsets.UTF_8)))
+                        .data(SdkBytes.fromString("{}",Charsets.UTF_8))
                         .partitionKey(entry.getValue())
                         .explicitHashKey(entry.getValue())
                         .build())

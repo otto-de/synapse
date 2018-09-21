@@ -24,13 +24,13 @@ public class RetryPutRecordsKinesisClientTest {
     private RetryPutRecordsKinesisClient retryPutRecordsKinesisClient;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         initMocks(this);
         retryPutRecordsKinesisClient = new RetryPutRecordsKinesisClient(kinesisClient, false);
     }
 
     @Test
-    public void shouldNotRetryOnSuccess() throws Exception {
+    public void shouldNotRetryOnSuccess() {
         // given
         when(kinesisClient.putRecords(any(PutRecordsRequest.class)))
                 .thenReturn(PutRecordsResponse.builder()
@@ -47,7 +47,7 @@ public class RetryPutRecordsKinesisClientTest {
     }
 
     @Test
-    public void shouldRetryOnFailure() throws Exception {
+    public void shouldRetryOnFailure() {
         // given
         when(kinesisClient.putRecords(any(PutRecordsRequest.class)))
                 .thenReturn(PutRecordsResponse.builder().failedRecordCount(1).records(emptyList()).build())
@@ -62,7 +62,7 @@ public class RetryPutRecordsKinesisClientTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldRetryThreeTimeMaxOnFailure() throws Exception {
+    public void shouldRetryThreeTimeMaxOnFailure() {
         // given
         when(kinesisClient.putRecords(any(PutRecordsRequest.class)))
                 .thenReturn(PutRecordsResponse.builder().failedRecordCount(1).records(emptyList()).build());
@@ -80,7 +80,7 @@ public class RetryPutRecordsKinesisClientTest {
     }
 
     @Test
-    public void shouldOnlyResendFailedRecords() throws Exception {
+    public void shouldOnlyResendFailedRecords() {
         // given
         PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder().streamName("test-stream").records(asList(
                         PutRecordsRequestEntry.builder().partitionKey("1").build(),
@@ -116,10 +116,10 @@ public class RetryPutRecordsKinesisClientTest {
     }
 
     @Test
-    public void shouldRetryOnKinesisException() throws Exception {
+    public void shouldRetryOnKinesisException() {
         // given
         when(kinesisClient.putRecords(any(PutRecordsRequest.class)))
-                .thenThrow(new SdkClientException("Unable to execute HTTP request: The target server failed to respond"))
+                .thenThrow(SdkClientException.builder().message("Unable to execute HTTP request: The target server failed to respond").build())
                 .thenReturn(PutRecordsResponse.builder().failedRecordCount(0).records(emptyList()).build());
 
         // when
@@ -131,10 +131,10 @@ public class RetryPutRecordsKinesisClientTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void shouldRetryThreeTimeMaxOnKinesisException() throws Exception {
+    public void shouldRetryThreeTimeMaxOnKinesisException() {
         // given
         when(kinesisClient.putRecords(any(PutRecordsRequest.class)))
-                .thenThrow(new SdkClientException("Unable to execute HTTP request: The target server failed to respond"));
+                .thenThrow(SdkClientException.builder().message("Unable to execute HTTP request: The target server failed to respond").build());
 
         // when
         PutRecordsRequest putRecordsRequest = PutRecordsRequest.builder().records(emptyList()).build();

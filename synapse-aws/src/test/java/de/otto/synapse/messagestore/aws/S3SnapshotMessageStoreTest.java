@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.ClassPathResource;
+import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.File;
@@ -62,7 +63,8 @@ public class S3SnapshotMessageStoreTest {
     @Test
     public void shouldThrowExceptionIfBucketNotExists() {
         // given
-        S3Exception bucketNotFoundException = new S3Exception("boom - simulate exception while loading from S3");
+        S3Exception bucketNotFoundException = NoSuchBucketException.builder().message("boom - simulate exception while loading from S3").build();
+
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenThrow(bucketNotFoundException);
 
         // when
@@ -78,7 +80,7 @@ public class S3SnapshotMessageStoreTest {
         SnapshotReaderNotification expectedFailedEvent = builder()
                 .withChannelName(STREAM_NAME)
                 .withStatus(SnapshotReaderStatus.FAILED)
-                .withMessage("Failed to load snapshot from S3: boom - simulate exception while loading from S3 (Service: null; Status Code: 0; Request ID: null)")
+                .withMessage("Failed to load snapshot from S3: boom - simulate exception while loading from S3")
                 .build();
 
         ArgumentCaptor<SnapshotReaderNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(SnapshotReaderNotification.class);
@@ -88,7 +90,7 @@ public class S3SnapshotMessageStoreTest {
     }
 
     @Test
-    public void shouldPublishStartingAndFinishEvents() throws IOException {
+    public void shouldPublishStartingAndFinishEvents() {
         // given
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.empty());
 

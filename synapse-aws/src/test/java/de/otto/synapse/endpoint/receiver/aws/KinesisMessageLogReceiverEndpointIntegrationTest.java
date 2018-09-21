@@ -20,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordRequest;
 
@@ -27,7 +28,6 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -57,7 +57,7 @@ import static org.hamcrest.core.IsNot.not;
 @SpringBootTest(classes = KinesisMessageLogReceiverEndpointIntegrationTest.class)
 public class KinesisMessageLogReceiverEndpointIntegrationTest {
 
-    private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.wrap(new byte[]{});
+    private static final SdkBytes EMPTY_BYTES = SdkBytes.fromByteArray(new byte[]{});
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET = 10;
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET = 10;
     private static final int EXPECTED_NUMBER_OF_SHARDS = 2;
@@ -194,7 +194,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
     public void consumeDeleteMessagesFromKinesis() throws ExecutionException, InterruptedException {
         // given
         final ChannelPosition startFrom = writeToStream("users_small1.txt").getLastStreamPosition();
-        kinesisClient.putRecord(PutRecordRequest.builder().streamName(TEST_CHANNEL).partitionKey("deleteEvent").data(EMPTY_BYTE_BUFFER).build());
+        kinesisClient.putRecord(PutRecordRequest.builder().streamName(TEST_CHANNEL).partitionKey("deleteEvent").data(EMPTY_BYTES).build());
         // when
         kinesisMessageLog.consumeUntil(
                 startFrom,

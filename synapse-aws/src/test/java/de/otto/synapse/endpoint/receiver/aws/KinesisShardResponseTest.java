@@ -1,10 +1,10 @@
 package de.otto.synapse.endpoint.receiver.aws;
 
 import org.junit.Test;
+import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
-import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.time.Instant;
 
@@ -50,13 +50,13 @@ public class KinesisShardResponseTest {
                                 .sequenceNumber("1")
                                 .approximateArrivalTimestamp(firstArrival)
                                 .partitionKey("first")
-                                .data(ByteBuffer.wrap("content".getBytes(UTF_8)))
+                                .data(SdkBytes.fromByteArray("content".getBytes(UTF_8)))
                                 .build(),
                         Record.builder()
                                 .sequenceNumber("2")
                                 .approximateArrivalTimestamp(secondArrival)
                                 .partitionKey("second")
-                                .data(ByteBuffer.wrap("content".getBytes(UTF_8)))
+                                .data(SdkBytes.fromByteArray("content".getBytes(UTF_8)))
                                 .build()
                         )
                 .nextShardIterator("nextIter")

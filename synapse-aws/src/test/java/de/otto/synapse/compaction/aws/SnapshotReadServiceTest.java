@@ -31,7 +31,7 @@ public class SnapshotReadServiceTest {
     private S3Service s3Service;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         s3Service = mock(S3Service.class);
 
         testee = new SnapshotReadService(snapshotProperties(), s3Service);
@@ -39,7 +39,7 @@ public class SnapshotReadServiceTest {
 
 
     @Test
-    public void shouldDownloadLatestSnapshotFileFromBucket() throws Exception {
+    public void shouldDownloadLatestSnapshotFileFromBucket() {
         //given
         final S3Object obj1 = mock(S3Object.class);
         when(obj1.key()).thenReturn("compaction-test-snapshot-1.json.zip");
@@ -57,7 +57,7 @@ public class SnapshotReadServiceTest {
     }
 
     @Test
-    public void shouldReturnOptionalEmptyWhenNoFileInBucket() throws Exception {
+    public void shouldReturnOptionalEmptyWhenNoFileInBucket() {
         //when
         when(s3Service.listAll(anyString())).thenReturn(emptyList());
         Optional<S3Object> s3Object = testee.fetchSnapshotMetadataFromS3("testBucket", "DOES_NOT_EXIST");
@@ -67,7 +67,7 @@ public class SnapshotReadServiceTest {
     }
 
     @Test
-    public void shouldGetLatestSnapshotFileFromS3Bucket() throws Exception {
+    public void shouldGetLatestSnapshotFileFromS3Bucket() {
         //given
         final S3Object s3Object = mock(S3Object.class);
         when(s3Object.key()).thenReturn("compaction-teststream-snapshot-1.json.zip");
@@ -83,7 +83,7 @@ public class SnapshotReadServiceTest {
     }
 
     @Test
-    public void shouldReturnEmptyWhenThereIsNoSnapshotFileInS3Bucket() throws Exception {
+    public void shouldReturnEmptyWhenThereIsNoSnapshotFileInS3Bucket() {
         //given
         when(s3Service.listAll("test-test")).thenReturn(ImmutableList.of());
 
@@ -96,7 +96,7 @@ public class SnapshotReadServiceTest {
 
 
     @Test
-    public void shouldReturnEmptyWhenDownloadOfSnapshotFileFails() throws Exception {
+    public void shouldReturnEmptyWhenDownloadOfSnapshotFileFails() {
         //given
         final S3Object obj1 = mock(S3Object.class);
         when(obj1.key()).thenReturn("compaction-test-snapshot-1.json.zip");

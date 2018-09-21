@@ -11,9 +11,7 @@ import software.amazon.awssdk.services.kinesis.model.*;
 import java.time.Instant;
 
 import static de.otto.synapse.channel.ShardPosition.*;
-import static java.time.Duration.ofMillis;
 import static java.time.Instant.now;
-import static java.time.temporal.ChronoUnit.HOURS;
 import static java.util.Collections.emptyList;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
@@ -257,10 +255,10 @@ public class KinesisShardIteratorTest {
                 .build();
         final KinesisClient kinesisClient = someKinesisClient();
         when(kinesisClient.getRecords(any(GetRecordsRequest.class)))
-                .thenThrow(new KinesisException("forced test exception"))
-                .thenThrow(new KinesisException("forced test exception"))
-                .thenThrow(new KinesisException("forced test exception"))
-                .thenThrow(new KinesisException("forced test exception"))
+                .thenThrow(KinesisException.builder().message("forced test exception").build())
+                .thenThrow(KinesisException.builder().message("forced test exception").build())
+                .thenThrow(KinesisException.builder().message("forced test exception").build())
+                .thenThrow(KinesisException.builder().message("forced test exception").build())
                 .thenReturn(response);
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromHorizon("someShard"));
 
@@ -277,7 +275,7 @@ public class KinesisShardIteratorTest {
         // given
         final KinesisClient kinesisClient = someKinesisClient();
         when(kinesisClient.getRecords(any(GetRecordsRequest.class)))
-                .thenThrow(new KinesisException("forced test exception"));
+                .thenThrow(KinesisException.builder().message("forced test exception").build());
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromHorizon("someShard"));
 
         // when

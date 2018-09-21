@@ -14,6 +14,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequestEntry;
@@ -72,7 +73,7 @@ public class KinesisMessageSenderTest {
         assertThat(caputuredRequest.records(), hasSize(1));
         assertThat(caputuredRequest.records().get(0).partitionKey(), is("someKey"));
 
-        final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data());
+        final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data().asByteBuffer());
         ExampleJsonObject jsonObject = objectMapper.readValue(inputStream, ExampleJsonObject.class);
         assertThat(jsonObject.value, is("banana"));
 
@@ -99,7 +100,7 @@ public class KinesisMessageSenderTest {
         verify(kinesisClient).putRecords(putRecordsRequestCaptor.capture());
         final PutRecordsRequest caputuredRequest = putRecordsRequestCaptor.getValue();
 
-        final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data());
+        final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data().asByteBuffer());
         ExampleJsonObject jsonObject = objectMapper.readValue(inputStream, ExampleJsonObject.class);
         assertThat(jsonObject.value, is("apple"));
     }
@@ -138,14 +139,14 @@ public class KinesisMessageSenderTest {
         assertThat(firstEntry.partitionKey(), is("b"));
 
         assertThat(objectMapper.readValue(
-                new ByteBufferBackedInputStream(firstEntry.data()), ExampleJsonObject.class).value,
+                new ByteBufferBackedInputStream(firstEntry.data().asByteBuffer()), ExampleJsonObject.class).value,
                 is("Lovely day for a Guinness"));
 
         final PutRecordsRequestEntry secondEntry = caputuredRequest.records().get(1);
         assertThat(secondEntry.partitionKey(), is("a"));
 
         assertThat(objectMapper.readValue(
-                new ByteBufferBackedInputStream(secondEntry.data()), ExampleJsonObject.class).value,
+                new ByteBufferBackedInputStream(secondEntry.data().asByteBuffer()), ExampleJsonObject.class).value,
                 is("Lovely day for a Guinness"));
     }
 
@@ -177,14 +178,14 @@ public class KinesisMessageSenderTest {
         assertThat(firstEntry.partitionKey(), is("b"));
 
         assertThat(objectMapper.readValue(
-                new ByteBufferBackedInputStream(firstEntry.data()), ExampleJsonObject.class).value,
+                new ByteBufferBackedInputStream(firstEntry.data().asByteBuffer()), ExampleJsonObject.class).value,
                 is("banana"));
 
         final PutRecordsRequestEntry secondEntry = caputuredRequest.records().get(1);
         assertThat(secondEntry.partitionKey(), is("a"));
 
         assertThat(objectMapper.readValue(
-                new ByteBufferBackedInputStream(secondEntry.data()), ExampleJsonObject.class).value,
+                new ByteBufferBackedInputStream(secondEntry.data().asByteBuffer()), ExampleJsonObject.class).value,
                 is("apple"));
     }
 
@@ -218,7 +219,7 @@ public class KinesisMessageSenderTest {
         //then
         verify(kinesisClient).putRecords(putRecordsRequestCaptor.capture());
         assertThat(putRecordsRequestCaptor.getValue().records().get(0).partitionKey(), is("someKey"));
-        assertThat(putRecordsRequestCaptor.getValue().records().get(0).data(), is(ByteBuffer.allocateDirect(0)));
+        assertThat(putRecordsRequestCaptor.getValue().records().get(0).data(), is(SdkBytes.fromByteBuffer(ByteBuffer.allocateDirect(0))));
     }
 
     private Stream<Message<String>> someEvents(int n) {

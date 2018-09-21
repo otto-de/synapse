@@ -2,9 +2,9 @@ package de.otto.synapse.message.aws;
 
 import de.otto.synapse.message.Message;
 import org.junit.Test;
+import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
-import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -21,7 +21,7 @@ public class KinesisMessageTest {
         final Instant now = Instant.now();
         final Record record = Record.builder()
                 .partitionKey("42")
-                .data(ByteBuffer.wrap("ßome dätä".getBytes(UTF_8)))
+                .data(SdkBytes.fromString("ßome dätä",UTF_8))
                 .approximateArrivalTimestamp(now)
                 .sequenceNumber("00001")
                 .build();

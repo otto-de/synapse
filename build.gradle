@@ -10,10 +10,10 @@ buildscript {
 }
 
 ext {
-    awsSdkVersion = "2.0.0-preview-10"
+    awsSdkVersion = "2.0.0-preview-12"
     springVersion = "4.3.12.RELEASE"
     springBootVersion = "1.5.8.RELEASE"
-    edisonAwsVersion = "0.4.1"
+    edisonAwsVersion = "0.5.0"
     edisonVersion = "1.2.19"
 }
 
@@ -35,7 +35,7 @@ subprojects {
     apply plugin: 'eclipse'
     apply from: "${rootDir}/jacoco.gradle"
 
-    version = '0.9.5-SNAPSHOT'
+    version = '0.10.0'
     group = 'de.otto.synapse'
 
     repositories {

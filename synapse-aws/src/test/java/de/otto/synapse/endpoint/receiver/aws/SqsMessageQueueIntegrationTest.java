@@ -19,7 +19,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import software.amazon.awssdk.services.sqs.SQSAsyncClient;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
@@ -43,7 +43,7 @@ public class SqsMessageQueueIntegrationTest {
     private static final String TEST_CHANNEL = "sqs-test-channel";
 
     @Autowired
-    private SQSAsyncClient sqsAsyncClient;
+    private SqsAsyncClient SqsAsyncClient;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -64,7 +64,7 @@ public class SqsMessageQueueIntegrationTest {
         /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
            when initializing it via @EnableEventSource
          */
-        sqsMessageQueue = new SqsMessageQueueReceiverEndpoint(TEST_CHANNEL, sqsAsyncClient, objectMapper, null);
+        sqsMessageQueue = new SqsMessageQueueReceiverEndpoint(TEST_CHANNEL, SqsAsyncClient, objectMapper, null);
         sqsMessageQueue.registerInterceptorsFrom(messageInterceptorRegistry);
         sqsMessageQueue.register(MessageConsumer.of(".*", String.class, (message) -> {
             messages.add(message);
@@ -79,7 +79,7 @@ public class SqsMessageQueueIntegrationTest {
 
     @PostConstruct
     public void setup() {
-        new SqsClientHelper(sqsAsyncClient).createChannelIfNotExists(TEST_CHANNEL);
+        new SqsClientHelper(SqsAsyncClient).createChannelIfNotExists(TEST_CHANNEL);
     }
 
     @Test

@@ -83,7 +83,7 @@ public class RetryPutRecordsKinesisClient {
     }
 
     private long getRecordsSize(final List<PutRecordsRequestEntry> records) {
-        return records.stream().map(e -> e.data().position()).mapToInt(Number::intValue).sum();
+        return records.stream().map(e -> e.data().asByteArray().length).mapToInt(Number::intValue).sum();
     }
 
     private List<PutRecordsRequestEntry> findFailedRecords(PutRecordsRequest putRecordsRequest, PutRecordsResponse response) {

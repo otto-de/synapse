@@ -103,7 +103,7 @@ public class LocalS3Client implements S3Client {
         try {
             Files.write(filePath, bucketItem.getData());
         } catch (IOException e) {
-            throw new SdkClientException(e);
+            throw SdkClientException.create("", e);
         }
 
         return GetObjectResponse.builder().build();
@@ -115,14 +115,15 @@ public class LocalS3Client implements S3Client {
         Map<String, BucketItem> bucketItemMap = bucketsWithContents.get(getObjectRequest.bucket());
         BucketItem bucketItem = bucketItemMap.get(getObjectRequest.key());
 
-        AbortableInputStream in = new AbortableInputStream(new ByteArrayInputStream(bucketItem.getData()), () -> {});
+        AbortableInputStream in = AbortableInputStream.create(new ByteArrayInputStream(bucketItem.getData()), () -> {
+        });
         try {
             Constructor<ResponseInputStream> responseInputStreamConstructor = ResponseInputStream.class.getDeclaredConstructor(Object.class, AbortableInputStream.class);
             responseInputStreamConstructor.setAccessible(true);
 
             return (ResponseInputStream<GetObjectResponse>) responseInputStreamConstructor.newInstance(GetObjectResponse.builder().build(), in);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
-            throw new SdkClientException(e);
+            throw SdkClientException.create("", e);
         }
 
     }

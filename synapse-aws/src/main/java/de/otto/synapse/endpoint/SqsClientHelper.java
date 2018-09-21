@@ -1,6 +1,6 @@
 package de.otto.synapse.endpoint;
 
-import software.amazon.awssdk.services.sqs.SQSAsyncClient;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.*;
 
 import java.net.MalformedURLException;
@@ -22,10 +22,10 @@ import static java.util.Collections.singletonMap;
  */
 public class SqsClientHelper {
 
-    private final SQSAsyncClient sqsAsyncClient;
+    private final SqsAsyncClient SqsAsyncClient;
 
-    public SqsClientHelper(final SQSAsyncClient sqsAsyncClient) {
-        this.sqsAsyncClient = sqsAsyncClient;
+    public SqsClientHelper(final SqsAsyncClient SqsAsyncClient) {
+        this.SqsAsyncClient = SqsAsyncClient;
     }
 
     public boolean doesChannelExist(final String channelName) {
@@ -47,7 +47,7 @@ public class SqsClientHelper {
 
     public List<URL> getQueueUrls() {
         try {
-            final ListQueuesResponse queuesResponse = sqsAsyncClient.listQueues().get();
+            final ListQueuesResponse queuesResponse = SqsAsyncClient.listQueues().get();
             return queuesResponse.queueUrls().stream().map(this::toUrl).collect(Collectors.toList());
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e.getMessage(), e);
@@ -56,7 +56,7 @@ public class SqsClientHelper {
 
     public URL getQueueUrl(final String channelName) {
         try {
-            return toUrl(sqsAsyncClient
+            return toUrl(SqsAsyncClient
                     .getQueueUrl(GetQueueUrlRequest.builder().queueName(channelName).build())
                     .get()
                     .queueUrl());
@@ -68,7 +68,7 @@ public class SqsClientHelper {
     public void createChannelIfNotExists(final String channelName) {
         try {
             if (!doesChannelExist(channelName)) {
-                sqsAsyncClient
+                SqsAsyncClient
                         .createQueue(CreateQueueRequest.builder()
                                 .queueName(channelName)
                                 .build()).get();
@@ -82,7 +82,7 @@ public class SqsClientHelper {
         try {
             if (doesChannelExist(channelName)) {
                 final URL channelUrl = getQueueUrl(channelName);
-                sqsAsyncClient.purgeQueue(PurgeQueueRequest
+                SqsAsyncClient.purgeQueue(PurgeQueueRequest
                         .builder()
                         .queueUrl(channelUrl.toString())
                         .build())
@@ -96,7 +96,7 @@ public class SqsClientHelper {
     public void purgeQueue(final URL channelUrl) {
         try {
             if (doesChannelExist(channelUrl)) {
-                sqsAsyncClient.purgeQueue(PurgeQueueRequest
+                SqsAsyncClient.purgeQueue(PurgeQueueRequest
                         .builder()
                         .queueUrl(channelUrl.toString())
                         .build())
@@ -138,7 +138,7 @@ public class SqsClientHelper {
 
     public List<Message> receiveMessages(final URL channelUrl) {
         try {
-            final ReceiveMessageResponse response = sqsAsyncClient
+            final ReceiveMessageResponse response = SqsAsyncClient
                     .receiveMessage(ReceiveMessageRequest.builder()
                             .waitTimeSeconds(1)
                             .queueUrl(channelUrl.toString())
@@ -162,7 +162,7 @@ public class SqsClientHelper {
             final URL channelUrl = getQueueUrl(channelName);
             sendMessage(channelUrl, key, payload);
         try {
-            final SendMessageResponse response = sqsAsyncClient.sendMessage(SendMessageRequest.builder()
+            final SendMessageResponse response = SqsAsyncClient.sendMessage(SendMessageRequest.builder()
                     .queueUrl(channelUrl.toString())
                     .messageAttributes(
                             singletonMap(MSG_KEY_ATTR, MessageAttributeValue.builder().dataType("String").stringValue(key).build()))
@@ -176,7 +176,7 @@ public class SqsClientHelper {
 
     public void sendMessage(final URL channelUrl, final String key, final String payload) {
         try {
-            final SendMessageResponse response = sqsAsyncClient.sendMessage(SendMessageRequest.builder()
+            final SendMessageResponse response = SqsAsyncClient.sendMessage(SendMessageRequest.builder()
                     .queueUrl(channelUrl.toString())
                     .messageAttributes(
                             singletonMap(MSG_KEY_ATTR, MessageAttributeValue.builder().dataType("String").stringValue(key).build()))
@@ -189,7 +189,7 @@ public class SqsClientHelper {
     }
 
     public CompletableFuture<DeleteMessageResponse> acknowledge(final String receiptHandle) {
-        return sqsAsyncClient.deleteMessage(DeleteMessageRequest
+        return SqsAsyncClient.deleteMessage(DeleteMessageRequest
                 .builder()
                 .receiptHandle(receiptHandle)
                 .build());

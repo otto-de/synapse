@@ -17,10 +17,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordRequest;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -29,7 +29,6 @@ import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -55,7 +54,7 @@ public class CompactionAcceptanceTest {
 
     private static final String INTEGRATION_TEST_STREAM = "promo-compaction-test";
     private static final String INTEGRATION_TEST_BUCKET = "de-otto-promo-compaction-test-snapshots";
-    private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.wrap(new byte[]{});
+    private static final SdkBytes EMPTY_BYTE_BUFFER = SdkBytes.fromByteArray(new byte[]{});
 
     @Autowired
     private KinesisClient kinesisClient;
@@ -131,7 +130,7 @@ public class CompactionAcceptanceTest {
     }
 
     @SuppressWarnings("unchecked")
-    private LinkedHashMap<String, JSONArray> fetchAndParseSnapshotFileFromS3(String snapshotFileName) throws ExecutionException, InterruptedException {
+    private LinkedHashMap<String, JSONArray> fetchAndParseSnapshotFileFromS3(String snapshotFileName) {
         GetObjectRequest request = GetObjectRequest.builder().bucket(INTEGRATION_TEST_BUCKET).key(snapshotFileName).build();
 
         ResponseInputStream<GetObjectResponse> responseInputStream = s3Client.getObject(request);

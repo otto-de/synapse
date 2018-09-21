@@ -9,7 +9,7 @@ import de.otto.synapse.state.StateRepository;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import software.amazon.awssdk.services.sqs.SQSAsyncClient;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 import static de.otto.synapse.example.consumer.state.BananaProduct.bananaProductBuilder;
 import static java.lang.String.valueOf;

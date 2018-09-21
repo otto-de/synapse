@@ -7,14 +7,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.core.client.builder.ClientHttpConfiguration;
 import software.amazon.awssdk.http.SdkHttpClient;
-import software.amazon.awssdk.http.SdkHttpClientFactory;
-import software.amazon.awssdk.http.apache.ApacheSdkHttpClientFactory;
-import software.amazon.awssdk.http.nio.netty.NettySdkHttpClientFactory;
+import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 
@@ -49,16 +46,16 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
         System.setProperty("aws.cborEnabled", "false");
         LOG.info("kinesis client for local tests");
         if (testEnvironment.equals("local")) {
-            final SdkHttpClientFactory factory = ApacheSdkHttpClientFactory.builder()
+            SdkHttpClient.Builder factory = ApacheHttpClient.builder()
                     .connectionTimeout(Duration.ofSeconds(10))
-                    .socketTimeout(Duration.ofSeconds(10))
+                    .socketTimeout(Duration.ofSeconds(10));
+            factory
                     .build();
-            return builder()
-                    .httpConfiguration(ClientHttpConfiguration.builder().httpClientFactory(factory).build())
+            return builder().httpClientBuilder(ApacheHttpClient.builder())
                     .endpointOverride(URI.create("http://localhost:4568"))
                     .region(Region.EU_CENTRAL_1)
                     .credentialsProvider(StaticCredentialsProvider.create(
-                            AwsCredentials.create("foobar", "foobar")))
+                            AwsBasicCredentials.create("foobar", "foobar")))
                     .build();
         } else {
             return builder()

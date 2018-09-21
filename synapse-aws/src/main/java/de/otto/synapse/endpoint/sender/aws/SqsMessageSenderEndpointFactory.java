@@ -7,7 +7,8 @@ import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
 import org.springframework.beans.factory.annotation.Value;
-import software.amazon.awssdk.services.sqs.SQSAsyncClient;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
 
 import javax.annotation.Nonnull;
@@ -16,29 +17,29 @@ public class SqsMessageSenderEndpointFactory implements MessageSenderEndpointFac
 
     private final MessageInterceptorRegistry registry;
     private final MessageTranslator<String> messageTranslator;
-    private final SQSAsyncClient sqsAsyncClient;
+    private final SqsAsyncClient SqsAsyncClient;
     private String messageSenderName;
 
     public SqsMessageSenderEndpointFactory(final MessageInterceptorRegistry registry,
                                            final ObjectMapper objectMapper,
-                                           final SQSAsyncClient sqsAsyncClient,
+                                           final SqsAsyncClient SqsAsyncClient,
                                            final String messageSenderName) {
         this.registry = registry;
         this.messageTranslator = new JsonStringMessageTranslator(objectMapper);
-        this.sqsAsyncClient = sqsAsyncClient;
+        this.SqsAsyncClient = SqsAsyncClient;
         this.messageSenderName = messageSenderName;
     }
 
     @Override
     public MessageSenderEndpoint create(final @Nonnull String channelName) {
         try {
-            final String queueUrl = sqsAsyncClient.getQueueUrl(GetQueueUrlRequest
+            final String queueUrl = SqsAsyncClient.getQueueUrl(GetQueueUrlRequest
                     .builder()
                     .queueName(channelName)
                     .build())
                     .get()
                     .queueUrl();
-            final MessageSenderEndpoint messageSender = new SqsMessageSender(channelName, queueUrl, messageTranslator, sqsAsyncClient, messageSenderName);
+            final MessageSenderEndpoint messageSender = new SqsMessageSender(channelName, queueUrl, messageTranslator, SqsAsyncClient, messageSenderName);
             messageSender.registerInterceptorsFrom(registry);
             return messageSender;
         } catch (Exception e) {

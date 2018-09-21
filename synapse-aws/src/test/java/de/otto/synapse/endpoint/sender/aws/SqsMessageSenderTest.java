@@ -13,7 +13,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import software.amazon.awssdk.services.sqs.SQSAsyncClient;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.*;
 
 import java.util.stream.Stream;
@@ -33,7 +33,7 @@ public class SqsMessageSenderTest {
     private SqsMessageSender sqsMessageSender;
 
     @Mock
-    private SQSAsyncClient sqsAsyncClient;
+    private SqsAsyncClient SqsAsyncClient;
     @Captor
     private ArgumentCaptor<SendMessageRequest> requestArgumentCaptor;
     @Captor
@@ -43,7 +43,7 @@ public class SqsMessageSenderTest {
 
     @Before
     public void setUp() {
-        sqsMessageSender = new SqsMessageSender("test", "https://example.com/test", messageTranslator, sqsAsyncClient, "test");
+        sqsMessageSender = new SqsMessageSender("test", "https://example.com/test", messageTranslator, SqsAsyncClient, "test");
     }
 
     @Test
@@ -51,7 +51,7 @@ public class SqsMessageSenderTest {
         // given
         final Message<ExampleJsonObject> message = message("some-key", new ExampleJsonObject("banana"));
 
-        when(sqsAsyncClient.sendMessage(any(SendMessageRequest.class))).thenReturn(completedFuture(SendMessageResponse.builder()
+        when(SqsAsyncClient.sendMessage(any(SendMessageRequest.class))).thenReturn(completedFuture(SendMessageResponse.builder()
                 .sequenceNumber("42")
                 .messageId("some-id")
                 .build()));
@@ -60,7 +60,7 @@ public class SqsMessageSenderTest {
         sqsMessageSender.send(message);
 
         // then
-        verify(sqsAsyncClient).sendMessage(requestArgumentCaptor.capture());
+        verify(SqsAsyncClient).sendMessage(requestArgumentCaptor.capture());
         final SendMessageRequest capturedRequest = requestArgumentCaptor.getValue();
 
         assertThat(capturedRequest.queueUrl(), is("https://example.com/test"));
@@ -74,7 +74,7 @@ public class SqsMessageSenderTest {
         // given
         final Message<ExampleJsonObject> message = message("", new ExampleJsonObject("banana"));
 
-        when(sqsAsyncClient.sendMessage(any(SendMessageRequest.class))).thenReturn(completedFuture(SendMessageResponse.builder()
+        when(SqsAsyncClient.sendMessage(any(SendMessageRequest.class))).thenReturn(completedFuture(SendMessageResponse.builder()
                 .sequenceNumber("42")
                 .messageId("some-id")
                 .build()));
@@ -87,7 +87,7 @@ public class SqsMessageSenderTest {
         sqsMessageSender.send(message);
 
         // then
-        verify(sqsAsyncClient).sendMessage(requestArgumentCaptor.capture());
+        verify(SqsAsyncClient).sendMessage(requestArgumentCaptor.capture());
         final SendMessageRequest capturedRequest = requestArgumentCaptor.getValue();
 
         assertThat(capturedRequest.messageBody(), is("{\"value\":\"apple\"}"));
@@ -106,7 +106,7 @@ public class SqsMessageSenderTest {
         sqsMessageSender.send(message);
 
         // then
-        verifyZeroInteractions(sqsAsyncClient);
+        verifyZeroInteractions(SqsAsyncClient);
     }
 
     @Test
@@ -115,7 +115,7 @@ public class SqsMessageSenderTest {
         ExampleJsonObject bananaObject = new ExampleJsonObject("banana");
         ExampleJsonObject appleObject = new ExampleJsonObject("apple");
 
-        when(sqsAsyncClient.sendMessageBatch(any(SendMessageBatchRequest.class))).thenReturn(completedFuture(SendMessageBatchResponse.builder()
+        when(SqsAsyncClient.sendMessageBatch(any(SendMessageBatchRequest.class))).thenReturn(completedFuture(SendMessageBatchResponse.builder()
                 .successful(asList(
                         SendMessageBatchResultEntry.builder().build(),
                         SendMessageBatchResultEntry.builder().build()
@@ -129,7 +129,7 @@ public class SqsMessageSenderTest {
         ));
 
         // then
-        verify(sqsAsyncClient).sendMessageBatch(batchRequestArgumentCaptor.capture());
+        verify(SqsAsyncClient).sendMessageBatch(batchRequestArgumentCaptor.capture());
         final SendMessageBatchRequest capturedRequest = batchRequestArgumentCaptor.getValue();
 
         assertThat(capturedRequest.entries(), hasSize(2));
@@ -145,7 +145,7 @@ public class SqsMessageSenderTest {
         ExampleJsonObject bananaObject = new ExampleJsonObject("banana");
         ExampleJsonObject appleObject = new ExampleJsonObject("apple");
 
-        when(sqsAsyncClient.sendMessageBatch(any(SendMessageBatchRequest.class))).thenReturn(completedFuture(SendMessageBatchResponse.builder()
+        when(SqsAsyncClient.sendMessageBatch(any(SendMessageBatchRequest.class))).thenReturn(completedFuture(SendMessageBatchResponse.builder()
                 .successful(asList(
                         SendMessageBatchResultEntry.builder().build(),
                         SendMessageBatchResultEntry.builder().build()
@@ -164,7 +164,7 @@ public class SqsMessageSenderTest {
         ));
 
         // then
-        verify(sqsAsyncClient).sendMessageBatch(batchRequestArgumentCaptor.capture());
+        verify(SqsAsyncClient).sendMessageBatch(batchRequestArgumentCaptor.capture());
         final SendMessageBatchRequest capturedRequest = batchRequestArgumentCaptor.getValue();
 
         assertThat(capturedRequest.entries(), hasSize(2));
@@ -175,7 +175,7 @@ public class SqsMessageSenderTest {
     @Test
     public void shouldSendDeleteEventWithEmptyByteBuffer() {
         // given
-        when(sqsAsyncClient.sendMessage(any(SendMessageRequest.class))).thenReturn(completedFuture(SendMessageResponse.builder()
+        when(SqsAsyncClient.sendMessage(any(SendMessageRequest.class))).thenReturn(completedFuture(SendMessageResponse.builder()
                 .sequenceNumber("42")
                 .messageId("some-id")
                 .build()));
@@ -184,7 +184,7 @@ public class SqsMessageSenderTest {
         sqsMessageSender.send(message("", null));
 
         //then
-        verify(sqsAsyncClient).sendMessage(requestArgumentCaptor.capture());
+        verify(SqsAsyncClient).sendMessage(requestArgumentCaptor.capture());
         assertThat(requestArgumentCaptor.getValue().messageBody(), is(nullValue()));
     }
 

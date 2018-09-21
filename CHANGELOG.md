@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.10.0
+* Update to aws-java-sdk-preview-12
+
 ## 0.9.3
 * Log times required to consume streams at startup   
 
