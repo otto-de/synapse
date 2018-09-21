@@ -95,6 +95,14 @@ public class KinesisEventSourceIntegrationTest {
 
     private List<Message<String>> messages = synchronizedList(new ArrayList<>());
 
+    @PostConstruct
+    public void setup() throws IOException {
+        KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
+        deleteSnapshotFilesFromTemp();
+        s3Service.createBucket(INTEGRATION_TEST_BUCKET);
+        s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
+    }
+
     @Before
     public void before() {
         messages.clear();
@@ -111,14 +119,6 @@ public class KinesisEventSourceIntegrationTest {
     @After
     public void after() {
         integrationEventSource.stop();
-    }
-
-    @PostConstruct
-    public void setup() throws IOException {
-        KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
-        deleteSnapshotFilesFromTemp();
-        s3Service.createBucket(INTEGRATION_TEST_BUCKET);
-        s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
     }
 
     @Test

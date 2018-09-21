@@ -7,7 +7,6 @@ import de.otto.synapse.configuration.aws.TestMessageInterceptor;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
 import de.otto.synapse.testsupport.KinesisTestStreamSource;
 import org.awaitility.Awaitility;
 import org.junit.After;
@@ -18,14 +17,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordRequest;
 
-import javax.annotation.PostConstruct;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -39,6 +37,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static de.otto.synapse.configuration.aws.KinesisTestConfiguration.EXPECTED_NUMBER_OF_SHARDS;
+import static de.otto.synapse.configuration.aws.KinesisTestConfiguration.KINESIS_INTEGRATION_TEST_CHANNEL;
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static java.util.Collections.synchronizedList;
@@ -55,13 +55,12 @@ import static org.hamcrest.core.IsNot.not;
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
 @SpringBootTest(classes = KinesisMessageLogReceiverEndpointIntegrationTest.class)
+@DirtiesContext
 public class KinesisMessageLogReceiverEndpointIntegrationTest {
 
     private static final SdkBytes EMPTY_BYTES = SdkBytes.fromByteArray(new byte[]{});
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET = 10;
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET = 10;
-    private static final int EXPECTED_NUMBER_OF_SHARDS = 2;
-    private static final String TEST_CHANNEL = "kinesis-ml-test-channel";
 
     @Autowired
     private KinesisClient kinesisClient;
@@ -85,7 +84,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
         /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
            when initializing it via @EnableEventSource
          */
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(TEST_CHANNEL, kinesisClient, objectMapper, null);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(KINESIS_INTEGRATION_TEST_CHANNEL, kinesisClient, objectMapper, null);
         kinesisMessageLog.registerInterceptorsFrom(messageInterceptorRegistry);
         kinesisMessageLog.register(MessageConsumer.of(".*", String.class, (message) -> {
             messages.add(message);
@@ -97,11 +96,6 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
     @After
     public void after() {
         kinesisMessageLog.stop();
-    }
-
-    @PostConstruct
-    public void setup() throws IOException {
-        KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
     }
 
     @Test
@@ -194,7 +188,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
     public void consumeDeleteMessagesFromKinesis() throws ExecutionException, InterruptedException {
         // given
         final ChannelPosition startFrom = writeToStream("users_small1.txt").getLastStreamPosition();
-        kinesisClient.putRecord(PutRecordRequest.builder().streamName(TEST_CHANNEL).partitionKey("deleteEvent").data(EMPTY_BYTES).build());
+        kinesisClient.putRecord(PutRecordRequest.builder().streamName(KINESIS_INTEGRATION_TEST_CHANNEL).partitionKey("deleteEvent").data(EMPTY_BYTES).build());
         // when
         kinesisMessageLog.consumeUntil(
                 startFrom,
@@ -238,7 +232,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
     }
 
     private KinesisTestStreamSource writeToStream(String filename) {
-        KinesisTestStreamSource streamSource = new KinesisTestStreamSource(kinesisClient, TEST_CHANNEL, filename);
+        KinesisTestStreamSource streamSource = new KinesisTestStreamSource(kinesisClient, KINESIS_INTEGRATION_TEST_CHANNEL, filename);
         streamSource.writeToStream();
         return streamSource;
     }

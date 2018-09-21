@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.concurrent.ExecutionException;
 
 /**
  * This class is a data source for supplying input to the Amazon Kinesis stream. It reads lines from the
@@ -26,15 +25,13 @@ public class SqsTestStreamSource {
 
     private static final Logger LOG = LoggerFactory.getLogger(SqsTestStreamSource.class);
 
-    private final String channelName;
     private final String inputFile;
     private final SqsMessageSender messageSender;
 
     public SqsTestStreamSource(String channelName, String inputFile) {
         this.inputFile = inputFile;
-        this.channelName = channelName;
-        final SqsAsyncClient SqsAsyncClient = new SqsTestConfiguration().SqsAsyncClient();
-        final URL queueUrl = new SqsClientHelper(SqsAsyncClient).getQueueUrl(channelName);
+        final SqsAsyncClient sqsAsyncClient = new SqsTestConfiguration().sqsAsyncClient();
+        final URL queueUrl = new SqsClientHelper(sqsAsyncClient).getQueueUrl(channelName);
         messageSender = new SqsMessageSender(
                 channelName,
                 queueUrl.toString(),
@@ -48,13 +45,13 @@ public class SqsTestStreamSource {
             throw new IllegalStateException("Could not find input file: " + inputFile);
         }
         try {
-            processInputStream(channelName, inputStream);
+            processInputStream(inputStream);
         } catch (Exception e) {
             LOG.error("Encountered exception while putting data in source stream.", e);
         }
     }
 
-    protected void processInputStream(final String channelName, final InputStream inputStream) throws IOException, ExecutionException, InterruptedException {
+    protected void processInputStream(final InputStream inputStream) throws IOException, InterruptedException {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
             while ((line = br.readLine()) != null) {

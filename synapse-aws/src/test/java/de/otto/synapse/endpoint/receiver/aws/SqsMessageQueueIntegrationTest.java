@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
@@ -24,6 +25,7 @@ import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import javax.annotation.PostConstruct;
 import java.util.*;
 
+import static de.otto.synapse.configuration.aws.SqsTestConfiguration.SQS_INTEGRATION_TEST_CHANNEL;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.synchronizedSet;
 import static org.awaitility.Awaitility.await;
@@ -37,10 +39,10 @@ import static org.hamcrest.Matchers.notNullValue;
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
 @SpringBootTest(classes = SqsMessageQueueIntegrationTest.class)
+@DirtiesContext
 public class SqsMessageQueueIntegrationTest {
 
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET = 10;
-    private static final String TEST_CHANNEL = "sqs-test-channel";
 
     @Autowired
     private SqsAsyncClient SqsAsyncClient;
@@ -64,7 +66,7 @@ public class SqsMessageQueueIntegrationTest {
         /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
            when initializing it via @EnableEventSource
          */
-        sqsMessageQueue = new SqsMessageQueueReceiverEndpoint(TEST_CHANNEL, SqsAsyncClient, objectMapper, null);
+        sqsMessageQueue = new SqsMessageQueueReceiverEndpoint(SQS_INTEGRATION_TEST_CHANNEL, sqsAsyncClient, objectMapper, null);
         sqsMessageQueue.registerInterceptorsFrom(messageInterceptorRegistry);
         sqsMessageQueue.register(MessageConsumer.of(".*", String.class, (message) -> {
             messages.add(message);
@@ -75,11 +77,6 @@ public class SqsMessageQueueIntegrationTest {
     @After
     public void after() {
         sqsMessageQueue.stop();
-    }
-
-    @PostConstruct
-    public void setup() {
-        new SqsClientHelper(SqsAsyncClient).createChannelIfNotExists(TEST_CHANNEL);
     }
 
     @Test
@@ -116,7 +113,7 @@ public class SqsMessageQueueIntegrationTest {
     }
 
     private SqsTestStreamSource writeToStream(final String filename) {
-        final SqsTestStreamSource streamSource = new SqsTestStreamSource(TEST_CHANNEL, filename);
+        final SqsTestStreamSource streamSource = new SqsTestStreamSource(SQS_INTEGRATION_TEST_CHANNEL, filename);
         streamSource.writeToStream();
         return streamSource;
     }

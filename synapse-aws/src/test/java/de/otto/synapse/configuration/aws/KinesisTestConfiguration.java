@@ -2,6 +2,7 @@ package de.otto.synapse.configuration.aws;
 
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +25,9 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
 
     private static final Logger LOG = getLogger(KinesisTestConfiguration.class);
 
+    public static final int EXPECTED_NUMBER_OF_SHARDS = 2;
+    public static final String KINESIS_INTEGRATION_TEST_CHANNEL = "kinesis-ml-test-channel";
+
     @Override
     public void configureMessageInterceptors(final MessageInterceptorRegistry registry) {
         registry.register(receiverChannelsWith(testMessageInterceptor()));
@@ -42,18 +46,21 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
         // kinesalite does not support cbor at the moment (v1.11.6)
         System.setProperty("aws.cborEnabled", "false");
         LOG.info("kinesis client for local tests");
+        final KinesisClient kinesisClient;
         if (testEnvironment.equals("local")) {
-            return builder()
+            kinesisClient = builder()
                     .endpointOverride(URI.create("http://localhost:4568"))
                     .region(Region.EU_CENTRAL_1)
                     .credentialsProvider(StaticCredentialsProvider.create(
                             AwsBasicCredentials.create("foobar", "foobar")))
                     .build();
         } else {
-            return builder()
+            kinesisClient = builder()
                     .credentialsProvider(credentialsProvider)
                     .build();
         }
+        KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, KINESIS_INTEGRATION_TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
+        return kinesisClient;
     }
 
 }
