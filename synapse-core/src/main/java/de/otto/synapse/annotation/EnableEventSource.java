@@ -1,6 +1,5 @@
 package de.otto.synapse.annotation;
 
-import de.otto.synapse.configuration.EventSourcingAutoConfiguration;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
@@ -43,7 +42,7 @@ public @interface EnableEventSource {
      * <p>
      *     Resolving placeholders like "${my.channel.name}" is supported for this property.
      * </p>
-     * @return stream name
+     * @return channel name
      */
     String channelName();
 

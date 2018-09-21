@@ -1,9 +1,6 @@
 package de.otto.synapse.annotation.messagequeue;
 
 import de.otto.synapse.configuration.MessageQueueReceiverEndpointAutoConfiguration;
-import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
-import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
-import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
@@ -24,7 +21,7 @@ public @interface EnableMessageQueueReceiverEndpoint {
      * Resolving placeholders like "${my.channel.name}" is supported for this property.
      * </p>
      *
-     * @return stream name
+     * @return channel name
      */
     String channelName();
 

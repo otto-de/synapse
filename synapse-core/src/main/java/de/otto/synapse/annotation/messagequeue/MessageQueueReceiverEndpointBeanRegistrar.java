@@ -14,7 +14,6 @@ import org.springframework.util.MultiValueMap;
 import java.util.Objects;
 
 import static com.google.common.base.Strings.emptyToNull;
-import static de.otto.synapse.annotation.BeanNameHelper.beanNameForMessageQueue;
 import static de.otto.synapse.annotation.BeanNameHelper.beanNameForMessageQueueReceiverEndpoint;
 import static java.lang.String.format;
 import static org.slf4j.LoggerFactory.getLogger;
