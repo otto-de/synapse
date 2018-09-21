@@ -1,8 +1,11 @@
 package de.otto.synapse.configuration.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.edison.aws.configuration.AwsConfiguration;
 import de.otto.edison.aws.configuration.AwsProperties;
+import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import de.otto.synapse.endpoint.receiver.aws.KinesisMessageLogReceiverEndpointFactory;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.endpoint.sender.aws.KinesisMessageSenderEndpointFactory;
@@ -12,11 +15,13 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 
 @Configuration
+@Import({AwsConfiguration.class, SynapseAutoConfiguration.class})
 @EnableConfigurationProperties(AwsProperties.class)
 public class KinesisAutoConfiguration {
 
@@ -50,10 +55,10 @@ public class KinesisAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(name = "messageLogReceiverEndpointFactory")
-    public KinesisMessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
-                                                                                      final ObjectMapper objectMapper,
-                                                                                      final KinesisClient kinesisClient,
-                                                                                      final ApplicationEventPublisher eventPublisher) {
+    public MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
+                                                                               final ObjectMapper objectMapper,
+                                                                               final KinesisClient kinesisClient,
+                                                                               final ApplicationEventPublisher eventPublisher) {
         return new KinesisMessageLogReceiverEndpointFactory(interceptorRegistry, kinesisClient, objectMapper, eventPublisher);
     }
 

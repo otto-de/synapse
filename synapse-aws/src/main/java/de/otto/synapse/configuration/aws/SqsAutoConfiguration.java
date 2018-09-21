@@ -1,7 +1,9 @@
 package de.otto.synapse.configuration.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.edison.aws.configuration.AwsConfiguration;
 import de.otto.edison.aws.configuration.AwsProperties;
+import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpointFactory;
 import de.otto.synapse.endpoint.receiver.aws.SqsMessageQueueReceiverEndpoint;
@@ -9,17 +11,20 @@ import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.endpoint.sender.aws.SqsMessageSenderEndpointFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 @Configuration
+@Import({AwsConfiguration.class, SynapseAutoConfiguration.class})
 @EnableConfigurationProperties(AwsProperties.class)
 public class SqsAutoConfiguration {
 
