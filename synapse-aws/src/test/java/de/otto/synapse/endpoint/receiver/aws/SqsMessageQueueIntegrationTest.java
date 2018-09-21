@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.configuration.aws.TestMessageInterceptor;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.endpoint.SqsClientHelper;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.SqsTestStreamSource;
 import org.awaitility.Duration;
@@ -22,7 +21,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 
 import static de.otto.synapse.configuration.aws.SqsTestConfiguration.SQS_INTEGRATION_TEST_CHANNEL;
@@ -30,7 +28,6 @@ import static java.util.Collections.synchronizedList;
 import static java.util.Collections.synchronizedSet;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -45,7 +42,7 @@ public class SqsMessageQueueIntegrationTest {
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET = 10;
 
     @Autowired
-    private SqsAsyncClient SqsAsyncClient;
+    private SqsAsyncClient sqsAsyncClient;
 
     @Autowired
     private ObjectMapper objectMapper;

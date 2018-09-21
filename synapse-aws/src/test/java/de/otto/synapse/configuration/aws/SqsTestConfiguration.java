@@ -16,7 +16,7 @@ public class SqsTestConfiguration {
     public static final String SQS_INTEGRATION_TEST_CHANNEL = "sqs-test-channel";
 
     @Bean
-    public SqsAsyncClient SqsAsyncClient() {
+    public SqsAsyncClient sqsAsyncClient() {
         final SqsAsyncClient sqsAsyncClient = SqsAsyncClient.builder()
                 .region(Region.EU_CENTRAL_1)
                 .credentialsProvider(StaticCredentialsProvider.create(
