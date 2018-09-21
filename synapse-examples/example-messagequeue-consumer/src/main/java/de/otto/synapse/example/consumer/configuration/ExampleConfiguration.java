@@ -1,11 +1,10 @@
 package de.otto.synapse.example.consumer.configuration;
 
 import de.otto.synapse.annotation.messagequeue.EnableMessageQueueReceiverEndpoint;
+import de.otto.synapse.annotation.messagequeue.EnableMessageQueueSenderEndpoint;
 import de.otto.synapse.configuration.InMemoryMessageQueueTestConfiguration;
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
-import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.example.consumer.state.BananaProduct;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;
 import de.otto.synapse.state.StateRepository;
@@ -24,6 +23,8 @@ import static org.slf4j.LoggerFactory.getLogger;
 @EnableConfigurationProperties({MyServiceProperties.class})
 @EnableMessageQueueReceiverEndpoint(name = "bananaQueue",  channelName = "${exampleservice.banana-channel}")
 @EnableMessageQueueReceiverEndpoint(name = "productQueue", channelName = "${exampleservice.product-channel}")
+@EnableMessageQueueSenderEndpoint(name = "productMessageSender", channelName = "${exampleservice.product-channel}")
+@EnableMessageQueueSenderEndpoint(name = "bananaMessageSender", channelName = "${exampleservice.banana-channel}")
 public class ExampleConfiguration implements MessageEndpointConfigurer {
 
     private static final Logger LOG = getLogger(ExampleConfiguration.class);
@@ -43,18 +44,6 @@ public class ExampleConfiguration implements MessageEndpointConfigurer {
     @Bean
     public StateRepository<BananaProduct> bananaProductConcurrentStateRepository() {
         return new ConcurrentHashMapStateRepository<>();
-    }
-
-    @Bean
-    public MessageSenderEndpoint bananaMessageSender(final MessageSenderEndpointFactory messageQueueSenderEndpointFactory,
-                                                     final MyServiceProperties properties) {
-        return messageQueueSenderEndpointFactory.create(properties.getBananaChannel());
-    }
-
-    @Bean
-    public MessageSenderEndpoint productMessageSender(final MessageSenderEndpointFactory messageQueueSenderEndpointFactory,
-                                                      final MyServiceProperties properties) {
-        return messageQueueSenderEndpointFactory.create(properties.getProductChannel());
     }
 
 }

@@ -2,10 +2,11 @@
 
 ## 0.10.0
 * Update to aws-java-sdk-preview-12
-* Fixes naming of MessageQueueReceiverEndpoint beans using @EnableMessageQueueReceiverEndpoint annotations
+* Fixes naming of ```MessageQueueReceiverEndpoint``` beans using ```@EnableMessageQueueReceiverEndpoint``` annotations
 * Separated configuration of event sources and message queues. In case of annotation-based configuration,
-  nothing has to be changed. Only if no EnableEventSource annotation is used, the auto-configuration must
-  be triggered by adding the new EnableEventSourcing annotation to one of your Spring configurations.  
+  nothing has to be changed. Only if no ```EnableEventSource``` annotation is used, the auto-configuration must
+  now be triggered by adding the new ```EnableEventSourcing``` annotation to one of your Spring configurations.
+* Added annotations-based configuration of ```MessageSenderEndpoints```
 
 ## 0.9.4
 * Fixes startup of application context when eventsources are missing or not available
