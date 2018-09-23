@@ -29,4 +29,9 @@ public class InMemoryMessageSenderFactory implements MessageSenderEndpointFactor
         messageSender.registerInterceptorsFrom(registry);
         return messageSender;
     }
+
+    @Override
+    public boolean supportsChannel(final String channelName) {
+        return true;
+    }
 }

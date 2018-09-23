@@ -18,9 +18,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
-import software.amazon.awssdk.services.kinesis.model.DescribeStreamRequest;
-import software.amazon.awssdk.services.kinesis.model.DescribeStreamResponse;
-import software.amazon.awssdk.services.kinesis.model.StreamDescription;
+import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -128,6 +126,13 @@ public class MessageConsumerIntegrationTest {
                 @Override
                 public void close() {
                     // do nothing
+                }
+
+                @Override
+                public ListStreamsResponse listStreams(final ListStreamsRequest request) {
+                    return ListStreamsResponse.builder()
+                            .streamNames("test-stream")
+                            .build();
                 }
 
                 @Override

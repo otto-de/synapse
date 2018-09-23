@@ -12,8 +12,8 @@ import java.lang.annotation.*;
 @Import({
         SynapseAutoConfiguration.class,
         MessageQueueSenderEndpointBeanRegistrar.class})
-@Repeatable(EnableMessageQueueSenderEndpoints.class)
-public @interface EnableMessageQueueSenderEndpoint {
+@Repeatable(EnableMessageSenderEndpoints.class)
+public @interface EnableMessageSenderEndpoint {
 
     /**
      * The name of the message queue.

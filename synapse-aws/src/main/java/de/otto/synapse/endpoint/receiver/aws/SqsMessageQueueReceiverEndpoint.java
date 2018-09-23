@@ -39,18 +39,18 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
     public static final String MSG_KEY_ATTR = "synapse_msg_key";
 
     @Nonnull
-    private final SqsAsyncClient SqsAsyncClient;
+    private final SqsAsyncClient sqsAsyncClient;
     private final String queueUrl;
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
     public SqsMessageQueueReceiverEndpoint(final @Nonnull String channelName,
-                                           final @Nonnull SqsAsyncClient SqsAsyncClient,
+                                           final @Nonnull SqsAsyncClient sqsAsyncClient,
                                            final @Nonnull ObjectMapper objectMapper,
                                            final @Nullable ApplicationEventPublisher eventPublisher) {
         super(channelName, objectMapper, eventPublisher);
-        this.SqsAsyncClient = SqsAsyncClient;
+        this.sqsAsyncClient = sqsAsyncClient;
         try {
-            this.queueUrl = SqsAsyncClient.getQueueUrl(GetQueueUrlRequest
+            this.queueUrl = sqsAsyncClient.getQueueUrl(GetQueueUrlRequest
                     .builder()
                     .queueName(channelName)
                     .build())
@@ -73,13 +73,14 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
 
     private void receiveAndProcess() {
         try {
-            SqsAsyncClient.receiveMessage(ReceiveMessageRequest.builder()
+            sqsAsyncClient.receiveMessage(ReceiveMessageRequest.builder()
                     .queueUrl(queueUrl)
                     .visibilityTimeout(VISIBILITY_TIMEOUT)
                     .messageAttributeNames(".*")
                     .waitTimeSeconds(WAIT_TIME_SECONDS)
-                    .build()
-            ).thenAccept(this::processResponse).get();
+                    .build())
+                    .thenAccept(this::processResponse)
+                    .get();
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
             throw new RuntimeException(e);
@@ -136,7 +137,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
     private void deleteMessage(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
         try {
             LOG.debug("Deleting message with receiptHandle={}", sqsMessage.receiptHandle());
-            SqsAsyncClient.deleteMessage(
+            sqsAsyncClient.deleteMessage(
                     DeleteMessageRequest.builder()
                             .queueUrl(queueUrl)
                             .receiptHandle(sqsMessage.receiptHandle())

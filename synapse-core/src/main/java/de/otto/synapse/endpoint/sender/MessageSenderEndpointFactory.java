@@ -6,7 +6,6 @@ import javax.annotation.Nonnull;
  * A factory used to create {@link MessageSenderEndpoint} instances.
  *
  */
-@FunctionalInterface
 public interface MessageSenderEndpointFactory {
 
     /**
@@ -17,4 +16,8 @@ public interface MessageSenderEndpointFactory {
      */
     MessageSenderEndpoint create(@Nonnull String channelName);
 
+    /**
+     * @return true if the factory is able to support the given channel name, false otherwise.
+     */
+    boolean supportsChannel(final String channelName);
 }

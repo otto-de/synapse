@@ -12,7 +12,8 @@ public class InMemoryChannels {
     private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher eventPublisher;
 
-    public InMemoryChannels(final ObjectMapper objectMapper, final ApplicationEventPublisher eventPublisher) {
+    public InMemoryChannels(final ObjectMapper objectMapper,
+                            final ApplicationEventPublisher eventPublisher) {
         this.objectMapper = objectMapper;
         this.eventPublisher = eventPublisher;
     }

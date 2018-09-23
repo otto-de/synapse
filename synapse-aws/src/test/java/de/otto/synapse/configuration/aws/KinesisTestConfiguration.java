@@ -2,7 +2,6 @@ package de.otto.synapse.configuration.aws;
 
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +16,7 @@ import software.amazon.awssdk.services.kinesis.KinesisClient;
 import java.net.URI;
 
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.receiverChannelsWith;
+import static de.otto.synapse.testsupport.KinesisChannelSetupUtils.createChannelIfNotExists;
 import static org.slf4j.LoggerFactory.getLogger;
 import static software.amazon.awssdk.services.kinesis.KinesisClient.builder;
 
@@ -59,7 +59,7 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
                     .credentialsProvider(credentialsProvider)
                     .build();
         }
-        KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, KINESIS_INTEGRATION_TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
+        createChannelIfNotExists(kinesisClient, KINESIS_INTEGRATION_TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
         return kinesisClient;
     }
 

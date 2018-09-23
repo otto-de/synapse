@@ -3,10 +3,10 @@ package de.otto.synapse.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.InMemoryChannels;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpointFactory;
-import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.endpoint.receiver.InMemoryMessageQueueReceiverEndpointFactory;
-import de.otto.synapse.endpoint.sender.InMemoryMessageQueueSenderFactory;
+import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpointFactory;
+import de.otto.synapse.endpoint.sender.InMemoryMessageSenderFactory;
+import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import org.slf4j.Logger;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -38,7 +38,7 @@ public class InMemoryMessageQueueTestConfiguration {
                                                                         final InMemoryChannels inMemoryChannels,
                                                                         final ObjectMapper objectMapper) {
         LOG.warn("Creating InMemoryMessageSenderEndpointFactory. This should only be used in tests");
-        return new InMemoryMessageQueueSenderFactory(interceptorRegistry, inMemoryChannels, objectMapper);
+        return new InMemoryMessageSenderFactory(interceptorRegistry, inMemoryChannels, objectMapper);
     }
 
     @Bean

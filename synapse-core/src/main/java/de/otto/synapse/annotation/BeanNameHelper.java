@@ -17,8 +17,8 @@ public class BeanNameHelper {
         return LOWER_HYPHEN.to(LOWER_CAMEL, channelName) + "MessageQueueReceiverEndpoint";
     }
 
-    public static String beanNameForMessageQueueSenderEndpoint(final String channelName) {
-        return LOWER_HYPHEN.to(LOWER_CAMEL, channelName) + "MessageQueueSenderEndpoint";
+    public static String beanNameForMessageSenderEndpoint(final String channelName) {
+        return LOWER_HYPHEN.to(LOWER_CAMEL, channelName) + "MessageSenderEndpoint";
     }
 
 }

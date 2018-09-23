@@ -1,7 +1,7 @@
 package de.otto.synapse.annotation.messagequeue;
 
 import de.otto.synapse.configuration.InMemoryMessageQueueTestConfiguration;
-import de.otto.synapse.endpoint.sender.DelegateMessageQueueSenderEndpoint;
+import de.otto.synapse.endpoint.sender.DelegateMessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import org.junit.After;
 import org.junit.Test;
@@ -22,26 +22,26 @@ public class MessageQueueSenderEndpointBeanRegistrarTest {
         }
     }
 
-    @EnableMessageQueueSenderEndpoint(name = "testQueue", channelName = "test-channel")
+    @EnableMessageSenderEndpoint(name = "testQueue", channelName = "test-channel")
     private static class SingleQueueSenderConfig {
     }
 
-    @EnableMessageQueueSenderEndpoint(channelName = "test-channel")
+    @EnableMessageSenderEndpoint(channelName = "test-channel")
     private static class SingleUnnamedQueueSenderConfig {
     }
 
-    @EnableMessageQueueSenderEndpoint(name = "broken", channelName = "some-channel")
-    @EnableMessageQueueSenderEndpoint(name = "broken", channelName = "some-channel")
+    @EnableMessageSenderEndpoint(name = "broken", channelName = "some-channel")
+    @EnableMessageSenderEndpoint(name = "broken", channelName = "some-channel")
     private static class RepeatableQueueSenderConfigWithSameNames {
     }
 
-    @EnableMessageQueueSenderEndpoint(channelName = "some-channel")
-    @EnableMessageQueueSenderEndpoint(channelName = "other-channel")
+    @EnableMessageSenderEndpoint(channelName = "some-channel")
+    @EnableMessageSenderEndpoint(channelName = "other-channel")
     private static class RepeatableUnnamedQueueSenderConfigWithDifferentChannels {
     }
 
-    @EnableMessageQueueSenderEndpoint(name = "firstQueue", channelName = "first-channel")
-    @EnableMessageQueueSenderEndpoint(name = "secondQueue", channelName = "${test.channel-name}")
+    @EnableMessageSenderEndpoint(name = "firstQueue", channelName = "first-channel")
+    @EnableMessageSenderEndpoint(name = "secondQueue", channelName = "${test.channel-name}")
     private static class RepeatableQueueSenderConfig {
     }
 
@@ -52,7 +52,7 @@ public class MessageQueueSenderEndpointBeanRegistrarTest {
         context.refresh();
 
         assertThat(context.containsBean("testQueue")).isTrue();
-        assertThat(context.getBean("testQueue", MessageSenderEndpoint.class)).isInstanceOf(DelegateMessageQueueSenderEndpoint.class);
+        assertThat(context.getBean("testQueue", MessageSenderEndpoint.class)).isInstanceOf(DelegateMessageSenderEndpoint.class);
     }
 
     @Test
@@ -61,8 +61,8 @@ public class MessageQueueSenderEndpointBeanRegistrarTest {
         context.register(InMemoryMessageQueueTestConfiguration.class);
         context.refresh();
 
-        assertThat(context.containsBean("testChannelMessageQueueSenderEndpoint")).isTrue();
-        final MessageSenderEndpoint senderEndpoint = context.getBean("testChannelMessageQueueSenderEndpoint", MessageSenderEndpoint.class);
+        assertThat(context.containsBean("testChannelMessageSenderEndpoint")).isTrue();
+        final MessageSenderEndpoint senderEndpoint = context.getBean("testChannelMessageSenderEndpoint", MessageSenderEndpoint.class);
         assertThat(senderEndpoint.getChannelName()).isEqualTo("test-channel");
     }
 
@@ -79,8 +79,8 @@ public class MessageQueueSenderEndpointBeanRegistrarTest {
         context.register(InMemoryMessageQueueTestConfiguration.class);
         context.refresh();
 
-        assertThat(context.getBean("someChannelMessageQueueSenderEndpoint", MessageSenderEndpoint.class).getChannelName()).isEqualTo("some-channel");
-        assertThat(context.getBean("otherChannelMessageQueueSenderEndpoint", MessageSenderEndpoint.class).getChannelName()).isEqualTo("other-channel");
+        assertThat(context.getBean("someChannelMessageSenderEndpoint", MessageSenderEndpoint.class).getChannelName()).isEqualTo("some-channel");
+        assertThat(context.getBean("otherChannelMessageSenderEndpoint", MessageSenderEndpoint.class).getChannelName()).isEqualTo("other-channel");
     }
 
     @Test
@@ -97,11 +97,11 @@ public class MessageQueueSenderEndpointBeanRegistrarTest {
 
         final MessageSenderEndpoint first = context.getBean("firstQueue", MessageSenderEndpoint.class);
         assertThat(first.getChannelName()).isEqualTo("first-channel");
-        assertThat(first).isInstanceOf(DelegateMessageQueueSenderEndpoint.class);
+        assertThat(first).isInstanceOf(DelegateMessageSenderEndpoint.class);
 
         final MessageSenderEndpoint second = context.getBean("secondQueue", MessageSenderEndpoint.class);
         assertThat(second.getChannelName()).isEqualTo("second-channel");
-        assertThat(second).isInstanceOf(DelegateMessageQueueSenderEndpoint.class);
+        assertThat(second).isInstanceOf(DelegateMessageSenderEndpoint.class);
     }
 
 }
