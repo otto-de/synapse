@@ -2,7 +2,6 @@ package de.otto.synapse.eventsource.aws;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.configuration.aws.TestMessageInterceptor;
 import de.otto.synapse.consumer.MessageConsumer;
@@ -14,6 +13,7 @@ import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
 import de.otto.synapse.testsupport.KinesisTestStreamSource;
+import de.otto.synapse.util.s3.S3Service;
 import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;
@@ -34,7 +34,6 @@ import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;

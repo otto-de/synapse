@@ -1,7 +1,7 @@
 package de.otto.synapse.compaction.aws;
 
 import com.google.common.collect.ImmutableList;
-import de.otto.edison.aws.s3.S3Service;
+import de.otto.synapse.util.s3.S3Service;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;

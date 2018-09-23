@@ -4,12 +4,12 @@ import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
-import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.configuration.aws.SnapshotProperties;
 import de.otto.synapse.logging.ProgressLogger;
 import de.otto.synapse.state.StateRepository;
+import de.otto.synapse.util.s3.S3Service;
 import org.slf4j.Logger;
 
 import java.io.*;
@@ -24,9 +24,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static de.otto.synapse.compaction.aws.SnapshotFileHelper.COMPACTION_FILE_EXTENSION;
-import static de.otto.synapse.compaction.aws.SnapshotFileHelper.getSnapshotFileNamePrefix;
-import static de.otto.synapse.compaction.aws.SnapshotFileHelper.getTempDir;
+import static de.otto.synapse.compaction.aws.SnapshotFileHelper.*;
 import static java.time.format.DateTimeFormatter.ofPattern;
 import static org.slf4j.LoggerFactory.getLogger;
 

@@ -1,19 +1,21 @@
 package de.otto.synapse.configuration.aws;
 
-import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.compaction.aws.SnapshotReadService;
 import de.otto.synapse.compaction.aws.SnapshotWriteService;
 import de.otto.synapse.messagestore.MessageStoreFactory;
 import de.otto.synapse.messagestore.SnapshotMessageStore;
 import de.otto.synapse.messagestore.aws.S3SnapshotMessageStore;
+import de.otto.synapse.util.s3.S3Service;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 @Configuration
 @EnableConfigurationProperties(SnapshotProperties.class)
+@Import(S3AutoConfiguration.class)
 public class S3SnapshotAutoConfiguration {
 
     @Bean

@@ -33,7 +33,6 @@ public class AwsConfigurationIntegrationTest {
     @Autowired
     private MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory;
 
-
     @Test
     public void shouldInjectQualifiedMessageSenderEndpointFactories() {
         assertThat(messageQueueSenderEndpointFactory, is(notNullValue()));

@@ -1,7 +1,7 @@
 package de.otto.synapse.compaction.aws;
 
-import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.configuration.aws.SnapshotProperties;
+import de.otto.synapse.util.s3.S3Service;
 import org.slf4j.Logger;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
@@ -10,8 +10,6 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
-import static de.otto.synapse.compaction.aws.SnapshotFileHelper.COMPACTION_FILE_EXTENSION;
-import static de.otto.synapse.compaction.aws.SnapshotFileHelper.getSnapshotFileNamePrefix;
 import static de.otto.synapse.compaction.aws.SnapshotFileHelper.*;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.reverseOrder;

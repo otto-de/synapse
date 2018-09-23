@@ -1,12 +1,12 @@
 package de.otto.synapse.compaction.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;
 import de.otto.synapse.state.StateRepository;
+import de.otto.synapse.util.s3.S3Service;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

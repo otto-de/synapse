@@ -1,6 +1,6 @@
 package de.otto.synapse.compaction.aws;
 
-import de.otto.edison.aws.s3.S3Service;
+import de.otto.synapse.util.s3.S3Service;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

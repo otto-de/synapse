@@ -1,6 +1,5 @@
 package de.otto.synapse.messagestore.aws;
 
-import de.otto.edison.aws.s3.S3Service;
 import de.otto.synapse.annotation.EnableEventSourcing;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.compaction.aws.CompactionService;
@@ -10,6 +9,7 @@ import de.otto.synapse.message.Message;
 import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
 import de.otto.synapse.testsupport.KinesisTestStreamSource;
+import de.otto.synapse.util.s3.S3Service;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

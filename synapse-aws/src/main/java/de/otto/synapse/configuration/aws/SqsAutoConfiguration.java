@@ -1,8 +1,6 @@
 package de.otto.synapse.configuration.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.edison.aws.configuration.AwsConfiguration;
-import de.otto.edison.aws.configuration.AwsProperties;
 import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpointFactory;

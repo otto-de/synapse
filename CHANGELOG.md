@@ -6,7 +6,11 @@
 * Separated configuration of event sources and message queues. In case of annotation-based configuration,
   nothing has to be changed. Only if no ```EnableEventSource``` annotation is used, the auto-configuration must
   now be triggered by adding the new ```EnableEventSourcing``` annotation to one of your Spring configurations.
-* Added annotations-based configuration of ```MessageSenderEndpoints```
+* Added annotations-based configuration of ```MessageSenderEndpoints``` using the new annotation 
+  ```EnableMessageSenderEndpoint```. Both Kinesis and SQS message senders are supported and automatically configured. 
+* Removed dependency to ```de.otto.edison:edison-aws-s3```. The configuration has changed as follows:
+  - **`aws.region`** renamed to `synapse.aws.region`
+  - **`aws.profile`** renamed to `synapse.aws.profile` 
 
 ## 0.9.4
 * Fixes startup of application context when eventsources are missing or not available
