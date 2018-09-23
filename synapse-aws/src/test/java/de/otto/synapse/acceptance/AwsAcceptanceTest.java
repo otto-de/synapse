@@ -95,7 +95,7 @@ public class AwsAcceptanceTest {
         final String expectedPayload = "some payload: " + LocalDateTime.now();
         kinesisSender.send(Message.message("test", expectedPayload));
         await()
-                .atMost(1, SECONDS)
+                .atMost(10, SECONDS)
                 .until(() -> lastEventSourceMessage.get() != null && expectedPayload.equals(lastEventSourceMessage.get().getPayload()));
     }
 
@@ -104,7 +104,7 @@ public class AwsAcceptanceTest {
         final String expectedPayload = "some payload: " + LocalDateTime.now();
         sqsSender.send(Message.message("test", expectedPayload));
         await()
-                .atMost(1, SECONDS)
+                .atMost(10, SECONDS)
                 .until(() -> lastSqsMessage.get() != null && expectedPayload.equals(lastSqsMessage.get().getPayload()));
     }
 }
