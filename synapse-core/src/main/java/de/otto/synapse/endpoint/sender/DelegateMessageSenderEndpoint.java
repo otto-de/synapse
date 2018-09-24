@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -60,12 +61,12 @@ public class DelegateMessageSenderEndpoint implements MessageSenderEndpoint{
     }
 
     @Override
-    public <T> void send(@Nonnull Message<T> message) {
-        delegate.send(message);
+    public <T> CompletableFuture<Void> send(@Nonnull Message<T> message) {
+        return delegate.send(message);
     }
 
     @Override
-    public <T> void sendBatch(@Nonnull Stream<Message<T>> batch) {
-        delegate.sendBatch(batch);
+    public <T> CompletableFuture<Void> sendBatch(@Nonnull Stream<Message<T>> batch) {
+        return delegate.sendBatch(batch);
     }
 }

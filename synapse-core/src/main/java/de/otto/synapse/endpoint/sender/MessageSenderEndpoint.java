@@ -4,6 +4,7 @@ import de.otto.synapse.endpoint.MessageEndpoint;
 import de.otto.synapse.message.Message;
 
 import javax.annotation.Nonnull;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 /**
@@ -24,7 +25,7 @@ public interface MessageSenderEndpoint extends MessageEndpoint {
      * @param message the message
      * @param <T> the type of the message payload
      */
-    <T> void send(@Nonnull Message<T> message);
+    <T> CompletableFuture<Void> send(@Nonnull Message<T> message);
 
     /**
      * Send a batch of {@link Message messages} to the channel.
@@ -32,5 +33,5 @@ public interface MessageSenderEndpoint extends MessageEndpoint {
      * @param batch the batch of messages
      * @param <T> the type of the message payload
      */
-    <T> void sendBatch(@Nonnull Stream<Message<T>> batch);
+    <T> CompletableFuture<Void> sendBatch(@Nonnull Stream<Message<T>> batch);
 }

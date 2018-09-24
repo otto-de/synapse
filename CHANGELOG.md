@@ -10,7 +10,9 @@
   ```EnableMessageSenderEndpoint```. Both Kinesis and SQS message senders are supported and automatically configured. 
 * Removed dependency to ```de.otto.edison:edison-aws-s3```. The configuration has changed as follows:
   - **`aws.region`** renamed to `synapse.aws.region`
-  - **`aws.profile`** renamed to `synapse.aws.profile` 
+  - **`aws.profile`** renamed to `synapse.aws.profile`
+* ```MessageSenderEndpoint.send(Message)``` and ```MessageSenderEndpoint.sendBatch(Stream<Message>)``` are now returning
+  CompletableFuture<Void>.  
 
 ## 0.9.4
 * Fixes startup of application context when eventsources are missing or not available

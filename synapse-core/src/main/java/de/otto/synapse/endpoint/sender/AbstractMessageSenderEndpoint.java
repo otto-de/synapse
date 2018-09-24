@@ -7,9 +7,12 @@ import de.otto.synapse.translator.MessageTranslator;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import static de.otto.synapse.endpoint.EndpointType.SENDER;
+import static java.util.concurrent.CompletableFuture.allOf;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 /**
  * Sender-side {@code MessageEndpoint endpoint} of a Message Channel with support for {@link MessageTranslator message translation}.
@@ -46,11 +49,13 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
      * @param <T> type of the message's payload
      */
     @Override
-    public final <T> void send(@Nonnull final Message<T> message) {
+    public final <T> CompletableFuture<Void> send(@Nonnull final Message<T> message) {
         final Message<String> translatedMessage = messageTranslator.translate(message);
         final Message<String> interceptedMessage = intercept(translatedMessage);
         if (interceptedMessage != null) {
-            doSend(interceptedMessage);
+            return doSend(interceptedMessage);
+        } else {
+            return completedFuture(null);
         }
     }
 
@@ -62,8 +67,8 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
      * @param <T> the type of the message payload
      */
     @Override
-    public final <T> void sendBatch(@Nonnull final Stream<Message<T>> batch) {
-        doSendBatch(batch
+    public final <T> CompletableFuture<Void> sendBatch(@Nonnull final Stream<Message<T>> batch) {
+        return doSendBatch(batch
                 .map(messageTranslator::translate)
                 .map(this::intercept)
                 .filter(Objects::nonNull));
@@ -75,10 +80,10 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
         return SENDER;
     }
 
-    protected void doSendBatch(final @Nonnull Stream<Message<String>> batch) {
-        batch.forEach(this::doSend);
+    protected CompletableFuture<Void> doSendBatch(final @Nonnull Stream<Message<String>> batch) {
+        return allOf(batch.map(this::doSend).toArray(CompletableFuture[]::new));
     }
 
-    protected abstract void doSend(final @Nonnull Message<String> message);
+    protected abstract CompletableFuture<Void> doSend(final @Nonnull Message<String> message);
 
 }

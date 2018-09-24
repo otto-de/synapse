@@ -5,6 +5,9 @@ import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
 
 import javax.annotation.Nonnull;
+import java.util.concurrent.CompletableFuture;
+
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 public class InMemoryMessageSender extends AbstractMessageSenderEndpoint {
 
@@ -17,8 +20,9 @@ public class InMemoryMessageSender extends AbstractMessageSenderEndpoint {
     }
 
     @Override
-    protected void doSend(@Nonnull Message<String> message) {
+    protected CompletableFuture<Void> doSend(final @Nonnull Message<String> message) {
         channel.send(message);
+        return completedFuture(null);
     }
 
 }

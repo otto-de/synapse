@@ -11,10 +11,12 @@ import software.amazon.awssdk.services.kinesis.model.PutRecordsRequestEntry;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.Lists.partition;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.stream.Collectors.toCollection;
 
 public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
@@ -31,16 +33,17 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
     }
 
     @Override
-    protected void doSend(@Nonnull Message<String> message) {
+    protected CompletableFuture<Void> doSend(@Nonnull Message<String> message) {
         retryPutRecordsKinesisClient.putRecords(() -> createPutRecordRequest(message));
+        return completedFuture(null);
     }
 
     @Override
-    protected void doSendBatch(@Nonnull Stream<Message<String>> messageStream) {
+    protected CompletableFuture<Void> doSendBatch(@Nonnull Stream<Message<String>> messageStream) {
         final List<PutRecordsRequestEntry> entries = createPutRecordRequestEntries(messageStream);
         partition(entries, PUT_RECORDS_BATCH_SIZE)
-                .forEach(batch -> retryPutRecordsKinesisClient.putRecords(() -> createPutRecordRequest(batch))
-                );
+                .forEach(batch -> retryPutRecordsKinesisClient.putRecords(() -> createPutRecordRequest(batch)));
+        return completedFuture(null);
     }
 
     private PutRecordsRequest createPutRecordRequest(final List<PutRecordsRequestEntry> batch) {

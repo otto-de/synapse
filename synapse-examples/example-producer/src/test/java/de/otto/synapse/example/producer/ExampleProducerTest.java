@@ -9,6 +9,9 @@ import org.junit.Test;
 
 import javax.annotation.Nonnull;
 
+import java.util.concurrent.CompletableFuture;
+
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
@@ -22,8 +25,9 @@ public class ExampleProducerTest {
         final MessageTranslator<String> translator = MessageTranslator.of((payload -> "received"));
 
         final MessageSenderEndpoint sender = new AbstractMessageSenderEndpoint("test", translator) {
-            protected void doSend(@Nonnull Message<String> message) {
+            protected CompletableFuture<Void> doSend(@Nonnull Message<String> message) {
                 sentMessage = message;
+                return completedFuture(null);
             }
         };
         testee = new ExampleProducer(sender);

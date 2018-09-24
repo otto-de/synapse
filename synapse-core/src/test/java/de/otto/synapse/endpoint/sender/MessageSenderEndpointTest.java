@@ -10,6 +10,7 @@ import org.junit.Test;
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -17,6 +18,7 @@ import java.util.stream.Stream;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.allChannelsWith;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingChannelsWith;
 import static de.otto.synapse.message.Message.message;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.stream.Stream.of;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -32,8 +34,9 @@ public class MessageSenderEndpointTest {
         final AtomicInteger numMessagesSent = new AtomicInteger(0);
         final MessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("test", (m) -> (Message<String>)m) {
             @Override
-            public void doSend(final @Nonnull Message<String> message) {
+            public CompletableFuture<Void> doSend(final @Nonnull Message<String> message) {
                 numMessagesSent.incrementAndGet();
+                return completedFuture(null);
             }
         };
         senderEndpoint.sendBatch(of(
@@ -51,7 +54,9 @@ public class MessageSenderEndpointTest {
         when(messageTranslator.translate(any(Message.class))).thenReturn(message("translated", null));
         final MessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
-            protected void doSend(Message<String> message) { /* no-op */ }
+            protected CompletableFuture<Void> doSend(final Message<String> message) { /* no-op */
+                return completedFuture(null);
+            }
         };
         // when
         final Message<Object> message = message("foo", null);
@@ -66,7 +71,9 @@ public class MessageSenderEndpointTest {
         final MessageTranslator<String> messageTranslator = mock(MessageTranslator.class);
         final MessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
-            protected void doSend(Message<String> message) { /* no-op */ }
+            protected CompletableFuture<Void> doSend(Message<String> message) { /* no-op */
+                return completedFuture(null);
+            }
         };
         MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
         MessageInterceptor interceptor = (m) -> message("intercepted", null);
@@ -87,7 +94,9 @@ public class MessageSenderEndpointTest {
         registry.register(matchingChannelsWith("foo-channel", interceptor));
         final MessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
-            protected void doSend(@Nonnull Message<String> message) { /* no-op */ }
+            protected CompletableFuture<Void> doSend(@Nonnull Message<String> message) { /* no-op */
+                return completedFuture(null);
+            }
         };
         senderEndpoint.registerInterceptorsFrom(registry);
         // when
@@ -108,8 +117,9 @@ public class MessageSenderEndpointTest {
         registry.register(matchingChannelsWith("foo-channel", interceptor));
         final MessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
-            protected void doSend(@Nonnull Message<String> message) {
+            protected CompletableFuture<Void> doSend(@Nonnull Message<String> message) {
                 fail("This should not be called for dropped messages!");
+                return completedFuture(null);
             }
         };
         senderEndpoint.registerInterceptorsFrom(registry);
@@ -129,8 +139,9 @@ public class MessageSenderEndpointTest {
         final AtomicReference<Message<String>> sentMessage = new AtomicReference<>(null);
         final MessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
-            protected void doSend(@Nonnull Message<String> message) {
+            protected CompletableFuture<Void> doSend(@Nonnull Message<String> message) {
                 sentMessage.set(message);
+                return completedFuture(null);
             }
         };
 
@@ -153,8 +164,9 @@ public class MessageSenderEndpointTest {
         final AtomicReference<Message<String>> sentMessage = new AtomicReference<>(null);
         final MessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
-            protected void doSend(@Nonnull Message<String> message) {
+            protected CompletableFuture<Void> doSend(@Nonnull Message<String> message) {
                 sentMessage.set(message);
+                return completedFuture(null);
             }
         };
         senderEndpoint.registerInterceptorsFrom(registry);
@@ -178,8 +190,9 @@ public class MessageSenderEndpointTest {
         final List<Message<String>> sentMessages = new ArrayList<>();
         final MessageSenderEndpoint senderEndpoint = new AbstractMessageSenderEndpoint("foo-channel", messageTranslator) {
             @Override
-            protected void doSend(@Nonnull Message<String> message) {
+            protected CompletableFuture<Void> doSend(@Nonnull Message<String> message) {
                 sentMessages.add(message);
+                return completedFuture(null);
             }
         };
         senderEndpoint.registerInterceptorsFrom(registry);
