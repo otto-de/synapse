@@ -7,10 +7,11 @@ import com.google.common.annotations.VisibleForTesting;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.configuration.aws.SnapshotProperties;
+import de.otto.synapse.helper.s3.S3Helper;
 import de.otto.synapse.logging.ProgressLogger;
 import de.otto.synapse.state.StateRepository;
-import de.otto.synapse.util.s3.S3Service;
 import org.slf4j.Logger;
+import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -41,12 +42,13 @@ public class SnapshotWriteService {
     private static final String SEQUENCE_NUMBER_FIELD_NAME = "sequenceNumber";
     private static final int NUM_SNAPSHOTS_TO_KEEP = 6;
 
-    private final S3Service s3Service;
+    private final S3Helper s3Helper;
     private final String snapshotBucketName;
     private final JsonFactory jsonFactory = new JsonFactory();
-    public SnapshotWriteService(final S3Service s3Service,
+
+    public SnapshotWriteService(final S3Client s3Client,
                                 final SnapshotProperties properties) {
-        this.s3Service = s3Service;
+        this.s3Helper = new S3Helper(s3Client);
         this.snapshotBucketName = properties.getBucketName();
     }
 
@@ -160,7 +162,7 @@ public class SnapshotWriteService {
     }
 
     private void uploadSnapshot(String bucketName, final File snapshotFile) {
-        s3Service.upload(bucketName, snapshotFile);
+        s3Helper.upload(bucketName, snapshotFile);
     }
 
     private void writeSequenceNumbers(ChannelPosition currentChannelPosition, JsonGenerator jGenerator) throws IOException {

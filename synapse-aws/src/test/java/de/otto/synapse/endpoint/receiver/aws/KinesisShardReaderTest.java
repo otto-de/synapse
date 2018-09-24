@@ -1,7 +1,6 @@
 package de.otto.synapse.endpoint.receiver.aws;
 
 import de.otto.synapse.channel.ShardPosition;
-import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.TestClock;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,7 +13,10 @@ import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
@@ -22,13 +24,10 @@ import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.StartFrom.HORIZON;
 import static java.time.Duration.ofMillis;
 import static java.time.Instant.now;
-import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Collections.emptyList;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -88,13 +87,16 @@ public class KinesisShardReaderTest {
         final ShardPosition shardPosition = kinesisShardReader.consumeUntil(fromHorizon("someShard"), now, consumer).get();
 
         // then
-        verify(consumer).accept(new KinesisShardResponse(
-                "someChannel",
-                fromPosition("someShard", "2"),
-                response, 0
-        ));
+        final ArgumentCaptor<KinesisShardResponse> argumentCaptor = ArgumentCaptor.forClass(KinesisShardResponse.class);
+        verify(consumer).accept(argumentCaptor.capture());
         verifyNoMoreInteractions(consumer);
 
+        final KinesisShardResponse shardResponse = argumentCaptor.getValue();
+        assertThat(shardResponse.getChannelName(), is("someChannel"));
+        assertThat(shardResponse.getShardName(), is("someShard"));
+        assertThat(shardResponse.getShardPosition(), is(fromPosition("someShard", "2")));
+        assertThat(shardResponse.getDurationBehind(), is(ofMillis(1234L)));
+        assertThat(shardResponse.getMessages(), hasSize(2));
         assertThat(shardPosition.position(), is("2"));
     }
 

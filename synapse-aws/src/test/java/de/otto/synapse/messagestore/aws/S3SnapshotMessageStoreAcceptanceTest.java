@@ -5,11 +5,11 @@ import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.compaction.aws.CompactionService;
 import de.otto.synapse.compaction.aws.SnapshotReadService;
 import de.otto.synapse.compaction.aws.SnapshotWriteService;
+import de.otto.synapse.helper.s3.S3Helper;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
 import de.otto.synapse.testsupport.KinesisTestStreamSource;
-import de.otto.synapse.util.s3.S3Service;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,6 +22,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -58,7 +59,9 @@ public class S3SnapshotMessageStoreAcceptanceTest {
     private SnapshotReadService snapshotReadService;
 
     @Autowired
-    private S3Service s3Service;
+    private S3Client s3Client;
+
+    private S3Helper s3Helper;
 
     @Autowired
     private CompactionService compactionService;
@@ -73,13 +76,14 @@ public class S3SnapshotMessageStoreAcceptanceTest {
     public void setup() throws IOException {
         KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, INTEGRATION_TEST_STREAM, 2);
         deleteSnapshotFilesFromTemp();
-        s3Service.createBucket(INTEGRATION_TEST_BUCKET);
-        s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
+        s3Helper = new S3Helper(s3Client);
+        s3Helper.createBucket(INTEGRATION_TEST_BUCKET);
+        s3Helper.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
     }
 
     @After
     public void tearDown() {
-        s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
+        s3Helper.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
     }
 
     @Test

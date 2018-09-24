@@ -6,12 +6,14 @@ import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;
 import de.otto.synapse.state.StateRepository;
-import de.otto.synapse.util.s3.S3Service;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,8 +37,8 @@ import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class SnapshotWriteServiceTest {
 
@@ -44,12 +46,12 @@ public class SnapshotWriteServiceTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private SnapshotWriteService testee;
-    private S3Service s3Service;
+    private S3Client s3Client;
 
     @Before
     public void setUp() {
-        s3Service = mock(S3Service.class);
-        testee = new SnapshotWriteService(s3Service, snapshotProperties());
+        s3Client = mock(S3Client.class);
+        testee = new SnapshotWriteService(s3Client, snapshotProperties());
     }
 
     @After
@@ -61,19 +63,19 @@ public class SnapshotWriteServiceTest {
     public void shouldUploadSnapshotFile() throws Exception {
         StateRepository<String> stateRepository = new ConcurrentHashMapStateRepository<>();
         stateRepository.put("testKey", "{\"content\":\"testValue1\"}");
-
+        when(s3Client.putObject(any(PutObjectRequest.class), any(Path.class))).thenReturn(PutObjectResponse.builder().build());
         //when
         String fileName = testee.writeSnapshot(STREAM_NAME, fromHorizon(), stateRepository);
 
         //then
-        ArgumentCaptor<File> fileArgumentCaptor = ArgumentCaptor.forClass(File.class);
-        Mockito.verify(s3Service).upload(eq("test-" + STREAM_NAME), fileArgumentCaptor.capture());
+        ArgumentCaptor<Path> fileArgumentCaptor = ArgumentCaptor.forClass(Path.class);
+        Mockito.verify(s3Client).putObject(any(PutObjectRequest.class), fileArgumentCaptor.capture());
 
-        File actualFile = fileArgumentCaptor.getValue();
-        assertThat(actualFile.getName(), containsString(fileName));
+        Path actualFile = fileArgumentCaptor.getValue();
+        assertThat(actualFile.toString(), containsString(fileName));
         assertThat(fileName, startsWith("compaction-" + STREAM_NAME + "-snapshot-"));
 
-        assertFalse(actualFile.exists());
+        assertFalse(Files.exists(actualFile));
     }
 
     @Test
@@ -107,7 +109,7 @@ public class SnapshotWriteServiceTest {
     @Test
     public void shouldDeleteSnapshotEvenIfUploadFails() throws Exception {
         // given
-        doThrow(new RuntimeException("forced test exception")).when(s3Service).upload(any(), any());
+//        doThrow(new RuntimeException("forced test exception")).when(s3Helper).upload(any(), any());
         StateRepository<String> stateRepository = new ConcurrentHashMapStateRepository<>();
         stateRepository.put("testKey", "testValue1");
         stateRepository.put("testKey2", "testValue2");

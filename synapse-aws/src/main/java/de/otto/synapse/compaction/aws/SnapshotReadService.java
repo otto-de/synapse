@@ -1,8 +1,9 @@
 package de.otto.synapse.compaction.aws;
 
 import de.otto.synapse.configuration.aws.SnapshotProperties;
-import de.otto.synapse.util.s3.S3Service;
+import de.otto.synapse.helper.s3.S3Helper;
 import org.slf4j.Logger;
+import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 import java.io.File;
@@ -19,14 +20,14 @@ public class SnapshotReadService {
 
     private static final Logger LOG = getLogger(SnapshotReadService.class);
 
-    private final S3Service s3Service;
+    private final S3Helper s3Helper;
     private final String snapshotBucketName;
 
     private File forcedSnapshotFile = null;
 
     public SnapshotReadService(final SnapshotProperties properties,
-                               final S3Service s3Service) {
-        this.s3Service = s3Service;
+                               final S3Client s3Client) {
+        this.s3Helper = new S3Helper(s3Client);
         this.snapshotBucketName = properties.getBucketName();
     }
 
@@ -75,7 +76,7 @@ public class SnapshotReadService {
 
             removeTempFiles("*-snapshot-*.json.zip");
             LOG.info("Downloading snapshot file to {}", snapshotFile.getFileName().toAbsolutePath().toString());
-            if (s3Service.download(snapshotBucketName, latestSnapshotKey, snapshotFile)) {
+            if (s3Helper.download(snapshotBucketName, latestSnapshotKey, snapshotFile)) {
                 return Optional.of(snapshotFile.toFile());
             }
             return Optional.empty();
@@ -86,7 +87,7 @@ public class SnapshotReadService {
 
 
     Optional<S3Object> fetchSnapshotMetadataFromS3(String bucketName, String channelName) {
-        return s3Service.listAll(bucketName)
+        return s3Helper.listAll(bucketName)
                 .stream()
                 .filter(o -> o.key().startsWith(getSnapshotFileNamePrefix(channelName)))
                 .filter(o -> o.key().endsWith(COMPACTION_FILE_EXTENSION))

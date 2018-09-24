@@ -6,16 +6,15 @@ edison:
     enabled: false
 
 synapse:
-    snapshot:
-        bucket-name: de-otto-promo-compaction-test-snapshots
-    compaction:
-        enabled: true
+  aws:
+    profile: ft3-nonlive
+  snapshot:
+    bucket-name: de-otto-promo-compaction-test-snapshots
+  compaction:
+    enabled: true
 
 service:
   encryption:
     password: test
     salt: test
-
-aws:
-  profile: ft3-nonlive
 

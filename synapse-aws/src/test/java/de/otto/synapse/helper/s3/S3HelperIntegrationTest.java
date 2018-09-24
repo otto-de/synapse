@@ -1,4 +1,4 @@
-package de.otto.synapse.util.s3;
+package de.otto.synapse.helper.s3;
 
 import de.otto.synapse.configuration.aws.AwsConfiguration;
 import de.otto.synapse.configuration.aws.S3TestConfiguration;
@@ -23,35 +23,35 @@ import static org.junit.Assert.assertThat;
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {S3TestConfiguration.class, AwsConfiguration.class})
 @ActiveProfiles("test")
-public class S3ServiceIntegrationTest {
+public class S3HelperIntegrationTest {
 
     private static final String TESTBUCKET = "testbucket";
     @Autowired
     private S3Client s3Client;
-    private S3Service s3Service;
+    private S3Helper s3Helper;
 
     @Before
     public void setUp() {
-        s3Service = new S3Service(s3Client);
-        s3Service.createBucket(TESTBUCKET);
+        s3Helper = new S3Helper(s3Client);
+        s3Helper.createBucket(TESTBUCKET);
     }
 
     @After
     public void tearDown() {
-        s3Service.deleteAllObjectsInBucket(TESTBUCKET);
+        s3Helper.deleteAllObjectsInBucket(TESTBUCKET);
     }
 
     @Test
     public void shouldOnlyDeleteFilesWithPrefix() throws Exception {
         // given
-        s3Service.upload(TESTBUCKET, createTestfile("test", ".txt", "Hello World!"));
-        s3Service.upload(TESTBUCKET, createTestfile("prefix", ".txt", "Hello World!"));
+        s3Helper.upload(TESTBUCKET, createTestfile("test", ".txt", "Hello World!"));
+        s3Helper.upload(TESTBUCKET, createTestfile("prefix", ".txt", "Hello World!"));
 
         // when
-        s3Service.deleteAllObjectsWithPrefixInBucket(TESTBUCKET, "prefix");
+        s3Helper.deleteAllObjectsWithPrefixInBucket(TESTBUCKET, "prefix");
 
         // then
-        final List<String> allFiles = s3Service.listAllFiles(TESTBUCKET);
+        final List<String> allFiles = s3Helper.listAllFiles(TESTBUCKET);
         assertThat(allFiles, contains(startsWith("test")));
         assertThat(allFiles, not(contains(startsWith("prefixed_test"))));
     }
@@ -59,14 +59,14 @@ public class S3ServiceIntegrationTest {
     @Test
     public void shouldDeleteAllFilesInBucket() throws Exception {
         //given
-        s3Service.upload(TESTBUCKET, createTempFile("test", ".json.zip").toFile());
-        s3Service.upload(TESTBUCKET, createTempFile("prefixed_test", ".json.zip").toFile());
+        s3Helper.upload(TESTBUCKET, createTempFile("test", ".json.zip").toFile());
+        s3Helper.upload(TESTBUCKET, createTempFile("prefixed_test", ".json.zip").toFile());
 
         //when
-        s3Service.deleteAllObjectsInBucket(TESTBUCKET);
+        s3Helper.deleteAllObjectsInBucket(TESTBUCKET);
 
         //then
-        final List<String> allFiles = s3Service.listAllFiles(TESTBUCKET);
+        final List<String> allFiles = s3Helper.listAllFiles(TESTBUCKET);
         assertThat(allFiles, hasSize(0));
     }
 

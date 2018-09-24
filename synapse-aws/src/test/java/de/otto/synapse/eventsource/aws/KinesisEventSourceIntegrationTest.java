@@ -10,10 +10,10 @@ import de.otto.synapse.endpoint.receiver.aws.KinesisMessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.aws.KinesisShardIterator;
 import de.otto.synapse.eventsource.DefaultEventSource;
 import de.otto.synapse.eventsource.EventSource;
+import de.otto.synapse.helper.s3.S3Helper;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
 import de.otto.synapse.testsupport.KinesisTestStreamSource;
-import de.otto.synapse.util.s3.S3Service;
 import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;
@@ -29,6 +29,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordRequest;
+import software.amazon.awssdk.services.s3.S3Client;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -82,7 +83,9 @@ public class KinesisEventSourceIntegrationTest {
     private ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    private S3Service s3Service;
+    private S3Client s3Client;
+
+    private S3Helper s3Helper;
 
     @Autowired
     private MessageInterceptorRegistry messageInterceptorRegistry;
@@ -98,8 +101,9 @@ public class KinesisEventSourceIntegrationTest {
     public void setup() throws IOException {
         KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
         deleteSnapshotFilesFromTemp();
-        s3Service.createBucket(INTEGRATION_TEST_BUCKET);
-        s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
+        s3Helper = new S3Helper(s3Client);
+        s3Helper.createBucket(INTEGRATION_TEST_BUCKET);
+        s3Helper.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
     }
 
     @Before

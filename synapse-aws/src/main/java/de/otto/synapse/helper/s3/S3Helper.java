@@ -1,4 +1,4 @@
-package de.otto.synapse.util.s3;
+package de.otto.synapse.helper.s3;
 
 import org.slf4j.Logger;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -15,13 +15,13 @@ import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 import static software.amazon.awssdk.services.s3.model.Delete.builder;
 
-public class S3Service {
+public class S3Helper {
 
-    private static final Logger LOG = getLogger(S3Service.class);
+    private static final Logger LOG = getLogger(S3Helper.class);
 
     private final S3Client s3Client;
 
-    public S3Service(final S3Client s3Client) {
+    public S3Helper(final S3Client s3Client) {
         this.s3Client = s3Client;
     }
 
@@ -58,13 +58,18 @@ public class S3Service {
                 Files.delete(destination);
             }
         } catch (final IOException e) {
-            LOG.error("could not delete temp snapshotfile {}", destination.toString(), e);
+            LOG.error("could not delete temp snapshotfile {}: {}", destination.toString(), e.getMessage());
             return false;
         }
-        final GetObjectRequest request = GetObjectRequest.builder().bucket(bucketName).key(fileName).build();
-        final GetObjectResponse getObjectResponse = s3Client.getObject(request, destination);
-        LOG.debug("download {} from bucket {}: ", fileName, bucketName, getObjectResponse.toString());
-        return true;
+        try {
+            final GetObjectRequest request = GetObjectRequest.builder().bucket(bucketName).key(fileName).build();
+            final GetObjectResponse getObjectResponse = s3Client.getObject(request, destination);
+            LOG.debug("download {} from bucket {}: {}", fileName, bucketName, getObjectResponse.toString());
+            return true;
+        } catch (final RuntimeException e) {
+            LOG.error("Failed to download {} from bucket {}: {}", fileName, bucketName, e.getMessage());
+            return false;
+        }
     }
 
     public void deleteAllObjectsInBucket(final String bucketName) {

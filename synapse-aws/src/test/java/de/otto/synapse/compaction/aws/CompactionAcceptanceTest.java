@@ -5,10 +5,10 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import de.otto.synapse.annotation.EnableEventSourcing;
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.helper.s3.S3Helper;
 import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
 import de.otto.synapse.testsupport.KinesisTestStreamSource;
-import de.otto.synapse.util.s3.S3Service;
 import net.minidev.json.JSONArray;
 import org.junit.After;
 import org.junit.Before;
@@ -75,20 +75,20 @@ public class CompactionAcceptanceTest {
     @Autowired
     private StateRepository<String> stateRepository;
 
-    private S3Service s3Service;
+    private S3Helper s3Helper;
 
     @Before
     public void setup() throws IOException {
         KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, INTEGRATION_TEST_STREAM, 2);
         deleteSnapshotFilesFromTemp();
-        s3Service = new S3Service(s3Client);
-        s3Service.createBucket(INTEGRATION_TEST_BUCKET);
-        s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
+        s3Helper = new S3Helper(s3Client);
+        s3Helper.createBucket(INTEGRATION_TEST_BUCKET);
+        s3Helper.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
     }
 
     @After
     public void tearDown() {
-        s3Service.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
+        s3Helper.deleteAllObjectsInBucket(INTEGRATION_TEST_BUCKET);
     }
 
     @Test
