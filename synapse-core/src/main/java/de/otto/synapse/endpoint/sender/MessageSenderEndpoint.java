@@ -24,6 +24,7 @@ public interface MessageSenderEndpoint extends MessageEndpoint {
      *
      * @param message the message
      * @param <T> the type of the message payload
+     * @return a CompletableFuture that can be used for logging, error handling, waiting for completion, etc.
      */
     <T> CompletableFuture<Void> send(@Nonnull Message<T> message);
 
@@ -32,6 +33,7 @@ public interface MessageSenderEndpoint extends MessageEndpoint {
      *
      * @param batch the batch of messages
      * @param <T> the type of the message payload
+     * @return a CompletableFuture that can be used for logging, error handling, waiting for completion, etc.
      */
     <T> CompletableFuture<Void> sendBatch(@Nonnull Stream<Message<T>> batch);
 }
