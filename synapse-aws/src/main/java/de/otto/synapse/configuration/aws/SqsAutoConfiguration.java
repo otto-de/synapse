@@ -33,7 +33,7 @@ public class SqsAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(SqsAsyncClient.class)
-    public SqsAsyncClient SqsAsyncClient(final AwsCredentialsProvider credentialsProvider) {
+    public SqsAsyncClient sqsAsyncClient(final AwsCredentialsProvider credentialsProvider) {
             return SqsAsyncClient.builder()
                     .credentialsProvider(credentialsProvider)
                     .region(Region.of(awsProperties.getRegion()))
@@ -44,20 +44,20 @@ public class SqsAutoConfiguration {
     @ConditionalOnMissingBean(name = "messageQueueSenderEndpointFactory")
     public MessageSenderEndpointFactory messageQueueSenderEndpointFactory(final MessageInterceptorRegistry registry,
                                                                           final ObjectMapper objectMapper,
-                                                                          final SqsAsyncClient SqsAsyncClient,
+                                                                          final SqsAsyncClient sqsAsyncClient,
                                                                           final @Value("${spring.application.name:Synapse Service}") String messageSenderName) {
-        return new SqsMessageSenderEndpointFactory(registry, objectMapper, SqsAsyncClient, messageSenderName);
+        return new SqsMessageSenderEndpointFactory(registry, objectMapper, sqsAsyncClient, messageSenderName);
     }
 
     @Bean
     @ConditionalOnMissingBean(name = "messageQueueReceiverEndpointFactory")
     public MessageQueueReceiverEndpointFactory messageQueueReceiverEndpointFactory(final MessageInterceptorRegistry registry,
                                                                                    final ObjectMapper objectMapper,
-                                                                                   final SqsAsyncClient SqsAsyncClient,
+                                                                                   final SqsAsyncClient sqsAsyncClient,
                                                                                    final ApplicationEventPublisher eventPublisher) {
 
         return (String channelName) -> {
-            final SqsMessageQueueReceiverEndpoint endpoint = new SqsMessageQueueReceiverEndpoint(channelName, SqsAsyncClient, objectMapper, eventPublisher);
+            final SqsMessageQueueReceiverEndpoint endpoint = new SqsMessageQueueReceiverEndpoint(channelName, sqsAsyncClient, objectMapper, eventPublisher);
             endpoint.registerInterceptorsFrom(registry);
             return endpoint;
         };

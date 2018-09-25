@@ -23,10 +23,10 @@ public class SqsMessageSenderEndpointFactoryTest {
     @Test
     public void shouldBuildSqsMessageSender() {
         final ObjectMapper objectMapper = mock(ObjectMapper.class);
-        final SqsAsyncClient SqsAsyncClient = mock(SqsAsyncClient.class);
-        when(SqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl("http://example.com").build()));
+        final SqsAsyncClient sqsAsyncClient = mock(SqsAsyncClient.class);
+        when(sqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl("http://example.com").build()));
 
-        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, SqsAsyncClient, "test");
+        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, sqsAsyncClient, "test");
 
         final MessageSenderEndpoint sender = factory.create("foo-stream");
         assertThat(sender.getChannelName(), is("foo-stream"));
@@ -36,10 +36,10 @@ public class SqsMessageSenderEndpointFactoryTest {
     @Test
     public void shouldNotSupportMissingChannel() {
         final ObjectMapper objectMapper = mock(ObjectMapper.class);
-        final SqsAsyncClient SqsAsyncClient = mock(SqsAsyncClient.class);
-        when(SqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class))).thenThrow(QueueDoesNotExistException.class);
+        final SqsAsyncClient sqsAsyncClient = mock(SqsAsyncClient.class);
+        when(sqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class))).thenThrow(QueueDoesNotExistException.class);
 
-        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, SqsAsyncClient, "test");
+        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, sqsAsyncClient, "test");
 
         assertThat(factory.supportsChannel("foo-stream"), is(false));
     }
@@ -47,10 +47,10 @@ public class SqsMessageSenderEndpointFactoryTest {
     @Test
     public void shouldSupportExistingChannel() {
         final ObjectMapper objectMapper = mock(ObjectMapper.class);
-        final SqsAsyncClient SqsAsyncClient = mock(SqsAsyncClient.class);
-        when(SqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl("http://example.com").build()));
+        final SqsAsyncClient sqsAsyncClient = mock(SqsAsyncClient.class);
+        when(sqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl("http://example.com").build()));
 
-        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, SqsAsyncClient, "test");
+        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, sqsAsyncClient, "test");
 
         assertThat(factory.supportsChannel("foo-stream"), is(true));
     }
@@ -58,14 +58,14 @@ public class SqsMessageSenderEndpointFactoryTest {
     @Test
     public void shouldRegisterMessageInterceptor() {
         final ObjectMapper objectMapper = mock(ObjectMapper.class);
-        final SqsAsyncClient SqsAsyncClient = mock(SqsAsyncClient.class);
-        when(SqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl("http://example.com").build()));
+        final SqsAsyncClient sqsAsyncClient = mock(SqsAsyncClient.class);
+        when(sqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl("http://example.com").build()));
 
         final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
         final MessageInterceptor interceptor = mock(MessageInterceptor.class);
         registry.register(MessageInterceptorRegistration.allChannelsWith(interceptor));
 
-        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(registry, objectMapper, SqsAsyncClient, "test");
+        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(registry, objectMapper, sqsAsyncClient, "test");
 
         final MessageSenderEndpoint sender = factory.create("foo-stream");
 

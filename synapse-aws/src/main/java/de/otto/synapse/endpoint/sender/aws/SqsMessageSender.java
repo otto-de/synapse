@@ -33,11 +33,11 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
     public SqsMessageSender(final String channelName,
                             final String queueUrl,
                             final MessageTranslator<String> messageTranslator,
-                            final SqsAsyncClient SqsAsyncClient,
+                            final SqsAsyncClient sqsAsyncClient,
                             final String messageSender) {
         super(channelName, messageTranslator);
         this.queueUrl = queueUrl;
-        this.sqsAsyncClient = SqsAsyncClient;
+        this.sqsAsyncClient = sqsAsyncClient;
         this.messageSender = messageSender;
     }
 

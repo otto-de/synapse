@@ -46,7 +46,7 @@ public class SqsMessageQueueReceiverEndpointTest {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock
-    private SqsAsyncClient SqsAsyncClient;
+    private SqsAsyncClient sqsAsyncClient;
 
     private SqsMessageQueueReceiverEndpoint sqsQueueReceiver;
     private List<Message<String>> messages = synchronizedList(new ArrayList<>());
@@ -56,10 +56,10 @@ public class SqsMessageQueueReceiverEndpointTest {
     public void setUp() {
         messages.clear();
         MockitoAnnotations.initMocks(this);
-        when(SqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class)))
+        when(sqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class)))
                 .thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl(QUEUE_URL).build()));
 
-        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", SqsAsyncClient, objectMapper, null);
+        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", sqsAsyncClient, objectMapper, null);
         sqsQueueReceiver.register(MessageConsumer.of(".*", String.class, (message) -> messages.add(message)));
 
     }
@@ -73,11 +73,11 @@ public class SqsMessageQueueReceiverEndpointTest {
     public void shouldShutdownOnRuntimeExceptionOnGetQueueUrl() {
 
         //given:
-        when(SqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class)))
+        when(sqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class)))
                 .thenThrow(RuntimeException.class);
 
 
-        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", SqsAsyncClient, objectMapper, null);
+        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", sqsAsyncClient, objectMapper, null);
     }
 
     @Test
@@ -116,7 +116,7 @@ public class SqsMessageQueueReceiverEndpointTest {
                 sqsMessage("matching-key", PAYLOAD_2),
                 sqsMessage("non-matching-key", PAYLOAD_3));
 
-        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", SqsAsyncClient, objectMapper, null);
+        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", sqsAsyncClient, objectMapper, null);
         sqsQueueReceiver.register(MessageConsumer.of("matching-key", String.class, (message) -> messages.add(message)));
 
         // when: consumption is started
@@ -156,7 +156,7 @@ public class SqsMessageQueueReceiverEndpointTest {
 
         // and:
         // expect delete message to be executed
-        verify(SqsAsyncClient, times(3)).deleteMessage(deleteRequestCaptor.capture());
+        verify(sqsAsyncClient, times(3)).deleteMessage(deleteRequestCaptor.capture());
 
         //and: the request should contain the queue url
         List<DeleteMessageRequest> deleteMessageRequests = deleteRequestCaptor.getAllValues();
@@ -213,7 +213,7 @@ public class SqsMessageQueueReceiverEndpointTest {
     @Test(expected = RuntimeException.class)
     public void shouldShutdownServiceOnRuntimeExceptionOnConsume() throws Throwable {
         //given
-        when(SqsAsyncClient.receiveMessage(any(ReceiveMessageRequest.class))).thenThrow(RuntimeException.class); // could be SdkException, SQSException etc.
+        when(sqsAsyncClient.receiveMessage(any(ReceiveMessageRequest.class))).thenThrow(RuntimeException.class); // could be SdkException, SQSException etc.
 
         //then
         expectExceptionToBeThrownAndNotDeleteMessage();
@@ -224,7 +224,7 @@ public class SqsMessageQueueReceiverEndpointTest {
     public void shouldShutdownServiceOnRuntimeExceptionOnDelete() throws Throwable {
         //given
         addSqsMessagesToQueue(sqsMessage("some key", PAYLOAD_1));
-        when(SqsAsyncClient.deleteMessage(any(DeleteMessageRequest.class))).thenThrow(RuntimeException.class); // could be SdkException, SQSException etc.
+        when(sqsAsyncClient.deleteMessage(any(DeleteMessageRequest.class))).thenThrow(RuntimeException.class); // could be SdkException, SQSException etc.
 
         //then
         expectExceptionToBeThrownAndWithDeleteMessage();
@@ -240,7 +240,7 @@ public class SqsMessageQueueReceiverEndpointTest {
         } catch (ExecutionException e) {
             // and:
             // expect delete message to be executed
-            verify(SqsAsyncClient, never()).deleteMessage(deleteRequestCaptor.capture());
+            verify(sqsAsyncClient, never()).deleteMessage(deleteRequestCaptor.capture());
             throw e.getCause();
         }
     }
@@ -254,7 +254,7 @@ public class SqsMessageQueueReceiverEndpointTest {
         } catch (ExecutionException e) {
             // and:
             // expect delete message to be executed
-            verify(SqsAsyncClient, times(1)).deleteMessage(deleteRequestCaptor.capture());
+            verify(sqsAsyncClient, times(1)).deleteMessage(deleteRequestCaptor.capture());
             throw e.getCause();
         }
     }
@@ -268,7 +268,7 @@ public class SqsMessageQueueReceiverEndpointTest {
                 .messages(ImmutableList.of())
                 .build();
 
-        when(SqsAsyncClient.receiveMessage(any(ReceiveMessageRequest.class)))
+        when(sqsAsyncClient.receiveMessage(any(ReceiveMessageRequest.class)))
                 .thenReturn(completedFuture(response1))
                 //add empty response to not add messages within loop
                 .thenReturn(CompletableFuture.completedFuture(emptyResponse));
