@@ -20,7 +20,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 @Configuration
-@Import({AwsConfiguration.class, SynapseAutoConfiguration.class})
+@Import({SynapseAwsConfiguration.class, SynapseAutoConfiguration.class})
 @EnableConfigurationProperties(AwsProperties.class)
 public class SqsAutoConfiguration {
 

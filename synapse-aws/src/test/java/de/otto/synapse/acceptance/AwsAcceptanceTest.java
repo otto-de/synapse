@@ -25,6 +25,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static de.otto.synapse.message.Message.message;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -93,18 +94,18 @@ public class AwsAcceptanceTest {
     @Test
     public void shouldSendAndReceiveKinesisMessage() {
         final String expectedPayload = "some payload: " + LocalDateTime.now();
-        kinesisSender.send(Message.message("test", expectedPayload));
+        kinesisSender.send(message("test-key-shouldSendAndReceiveKinesisMessage", expectedPayload));
         await()
                 .atMost(10, SECONDS)
-                .until(() -> lastEventSourceMessage.get() != null && expectedPayload.equals(lastEventSourceMessage.get().getPayload()));
+                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals("test-key-shouldSendAndReceiveKinesisMessage") && expectedPayload.equals(lastEventSourceMessage.get().getPayload()));
     }
 
     @Test
     public void shouldSendAndReceiveSqsMessage() {
         final String expectedPayload = "some payload: " + LocalDateTime.now();
-        sqsSender.send(Message.message("test", expectedPayload));
+        sqsSender.send(message("test-key-shouldSendAndReceiveSqsMessage", expectedPayload));
         await()
                 .atMost(10, SECONDS)
-                .until(() -> lastSqsMessage.get() != null && expectedPayload.equals(lastSqsMessage.get().getPayload()));
+                .until(() -> lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals("test-key-shouldSendAndReceiveSqsMessage") && expectedPayload.equals(lastSqsMessage.get().getPayload()));
     }
 }

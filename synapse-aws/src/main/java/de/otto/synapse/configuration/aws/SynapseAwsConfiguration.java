@@ -8,7 +8,7 @@ import software.amazon.awssdk.auth.credentials.*;
 
 @Configuration
 @EnableConfigurationProperties(AwsProperties.class)
-public class AwsConfiguration {
+public class SynapseAwsConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(AwsCredentialsProvider.class)

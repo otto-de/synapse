@@ -12,9 +12,14 @@
 
     <logger name="software.amazon.awssdk" level="INFO"/>
 
+    <!-- Verbose wire logging for synchronous clients (e.g. Kinesis): -->
+    <!--logger name="org.apache.http.wire" level="DEBUG"/-->
+    <!-- Verbose wire logging for asynchronous clients (e.g. SQS): -->
+    <!--logger name="software.amazon.awssdk.http.nio.netty" level="DEBUG"/-->
+
     <logger name="org" level="INFO"/>
 
-    <root level="INFO">
+    <root level="DEBUG">
         <appender-ref ref="console"/>
     </root>
 

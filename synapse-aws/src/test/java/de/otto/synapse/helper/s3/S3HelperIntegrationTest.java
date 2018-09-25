@@ -1,7 +1,7 @@
 package de.otto.synapse.helper.s3;
 
-import de.otto.synapse.configuration.aws.AwsConfiguration;
 import de.otto.synapse.configuration.aws.S3TestConfiguration;
+import de.otto.synapse.configuration.aws.SynapseAwsConfiguration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,7 +21,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = {S3TestConfiguration.class, AwsConfiguration.class})
+@ContextConfiguration(classes = {S3TestConfiguration.class, SynapseAwsConfiguration.class})
 @ActiveProfiles("test")
 public class S3HelperIntegrationTest {
 

@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @ImportAutoConfiguration({
-        AwsConfiguration.class,
+        SynapseAwsConfiguration.class,
         S3AutoConfiguration.class,
         KinesisAutoConfiguration.class,
         S3SnapshotAutoConfiguration.class

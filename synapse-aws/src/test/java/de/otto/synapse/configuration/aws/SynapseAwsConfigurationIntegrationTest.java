@@ -21,8 +21,8 @@ import static org.junit.Assert.assertThat;
 @ActiveProfiles("test")
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
-@SpringBootTest(classes = AwsConfigurationIntegrationTest.class)
-public class AwsConfigurationIntegrationTest {
+@SpringBootTest(classes = SynapseAwsConfigurationIntegrationTest.class)
+public class SynapseAwsConfigurationIntegrationTest {
 
     @Autowired
     private MessageSenderEndpointFactory messageQueueSenderEndpointFactory;
