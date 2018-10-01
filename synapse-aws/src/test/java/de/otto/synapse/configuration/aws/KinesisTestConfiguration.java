@@ -44,7 +44,6 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
     public KinesisClient kinesisClient(final @Value("${test.environment:local}") String testEnvironment,
                                        final AwsCredentialsProvider credentialsProvider) {
         // kinesalite does not support cbor at the moment (v1.11.6)
-        System.setProperty("aws.cborEnabled", "false");
         LOG.info("kinesis client for local tests");
         final KinesisClient kinesisClient;
         if (testEnvironment.equals("local")) {
