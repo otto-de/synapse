@@ -36,7 +36,6 @@ public class KinesisAutoConfiguration {
         // parsing of approximateArrivalTimestamp does not work with cbor format
         // see https://github.com/aws/aws-sdk-java-v2/issues/184
         // fixed in preview-5
-        System.setProperty("aws.cborEnabled", "false");
         return KinesisClient.builder()
                 .credentialsProvider(credentialsProvider)
                 .region(Region.of(awsProperties.getRegion()))
