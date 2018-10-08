@@ -29,15 +29,15 @@ public class MethodInvokingMessageConsumer<T> implements MessageConsumer<T> {
                                          final Method method) {
         Objects.requireNonNull(keyPattern, "keyPattern must not be null");
         Objects.requireNonNull(payloadType, "payloadType must not be null");
-        Objects.requireNonNull(instance, "Unable to build MethodInvokingEventConsumer: instance parameter is null");
-        Objects.requireNonNull(method, "Unable to build MethodInvokingEventConsumer: method parameter is null");
+        Objects.requireNonNull(instance, "Unable to build MethodInvokingMessageConsumer: instance parameter is null");
+        Objects.requireNonNull(method, "Unable to build MethodInvokingNMessageConsumer: method parameter is null");
 
         if (method.getParameterCount() != 1) {
-            throw new IllegalArgumentException("Unable to build MethodInvokingEventConsumer: illegal number of arguments ");
+            throw new IllegalArgumentException("Unable to build MethodInvokingMessageConsumer: illegal number of arguments");
         }
         final Class<?> paramType = method.getParameterTypes()[0];
         if (!paramType.equals(Message.class)) {
-            throw new IllegalArgumentException("Unable to build MethodInvokingEventConsumer: expected parameter type is Event, not " + paramType.getName());
+            throw new IllegalArgumentException("Unable to build MethodInvokingMessageConsumer: expected parameter type is Message, not " + paramType.getName());
         }
 
         this.keyPattern = Pattern.compile(keyPattern);
@@ -47,7 +47,7 @@ public class MethodInvokingMessageConsumer<T> implements MessageConsumer<T> {
     }
 
     /**
-     * Returns the expected payload type of {@link Message events} consumed by this EventConsumer.
+     * Returns the expected payload type of {@link Message messages} consumed by this MessageConsumer.
      *
      * @return payload type
      */
@@ -58,7 +58,7 @@ public class MethodInvokingMessageConsumer<T> implements MessageConsumer<T> {
     }
 
     /**
-     * Returns the pattern of {@link Message#getKey()} () event keys} accepted by this consumer.
+     * Returns the pattern of {@link Message#getKey()} () message keys} accepted by this consumer.
      *
      * @return Pattern
      */
