@@ -17,7 +17,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.io.File;
@@ -25,8 +25,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -116,8 +118,8 @@ public class MessageConsumerIntegrationTest {
 
         @Bean
         @Primary
-        public KinesisClient kinesisClient() {
-            return new KinesisClient() {
+        public KinesisAsyncClient kinesisAsyncClient() {
+            return new KinesisAsyncClient() {
                 @Override
                 public String serviceName() {
                     return SERVICE_NAME;
@@ -129,21 +131,21 @@ public class MessageConsumerIntegrationTest {
                 }
 
                 @Override
-                public ListStreamsResponse listStreams(final ListStreamsRequest request) {
-                    return ListStreamsResponse.builder()
+                public CompletableFuture<ListStreamsResponse> listStreams(final ListStreamsRequest request) {
+                    return completedFuture(ListStreamsResponse.builder()
                             .streamNames("test-stream")
-                            .build();
+                            .build());
                 }
 
                 @Override
-                public DescribeStreamResponse describeStream(DescribeStreamRequest describeStreamRequest) {
-                    return DescribeStreamResponse.builder()
+                public CompletableFuture<DescribeStreamResponse> describeStream(DescribeStreamRequest describeStreamRequest) {
+                    return completedFuture(DescribeStreamResponse.builder()
                             .streamDescription(StreamDescription.builder()
                                     .streamName(describeStreamRequest.streamName())
                                     .shards(Collections.emptyList())
                                     .hasMoreShards(Boolean.FALSE)
                                     .build())
-                            .build();
+                            .build());
                 }
             };
         }

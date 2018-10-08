@@ -13,11 +13,10 @@ import org.springframework.retry.listener.RetryListenerSupport;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
 import software.amazon.awssdk.core.exception.SdkClientException;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
 import javax.annotation.Nonnull;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
@@ -32,7 +31,7 @@ import static software.amazon.awssdk.services.kinesis.model.ShardIteratorType.*;
  *     reused and messages should be read continuously using by calling {@link #next()} should be preferred.
  *     Creating a KinesisShardIterator too often may result in a {@link ProvisionedThroughputExceededException}
  *     coming from the Amazon Kinesis SDK as described
- *     {@link KinesisClient#getShardIterator(GetShardIteratorRequest) here}.
+ *     {@link KinesisAsyncClient#getShardIterator(GetShardIteratorRequest) here}.
  * </p>
  */
 public class KinesisShardIterator {
@@ -47,7 +46,7 @@ public class KinesisShardIterator {
     private static final int RETRY_BACK_OFF_POLICY_MAX_INTERVAL = 64000;
     private static final double RETRY_BACK_OFF_POLICY_MULTIPLIER = 2.0;
 
-    private final KinesisClient kinesisClient;
+    private final KinesisAsyncClient kinesisClient;
     private final String channelName;
     private String id;
     private ShardPosition shardPosition;
@@ -55,13 +54,13 @@ public class KinesisShardIterator {
     private final RetryTemplate retryTemplate;
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
-    public KinesisShardIterator(final @Nonnull KinesisClient kinesisClient,
+    public KinesisShardIterator(final @Nonnull KinesisAsyncClient kinesisClient,
                                 final @Nonnull String channelName,
                                 final @Nonnull ShardPosition shardPosition) {
         this(kinesisClient, channelName, shardPosition, FETCH_RECORDS_LIMIT);
     }
 
-    public KinesisShardIterator(final @Nonnull KinesisClient kinesisClient,
+    public KinesisShardIterator(final @Nonnull KinesisAsyncClient kinesisClient,
                                 final @Nonnull String channelName,
                                 final @Nonnull ShardPosition shardPosition,
                                 final int fetchRecordLimit) {
@@ -72,6 +71,7 @@ public class KinesisShardIterator {
         this.shardPosition = shardPosition;
         this.id = kinesisClient
                 .getShardIterator(buildIteratorShardRequest(shardPosition))
+                .join()
                 .shardIterator();
     }
 
@@ -154,7 +154,8 @@ public class KinesisShardIterator {
         GetRecordsResponse response = kinesisClient.getRecords(GetRecordsRequest.builder()
                 .shardIterator(id)
                 .limit(fetchRecordLimit)
-                .build());
+                .build())
+                .join();
         this.id = response.nextShardIterator();
         LOG.debug("next() with id " + this.id + " returned " + response.records().size() + " records");
         if (!response.records().isEmpty()) {

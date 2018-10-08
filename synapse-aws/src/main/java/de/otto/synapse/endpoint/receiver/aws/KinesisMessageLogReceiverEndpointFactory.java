@@ -6,7 +6,7 @@ import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
 import javax.annotation.Nonnull;
 import java.time.Clock;
@@ -14,21 +14,21 @@ import java.time.Clock;
 public class KinesisMessageLogReceiverEndpointFactory implements MessageLogReceiverEndpointFactory {
 
     private final MessageInterceptorRegistry interceptorRegistry;
-    private final KinesisClient kinesisClient;
+    private final KinesisAsyncClient kinesisClient;
     private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
     @Autowired
     public KinesisMessageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
-                                                    final KinesisClient kinesisClient,
+                                                    final KinesisAsyncClient kinesisClient,
                                                     final ObjectMapper objectMapper,
                                                     final ApplicationEventPublisher eventPublisher) {
         this(interceptorRegistry, kinesisClient, objectMapper, eventPublisher, Clock.systemDefaultZone());
     }
 
     public KinesisMessageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
-                                                    final KinesisClient kinesisClient,
+                                                    final KinesisAsyncClient kinesisClient,
                                                     final ObjectMapper objectMapper,
                                                     final ApplicationEventPublisher eventPublisher,
                                                     final Clock clock) {

@@ -8,7 +8,8 @@ import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
 import org.slf4j.Logger;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
+import software.amazon.awssdk.services.kinesis.model.ListStreamsResponse;
 
 import javax.annotation.Nonnull;
 
@@ -20,24 +21,23 @@ public class KinesisMessageSenderEndpointFactory implements MessageSenderEndpoin
 
     private final MessageInterceptorRegistry registry;
     private final MessageTranslator<String> messageTranslator;
-    private final KinesisClient kinesisClient;
+    private final KinesisAsyncClient kinesisClient;
     private final ImmutableSet<String> kinesisChannels;
 
     public KinesisMessageSenderEndpointFactory(final MessageInterceptorRegistry registry,
                                                final ObjectMapper objectMapper,
-                                               final KinesisClient kinesisClient) {
+                                               final KinesisAsyncClient kinesisClient) {
         this.registry = registry;
         this.messageTranslator = new JsonStringMessageTranslator(objectMapper);
         this.kinesisClient = kinesisClient;
-        final ImmutableSet.Builder<String> streamNames = ImmutableSet.builder();
-        try {
-            streamNames.addAll(kinesisClient
-                    .listStreams()
-                    .streamNames());
-        } catch (final RuntimeException e) {
-            LOG.warn("Unable to access Kinesis: {}", e.getMessage());
-        }
-        kinesisChannels = streamNames.build();
+        this.kinesisChannels = ImmutableSet.copyOf(kinesisClient
+                .listStreams()
+                .exceptionally(throwable -> {
+                    LOG.warn("Unable to fetch Kinesis channels: {}", throwable.getMessage());
+                    return ListStreamsResponse.builder().build();
+                })
+                .join()
+                .streamNames());
     }
 
     @Override

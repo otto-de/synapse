@@ -23,7 +23,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordRequest;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -60,7 +60,7 @@ public class CompactionAcceptanceTest {
     private static final SdkBytes EMPTY_BYTE_BUFFER = SdkBytes.fromByteArray(new byte[]{});
 
     @Autowired
-    private KinesisClient kinesisClient;
+    private KinesisAsyncClient kinesisClient;
 
     @Autowired
     private S3Client s3Client;

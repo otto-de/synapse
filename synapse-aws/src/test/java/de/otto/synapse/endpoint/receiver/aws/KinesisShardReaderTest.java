@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.time.Clock;
@@ -26,6 +26,7 @@ import static java.time.Duration.ofMillis;
 import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Collections.emptyList;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
@@ -37,7 +38,7 @@ import static org.mockito.Mockito.*;
 public class KinesisShardReaderTest {
 
     @Mock
-    private KinesisClient kinesisClient;
+    private KinesisAsyncClient kinesisClient;
 
     @Mock
     private Consumer<KinesisShardResponse> consumer;
@@ -55,7 +56,7 @@ public class KinesisShardReaderTest {
                 .shardIterator("someShardIterator")
                 .build();
 
-        when(kinesisClient.getShardIterator(any(GetShardIteratorRequest.class))).thenReturn(fakeResponse);
+        when(kinesisClient.getShardIterator(any(GetShardIteratorRequest.class))).thenReturn(completedFuture(fakeResponse));
     }
 
 
@@ -80,7 +81,7 @@ public class KinesisShardReaderTest {
                 .nextShardIterator("nextShardIterator")
                 .millisBehindLatest(1234L)
                 .build();
-        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
 
         // when
         kinesisShardReader.stop();
@@ -111,7 +112,7 @@ public class KinesisShardReaderTest {
                 .nextShardIterator("nextShardIterator")
                 .millisBehindLatest(1234L)
                 .build();
-        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
 
         // when
         ArgumentCaptor<KinesisShardResponse> argumentCaptor = ArgumentCaptor.forClass(KinesisShardResponse.class);
@@ -152,7 +153,7 @@ public class KinesisShardReaderTest {
                 .nextShardIterator("nextShardIterator")
                 .millisBehindLatest(1234L)
                 .build();
-        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
 
         // when
         ArgumentCaptor<KinesisShardResponse> argumentCaptor = ArgumentCaptor.forClass(KinesisShardResponse.class);
@@ -183,7 +184,7 @@ public class KinesisShardReaderTest {
                 .nextShardIterator("nextShardIterator")
                 .millisBehindLatest(1234L)
                 .build();
-        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
 
         // when
         kinesisShardReader.stop();

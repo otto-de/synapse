@@ -12,7 +12,7 @@ import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
 import javax.annotation.Nonnull;
 import java.time.Clock;
@@ -83,14 +83,14 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
 
 
     public KinesisMessageLogReceiverEndpoint(final String channelName,
-                                             final KinesisClient kinesisClient,
+                                             final KinesisAsyncClient kinesisClient,
                                              final ObjectMapper objectMapper,
                                              final ApplicationEventPublisher eventPublisher) {
         this(channelName, kinesisClient, objectMapper, eventPublisher, Clock.systemDefaultZone());
     }
 
     public KinesisMessageLogReceiverEndpoint(final String channelName,
-                                             final KinesisClient kinesisClient,
+                                             final KinesisAsyncClient kinesisClient,
                                              final ObjectMapper objectMapper,
                                              final ApplicationEventPublisher eventPublisher,
                                              final Clock clock) {

@@ -15,7 +15,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequestEntry;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsResponse;
@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.allChannelsWith;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -41,7 +42,7 @@ public class KinesisMessageSenderTest {
     private KinesisMessageSender kinesisMessageSender;
 
     @Mock
-    private KinesisClient kinesisClient;
+    private KinesisAsyncClient kinesisClient;
     @Captor
     private ArgumentCaptor<PutRecordsRequest> putRecordsRequestCaptor;
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -57,10 +58,10 @@ public class KinesisMessageSenderTest {
         // given
         final Message<ExampleJsonObject> message = message("someKey", new ExampleJsonObject("banana"));
 
-        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(PutRecordsResponse.builder()
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(completedFuture(PutRecordsResponse.builder()
                 .failedRecordCount(0)
                 .records(PutRecordsResultEntry.builder().build())
-                .build());
+                .build()));
 
         // when
         kinesisMessageSender.send(message);
@@ -84,10 +85,10 @@ public class KinesisMessageSenderTest {
         // given
         final Message<ExampleJsonObject> message = message("someKey", new ExampleJsonObject("banana"));
 
-        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(PutRecordsResponse.builder()
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(completedFuture(PutRecordsResponse.builder()
                 .failedRecordCount(0)
                 .records(PutRecordsResultEntry.builder().build())
-                .build());
+                .build()));
         // and especially
         final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
         registry.register(allChannelsWith((m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"apple\"}")));
@@ -112,10 +113,10 @@ public class KinesisMessageSenderTest {
         ExampleJsonObject bananaObject = new ExampleJsonObject("banana");
         ExampleJsonObject appleObject = new ExampleJsonObject("apple");
 
-        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(PutRecordsResponse.builder()
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(completedFuture(PutRecordsResponse.builder()
                 .failedRecordCount(0)
                 .records(PutRecordsResultEntry.builder().build())
-                .build());
+                .build()));
 
         // and especially
         final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
@@ -156,10 +157,10 @@ public class KinesisMessageSenderTest {
         ExampleJsonObject bananaObject = new ExampleJsonObject("banana");
         ExampleJsonObject appleObject = new ExampleJsonObject("apple");
 
-        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(PutRecordsResponse.builder()
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(completedFuture(PutRecordsResponse.builder()
                 .failedRecordCount(0)
                 .records(PutRecordsResultEntry.builder().build())
-                .build());
+                .build()));
 
         // when
         kinesisMessageSender.sendBatch(Stream.of(
@@ -196,7 +197,7 @@ public class KinesisMessageSenderTest {
                 .failedRecordCount(0)
                 .records(PutRecordsResultEntry.builder().build())
                 .build();
-        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(putRecordsResponse);
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(completedFuture(putRecordsResponse));
 
         // when
         kinesisMessageSender.sendBatch(someEvents(500 + 1));
@@ -208,10 +209,10 @@ public class KinesisMessageSenderTest {
     @Test
     public void shouldSendDeleteEventWithEmptyByteBuffer() {
         // given
-        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(PutRecordsResponse.builder()
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(completedFuture(PutRecordsResponse.builder()
                 .failedRecordCount(0)
                 .records(PutRecordsResultEntry.builder().build())
-                .build());
+                .build()));
 
         //when
         kinesisMessageSender.send(message("someKey", null));

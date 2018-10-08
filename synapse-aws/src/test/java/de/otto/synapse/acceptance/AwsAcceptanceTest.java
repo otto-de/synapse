@@ -5,8 +5,6 @@ import de.otto.synapse.annotation.EventSourceConsumer;
 import de.otto.synapse.annotation.messagequeue.EnableMessageQueueReceiverEndpoint;
 import de.otto.synapse.annotation.messagequeue.EnableMessageSenderEndpoint;
 import de.otto.synapse.annotation.messagequeue.MessageQueueConsumer;
-import de.otto.synapse.configuration.aws.KinesisTestConfiguration;
-import de.otto.synapse.configuration.aws.SqsTestConfiguration;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Message;
@@ -21,10 +19,14 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
+import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static de.otto.synapse.configuration.aws.KinesisTestConfiguration.KINESIS_INTEGRATION_TEST_CHANNEL;
+import static de.otto.synapse.configuration.aws.SqsTestConfiguration.SQS_INTEGRATION_TEST_CHANNEL;
 import static de.otto.synapse.message.Message.message;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,20 +43,22 @@ import static org.slf4j.LoggerFactory.getLogger;
         classes = AwsAcceptanceTest.class)
 @EnableEventSource(
         name = "kinesisEventSource",
-        channelName = KinesisTestConfiguration.KINESIS_INTEGRATION_TEST_CHANNEL)
+        channelName = KINESIS_INTEGRATION_TEST_CHANNEL)
 @EnableMessageQueueReceiverEndpoint(
         name = "sqsReceiver",
-        channelName = SqsTestConfiguration.SQS_INTEGRATION_TEST_CHANNEL)
+        channelName = SQS_INTEGRATION_TEST_CHANNEL)
 @EnableMessageSenderEndpoint(
         name = "kinesisSender",
-        channelName = KinesisTestConfiguration.KINESIS_INTEGRATION_TEST_CHANNEL)
+        channelName = KINESIS_INTEGRATION_TEST_CHANNEL)
 @EnableMessageSenderEndpoint(
         name = "sqsSender",
-        channelName = SqsTestConfiguration.SQS_INTEGRATION_TEST_CHANNEL)
+        channelName = SQS_INTEGRATION_TEST_CHANNEL)
 @DirtiesContext
 public class AwsAcceptanceTest {
 
     private static final Logger LOG = getLogger(AwsAcceptanceTest.class);
+
+
 
     private final AtomicReference<Message<String>> lastSqsMessage = new AtomicReference<>(null);
     private final AtomicReference<Message<String>> lastEventSourceMessage = new AtomicReference<>(null);
@@ -67,6 +71,13 @@ public class AwsAcceptanceTest {
 
     @Autowired
     private MessageLogReceiverEndpoint kinesisMessageLogReceiverEndpoint;
+
+    @Autowired
+    private KinesisAsyncClient kinesisAsyncClient;
+
+    @Autowired
+    private SqsAsyncClient sqsAsyncClient;
+
 
     @MessageQueueConsumer(endpointName = "sqsReceiver", payloadType = String.class)
     public void sqsConsumer(final Message<String> message) {
@@ -88,7 +99,7 @@ public class AwsAcceptanceTest {
     @Test
     public void shouldRegisterMessageLogReceiverEndpoint() {
         assertThat(kinesisMessageLogReceiverEndpoint.getChannelName())
-                .isEqualTo(KinesisTestConfiguration.KINESIS_INTEGRATION_TEST_CHANNEL);
+                .isEqualTo(KINESIS_INTEGRATION_TEST_CHANNEL);
     }
 
     @Test

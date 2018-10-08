@@ -21,7 +21,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordRequest;
 
 import java.lang.reflect.Field;
@@ -63,7 +63,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_SECOND_SET = 10;
 
     @Autowired
-    private KinesisClient kinesisClient;
+    private KinesisAsyncClient kinesisAsyncClient;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -84,7 +84,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
         /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
            when initializing it via @EnableEventSource
          */
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(KINESIS_INTEGRATION_TEST_CHANNEL, kinesisClient, objectMapper, null);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(KINESIS_INTEGRATION_TEST_CHANNEL, kinesisAsyncClient, objectMapper, null);
         kinesisMessageLog.registerInterceptorsFrom(messageInterceptorRegistry);
         kinesisMessageLog.register(MessageConsumer.of(".*", String.class, (message) -> {
             messages.add(message);
@@ -188,7 +188,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
     public void consumeDeleteMessagesFromKinesis() throws ExecutionException, InterruptedException {
         // given
         final ChannelPosition startFrom = writeToStream("users_small1.txt").getLastStreamPosition();
-        kinesisClient.putRecord(PutRecordRequest.builder().streamName(KINESIS_INTEGRATION_TEST_CHANNEL).partitionKey("deleteEvent").data(EMPTY_BYTES).build());
+        kinesisAsyncClient.putRecord(PutRecordRequest.builder().streamName(KINESIS_INTEGRATION_TEST_CHANNEL).partitionKey("deleteEvent").data(EMPTY_BYTES).build());
         // when
         kinesisMessageLog.consumeUntil(
                 startFrom,
@@ -232,7 +232,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
     }
 
     private KinesisTestStreamSource writeToStream(String filename) {
-        KinesisTestStreamSource streamSource = new KinesisTestStreamSource(kinesisClient, KINESIS_INTEGRATION_TEST_CHANNEL, filename);
+        KinesisTestStreamSource streamSource = new KinesisTestStreamSource(kinesisAsyncClient, KINESIS_INTEGRATION_TEST_CHANNEL, filename);
         streamSource.writeToStream();
         return streamSource;
     }

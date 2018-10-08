@@ -55,6 +55,7 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
         final CompletableFuture<SendMessageBatchResponse> futureResponse = sqsAsyncClient
                 .sendMessageBatch(toSendMessageBatchRequest(messageStream))
                 .whenComplete(logBatchResponse());
+        // TODO: Introduce a response object and return it instead of Void
         // Just because we need a CompletableFuture<Void>, no CompletableFuture<SendMessageBatchResponse>:
         return CompletableFuture.allOf(futureResponse);
     }

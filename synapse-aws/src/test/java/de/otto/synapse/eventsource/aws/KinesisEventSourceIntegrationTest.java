@@ -19,6 +19,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,7 +28,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordRequest;
 import software.amazon.awssdk.services.s3.S3Client;
 
@@ -57,6 +58,7 @@ import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
+import static org.slf4j.LoggerFactory.getLogger;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
@@ -64,6 +66,8 @@ import static org.hamcrest.core.IsNot.not;
 @ComponentScan(basePackages = {"de.otto.synapse"})
 @SpringBootTest(classes = KinesisEventSourceIntegrationTest.class)
 public class KinesisEventSourceIntegrationTest {
+
+    private static final Logger LOG = getLogger(KinesisEventSourceIntegrationTest.class);
 
     private static final SdkBytes EMPTY_BYTE_BUFFER = SdkBytes.fromByteArray(new byte[]{});
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET = 10;
@@ -74,7 +78,7 @@ public class KinesisEventSourceIntegrationTest {
     private static final String INTEGRATION_TEST_BUCKET = "de-otto-promo-compaction-test-snapshots";
 
     @Autowired
-    private KinesisClient kinesisClient;
+    private KinesisAsyncClient kinesisClient;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -223,7 +227,7 @@ public class KinesisEventSourceIntegrationTest {
                     try {
                         Files.deleteIfExists(path);
                     } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        LOG.error("Error deleting files from {}: {}", path, e.getMessage());
                     }
                 });
     }

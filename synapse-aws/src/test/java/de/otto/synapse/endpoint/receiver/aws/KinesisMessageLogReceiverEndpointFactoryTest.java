@@ -6,10 +6,11 @@ import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import org.junit.Test;
 import org.springframework.context.ApplicationEventPublisher;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.*;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -21,7 +22,7 @@ public class KinesisMessageLogReceiverEndpointFactoryTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
     private final MessageInterceptorRegistry registry = mock(MessageInterceptorRegistry.class);
-    private final KinesisClient kinesisClient = someKinesisClient();
+    private final KinesisAsyncClient kinesisClient = someKinesisClient();
 
     @Test
     public void shouldBuildEventSource() {
@@ -82,13 +83,13 @@ public class KinesisMessageLogReceiverEndpointFactoryTest {
         assertThat(endpoint.getInterceptorChain().getInterceptors(), contains(someInterceptor));
     }
 
-    private KinesisClient someKinesisClient() {
-        final KinesisClient kinesisClient = mock(KinesisClient.class);
+    private KinesisAsyncClient someKinesisClient() {
+        final KinesisAsyncClient kinesisClient = mock(KinesisAsyncClient.class);
         describeStreamResponse(kinesisClient);
         return kinesisClient;
     }
 
-    private void describeStreamResponse(final KinesisClient kinesisClient) {
+    private void describeStreamResponse(final KinesisAsyncClient kinesisClient) {
         DescribeStreamResponse response = createResponseForShards(
                 Shard.builder()
                         .shardId("foo")
@@ -99,7 +100,7 @@ public class KinesisMessageLogReceiverEndpointFactoryTest {
                         .build()
         );
 
-        when(kinesisClient.describeStream(any(DescribeStreamRequest.class))).thenReturn(response);
+        when(kinesisClient.describeStream(any(DescribeStreamRequest.class))).thenReturn(completedFuture(response));
     }
 
     private DescribeStreamResponse createResponseForShards(Shard shard) {

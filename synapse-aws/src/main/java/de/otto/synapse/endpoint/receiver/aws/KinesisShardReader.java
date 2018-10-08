@@ -4,7 +4,7 @@ import de.otto.synapse.channel.ShardPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.time.Clock;
@@ -23,14 +23,14 @@ public class KinesisShardReader {
 
     private final String shardName;
     private final String channelName;
-    private final KinesisClient kinesisClient;
+    private final KinesisAsyncClient kinesisClient;
     private final ExecutorService executorService;
     private final Clock clock;
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
     public KinesisShardReader(final String channelName,
                               final String shardName,
-                              final KinesisClient kinesisClient,
+                              final KinesisAsyncClient kinesisClient,
                               final ExecutorService executorService,
                               final Clock clock) {
         this.shardName = shardName;

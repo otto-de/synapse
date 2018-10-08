@@ -5,14 +5,17 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
 
 import static de.otto.synapse.channel.ShardPosition.*;
 import static java.time.Instant.now;
 import static java.util.Collections.emptyList;
+import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
@@ -62,8 +65,8 @@ public class KinesisShardIteratorTest {
                 .nextShardIterator("nextShardIterator")
                 .millisBehindLatest(1234L)
                 .build();
-        final KinesisClient kinesisClient = someKinesisClient();
-        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
+        final KinesisAsyncClient kinesisClient = someKinesisClient();
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
 
         final KinesisShardIterator iterator = new KinesisShardIterator(kinesisClient, "", fromPosition("someShard", "42"), 1);
         final KinesisShardResponse shardResponse = iterator.next();
@@ -88,8 +91,8 @@ public class KinesisShardIteratorTest {
                 .millisBehindLatest(42L)
                 .nextShardIterator("next")
                 .build();
-        final KinesisClient kinesisClient = someKinesisClient();
-        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
+        final KinesisAsyncClient kinesisClient = someKinesisClient();
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromHorizon("someShard"));
 
         // when
@@ -106,8 +109,8 @@ public class KinesisShardIteratorTest {
                 .records(emptyList())
                 .millisBehindLatest(42L)
                 .build();
-        final KinesisClient kinesisClient = someKinesisClient();
-        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
+        final KinesisAsyncClient kinesisClient = someKinesisClient();
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromPosition("someShard", "42"));
 
         // when
@@ -121,7 +124,7 @@ public class KinesisShardIteratorTest {
     public void shouldReturnTrimHorizonShardIteratorWhenStartingAtHorizon() {
 
         // when
-        final KinesisClient kinesisClient = someKinesisClient();
+        final KinesisAsyncClient kinesisClient = someKinesisClient();
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "someChannel", fromHorizon("someShard"));
 
         // then
@@ -138,15 +141,15 @@ public class KinesisShardIteratorTest {
     @Test
     public void shouldReturnTrimHorizonShardIteratorWhenRetrieveIteratorFailsWithInvalidArgumentException() {
         // when
-        KinesisClient kinesisClient = mock(KinesisClient.class);
+        KinesisAsyncClient kinesisClient = mock(KinesisAsyncClient.class);
         when(kinesisClient.getShardIterator(any(GetShardIteratorRequest.class)))
-                .thenAnswer((Answer<GetShardIteratorResponse>) invocation -> {
+                .thenAnswer((Answer< CompletableFuture<GetShardIteratorResponse>>) invocation -> {
                     if ("4711".equals(((GetShardIteratorRequest)invocation.getArgument(0)).startingSequenceNumber())) {
                         throw InvalidArgumentException.builder().message("Bumm!").build();
                     }
-                    return GetShardIteratorResponse.builder()
+                    return completedFuture(GetShardIteratorResponse.builder()
                             .shardIterator("someShardIterator")
-                            .build();
+                            .build());
                 });
 
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "someChannel", fromHorizon("someShard"));
@@ -165,7 +168,7 @@ public class KinesisShardIteratorTest {
     @Test
     public void shouldReturnAfterSequenceNumberIterator() {
         // when
-        final KinesisClient kinesisClient = someKinesisClient();
+        final KinesisAsyncClient kinesisClient = someKinesisClient();
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "someChannel", fromPosition("someShard", "1"));
 
         // then
@@ -184,7 +187,7 @@ public class KinesisShardIteratorTest {
     public void shouldReturnAtTimestampIterator() {
         // when
         final Instant now = now();
-        final KinesisClient kinesisClient = someKinesisClient();
+        final KinesisAsyncClient kinesisClient = someKinesisClient();
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "someChannel", fromTimestamp("someShard", now));
 
         // then
@@ -210,8 +213,8 @@ public class KinesisShardIteratorTest {
                         .approximateArrivalTimestamp(now())
                         .build())
                 .build();
-        final KinesisClient kinesisClient = someKinesisClient();
-        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
+        final KinesisAsyncClient kinesisClient = someKinesisClient();
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromHorizon("someShard"));
 
         // when
@@ -233,8 +236,8 @@ public class KinesisShardIteratorTest {
                 .nextShardIterator("nextIteratorId")
                 .millisBehindLatest(42L)
                 .build();
-        KinesisClient kinesisClient = someKinesisClient();
-        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(response);
+        KinesisAsyncClient kinesisClient = someKinesisClient();
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromHorizon("someShard"));
 
         // when
@@ -253,13 +256,13 @@ public class KinesisShardIteratorTest {
                 .nextShardIterator("nextIteratorId")
                 .millisBehindLatest(42L)
                 .build();
-        final KinesisClient kinesisClient = someKinesisClient();
+        final KinesisAsyncClient kinesisClient = someKinesisClient();
         when(kinesisClient.getRecords(any(GetRecordsRequest.class)))
                 .thenThrow(KinesisException.builder().message("forced test exception").build())
                 .thenThrow(KinesisException.builder().message("forced test exception").build())
                 .thenThrow(KinesisException.builder().message("forced test exception").build())
                 .thenThrow(KinesisException.builder().message("forced test exception").build())
-                .thenReturn(response);
+                .thenReturn(completedFuture(response));
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromHorizon("someShard"));
 
         // when
@@ -273,9 +276,11 @@ public class KinesisShardIteratorTest {
     @Test(expected = RuntimeException.class)
     public void shouldThrowExceptionWhenStoppingInRetry() {
         // given
-        final KinesisClient kinesisClient = someKinesisClient();
+        final KinesisAsyncClient kinesisClient = someKinesisClient();
         when(kinesisClient.getRecords(any(GetRecordsRequest.class)))
-                .thenThrow(KinesisException.builder().message("forced test exception").build());
+                .thenReturn(supplyAsync(() -> {
+                    throw KinesisException.builder().message("forced test exception").build();
+                }));
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromHorizon("someShard"));
 
         // when
@@ -286,12 +291,12 @@ public class KinesisShardIteratorTest {
     }
 
 
-    private static KinesisClient someKinesisClient() {
-        final KinesisClient kinesisClient = mock(KinesisClient.class);
-        when(kinesisClient.getShardIterator(any(GetShardIteratorRequest.class))).thenReturn(GetShardIteratorResponse
+    private static KinesisAsyncClient someKinesisClient() {
+        final KinesisAsyncClient kinesisClient = mock(KinesisAsyncClient.class);
+        when(kinesisClient.getShardIterator(any(GetShardIteratorRequest.class))).thenReturn(completedFuture(GetShardIteratorResponse
                 .builder()
                 .shardIterator("someShardIterator")
-                .build());
+                .build()));
         return kinesisClient;
     }
 }

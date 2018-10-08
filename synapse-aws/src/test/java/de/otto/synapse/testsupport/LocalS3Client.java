@@ -4,12 +4,14 @@ import org.slf4j.Logger;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.http.Abortable;
 import software.amazon.awssdk.http.AbortableInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
@@ -36,8 +38,8 @@ public class LocalS3Client implements S3Client {
     }
 
     @Override
-    public ListObjectsV2Response listObjectsV2(ListObjectsV2Request listObjectsV2Request) throws S3Exception {
-        Collection<S3Object> s3Objects = bucketsWithContents.get(listObjectsV2Request.bucket())
+    public ListObjectsV2Response listObjectsV2(final ListObjectsV2Request listObjectsV2Request) throws S3Exception {
+        final Collection<S3Object> s3Objects = bucketsWithContents.get(listObjectsV2Request.bucket())
                 .values()
                 .stream()
                 .map(bucketItem -> S3Object.builder()
@@ -54,13 +56,14 @@ public class LocalS3Client implements S3Client {
     }
 
     @Override
-    public CreateBucketResponse createBucket(CreateBucketRequest createBucketRequest) throws S3Exception {
+    public CreateBucketResponse createBucket(final CreateBucketRequest createBucketRequest) throws S3Exception {
         bucketsWithContents.put(createBucketRequest.bucket(), new HashMap<>());
         return CreateBucketResponse.builder().build();
     }
 
     @Override
-    public PutObjectResponse putObject(PutObjectRequest putObjectRequest, RequestBody requestBody) throws S3Exception {
+    public PutObjectResponse putObject(final PutObjectRequest putObjectRequest,
+                                       final RequestBody requestBody) throws S3Exception {
         try {
             bucketsWithContents.get(putObjectRequest.bucket()).put(putObjectRequest.key(),
                     bucketItemBuilder()
@@ -75,8 +78,8 @@ public class LocalS3Client implements S3Client {
     }
 
     @Override
-    public DeleteObjectsResponse deleteObjects(DeleteObjectsRequest deleteObjectsRequest) throws S3Exception {
-        Map<String, BucketItem> bucketItemMap = bucketsWithContents.get(deleteObjectsRequest.bucket());
+    public DeleteObjectsResponse deleteObjects(final DeleteObjectsRequest deleteObjectsRequest) throws S3Exception {
+        final Map<String, BucketItem> bucketItemMap = bucketsWithContents.get(deleteObjectsRequest.bucket());
         deleteObjectsRequest.delete().objects()
                 .stream()
                 .map(ObjectIdentifier::key)
@@ -85,7 +88,7 @@ public class LocalS3Client implements S3Client {
     }
 
     @Override
-    public ListBucketsResponse listBuckets(ListBucketsRequest listBucketsRequest) throws S3Exception {
+    public ListBucketsResponse listBuckets(final ListBucketsRequest listBucketsRequest) throws S3Exception {
         return ListBucketsResponse.builder()
                 .buckets(bucketsWithContents.keySet().stream()
                         .map(name -> Bucket.builder()
@@ -96,9 +99,10 @@ public class LocalS3Client implements S3Client {
     }
 
     @Override
-    public GetObjectResponse getObject(GetObjectRequest getObjectRequest, Path filePath) throws S3Exception {
-        Map<String, BucketItem> bucketItemMap = bucketsWithContents.get(getObjectRequest.bucket());
-        BucketItem bucketItem = bucketItemMap.get(getObjectRequest.key());
+    public GetObjectResponse getObject(final GetObjectRequest getObjectRequest,
+                                       final Path filePath) throws S3Exception {
+        final Map<String, BucketItem> bucketItemMap = bucketsWithContents.get(getObjectRequest.bucket());
+        final BucketItem bucketItem = bucketItemMap.get(getObjectRequest.key());
 
         try {
             Files.write(filePath, bucketItem.getData());
@@ -111,21 +115,24 @@ public class LocalS3Client implements S3Client {
 
     @SuppressWarnings("unchecked")
     @Override
-    public ResponseInputStream<GetObjectResponse> getObject(GetObjectRequest getObjectRequest) throws S3Exception {
-        Map<String, BucketItem> bucketItemMap = bucketsWithContents.get(getObjectRequest.bucket());
-        BucketItem bucketItem = bucketItemMap.get(getObjectRequest.key());
-
-        AbortableInputStream in = AbortableInputStream.create(new ByteArrayInputStream(bucketItem.getData()), () -> {
-        });
+    public ResponseInputStream<GetObjectResponse> getObject(final GetObjectRequest getObjectRequest) throws S3Exception {
+        final Map<String, BucketItem> bucketItemMap = bucketsWithContents.get(getObjectRequest.bucket());
+        final BucketItem bucketItem = bucketItemMap.get(getObjectRequest.key());
         try {
-            Constructor<ResponseInputStream> responseInputStreamConstructor = ResponseInputStream.class.getDeclaredConstructor(Object.class, AbortableInputStream.class);
-            responseInputStreamConstructor.setAccessible(true);
-
-            return (ResponseInputStream<GetObjectResponse>) responseInputStreamConstructor.newInstance(GetObjectResponse.builder().build(), in);
+            return new ResponseInputStream<>(GetObjectResponse.builder().build(), toAbortableInputStream(bucketItem));
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException | InstantiationException e) {
             throw SdkClientException.create("", e);
         }
 
+    }
+
+    private AbortableInputStream toAbortableInputStream(final BucketItem bucketItem) throws NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        final Constructor<AbortableInputStream> constructor = AbortableInputStream.class.getDeclaredConstructor(InputStream.class, Abortable.class);
+        constructor.setAccessible(true);
+        return constructor.newInstance(
+                new ByteArrayInputStream(bucketItem.getData()),
+                (Abortable) () -> {}
+        );
     }
 
     @Override

@@ -21,7 +21,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.IOException;
@@ -50,7 +50,7 @@ public class S3SnapshotMessageStoreAcceptanceTest {
     private static final String INTEGRATION_TEST_BUCKET = "de-otto-promo-compaction-test-snapshots";
 
     @Autowired
-    private KinesisClient kinesisClient;
+    private KinesisAsyncClient kinesisClient;
 
     @Autowired
     private SnapshotWriteService snapshotWriteService;

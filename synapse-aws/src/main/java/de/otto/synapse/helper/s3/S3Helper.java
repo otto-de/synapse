@@ -73,9 +73,13 @@ public class S3Helper {
     }
 
     public void deleteAllObjectsInBucket(final String bucketName) {
-        LOG.debug("deleting all objects in bucket {}", bucketName);
-        deleteAllObjectsWithPrefixInBucket(bucketName, "");
-        LOG.debug("files in bucket: {}", listAllFiles(bucketName));
+        try {
+            LOG.debug("deleting all objects in bucket {}", bucketName);
+            deleteAllObjectsWithPrefixInBucket(bucketName, "");
+            LOG.debug("files in bucket: {}", listAllFiles(bucketName));
+        } catch (final RuntimeException e) {
+            LOG.error("Error while deleting files from bucket: " + e.getMessage(), e);
+        }
     }
 
     public void deleteAllObjectsWithPrefixInBucket(final String bucketName,

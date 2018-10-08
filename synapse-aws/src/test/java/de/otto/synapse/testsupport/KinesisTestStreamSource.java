@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.io.BufferedReader;
@@ -34,7 +34,7 @@ public class KinesisTestStreamSource {
     private static final Logger LOG = LoggerFactory.getLogger(KinesisTestStreamSource.class);
 
     private final String channelName;
-    private final KinesisClient kinesisClient;
+    private final KinesisAsyncClient kinesisClient;
     private final String inputFile;
     private final ObjectMapper objectMapper;
 
@@ -46,7 +46,7 @@ public class KinesisTestStreamSource {
      *
      * @param inputFile File containing record data to emit on each line
      */
-    public KinesisTestStreamSource(KinesisClient kinesisClient, String channelName, String inputFile) {
+    public KinesisTestStreamSource(KinesisAsyncClient kinesisClient, String channelName, String inputFile) {
         this.kinesisClient = kinesisClient;
         this.inputFile = inputFile;
         this.objectMapper = new ObjectMapper();
@@ -142,7 +142,7 @@ public class KinesisTestStreamSource {
                 .streamName(channelName)
                 .records(records)
                 .build();
-        List<PutRecordsResultEntry> writtenRecords = kinesisClient.putRecords(putRecordsRequest).records();
+        List<PutRecordsResultEntry> writtenRecords = kinesisClient.putRecords(putRecordsRequest).join().records();
         collectFirstAndLastSequenceNumber(writtenRecords);
     }
 
@@ -158,7 +158,7 @@ public class KinesisTestStreamSource {
                 .streamName(channelName)
                 .build();
         try {
-            return kinesisClient.describeStream(describeStreamRequest).streamDescription()
+            return kinesisClient.describeStream(describeStreamRequest).join().streamDescription()
                     .shards()
                     .stream()
                     .filter(this::isShardOpen)

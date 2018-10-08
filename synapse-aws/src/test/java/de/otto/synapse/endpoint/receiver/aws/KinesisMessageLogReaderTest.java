@@ -13,7 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.slf4j.Logger;
 import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.nio.ByteBuffer;
@@ -31,11 +31,11 @@ import java.util.regex.Pattern;
 
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
-import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.endpoint.receiver.aws.KinesisShardIterator.POISON_SHARD_ITER;
 import static java.time.Duration.ofMillis;
 import static java.util.Collections.emptyList;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -55,7 +55,7 @@ public class KinesisMessageLogReaderTest {
     private static final TestClock clock = TestClock.now();
 
     @Mock
-    private KinesisClient kinesisClient;
+    private KinesisAsyncClient kinesisClient;
 
     @Captor
     private ArgumentCaptor<KinesisShardResponse> responseArgumentCaptor;
@@ -425,20 +425,23 @@ public class KinesisMessageLogReaderTest {
     private void describeStreamResponse(List<Shard> shards) {
         DescribeStreamResponse response = createResponseForShards(shards, false);
 
-        when(kinesisClient.describeStream(any(DescribeStreamRequest.class))).thenReturn(response);
+        when(kinesisClient.describeStream(any(DescribeStreamRequest.class))).thenReturn(completedFuture(response));
     }
 
     private void describeStreamResponse(List<Shard> firstShardBatch, List<Shard> secondShardBatch) {
         DescribeStreamResponse firstResponse = createResponseForShards(firstShardBatch, true);
         DescribeStreamResponse secondResponse = createResponseForShards(secondShardBatch, false);
 
-        when(kinesisClient.describeStream(any(DescribeStreamRequest.class))).thenReturn(firstResponse, secondResponse);
+        when(kinesisClient.describeStream(any(DescribeStreamRequest.class)))
+                .thenReturn(
+                        completedFuture(firstResponse),
+                        completedFuture(secondResponse));
     }
 
     private void describeRecordsForShard(final String shardName, boolean withPoison) {
         when(kinesisClient
                 .getShardIterator(argThat((GetShardIteratorRequest req1) -> req1 != null && req1.shardId().equals(shardName))))
-                .thenReturn(GetShardIteratorResponse.builder().shardIterator(shardName + "-iter").build());
+                .thenReturn(completedFuture(GetShardIteratorResponse.builder().shardIterator(shardName + "-iter").build()));
 
         GetRecordsResponse response0 = GetRecordsResponse.builder()
                 .records(emptyList())
@@ -466,7 +469,11 @@ public class KinesisMessageLogReaderTest {
                 .thenThrow(new RuntimeException("boo!"));
 
         when(kinesisClient.getRecords(argThat((GetRecordsRequest req) -> isShardIter(shardName, req))))
-                .thenReturn(response0, response1, response2, response3);
+                .thenReturn(
+                        completedFuture(response0),
+                        completedFuture(response1),
+                        completedFuture(response2),
+                        completedFuture(response3));
     }
 
     private boolean isShardIter(String shardName, GetRecordsRequest req) {

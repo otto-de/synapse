@@ -4,7 +4,7 @@ import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
 import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequestEntry;
 
@@ -16,34 +16,37 @@ import java.util.stream.Stream;
 
 import static com.google.common.collect.Lists.partition;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.stream.Collectors.toCollection;
 
 public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
 
     private static final int PUT_RECORDS_BATCH_SIZE = 500;
 
-    private final RetryPutRecordsKinesisClient retryPutRecordsKinesisClient;
+    private final KinesisAsyncClient kinesisAsyncClient;
 
     public KinesisMessageSender(final String channelName,
                                 final MessageTranslator<String> messageTranslator,
-                                final KinesisClient kinesisClient) {
+                                final KinesisAsyncClient kinesisClient) {
         super(channelName, messageTranslator);
-        this.retryPutRecordsKinesisClient = new RetryPutRecordsKinesisClient(kinesisClient);
+        this.kinesisAsyncClient = kinesisClient;
     }
 
     @Override
     protected CompletableFuture<Void> doSend(@Nonnull Message<String> message) {
-        retryPutRecordsKinesisClient.putRecords(() -> createPutRecordRequest(message));
-        return completedFuture(null);
+        // TODO: Introduce a response object and return it instead of Void
+        // Just because we need a CompletableFuture<Void>, no CompletableFuture<SendMessageBatchResponse>:
+        return allOf(kinesisAsyncClient.putRecords(createPutRecordRequest(message)));
     }
 
     @Override
     protected CompletableFuture<Void> doSendBatch(@Nonnull Stream<Message<String>> messageStream) {
         final List<PutRecordsRequestEntry> entries = createPutRecordRequestEntries(messageStream);
-        partition(entries, PUT_RECORDS_BATCH_SIZE)
-                .forEach(batch -> retryPutRecordsKinesisClient.putRecords(() -> createPutRecordRequest(batch)));
-        return completedFuture(null);
+        return allOf(
+                partition(entries, PUT_RECORDS_BATCH_SIZE)
+                        .stream()
+                        .map(batch -> kinesisAsyncClient.putRecords(createPutRecordRequest(batch)))
+                        .toArray(CompletableFuture[]::new));
     }
 
     private PutRecordsRequest createPutRecordRequest(final List<PutRecordsRequestEntry> batch) {

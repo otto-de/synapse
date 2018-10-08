@@ -1,7 +1,12 @@
 # Release Notes
 
+## 0.11.0
+* Updates to SDK 2.0.4 (except SQS and S3 as these are not yet available)
+* Updates from old synchronous KinesisClient to new KinesisAsyncClient
+* Adds possibility to configure a RetryPolicy for Kinesis
+ 
 ## 0.10.0
-* Update to aws-java-sdk-preview-12
+* Updates to aws-java-sdk-preview-12
 * Fixes naming of ```MessageQueueReceiverEndpoint``` beans using ```@EnableMessageQueueReceiverEndpoint``` annotations
 * Separated configuration of event sources and message queues. In case of annotation-based configuration,
   nothing has to be changed. Only if no ```EnableEventSource``` annotation is used, the auto-configuration must

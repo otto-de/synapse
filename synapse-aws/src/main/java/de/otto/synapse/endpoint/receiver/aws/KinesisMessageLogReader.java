@@ -5,7 +5,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import org.slf4j.Logger;
-import software.amazon.awssdk.services.kinesis.KinesisClient;
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.DescribeStreamRequest;
 import software.amazon.awssdk.services.kinesis.model.DescribeStreamResponse;
 import software.amazon.awssdk.services.kinesis.model.Shard;
@@ -36,7 +36,7 @@ public class KinesisMessageLogReader {
     private static final Logger LOG = getLogger(KinesisMessageLogReader.class);
 
     private final String channelName;
-    private final KinesisClient kinesisClient;
+    private final KinesisAsyncClient kinesisClient;
     private final Clock clock;
     private List<KinesisShardReader> kinesisShardReaders;
     private ExecutorService executorService;
@@ -44,7 +44,7 @@ public class KinesisMessageLogReader {
     public static final int SKIP_NEXT_PARTS = 8;
 
     public KinesisMessageLogReader(final String channelName,
-                                   final KinesisClient kinesisClient,
+                                   final KinesisAsyncClient kinesisClient,
                                    final Clock clock) {
         this.channelName = channelName;
         this.kinesisClient = kinesisClient;
@@ -184,14 +184,14 @@ public class KinesisMessageLogReader {
     }
 
     private boolean retrieveAndAppendNextBatchOfShards(List<Shard> shardList) {
-        DescribeStreamRequest describeStreamRequest = DescribeStreamRequest
+        final DescribeStreamRequest describeStreamRequest = DescribeStreamRequest
                 .builder()
                 .streamName(getChannelName())
                 .exclusiveStartShardId(getLastSeenShardId(shardList))
                 .limit(10)
                 .build();
 
-        DescribeStreamResponse describeStreamResult = kinesisClient.describeStream(describeStreamRequest);
+        final DescribeStreamResponse describeStreamResult = kinesisClient.describeStream(describeStreamRequest).join();
         shardList.addAll(describeStreamResult.streamDescription().shards());
 
         return describeStreamResult.streamDescription().hasMoreShards();
