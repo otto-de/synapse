@@ -29,6 +29,7 @@ import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class KinesisMessageLogReader {
@@ -166,53 +167,15 @@ public class KinesisMessageLogReader {
     }
 
     private Set<String> retrieveAllOpenShards() {
-        return retrieveAllShards()
+        return new KinesisStreamInfoProvider(kinesisClient)
+                .getStreamInfo(channelName)
+                .getShardInfo()
                 .stream()
-                .filter(this::isShardOpen)
-                .map(Shard::shardId)
+                .filter(KinesisShardInfo::isOpen)
+                .map(KinesisShardInfo::getShardName)
                 .collect(toImmutableSet());
     }
 
-    private List<Shard> retrieveAllShards() {
-        List<Shard> shardList = new ArrayList<>();
-
-        boolean fetchMore = true;
-        while (fetchMore) {
-            fetchMore = retrieveAndAppendNextBatchOfShards(shardList);
-        }
-        return shardList;
-    }
-
-    private boolean retrieveAndAppendNextBatchOfShards(List<Shard> shardList) {
-        final DescribeStreamRequest describeStreamRequest = DescribeStreamRequest
-                .builder()
-                .streamName(getChannelName())
-                .exclusiveStartShardId(getLastSeenShardId(shardList))
-                .limit(10)
-                .build();
-
-        final DescribeStreamResponse describeStreamResult = kinesisClient.describeStream(describeStreamRequest).join();
-        shardList.addAll(describeStreamResult.streamDescription().shards());
-
-        return describeStreamResult.streamDescription().hasMoreShards();
-    }
-
-    private String getLastSeenShardId(List<Shard> shardList) {
-        if (!shardList.isEmpty()) {
-            return shardList.get(shardList.size() - 1).shardId();
-        } else {
-            return null;
-        }
-    }
-
-    private boolean isShardOpen(Shard shard) {
-        if (shard.sequenceNumberRange().endingSequenceNumber() == null) {
-            return true;
-        } else {
-            LOG.warn("Shard with id {} is closed. Cannot retrieve data.", shard.shardId());
-            return false;
-        }
-    }
 
     private void shutdownExecutor() {
         if (executorService != null) {
