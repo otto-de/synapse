@@ -21,7 +21,7 @@ ext['jackson.version'] = "2.9.3"
 dependencies {
     compile project(':synapse-aws:')
     compile project(':synapse-core:')
-    compile "software.amazon.awssdk:sqs:${awsSdkVersion}"
+    compile "software.amazon.awssdk:sqs:${awsSdkPreviewVersion}"
 
     compile("org.springframework.boot:spring-boot-starter-web") {
         exclude module: "spring-boot-starter-tomcat"

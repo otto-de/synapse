@@ -4,9 +4,9 @@ dependencies {
     api project(':synapse-core:')
 
     implementation "com.google.guava:guava:23.0"
-    implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
+    implementation "software.amazon.awssdk:s3:${awsSdkPreviewVersion}"
     implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
-    implementation "software.amazon.awssdk:sqs:${awsSdkVersion}"
+    implementation "software.amazon.awssdk:sqs:${awsSdkPreviewVersion}"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.3"
     implementation "org.springframework.retry:spring-retry:1.2.1.RELEASE"
 

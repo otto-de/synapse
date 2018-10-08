@@ -4,7 +4,7 @@ dependencies {
     implementation project(':synapse-core:')
     implementation "de.otto.edison:edison-core:${edisonVersion}"
     implementation "org.springframework:spring-context:${springVersion}"
-    implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
+    implementation "software.amazon.awssdk:s3:${awsSdkPreviewVersion}"
     implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
 
     // Use JUnit test framework
