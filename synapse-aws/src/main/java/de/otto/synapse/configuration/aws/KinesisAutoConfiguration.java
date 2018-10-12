@@ -43,10 +43,6 @@ public class KinesisAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(KinesisAsyncClient.class)
     public KinesisAsyncClient kinesisAsyncClient(final AwsCredentialsProvider credentialsProvider) {
-        // parsing of approximateArrivalTimestamp does not work with cbor format
-        // see https://github.com/aws/aws-sdk-java-v2/issues/184
-        // fixed in preview-5
-        System.setProperty("aws.cborEnabled", "false");
         return KinesisAsyncClient.builder()
                 .credentialsProvider(credentialsProvider)
                 .region(Region.of(awsProperties.getRegion()))
