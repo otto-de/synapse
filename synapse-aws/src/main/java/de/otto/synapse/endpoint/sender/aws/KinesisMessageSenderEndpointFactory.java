@@ -42,9 +42,7 @@ public class KinesisMessageSenderEndpointFactory implements MessageSenderEndpoin
 
     @Override
     public MessageSenderEndpoint create(final @Nonnull String channelName) {
-        final MessageSenderEndpoint messageSender = new KinesisMessageSender(channelName, messageTranslator, kinesisClient);
-        messageSender.registerInterceptorsFrom(registry);
-        return messageSender;
+        return new KinesisMessageSender(channelName, registry, messageTranslator, kinesisClient);
     }
 
     @Override

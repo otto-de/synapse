@@ -7,6 +7,7 @@ import de.otto.synapse.channel.ChannelDurationBehind;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.InterceptorChain;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.AbstractMessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
@@ -83,18 +84,20 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
 
 
     public KinesisMessageLogReceiverEndpoint(final String channelName,
+                                             final MessageInterceptorRegistry interceptorRegistry,
                                              final KinesisAsyncClient kinesisClient,
                                              final ObjectMapper objectMapper,
                                              final ApplicationEventPublisher eventPublisher) {
-        this(channelName, kinesisClient, objectMapper, eventPublisher, Clock.systemDefaultZone());
+        this(channelName, interceptorRegistry, kinesisClient, objectMapper, eventPublisher, Clock.systemDefaultZone());
     }
 
     public KinesisMessageLogReceiverEndpoint(final String channelName,
+                                             final MessageInterceptorRegistry interceptorRegistry,
                                              final KinesisAsyncClient kinesisClient,
                                              final ObjectMapper objectMapper,
                                              final ApplicationEventPublisher eventPublisher,
                                              final Clock clock) {
-        super(channelName, objectMapper, eventPublisher);
+        super(channelName, interceptorRegistry, objectMapper, eventPublisher);
         this.eventPublisher = eventPublisher;
         this.kinesisMessageLogReader = new KinesisMessageLogReader(channelName, kinesisClient, clock);
     }

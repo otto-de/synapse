@@ -6,6 +6,7 @@ import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.AbstractMessageEndpoint;
 import de.otto.synapse.endpoint.EndpointType;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.info.MessageReceiverNotification;
 import de.otto.synapse.info.MessageReceiverStatus;
 import org.springframework.context.ApplicationEventPublisher;
@@ -28,9 +29,10 @@ public class AbstractMessageReceiverEndpoint extends AbstractMessageEndpoint imp
     private final ApplicationEventPublisher eventPublisher;
 
     public AbstractMessageReceiverEndpoint(final @Nonnull String channelName,
+                                           final @Nonnull MessageInterceptorRegistry interceptorRegistry,
                                            final @Nonnull ObjectMapper objectMapper,
                                            final @Nullable ApplicationEventPublisher eventPublisher) {
-        super(channelName);
+        super(channelName, interceptorRegistry);
         messageDispatcher = new MessageDispatcher(objectMapper);
         this.eventPublisher = eventPublisher;
     }

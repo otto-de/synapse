@@ -2,6 +2,7 @@ package de.otto.synapse.testsupport;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.configuration.aws.SqsTestConfiguration;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.SqsClientHelper;
 import de.otto.synapse.endpoint.sender.aws.SqsMessageSender;
 import de.otto.synapse.message.Message;
@@ -35,6 +36,7 @@ public class SqsTestStreamSource {
         messageSender = new SqsMessageSender(
                 channelName,
                 queueUrl.toString(),
+                new MessageInterceptorRegistry(),
                 new JsonStringMessageTranslator(new ObjectMapper()), sqsAsyncClient, "SqsTestStreamSource");
     }
 

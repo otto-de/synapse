@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint.sender.aws;
 
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
@@ -26,9 +27,10 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
     private final KinesisAsyncClient kinesisAsyncClient;
 
     public KinesisMessageSender(final String channelName,
+                                final MessageInterceptorRegistry interceptorRegistry,
                                 final MessageTranslator<String> messageTranslator,
                                 final KinesisAsyncClient kinesisClient) {
-        super(channelName, messageTranslator);
+        super(channelName, interceptorRegistry, messageTranslator);
         this.kinesisAsyncClient = kinesisClient;
     }
 

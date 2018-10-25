@@ -16,20 +16,14 @@ import javax.annotation.Nonnull;
  */
 public class InMemoryMessageQueueReceiverEndpointFactory implements MessageQueueReceiverEndpointFactory {
 
-    private final MessageInterceptorRegistry interceptorRegistry;
     private final InMemoryChannels inMemoryChannels;
 
-    public InMemoryMessageQueueReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
-                                                       final InMemoryChannels inMemoryChannels) {
-
-        this.interceptorRegistry = interceptorRegistry;
+    public InMemoryMessageQueueReceiverEndpointFactory(final InMemoryChannels inMemoryChannels) {
         this.inMemoryChannels = inMemoryChannels;
     }
 
     @Override
     public MessageQueueReceiverEndpoint create(final @Nonnull String channelName) {
-        final InMemoryChannel channel = inMemoryChannels.getChannel(channelName);
-        channel.registerInterceptorsFrom(interceptorRegistry);
-        return channel;
+        return inMemoryChannels.getChannel(channelName);
     }
 }

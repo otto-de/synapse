@@ -3,6 +3,7 @@ package de.otto.synapse.channel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.Iterables;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.AbstractMessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
@@ -33,15 +34,17 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
     private final List<Message<String>> eventQueue;
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
-    public InMemoryChannel(final String channelName) {
-        super(channelName, new ObjectMapper().registerModule(new JavaTimeModule()), null);
+    public InMemoryChannel(final String channelName,
+                           final MessageInterceptorRegistry interceptorRegistry) {
+        super(channelName, interceptorRegistry, new ObjectMapper().registerModule(new JavaTimeModule()), null);
         this.eventQueue = synchronizedList(new ArrayList<>());
     }
 
     public InMemoryChannel(final String channelName,
+                           final MessageInterceptorRegistry interceptorRegistry,
                            final ObjectMapper objectMapper,
                            final ApplicationEventPublisher eventPublisher) {
-        super(channelName, objectMapper, eventPublisher);
+        super(channelName, interceptorRegistry, objectMapper, eventPublisher);
         this.eventQueue = synchronizedList(new ArrayList<>());
     }
 

@@ -1,6 +1,7 @@
 package de.otto.synapse.channel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.info.MessageReceiverNotification;
 import de.otto.synapse.info.MessageReceiverStatus;
 import org.junit.Test;
@@ -22,7 +23,7 @@ public class InMemoryChannelTest {
     @Test
     public void shouldPublishStartedAndFinishedEvents() throws ExecutionException, InterruptedException {
         // given
-        InMemoryChannel inMemoryChannel = new InMemoryChannel("some-stream", objectMapper, eventPublisher);
+        InMemoryChannel inMemoryChannel = new InMemoryChannel("some-stream", new MessageInterceptorRegistry(), objectMapper, eventPublisher);
 
         // when
         inMemoryChannel.consumeUntil(fromHorizon(), Instant.now()).get();

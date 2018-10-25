@@ -1,5 +1,6 @@
 package de.otto.synapse.example.producer;
 
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Message;
@@ -24,7 +25,7 @@ public class ExampleProducerTest {
     public void setUp() {
         final MessageTranslator<String> translator = MessageTranslator.of((payload -> "received"));
 
-        final MessageSenderEndpoint sender = new AbstractMessageSenderEndpoint("test", translator) {
+        final MessageSenderEndpoint sender = new AbstractMessageSenderEndpoint("test", new MessageInterceptorRegistry(), translator) {
             protected CompletableFuture<Void> doSend(@Nonnull Message<String> message) {
                 sentMessage = message;
                 return completedFuture(null);

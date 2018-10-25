@@ -50,7 +50,7 @@ public class KinesisMessageSenderTest {
 
     @Before
     public void setUp() {
-        kinesisMessageSender = new KinesisMessageSender("test", messageTranslator, kinesisClient);
+        kinesisMessageSender = new KinesisMessageSender("test", new MessageInterceptorRegistry(), messageTranslator, kinesisClient);
     }
 
     @Test
@@ -90,9 +90,7 @@ public class KinesisMessageSenderTest {
                 .records(PutRecordsResultEntry.builder().build())
                 .build()));
         // and especially
-        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
-        registry.register(allChannelsWith((m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"apple\"}")));
-        kinesisMessageSender.registerInterceptorsFrom(registry);
+        kinesisMessageSender.getInterceptorChain().register((m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"apple\"}"));
 
         // when
         kinesisMessageSender.send(message);
@@ -119,9 +117,7 @@ public class KinesisMessageSenderTest {
                 .build()));
 
         // and especially
-        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
-        registry.register(allChannelsWith((m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"Lovely day for a Guinness\"}")));
-        kinesisMessageSender.registerInterceptorsFrom(registry);
+        kinesisMessageSender.getInterceptorChain().register((m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"Lovely day for a Guinness\"}"));
 
         // when
         kinesisMessageSender.sendBatch(Stream.of(

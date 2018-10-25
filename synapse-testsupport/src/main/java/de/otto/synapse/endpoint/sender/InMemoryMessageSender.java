@@ -1,6 +1,7 @@
 package de.otto.synapse.endpoint.sender;
 
 import de.otto.synapse.channel.InMemoryChannel;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
 
@@ -13,9 +14,10 @@ public class InMemoryMessageSender extends AbstractMessageSenderEndpoint {
 
     private final InMemoryChannel channel;
 
-    public InMemoryMessageSender(final MessageTranslator<String> messageTranslator,
+    public InMemoryMessageSender(final MessageInterceptorRegistry interceptorRegistry,
+                                 final MessageTranslator<String> messageTranslator,
                                  final InMemoryChannel channel) {
-        super(channel.getChannelName(), messageTranslator);
+        super(channel.getChannelName(), interceptorRegistry, messageTranslator);
         this.channel = channel;
     }
 

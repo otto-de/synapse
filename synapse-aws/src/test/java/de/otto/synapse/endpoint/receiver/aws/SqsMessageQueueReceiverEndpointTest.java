@@ -3,6 +3,7 @@ package de.otto.synapse.endpoint.receiver.aws;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
 import org.awaitility.Duration;
 import org.junit.After;
@@ -59,7 +60,7 @@ public class SqsMessageQueueReceiverEndpointTest {
         when(sqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class)))
                 .thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl(QUEUE_URL).build()));
 
-        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", sqsAsyncClient, objectMapper, null);
+        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", new MessageInterceptorRegistry(), sqsAsyncClient, objectMapper, null);
         sqsQueueReceiver.register(MessageConsumer.of(".*", String.class, (message) -> messages.add(message)));
 
     }
@@ -77,7 +78,7 @@ public class SqsMessageQueueReceiverEndpointTest {
                 .thenThrow(RuntimeException.class);
 
 
-        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", sqsAsyncClient, objectMapper, null);
+        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", new MessageInterceptorRegistry(), sqsAsyncClient, objectMapper, null);
     }
 
     @Test
@@ -116,7 +117,7 @@ public class SqsMessageQueueReceiverEndpointTest {
                 sqsMessage("matching-key", PAYLOAD_2),
                 sqsMessage("non-matching-key", PAYLOAD_3));
 
-        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", sqsAsyncClient, objectMapper, null);
+        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", new MessageInterceptorRegistry(), sqsAsyncClient, objectMapper, null);
         sqsQueueReceiver.register(MessageConsumer.of("matching-key", String.class, (message) -> messages.add(message)));
 
         // when: consumption is started

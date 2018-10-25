@@ -63,8 +63,7 @@ public class SqsMessageQueueIntegrationTest {
         /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
            when initializing it via @EnableEventSource
          */
-        sqsMessageQueue = new SqsMessageQueueReceiverEndpoint(SQS_INTEGRATION_TEST_CHANNEL, sqsAsyncClient, objectMapper, null);
-        sqsMessageQueue.registerInterceptorsFrom(messageInterceptorRegistry);
+        sqsMessageQueue = new SqsMessageQueueReceiverEndpoint(SQS_INTEGRATION_TEST_CHANNEL, messageInterceptorRegistry, sqsAsyncClient, objectMapper, null);
         sqsMessageQueue.register(MessageConsumer.of(".*", String.class, (message) -> {
             messages.add(message);
             threads.add(Thread.currentThread().getName());

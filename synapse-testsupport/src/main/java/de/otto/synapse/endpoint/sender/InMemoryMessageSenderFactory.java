@@ -24,9 +24,9 @@ public class InMemoryMessageSenderFactory implements MessageSenderEndpointFactor
     @Override
     public InMemoryMessageSender create(@Nonnull final String channelName) {
         final InMemoryMessageSender messageSender = new InMemoryMessageSender(
+                registry,
                 new JsonStringMessageTranslator(objectMapper),
                 inMemoryChannels.getChannel(channelName));
-        messageSender.registerInterceptorsFrom(registry);
         return messageSender;
     }
 

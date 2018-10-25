@@ -43,7 +43,7 @@ public class SqsMessageSenderTest {
 
     @Before
     public void setUp() {
-        sqsMessageSender = new SqsMessageSender("test", "https://example.com/test", messageTranslator, sqsAsyncClient, "test");
+        sqsMessageSender = new SqsMessageSender("test", "https://example.com/test", new MessageInterceptorRegistry(), messageTranslator, sqsAsyncClient, "test");
     }
 
     @Test
@@ -79,9 +79,7 @@ public class SqsMessageSenderTest {
                 .messageId("some-id")
                 .build()));
         // and especially
-        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
-        registry.register(allChannelsWith((m) -> message(m.getKey(), m.getHeader(), "{\"value\":\"apple\"}")));
-        sqsMessageSender.registerInterceptorsFrom(registry);
+        sqsMessageSender.getInterceptorChain().register((m) -> message(m.getKey(), m.getHeader(), "{\"value\":\"apple\"}"));
 
         // when
         sqsMessageSender.send(message);
@@ -98,9 +96,7 @@ public class SqsMessageSenderTest {
         // given
         final Message<ExampleJsonObject> message = message("", new ExampleJsonObject("banana"));
 
-        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
-        registry.register(allChannelsWith((m) -> null));
-        sqsMessageSender.registerInterceptorsFrom(registry);
+        sqsMessageSender.getInterceptorChain().register((m) -> null);
 
         // when
         sqsMessageSender.send(message);
@@ -154,8 +150,7 @@ public class SqsMessageSenderTest {
 
         // and especially
         final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
-        registry.register(allChannelsWith((m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"Lovely day for a Guinness\"}")));
-        sqsMessageSender.registerInterceptorsFrom(registry);
+        sqsMessageSender.getInterceptorChain().register((m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"Lovely day for a Guinness\"}"));
 
         // when
         sqsMessageSender.sendBatch(Stream.of(

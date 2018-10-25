@@ -37,16 +37,20 @@ import static java.util.Objects.requireNonNull;
  */
 public abstract class AbstractMessageEndpoint implements MessageEndpoint {
 
+    @Nonnull
     private final String channelName;
-    private final InterceptorChain interceptorChain = new InterceptorChain();
+    @Nonnull
+    private final MessageInterceptorRegistry interceptorRegistry;
 
     /**
      * Constructor used to create a new AbstractMessageEndpoint.
      *
      * @param channelName the name of the underlying channel / stream / queue / message log.
      */
-    public AbstractMessageEndpoint(final @Nonnull String channelName) {
+    public AbstractMessageEndpoint(final @Nonnull String channelName,
+                                   final @Nonnull MessageInterceptorRegistry interceptorRegistry) {
         this.channelName = requireNonNull(channelName, "ChannelName must not be null");
+        this.interceptorRegistry = requireNonNull(interceptorRegistry);
     }
 
     /**
@@ -71,24 +75,7 @@ public abstract class AbstractMessageEndpoint implements MessageEndpoint {
     @Nonnull
     @Override
     public final InterceptorChain getInterceptorChain() {
-        return interceptorChain;
-    }
-
-    /**
-     * Registers all {@code MessageInterceptor} from the {@link MessageInterceptorRegistry registry} that is matching
-     * the {@link #channelName} and {@link #getEndpointType()}.
-     * <p>
-     *     The registered interceptors will be used to intercept {@link Message messages} processed by the endpoint.
-     * </p>
-     * @param registry the MessageInterceptorRegistry
-     */
-    @Override
-    public final void registerInterceptorsFrom(final @Nonnull MessageInterceptorRegistry registry) {
-        registry.getRegistrations(channelName, getEndpointType())
-                .forEach(reg ->
-                        interceptorChain.register(reg.getInterceptor())
-                );
-
+        return interceptorRegistry.getInterceptorChain(channelName, getEndpointType());
     }
 
     /**
@@ -112,7 +99,7 @@ public abstract class AbstractMessageEndpoint implements MessageEndpoint {
     @Override
     @Nullable
     public final Message<String> intercept(final @Nonnull Message<String> message) {
-        return interceptorChain.intercept(message);
+        return getInterceptorChain().intercept(message);
     }
 
 }

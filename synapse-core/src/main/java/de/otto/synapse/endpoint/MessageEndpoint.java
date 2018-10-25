@@ -55,16 +55,6 @@ public interface MessageEndpoint {
     InterceptorChain getInterceptorChain();
 
     /**
-     * Registers all {@code MessageInterceptor} from the {@link MessageInterceptorRegistry registry} that is matching
-     * the {@link #getChannelName() channel name} and {@link #getEndpointType() endpoint type}.
-     * <p>
-     *     The registered interceptors will be used to intercept {@link Message messages} processed by the endpoint.
-     * </p>
-     * @param registry the MessageInterceptorRegistry
-     */
-    void registerInterceptorsFrom(@Nonnull MessageInterceptorRegistry registry);
-
-    /**
      * Returns the type of the {@code MessageEndpoint}, either {@link EndpointType#SENDER} or
      * {@link EndpointType#RECEIVER}.
      *

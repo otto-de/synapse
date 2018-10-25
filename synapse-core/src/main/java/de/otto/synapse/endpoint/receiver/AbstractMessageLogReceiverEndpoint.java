@@ -2,6 +2,7 @@ package de.otto.synapse.endpoint.receiver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.Nonnull;
@@ -18,9 +19,10 @@ import javax.annotation.Nullable;
 public abstract class AbstractMessageLogReceiverEndpoint extends AbstractMessageReceiverEndpoint implements MessageLogReceiverEndpoint {
 
     public AbstractMessageLogReceiverEndpoint(final @Nonnull String channelName,
+                                              final @Nonnull MessageInterceptorRegistry interceptorRegistry,
                                               final @Nonnull ObjectMapper objectMapper,
                                               final @Nullable ApplicationEventPublisher eventPublisher) {
-        super(channelName, objectMapper, eventPublisher);
+        super(channelName, interceptorRegistry, objectMapper, eventPublisher);
     }
 
 }

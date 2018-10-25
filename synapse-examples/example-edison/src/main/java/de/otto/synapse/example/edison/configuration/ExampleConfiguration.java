@@ -6,6 +6,7 @@ import de.otto.synapse.annotation.messagequeue.EnableMessageQueueReceiverEndpoin
 import de.otto.synapse.channel.InMemoryChannels;
 import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
 import de.otto.synapse.configuration.InMemoryMessageQueueTestConfiguration;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.InMemoryMessageSender;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.example.edison.state.BananaProduct;
@@ -13,6 +14,7 @@ import de.otto.synapse.state.ConcurrentHashMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +28,9 @@ import org.springframework.context.annotation.Configuration;
 @EnableEventSource(name = "productSource", channelName = "${exampleservice.product-channel}")
 @EnableMessageQueueReceiverEndpoint(name = "bananaQueue", channelName = "banana-queue")
 public class ExampleConfiguration {
+
+    @Autowired
+    private MessageInterceptorRegistry interceptorRegistry;
 
     @Bean
     public StateRepository<BananaProduct> bananaProductConcurrentStateRepository() {
@@ -50,6 +55,6 @@ public class ExampleConfiguration {
                                                      final ObjectMapper objectMapper,
                                                      final InMemoryChannels inMemoryChannels) {
         final MessageTranslator<String> translator = new JsonStringMessageTranslator(objectMapper);
-        return new InMemoryMessageSender(translator, inMemoryChannels.getChannel(channelName));
+        return new InMemoryMessageSender(interceptorRegistry, translator, inMemoryChannels.getChannel(channelName));
     }
 }

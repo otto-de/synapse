@@ -1,7 +1,9 @@
 package de.otto.synapse.endpoint;
 
+import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
+import jdk.nashorn.internal.ir.annotations.Immutable;
 
 import javax.annotation.Nonnull;
 import java.util.EnumSet;
@@ -9,6 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import static com.google.common.collect.ImmutableSet.copyOf;
 import static java.util.Objects.requireNonNull;
 import static java.util.regex.Pattern.compile;
 
@@ -21,7 +24,7 @@ public class MessageInterceptorRegistration {
 
     private final Pattern channelNamePattern;
     private final MessageInterceptor interceptor;
-    private final Set<EndpointType> enabledEndpointTypes;
+    private final ImmutableSet<EndpointType> enabledEndpointTypes;
 
     /**
      * Creates a MessageInterceptorRegistration that is used to register a {@link MessageInterceptor} in all channels,
@@ -105,7 +108,7 @@ public class MessageInterceptorRegistration {
                                            final Set<EndpointType> enabledEndpointTypes) {
         this.channelNamePattern = requireNonNull(channelNamePattern);
         this.interceptor = requireNonNull(interceptor);
-        this.enabledEndpointTypes = requireNonNull(enabledEndpointTypes);
+        this.enabledEndpointTypes = copyOf(requireNonNull(enabledEndpointTypes));
         if (enabledEndpointTypes.isEmpty()) {
             throw new IllegalArgumentException("The set of enabled endpoint types must not be emptyMessageStore");
         }
@@ -131,6 +134,10 @@ public class MessageInterceptorRegistration {
     public boolean isEnabledFor(final String channelNamePattern,
                                 final EndpointType endpointType) {
         return enabledEndpointTypes.contains(endpointType) && this.channelNamePattern.matcher(channelNamePattern).matches();
+    }
+
+    public ImmutableSet<EndpointType> getEnabledEndpointTypes() {
+        return enabledEndpointTypes;
     }
 
     @Override

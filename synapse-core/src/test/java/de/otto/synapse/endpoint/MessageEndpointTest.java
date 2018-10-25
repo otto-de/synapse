@@ -22,7 +22,7 @@ public class MessageEndpointTest {
 
     @Test(expected = RuntimeException.class)
     public void shouldFailToCreateWithNullChannelName() {
-        new AbstractMessageEndpoint(null) {
+        new AbstractMessageEndpoint(null, new MessageInterceptorRegistry()) {
             @Nonnull
             @Override
             public EndpointType getEndpointType() {
@@ -32,7 +32,7 @@ public class MessageEndpointTest {
     }
     @Test
     public void shouldReturnChannelName() {
-        final AbstractMessageEndpoint endpoint = new AbstractMessageEndpoint("foo") {
+        final AbstractMessageEndpoint endpoint = new AbstractMessageEndpoint("foo", new MessageInterceptorRegistry()) {
             @Nonnull
             @Override
             public EndpointType getEndpointType() {
@@ -50,29 +50,27 @@ public class MessageEndpointTest {
      */
     @Test(expected = RuntimeException.class)
     public void shouldFailToRegisterFromNullRegistry() {
-        AbstractMessageEndpoint messageEndpoint = new AbstractMessageEndpoint("foo") {
+        new AbstractMessageEndpoint("foo", null) {
             @Nonnull
             @Override
             public EndpointType getEndpointType() {
                 return SENDER;
             }
         };
-        messageEndpoint.registerInterceptorsFrom(null);
     }
 
     @Test
     public void shouldInterceptMessages() {
         final MessageInterceptor interceptor = mock(MessageInterceptor.class);
-        final AbstractMessageEndpoint endpoint = new AbstractMessageEndpoint("foo") {
+        MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        final AbstractMessageEndpoint endpoint = new AbstractMessageEndpoint("foo", registry) {
             @Nonnull
             @Override
             public EndpointType getEndpointType() {
                 return SENDER;
             }
         };
-        MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
         registry.register(senderChannelsWith(interceptor));
-        endpoint.registerInterceptorsFrom(registry);
         final Message<String> message = mock(Message.class);
         endpoint.intercept(message);
         verify(interceptor).intercept(message);
@@ -81,7 +79,7 @@ public class MessageEndpointTest {
     @Test
     @SuppressWarnings("unchecked")
     public void shouldReturnMessageWithoutInterceptor() {
-        final AbstractMessageEndpoint messageEndpoint = new AbstractMessageEndpoint("foo") {
+        final AbstractMessageEndpoint messageEndpoint = new AbstractMessageEndpoint("foo", new MessageInterceptorRegistry()) {
             @Nonnull
             @Override
             public EndpointType getEndpointType() {

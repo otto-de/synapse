@@ -84,8 +84,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
         /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
            when initializing it via @EnableEventSource
          */
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(KINESIS_INTEGRATION_TEST_CHANNEL, kinesisAsyncClient, objectMapper, null);
-        kinesisMessageLog.registerInterceptorsFrom(messageInterceptorRegistry);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(KINESIS_INTEGRATION_TEST_CHANNEL, messageInterceptorRegistry, kinesisAsyncClient, objectMapper, null);
         kinesisMessageLog.register(MessageConsumer.of(".*", String.class, (message) -> {
             messages.add(message);
             threads.add(Thread.currentThread().getName());

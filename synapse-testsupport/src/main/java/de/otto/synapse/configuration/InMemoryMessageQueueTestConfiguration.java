@@ -42,10 +42,9 @@ public class InMemoryMessageQueueTestConfiguration {
     }
 
     @Bean
-    public MessageQueueReceiverEndpointFactory messageQueueReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
-                                                                                   final InMemoryChannels inMemoryChannels) {
+    public MessageQueueReceiverEndpointFactory messageQueueReceiverEndpointFactory(final InMemoryChannels inMemoryChannels) {
         LOG.warn("Creating InMemoryMessageLogReceiverEndpointFactory. This should only be used in tests");
-        return new InMemoryMessageQueueReceiverEndpointFactory(interceptorRegistry, inMemoryChannels);
+        return new InMemoryMessageQueueReceiverEndpointFactory(inMemoryChannels);
     }
 
 }

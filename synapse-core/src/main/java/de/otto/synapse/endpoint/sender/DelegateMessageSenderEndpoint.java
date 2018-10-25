@@ -43,11 +43,6 @@ public class DelegateMessageSenderEndpoint implements MessageSenderEndpoint{
         return delegate.getInterceptorChain();
     }
 
-    @Override
-    public void registerInterceptorsFrom(final @Nonnull MessageInterceptorRegistry registry) {
-        delegate.registerInterceptorsFrom(registry);
-    }
-
     @Nonnull
     @Override
     public EndpointType getEndpointType() {

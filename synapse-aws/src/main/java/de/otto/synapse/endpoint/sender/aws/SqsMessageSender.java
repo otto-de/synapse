@@ -1,6 +1,7 @@
 package de.otto.synapse.endpoint.sender.aws;
 
 import com.google.common.collect.ImmutableMap;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
@@ -32,10 +33,11 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
 
     public SqsMessageSender(final String channelName,
                             final String queueUrl,
+                            final MessageInterceptorRegistry interceptorRegistry,
                             final MessageTranslator<String> messageTranslator,
                             final SqsAsyncClient sqsAsyncClient,
                             final String messageSender) {
-        super(channelName, messageTranslator);
+        super(channelName, interceptorRegistry, messageTranslator);
         this.queueUrl = queueUrl;
         this.sqsAsyncClient = sqsAsyncClient;
         this.messageSender = messageSender;

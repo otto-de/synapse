@@ -78,7 +78,7 @@ public class KinesisMessageLogReceiverEndpointTest {
     public void shouldRetrieveEmptyListOfShards() {
         // given
         describeStreamResponse(ImmutableList.of());
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper, null);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", new MessageInterceptorRegistry(), kinesisClient, objectMapper, null);
 
         // when
         List<KinesisShardReader> shards = kinesisMessageLog.getCurrentKinesisShards();
@@ -91,7 +91,7 @@ public class KinesisMessageLogReceiverEndpointTest {
     public void shouldRetrieveSingleOpenShard() {
         // given
         describeStreamResponse(ImmutableList.of(someShard("shard1", true)));
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper, null);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", new MessageInterceptorRegistry(), kinesisClient, objectMapper, null);
 
         // when
         List<KinesisShardReader> shards = kinesisMessageLog.getCurrentKinesisShards();
@@ -109,7 +109,7 @@ public class KinesisMessageLogReceiverEndpointTest {
                         someShard("shard1", true),
                         someShard("shard2", false),
                         someShard("shard3", true)));
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", new MessageInterceptorRegistry(), kinesisClient, objectMapper,null);
 
         // when
         List<KinesisShardReader> shards = kinesisMessageLog.getCurrentKinesisShards();
@@ -130,7 +130,7 @@ public class KinesisMessageLogReceiverEndpointTest {
                 ImmutableList.of(
                         someShard("shard3", true),
                         someShard("shard4", true)));
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", new MessageInterceptorRegistry(), kinesisClient, objectMapper,null);
 
         // when
         List<KinesisShardReader> shards = kinesisMessageLog.getCurrentKinesisShards();
@@ -153,7 +153,7 @@ public class KinesisMessageLogReceiverEndpointTest {
                 ImmutableList.of(
                         someShard("shard3", true),
                         someShard("shard4", true)));
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", new MessageInterceptorRegistry(), kinesisClient, objectMapper,null);
 
         // when
         List<KinesisShardReader> shards = kinesisMessageLog.getCurrentKinesisShards();
@@ -172,7 +172,7 @@ public class KinesisMessageLogReceiverEndpointTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", true);
 
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null, clock);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", new MessageInterceptorRegistry(), kinesisClient, objectMapper,null, clock);
         kinesisMessageLog.register(messageConsumer);
 
         // when
@@ -203,7 +203,7 @@ public class KinesisMessageLogReceiverEndpointTest {
 
 
         // when
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", new MessageInterceptorRegistry(), kinesisClient, objectMapper,null);
         kinesisMessageLog.register(messageConsumer);
 
 
@@ -222,8 +222,8 @@ public class KinesisMessageLogReceiverEndpointTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", true);
 
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("testStream", kinesisClient, objectMapper,null);
         final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("testStream", registry, kinesisClient, objectMapper,null);
         // no lambda used in order to make Mockito happy...
         final MessageInterceptor interceptor = spy(new MessageInterceptor() {
             @Override
@@ -233,7 +233,6 @@ public class KinesisMessageLogReceiverEndpointTest {
         });
 
         registry.register(matchingReceiverChannelsWith("testStream", interceptor));
-        kinesisMessageLog.registerInterceptorsFrom(registry);
         kinesisMessageLog.register(messageConsumer);
 
         // when
@@ -259,8 +258,8 @@ public class KinesisMessageLogReceiverEndpointTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", true);
 
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("testStream", kinesisClient, objectMapper,null);
         final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("testStream", registry, kinesisClient, objectMapper,null);
         // no lambda used in order to make Mockito happy...
         final MessageInterceptor interceptor = spy(new MessageInterceptor() {
             @Override
@@ -270,7 +269,6 @@ public class KinesisMessageLogReceiverEndpointTest {
         });
 
         registry.register(matchingReceiverChannelsWith("testStream", interceptor));
-        kinesisMessageLog.registerInterceptorsFrom(registry);
         kinesisMessageLog.register(messageConsumer);
 
         // when
@@ -295,7 +293,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         describeRecordsForShard("shard1", true);
         ArgumentCaptor<MessageReceiverNotification> eventCaptor = ArgumentCaptor.forClass(MessageReceiverNotification.class);
         final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("testStream", kinesisClient, objectMapper,eventPublisher);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("testStream", new MessageInterceptorRegistry(), kinesisClient, objectMapper,eventPublisher);
         kinesisMessageLog.register(messageConsumer);
 
         // when
@@ -331,7 +329,7 @@ public class KinesisMessageLogReceiverEndpointTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", false);
 
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", new MessageInterceptorRegistry(), kinesisClient, objectMapper,null);
 
         kinesisMessageLog.register(messageConsumer);
 
@@ -354,7 +352,7 @@ public class KinesisMessageLogReceiverEndpointTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", false);
 
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", new MessageInterceptorRegistry(), kinesisClient, objectMapper,null);
 
         kinesisMessageLog.register(messageConsumer);
 
@@ -377,7 +375,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         );
         describeRecordsForShard("shard1", true);
         describeRecordsForShard("failing-shard2", true);
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", new MessageInterceptorRegistry(), kinesisClient, objectMapper,null);
 
         kinesisMessageLog.register(messageConsumer);
 
@@ -393,7 +391,7 @@ public class KinesisMessageLogReceiverEndpointTest {
                         someShard("failing-shard", true))
         );
         describeRecordsForShard("failing-shard", true);
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", kinesisClient, objectMapper,null);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", new MessageInterceptorRegistry(), kinesisClient, objectMapper,null);
         kinesisMessageLog.register(messageConsumer);
         try {
             kinesisMessageLog.consume(fromHorizon()).get();

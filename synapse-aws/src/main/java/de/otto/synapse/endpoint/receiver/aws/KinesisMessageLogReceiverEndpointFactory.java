@@ -41,9 +41,7 @@ public class KinesisMessageLogReceiverEndpointFactory implements MessageLogRecei
 
     @Override
     public MessageLogReceiverEndpoint create(@Nonnull String channelName) {
-        final MessageLogReceiverEndpoint messageLog = new KinesisMessageLogReceiverEndpoint(channelName, kinesisClient, objectMapper, eventPublisher, clock);
-        messageLog.registerInterceptorsFrom(interceptorRegistry);
-        return messageLog;
+        return new KinesisMessageLogReceiverEndpoint(channelName, interceptorRegistry, kinesisClient, objectMapper, eventPublisher, clock);
     }
 
 }

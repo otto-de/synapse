@@ -2,6 +2,7 @@ package de.otto.synapse.endpoint.receiver.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import de.otto.synapse.message.Message;
@@ -35,8 +36,8 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
      * Duration for long-polling calls to the SQS service
      */
     private static final int WAIT_TIME_SECONDS = 10;
-    public static final MessageAttributeValue EMPTY_STRING_ATTR = MessageAttributeValue.builder().dataType("String").stringValue("").build();
-    public static final String MSG_KEY_ATTR = "synapse_msg_key";
+    private static final MessageAttributeValue EMPTY_STRING_ATTR = MessageAttributeValue.builder().dataType("String").stringValue("").build();
+    private static final String MSG_KEY_ATTR = "synapse_msg_key";
 
     @Nonnull
     private final SqsAsyncClient sqsAsyncClient;
@@ -44,10 +45,11 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
     public SqsMessageQueueReceiverEndpoint(final @Nonnull String channelName,
+                                           final @Nonnull MessageInterceptorRegistry interceptorRegistry,
                                            final @Nonnull SqsAsyncClient sqsAsyncClient,
                                            final @Nonnull ObjectMapper objectMapper,
                                            final @Nullable ApplicationEventPublisher eventPublisher) {
-        super(channelName, objectMapper, eventPublisher);
+        super(channelName, interceptorRegistry, objectMapper, eventPublisher);
         this.sqsAsyncClient = sqsAsyncClient;
         try {
             this.queueUrl = sqsAsyncClient.getQueueUrl(GetQueueUrlRequest

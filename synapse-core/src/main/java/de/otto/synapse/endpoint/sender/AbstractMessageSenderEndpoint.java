@@ -2,6 +2,7 @@ package de.otto.synapse.endpoint.sender;
 
 import de.otto.synapse.endpoint.AbstractMessageEndpoint;
 import de.otto.synapse.endpoint.EndpointType;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
 
@@ -36,9 +37,10 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
      * @param messageTranslator the MessageTranslator used to translate message payloads as expected by the
      * {@link de.otto.synapse.consumer.MessageConsumer consumers}.
      */
-    public AbstractMessageSenderEndpoint(final String channelName,
-                                         final MessageTranslator<String> messageTranslator) {
-        super(channelName);
+    public AbstractMessageSenderEndpoint(final @Nonnull String channelName,
+                                         final @Nonnull MessageInterceptorRegistry interceptorRegistry,
+                                         final @Nonnull MessageTranslator<String> messageTranslator) {
+        super(channelName, interceptorRegistry);
         this.messageTranslator = messageTranslator;
     }
 

@@ -22,7 +22,6 @@ public class InMemoryMessageLogReceiverEndpointFactory implements MessageLogRece
 
     public InMemoryMessageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
                                                      final InMemoryChannels inMemoryChannels) {
-
         this.interceptorRegistry = interceptorRegistry;
         this.inMemoryChannels = inMemoryChannels;
     }
@@ -30,7 +29,6 @@ public class InMemoryMessageLogReceiverEndpointFactory implements MessageLogRece
     @Override
     public MessageLogReceiverEndpoint create(final @Nonnull String channelName) {
         final InMemoryChannel channel = inMemoryChannels.getChannel(channelName);
-        channel.registerInterceptorsFrom(interceptorRegistry);
         return channel;
     }
 }

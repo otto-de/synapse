@@ -56,11 +56,7 @@ public class SqsAutoConfiguration {
                                                                                    final SqsAsyncClient sqsAsyncClient,
                                                                                    final ApplicationEventPublisher eventPublisher) {
 
-        return (String channelName) -> {
-            final SqsMessageQueueReceiverEndpoint endpoint = new SqsMessageQueueReceiverEndpoint(channelName, sqsAsyncClient, objectMapper, eventPublisher);
-            endpoint.registerInterceptorsFrom(registry);
-            return endpoint;
-        };
+        return (String channelName) -> new SqsMessageQueueReceiverEndpoint(channelName, registry, sqsAsyncClient, objectMapper, eventPublisher);
     }
 
 }

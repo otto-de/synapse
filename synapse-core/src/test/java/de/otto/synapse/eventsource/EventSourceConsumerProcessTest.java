@@ -2,6 +2,7 @@ package de.otto.synapse.eventsource;
 
 import de.otto.synapse.channel.InMemoryChannel;
 import de.otto.synapse.consumer.TestMessageConsumer;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 
@@ -56,7 +57,7 @@ public class EventSourceConsumerProcessTest {
     @Test
     @SuppressWarnings("unchecked")
     public void shouldInvokeTwoConsumersForSameEventSource() throws InterruptedException {
-        final InMemoryChannel channel = new InMemoryChannel("test");
+        final InMemoryChannel channel = new InMemoryChannel("test", new MessageInterceptorRegistry());
         final EventSource eventSource = new DefaultEventSource(emptyMessageStore(), channel);
 
         final TestMessageConsumer eventConsumerA = testEventConsumer(".*", String.class);
