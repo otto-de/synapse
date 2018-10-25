@@ -1,9 +1,14 @@
 # Release Notes
 
 ## 0.11.0
-* Updates to SDK 2.0.4 (except SQS and S3 as these are not yet available)
 * Updates from old synchronous KinesisClient to new KinesisAsyncClient
 * Adds possibility to configure a RetryPolicy for Kinesis
+* Updates 3rd-party dependencies:
+    - awsSdkVersion = "2.0.6" (except SQS and S3 as these are not yet available)
+    - springVersion = "4.3.20.RELEASE"
+    - springBootVersion = "1.5.17.RELEASE"
+    - edisonVersion = "1.2.30"
+
  
 ## 0.10.0
 * Updates to aws-java-sdk-preview-12
