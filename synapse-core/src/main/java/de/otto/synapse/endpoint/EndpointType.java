@@ -1,18 +1,18 @@
 package de.otto.synapse.endpoint;
 
-import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
-import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
+import de.otto.synapse.endpoint.receiver.MessageReceiverEndpoint;
+import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 
 /**
- * Enumeration to distinguish sender and receiver {@link AbstractMessageEndpoint endpoints}
+ * Enumeration to distinguish sender and receiver {@link MessageEndpoint endpoints}
  */
 public enum EndpointType {
     /**
-     * The {@link AbstractMessageEndpoint} IS-A {@link AbstractMessageSenderEndpoint}
+     * The {@link MessageEndpoint} IS-A {@link MessageSenderEndpoint}
      */
     SENDER,
     /**
-     * The {@link AbstractMessageEndpoint} IS-A {@link AbstractMessageReceiverEndpoint}
+     * The {@link MessageEndpoint} IS-A {@link MessageReceiverEndpoint}
      */
     RECEIVER
 }
