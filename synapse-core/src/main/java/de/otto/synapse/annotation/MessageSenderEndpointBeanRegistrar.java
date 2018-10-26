@@ -25,9 +25,9 @@ import static org.springframework.beans.factory.support.BeanDefinitionBuilder.ge
  *
  * @see EnableMessageQueueReceiverEndpoint
  */
-public class MessageQueueSenderEndpointBeanRegistrar implements ImportBeanDefinitionRegistrar, EnvironmentAware {
+public class MessageSenderEndpointBeanRegistrar implements ImportBeanDefinitionRegistrar, EnvironmentAware {
 
-    private static final Logger LOG = getLogger(MessageQueueSenderEndpointBeanRegistrar.class);
+    private static final Logger LOG = getLogger(MessageSenderEndpointBeanRegistrar.class);
 
     private Environment environment;
 

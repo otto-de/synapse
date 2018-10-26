@@ -11,7 +11,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.util.EnvironmentTestUtils.addEnvironment;
 
-public class MessageQueueSenderEndpointBeanRegistrarTest {
+public class MessageSenderEndpointBeanRegistrarTest {
 
     private AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
 

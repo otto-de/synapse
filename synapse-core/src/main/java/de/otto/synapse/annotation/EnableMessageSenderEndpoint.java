@@ -11,7 +11,7 @@ import java.lang.annotation.*;
 @Documented
 @Import({
         SynapseAutoConfiguration.class,
-        MessageQueueSenderEndpointBeanRegistrar.class})
+        MessageSenderEndpointBeanRegistrar.class})
 @Repeatable(EnableMessageSenderEndpoints.class)
 public @interface EnableMessageSenderEndpoint {
 
