@@ -3,7 +3,6 @@ package de.otto.synapse.example.consumer.configuration;
 import de.otto.synapse.annotation.EnableEventSource;
 import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
-import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.example.consumer.state.BananaProduct;
@@ -15,8 +14,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import static de.otto.synapse.endpoint.MessageInterceptorRegistration.receiverChannelsWith;
-import static de.otto.synapse.endpoint.MessageInterceptorRegistration.senderChannelsWith;
 import static org.slf4j.LoggerFactory.getLogger;
 
 
@@ -28,18 +25,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class ExampleConfiguration implements MessageEndpointConfigurer {
 
     private static final Logger LOG = getLogger(ExampleConfiguration.class);
-
-    @Override
-    public void configureMessageInterceptors(final MessageInterceptorRegistry registry) {
-        registry.register(receiverChannelsWith(m -> {
-            LOG.info("[receiver] Intercepted message {}", m);
-            return m;
-        }));
-        registry.register(senderChannelsWith((m) -> {
-            LOG.info("[sender] Intercepted message {}", m);
-            return m;
-        }));
-    }
 
     @Bean
     public StateRepository<BananaProduct> bananaProductConcurrentStateRepository() {

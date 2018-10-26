@@ -103,9 +103,9 @@ public class MessageInterceptorRegistration {
         return new MessageInterceptorRegistration(compile(channelNamePattern), interceptor, EnumSet.of(EndpointType.SENDER));
     }
 
-    private MessageInterceptorRegistration(final Pattern channelNamePattern,
-                                           final MessageInterceptor interceptor,
-                                           final Set<EndpointType> enabledEndpointTypes) {
+    public MessageInterceptorRegistration(final Pattern channelNamePattern,
+                                          final MessageInterceptor interceptor,
+                                          final Set<EndpointType> enabledEndpointTypes) {
         this.channelNamePattern = requireNonNull(channelNamePattern);
         this.interceptor = requireNonNull(interceptor);
         this.enabledEndpointTypes = copyOf(requireNonNull(enabledEndpointTypes));
@@ -134,10 +134,6 @@ public class MessageInterceptorRegistration {
     public boolean isEnabledFor(final String channelNamePattern,
                                 final EndpointType endpointType) {
         return enabledEndpointTypes.contains(endpointType) && this.channelNamePattern.matcher(channelNamePattern).matches();
-    }
-
-    public ImmutableSet<EndpointType> getEnabledEndpointTypes() {
-        return enabledEndpointTypes;
     }
 
     @Override
