@@ -1,4 +1,4 @@
-package de.otto.synapse.annotation.messagequeue;
+package de.otto.synapse.annotation;
 
 import de.otto.synapse.configuration.InMemoryMessageQueueTestConfiguration;
 import de.otto.synapse.endpoint.receiver.DelegateMessageQueueReceiverEndpoint;

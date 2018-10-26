@@ -1,6 +1,6 @@
-package de.otto.synapse.annotation.messagequeue;
+package de.otto.synapse.annotation;
 
-import de.otto.synapse.configuration.MessageQueueReceiverEndpointAutoConfiguration;
+import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
@@ -10,10 +10,10 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Import({
-        MessageQueueReceiverEndpointAutoConfiguration.class,
-        MessageQueueReceiverEndpointBeanRegistrar.class})
-@Repeatable(EnableMessageQueueReceiverEndpoints.class)
-public @interface EnableMessageQueueReceiverEndpoint {
+        SynapseAutoConfiguration.class,
+        MessageQueueSenderEndpointBeanRegistrar.class})
+@Repeatable(EnableMessageSenderEndpoints.class)
+public @interface EnableMessageSenderEndpoint {
 
     /**
      * The name of the message queue.
@@ -26,13 +26,13 @@ public @interface EnableMessageQueueReceiverEndpoint {
     String channelName();
 
     /**
-     * The name of the registered MessageQueueReceiverEndpoint bean.
+     * The name of the registered {@link de.otto.synapse.endpoint.sender.MessageSenderEndpoint} bean.
      * <p>
      * If {@code #name} is not set, the name of the bean is derived from the name of the message channel. The name
      * is constructed by tranforming hyphenated variable naming convention, e.g., "my-channel" into
      * the Spring bean naming convention, e.g., "myChannel". After this conversion, the string
-     * "MessageQueueReceiverEndpoint" is appended. A channel named "my-channel" will therefore result in a bean name
-     * "myChannelMessageQueueReceiverEndpoint".
+     * "MessageQueueSenderEndpoint" is appended. A channel named "my-channel" will therefore result in a bean name
+     * "myChannelMessageQueueSenderEndpoint".
      * </p>
      *
      * @return bean name

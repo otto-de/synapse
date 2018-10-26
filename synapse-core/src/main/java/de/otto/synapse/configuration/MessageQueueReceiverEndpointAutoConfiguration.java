@@ -1,6 +1,6 @@
 package de.otto.synapse.configuration;
 
-import de.otto.synapse.annotation.messagequeue.MessageQueueConsumerBeanPostProcessor;
+import de.otto.synapse.annotation.MessageQueueConsumerBeanPostProcessor;
 import de.otto.synapse.endpoint.receiver.MessageQueueConsumerProcess;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import org.slf4j.Logger;

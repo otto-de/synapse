@@ -1,7 +1,7 @@
 package de.otto.synapse.example.consumer.configuration;
 
-import de.otto.synapse.annotation.messagequeue.EnableMessageQueueReceiverEndpoint;
-import de.otto.synapse.annotation.messagequeue.EnableMessageSenderEndpoint;
+import de.otto.synapse.annotation.EnableMessageQueueReceiverEndpoint;
+import de.otto.synapse.annotation.EnableMessageSenderEndpoint;
 import de.otto.synapse.configuration.InMemoryMessageQueueTestConfiguration;
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;

@@ -1,10 +1,6 @@
 package de.otto.synapse.acceptance;
 
-import de.otto.synapse.annotation.EnableEventSource;
-import de.otto.synapse.annotation.EventSourceConsumer;
-import de.otto.synapse.annotation.messagequeue.EnableMessageQueueReceiverEndpoint;
-import de.otto.synapse.annotation.messagequeue.EnableMessageSenderEndpoint;
-import de.otto.synapse.annotation.messagequeue.MessageQueueConsumer;
+import de.otto.synapse.annotation.*;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Message;

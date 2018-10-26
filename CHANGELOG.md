@@ -4,6 +4,7 @@
 * Updates from old synchronous KinesisClient to new KinesisAsyncClient.
 * Adds `@MessageInterceptor` annotation used to easily intercept messages at sender and/or receiver side of a channel. 
 * Adds possibility to configure a RetryPolicy for Kinesis.
+* Moved annotations etc. from `de.otto.synapse.annotation.messagequeue` to `de.otto.synapse.annotation`.
 * Updates 3rd-party dependencies:
     - awsSdkVersion = "2.0.6" (except SQS and S3 as these are not yet available)
     - springVersion = "4.3.20.RELEASE"

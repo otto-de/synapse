@@ -2,7 +2,7 @@ package de.otto.synapse.example.edison.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.annotation.EnableEventSource;
-import de.otto.synapse.annotation.messagequeue.EnableMessageQueueReceiverEndpoint;
+import de.otto.synapse.annotation.EnableMessageQueueReceiverEndpoint;
 import de.otto.synapse.channel.InMemoryChannels;
 import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
 import de.otto.synapse.configuration.InMemoryMessageQueueTestConfiguration;
