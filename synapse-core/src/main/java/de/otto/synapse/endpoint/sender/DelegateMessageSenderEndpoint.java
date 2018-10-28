@@ -1,8 +1,8 @@
 package de.otto.synapse.endpoint.sender;
 
+import de.otto.synapse.channel.Selector;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.InterceptorChain;
-import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 
@@ -21,10 +21,11 @@ public class DelegateMessageSenderEndpoint implements MessageSenderEndpoint{
     private final MessageSenderEndpoint delegate;
 
     public DelegateMessageSenderEndpoint(final @Nonnull String channelName,
+                                         final @Nullable Class<? extends Selector> selector,
                                          final List<MessageSenderEndpointFactory> factories) {
         final MessageSenderEndpointFactory messageSenderEndpointFactory = factories
                 .stream()
-                .filter(factory -> factory.supportsChannel(channelName))
+                .filter(factory -> factory.matches(selector))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException(format("Unable to create MessageSenderEndpoint for channelName=%s: no matching MessageSenderEndpointFactory found in the ApplicationContext.", channelName)));
         this.delegate = messageSenderEndpointFactory.create(channelName);

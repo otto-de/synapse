@@ -1,10 +1,6 @@
 package de.otto.synapse.endpoint.receiver;
 
-import de.otto.synapse.channel.InMemoryChannel;
 import de.otto.synapse.channel.InMemoryChannels;
-import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
-import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import de.otto.synapse.eventsource.EventSource;
 
 import javax.annotation.Nonnull;
@@ -17,18 +13,14 @@ import javax.annotation.Nonnull;
  */
 public class InMemoryMessageLogReceiverEndpointFactory implements MessageLogReceiverEndpointFactory {
 
-    private final MessageInterceptorRegistry interceptorRegistry;
     private final InMemoryChannels inMemoryChannels;
 
-    public InMemoryMessageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
-                                                     final InMemoryChannels inMemoryChannels) {
-        this.interceptorRegistry = interceptorRegistry;
+    public InMemoryMessageLogReceiverEndpointFactory(final InMemoryChannels inMemoryChannels) {
         this.inMemoryChannels = inMemoryChannels;
     }
 
     @Override
     public MessageLogReceiverEndpoint create(final @Nonnull String channelName) {
-        final InMemoryChannel channel = inMemoryChannels.getChannel(channelName);
-        return channel;
+        return inMemoryChannels.getChannel(channelName);
     }
 }

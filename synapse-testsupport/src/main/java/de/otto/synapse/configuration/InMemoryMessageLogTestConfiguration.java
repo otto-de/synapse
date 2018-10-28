@@ -3,10 +3,10 @@ package de.otto.synapse.configuration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.InMemoryChannels;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.endpoint.receiver.InMemoryMessageLogReceiverEndpointFactory;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import de.otto.synapse.endpoint.sender.InMemoryMessageSenderFactory;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
-import de.otto.synapse.endpoint.receiver.InMemoryMessageLogReceiverEndpointFactory;
 import de.otto.synapse.messagestore.CompactingInMemoryMessageStore;
 import de.otto.synapse.messagestore.DelegatingSnapshotMessageStore;
 import de.otto.synapse.messagestore.MessageStoreFactory;
@@ -53,10 +53,9 @@ public class InMemoryMessageLogTestConfiguration {
     }
 
     @Bean
-    public MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
-                                                                               final InMemoryChannels inMemoryChannels) {
+    public MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory(final InMemoryChannels inMemoryChannels) {
         LOG.warn("Creating InMemoryMessageLogReceiverEndpointFactory. This should only be used in tests");
-        return new InMemoryMessageLogReceiverEndpointFactory(interceptorRegistry, inMemoryChannels);
+        return new InMemoryMessageLogReceiverEndpointFactory(inMemoryChannels);
     }
 
 }

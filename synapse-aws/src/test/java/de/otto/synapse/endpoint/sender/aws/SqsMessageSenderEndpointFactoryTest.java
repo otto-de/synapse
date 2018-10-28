@@ -1,6 +1,8 @@
 package de.otto.synapse.endpoint.sender.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.synapse.channel.Selectors;
+import de.otto.synapse.channel.aws.AwsSelectors;
 import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistration;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
@@ -9,7 +11,6 @@ import org.junit.Test;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlResponse;
-import software.amazon.awssdk.services.sqs.model.QueueDoesNotExistException;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -34,25 +35,27 @@ public class SqsMessageSenderEndpointFactoryTest {
     }
 
     @Test
-    public void shouldNotSupportMissingChannel() {
+    public void shouldMatchMessageQueueSelectors() {
+        final MessageInterceptorRegistry interceptorRegistry = mock(MessageInterceptorRegistry.class);
         final ObjectMapper objectMapper = mock(ObjectMapper.class);
         final SqsAsyncClient sqsAsyncClient = mock(SqsAsyncClient.class);
-        when(sqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class))).thenThrow(QueueDoesNotExistException.class);
 
         final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, sqsAsyncClient, "test");
 
-        assertThat(factory.supportsChannel("foo-stream"), is(false));
+        assertThat(factory.matches(Selectors.MessageQueue.class), is(true));
+        assertThat(factory.matches(AwsSelectors.Sqs.class), is(true));
     }
 
     @Test
-    public void shouldSupportExistingChannel() {
+    public void shouldNotMatchMessageLogSelectors() {
+        final MessageInterceptorRegistry interceptorRegistry = mock(MessageInterceptorRegistry.class);
         final ObjectMapper objectMapper = mock(ObjectMapper.class);
         final SqsAsyncClient sqsAsyncClient = mock(SqsAsyncClient.class);
-        when(sqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl("http://example.com").build()));
 
         final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, sqsAsyncClient, "test");
 
-        assertThat(factory.supportsChannel("foo-stream"), is(true));
+        assertThat(factory.matches(Selectors.MessageLog.class), is(false));
+        assertThat(factory.matches(AwsSelectors.Kinesis.class), is(false));
     }
 
     @Test

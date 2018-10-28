@@ -2,6 +2,8 @@ package de.otto.synapse.example.consumer.configuration;
 
 import de.otto.synapse.annotation.EnableMessageQueueReceiverEndpoint;
 import de.otto.synapse.annotation.EnableMessageSenderEndpoint;
+import de.otto.synapse.channel.Selectors.MessageQueue;
+import de.otto.synapse.channel.aws.AwsSelectors.Sqs;
 import de.otto.synapse.configuration.InMemoryMessageQueueTestConfiguration;
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
@@ -23,8 +25,14 @@ import static org.slf4j.LoggerFactory.getLogger;
 @EnableConfigurationProperties({MyServiceProperties.class})
 @EnableMessageQueueReceiverEndpoint(name = "bananaQueue",  channelName = "${exampleservice.banana-channel}")
 @EnableMessageQueueReceiverEndpoint(name = "productQueue", channelName = "${exampleservice.product-channel}")
-@EnableMessageSenderEndpoint(name = "productMessageSender", channelName = "${exampleservice.product-channel}")
-@EnableMessageSenderEndpoint(name = "bananaMessageSender", channelName = "${exampleservice.banana-channel}")
+@EnableMessageSenderEndpoint(
+        name = "productMessageSender",
+        channelName = "${exampleservice.product-channel}",
+        selector = Sqs.class)
+@EnableMessageSenderEndpoint(
+        name = "bananaMessageSender",
+        channelName = "${exampleservice.banana-channel}",
+        selector = MessageQueue.class)
 public class ExampleConfiguration implements MessageEndpointConfigurer {
 
     private static final Logger LOG = getLogger(ExampleConfiguration.class);

@@ -1,5 +1,7 @@
 package de.otto.synapse.endpoint.sender;
 
+import de.otto.synapse.channel.Selector;
+
 import javax.annotation.Nonnull;
 
 /*
@@ -17,7 +19,12 @@ public interface MessageSenderEndpointFactory {
     MessageSenderEndpoint create(@Nonnull String channelName);
 
     /**
-     * @return true if the factory is able to support the given channel name, false otherwise.
+     * Returns true if the factory is capable to create a {@link MessageSenderEndpoint} matching the given
+     * selectors, false otherwise.
+     *
+     * @param channelSelector Set of channel selectors
+     * @return boolean
      */
-    boolean supportsChannel(final String channelName);
+    boolean matches(final Class<? extends Selector> channelSelector);
+
 }

@@ -1,6 +1,8 @@
 package de.otto.synapse.endpoint.sender.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.synapse.channel.Selector;
+import de.otto.synapse.channel.aws.AwsSelectors.Sqs;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
@@ -38,12 +40,8 @@ public class SqsMessageSenderEndpointFactory implements MessageSenderEndpointFac
     }
 
     @Override
-    public boolean supportsChannel(final String channelName) {
-        try {
-            return urlOf(channelName) != null;
-        } catch (final RuntimeException e) {
-            return false;
-        }
+    public boolean matches(Class<? extends Selector> channelSelector) {
+        return channelSelector.isAssignableFrom(Sqs.class);
     }
 
     private String urlOf(final @Nonnull String channelName) {

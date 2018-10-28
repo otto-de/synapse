@@ -2,6 +2,7 @@ package de.otto.synapse.endpoint.sender;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.InMemoryChannels;
+import de.otto.synapse.channel.Selector;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 
@@ -31,7 +32,10 @@ public class InMemoryMessageSenderFactory implements MessageSenderEndpointFactor
     }
 
     @Override
-    public boolean supportsChannel(final String channelName) {
+    public boolean matches(Class<? extends Selector> channelSelector) {
+        // As the in-mem implementation of the factory is intended to replase special implementations
+        // and because in-mem channels support both message logs and queues, we can simply return true here:
         return true;
     }
+
 }

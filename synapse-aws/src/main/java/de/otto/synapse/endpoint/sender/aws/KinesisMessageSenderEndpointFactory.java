@@ -1,7 +1,8 @@
 package de.otto.synapse.endpoint.sender.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableSet;
+import de.otto.synapse.channel.Selector;
+import de.otto.synapse.channel.aws.AwsSelectors.Kinesis;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
@@ -9,7 +10,6 @@ import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
 import org.slf4j.Logger;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
-import software.amazon.awssdk.services.kinesis.model.ListStreamsResponse;
 
 import javax.annotation.Nonnull;
 
@@ -22,7 +22,6 @@ public class KinesisMessageSenderEndpointFactory implements MessageSenderEndpoin
     private final MessageInterceptorRegistry registry;
     private final MessageTranslator<String> messageTranslator;
     private final KinesisAsyncClient kinesisClient;
-    private final ImmutableSet<String> kinesisChannels;
 
     public KinesisMessageSenderEndpointFactory(final MessageInterceptorRegistry registry,
                                                final ObjectMapper objectMapper,
@@ -30,14 +29,6 @@ public class KinesisMessageSenderEndpointFactory implements MessageSenderEndpoin
         this.registry = registry;
         this.messageTranslator = new JsonStringMessageTranslator(objectMapper);
         this.kinesisClient = kinesisClient;
-        this.kinesisChannels = ImmutableSet.copyOf(kinesisClient
-                .listStreams()
-                .exceptionally(throwable -> {
-                    LOG.warn("Unable to fetch Kinesis channels: {}", throwable.getMessage());
-                    return ListStreamsResponse.builder().build();
-                })
-                .join()
-                .streamNames());
     }
 
     @Override
@@ -46,7 +37,8 @@ public class KinesisMessageSenderEndpointFactory implements MessageSenderEndpoin
     }
 
     @Override
-    public boolean supportsChannel(final String channelName) {
-        return kinesisChannels.contains(channelName);
+    public boolean matches(final Class<? extends Selector> channelSelector) {
+        return channelSelector.isAssignableFrom(Kinesis.class);
     }
+
 }

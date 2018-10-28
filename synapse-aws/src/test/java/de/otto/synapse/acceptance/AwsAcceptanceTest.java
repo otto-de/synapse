@@ -1,6 +1,7 @@
 package de.otto.synapse.acceptance;
 
 import de.otto.synapse.annotation.*;
+import de.otto.synapse.channel.Selectors;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Message;
@@ -48,13 +49,12 @@ import static org.slf4j.LoggerFactory.getLogger;
         channelName = KINESIS_INTEGRATION_TEST_CHANNEL)
 @EnableMessageSenderEndpoint(
         name = "sqsSender",
-        channelName = SQS_INTEGRATION_TEST_CHANNEL)
+        channelName = SQS_INTEGRATION_TEST_CHANNEL,
+        selector = Selectors.MessageQueue.class)
 @DirtiesContext
 public class AwsAcceptanceTest {
 
     private static final Logger LOG = getLogger(AwsAcceptanceTest.class);
-
-
 
     private final AtomicReference<Message<String>> lastSqsMessage = new AtomicReference<>(null);
     private final AtomicReference<Message<String>> lastEventSourceMessage = new AtomicReference<>(null);

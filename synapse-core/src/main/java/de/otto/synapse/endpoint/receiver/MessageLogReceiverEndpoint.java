@@ -10,7 +10,7 @@ import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Receiver-side {@code MessageEndpoint endpoint} of a Message Channel that supports random-access like reading of
+ * Receiver-side {@code MessageEndpoint endpoint} of a Message Channel that matches random-access like reading of
  * messages using {@link ChannelPosition ChannelPositions}.
  *
  * <p>
@@ -48,7 +48,7 @@ public interface MessageLogReceiverEndpoint extends MessageReceiverEndpoint {
      * @return ChannelPosition
      */
     @Nonnull
-    public default CompletableFuture<ChannelPosition> consume(@Nonnull ChannelPosition startFrom) {
+    default CompletableFuture<ChannelPosition> consume(@Nonnull ChannelPosition startFrom) {
         return consumeUntil(startFrom, Instant.MAX);
     }
 

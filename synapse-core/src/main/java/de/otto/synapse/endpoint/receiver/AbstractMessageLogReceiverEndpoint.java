@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * Receiver-side {@code MessageEndpoint endpoint} of a Message Channel that supports random-access like reading of
+ * Receiver-side {@code MessageEndpoint endpoint} of a Message Channel that matches random-access like reading of
  * messages using {@link ChannelPosition ChannelPositions}.
  *
  * <p>

@@ -1,6 +1,8 @@
 package de.otto.synapse.endpoint.sender.aws;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.synapse.channel.Selectors;
+import de.otto.synapse.channel.aws.AwsSelectors;
 import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistration;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
@@ -31,32 +33,33 @@ public class KinesisMessageSenderEndpointFactoryTest {
     }
 
     @Test
-    public void shouldNotSupportMissingChannel() {
+    public void shouldMatchMessageLogSelectors() {
+        final MessageInterceptorRegistry interceptorRegistry = mock(MessageInterceptorRegistry.class);
         final ObjectMapper objectMapper = mock(ObjectMapper.class);
         final KinesisAsyncClient kinesisClient = mock(KinesisAsyncClient.class);
-        when(kinesisClient.listStreams()).thenReturn(completedFuture(ListStreamsResponse.builder().build()));
 
-        final KinesisMessageSenderEndpointFactory factory = new KinesisMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, kinesisClient);
+        final KinesisMessageSenderEndpointFactory factory = new KinesisMessageSenderEndpointFactory(interceptorRegistry, objectMapper, kinesisClient);
 
-        assertThat(factory.supportsChannel("foo-stream"), is(false));
+        assertThat(factory.matches(Selectors.MessageLog.class), is(true));
+        assertThat(factory.matches(AwsSelectors.Kinesis.class), is(true));
     }
 
     @Test
-    public void shouldSupportExistingChannel() {
+    public void shouldNotMatchMessageQueueSelectors() {
+        final MessageInterceptorRegistry interceptorRegistry = mock(MessageInterceptorRegistry.class);
         final ObjectMapper objectMapper = mock(ObjectMapper.class);
         final KinesisAsyncClient kinesisClient = mock(KinesisAsyncClient.class);
-        when(kinesisClient.listStreams()).thenReturn(completedFuture(ListStreamsResponse.builder().streamNames("foo-stream").build()));
 
-        final KinesisMessageSenderEndpointFactory factory = new KinesisMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, kinesisClient);
+        final KinesisMessageSenderEndpointFactory factory = new KinesisMessageSenderEndpointFactory(interceptorRegistry, objectMapper, kinesisClient);
 
-        assertThat(factory.supportsChannel("foo-stream"), is(true));
+        assertThat(factory.matches(Selectors.MessageQueue.class), is(false));
+        assertThat(factory.matches(AwsSelectors.Sqs.class), is(false));
     }
 
     @Test
     public void shouldRegisterMessageInterceptor() {
         final ObjectMapper objectMapper = mock(ObjectMapper.class);
         final KinesisAsyncClient kinesisClient = mock(KinesisAsyncClient.class);
-        when(kinesisClient.listStreams()).thenReturn(completedFuture(ListStreamsResponse.builder().build()));
 
         final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
         final MessageInterceptor interceptor = mock(MessageInterceptor.class);

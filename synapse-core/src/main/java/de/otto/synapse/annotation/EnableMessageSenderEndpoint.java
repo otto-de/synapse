@@ -1,5 +1,8 @@
 package de.otto.synapse.annotation;
 
+import de.otto.synapse.channel.Selector;
+import de.otto.synapse.channel.Selectors;
+import de.otto.synapse.channel.Selectors.MessageLog;
 import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import org.springframework.context.annotation.Import;
 
@@ -38,6 +41,27 @@ public @interface EnableMessageSenderEndpoint {
      * @return bean name
      */
     String name() default "";
+
+    /**
+     * Selector used to select one of possibly multiple available
+     * {@link de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory} instances.
+     *
+     * <p>
+     *     Example: the SqsMessageSenderEndpointFactory matches both {@link Selectors.MessageQueue Selectors.MessageQueue.class}
+     *     and AwsSelectors.Sqs.class. The following usage of the annotation is selecting the SqsMessageSenderEndpointFactory
+     *     using the more specific SQS selector class:
+     * </p>
+     * <pre><code>
+     * {@literal @}Configuration
+     * {@literal @}EnableMessageSenderEndpoint(
+     *      channelName = "some-sqs-queue",
+     *      selector = AwsSelectors.SQS)
+     * class MyExampleConfiguration {
+     * }
+     * </code></pre>
+     * @return Selector class
+     */
+    Class<? extends Selector> selector() default MessageLog.class;
 
 }
 

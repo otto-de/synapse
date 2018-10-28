@@ -1,5 +1,6 @@
 package de.otto.synapse.annotation;
 
+import de.otto.synapse.channel.Selector;
 import de.otto.synapse.endpoint.sender.DelegateMessageSenderEndpoint;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.BeanCreationException;
@@ -65,17 +66,19 @@ public class MessageSenderEndpointBeanRegistrar implements ImportBeanDefinitionR
                                                              final AnnotationAttributes[] annotationAttributesArr) {
         for (final AnnotationAttributes annotationAttributes : annotationAttributesArr) {
             final String channelName = environment.resolvePlaceholders(annotationAttributes.getString("channelName"));
+            final Class<? extends Selector> selector = annotationAttributes.getClass("selector");
             final String messageQueueSenderEndpointBeanName = Objects.toString(
                     emptyToNull(annotationAttributes.getString("name")),
                     beanNameForMessageSenderEndpoint(channelName));
             if (!registry.containsBeanDefinition(messageQueueSenderEndpointBeanName)) {
-                registerMessageQueueSenderEndpointBeanDefinition(registry, messageQueueSenderEndpointBeanName, channelName);
+                registerMessageQueueSenderEndpointBeanDefinition(registry, messageQueueSenderEndpointBeanName, channelName, selector);
             } else {
                 throw new BeanCreationException(messageQueueSenderEndpointBeanName, format("messageQueueSenderEndpoint %s is already registered.", messageQueueSenderEndpointBeanName));
             }
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void registerSingleMessageQueueSenderEndpoint(final BeanDefinitionRegistry registry,
                                                           final MultiValueMap<String, Object> messageQueueAttr) {
         if (messageQueueAttr != null) {
@@ -87,23 +90,35 @@ public class MessageSenderEndpointBeanRegistrar implements ImportBeanDefinitionR
                     emptyToNull(messageQueueAttr.getFirst("name").toString()),
                     beanNameForMessageSenderEndpoint(channelName));
 
+            final Class<? extends Selector> channelSelector = (Class<? extends Selector>) messageQueueAttr.getFirst("selector");
+
             if (!registry.containsBeanDefinition(messageSenderEndpointBeanName)) {
-                registerMessageQueueSenderEndpointBeanDefinition(registry, messageSenderEndpointBeanName, channelName);
+                registerMessageQueueSenderEndpointBeanDefinition(
+                        registry,
+                        messageSenderEndpointBeanName,
+                        channelName,
+                        channelSelector
+                );
             } else {
-                throw new BeanCreationException(messageSenderEndpointBeanName, format("MessageQueueReceiverEndpoint %s is already registered.", messageSenderEndpointBeanName));
+                throw new BeanCreationException(
+                        messageSenderEndpointBeanName,
+                        format("MessageQueueReceiverEndpoint %s is already registered.", messageSenderEndpointBeanName)
+                );
             }
         }
     }
 
     private void registerMessageQueueSenderEndpointBeanDefinition(final BeanDefinitionRegistry registry,
                                                                   final String beanName,
-                                                                  final String channelName) {
+                                                                  final String channelName,
+                                                                  final Class<? extends Selector> channelSelector) {
 
 
         registry.registerBeanDefinition(
                 beanName,
                 genericBeanDefinition(DelegateMessageSenderEndpoint.class)
                         .addConstructorArgValue(channelName)
+                        .addConstructorArgValue(channelSelector)
                         .setDependencyCheck(DEPENDENCY_CHECK_ALL)
                         .getBeanDefinition()
         );
