@@ -1,6 +1,7 @@
 # Release Notes
 
 ## 0.11.0
+* Introduced new module `synapse-aws-sqs` for SQS message channels.
 * Updates from old synchronous KinesisClient to new KinesisAsyncClient.
 * Adds `@MessageInterceptor` annotation used to easily intercept messages at sender and/or receiver side of a channel. 
 * Adds possibility to configure a RetryPolicy for Kinesis.

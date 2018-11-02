@@ -1,5 +1,6 @@
 include "synapse-core"
 include "synapse-aws"
+include "synapse-aws-sqs"
 include "synapse-edison"
 include "synapse-testsupport"
 include "synapse-examples:example-eventsource-consumer"

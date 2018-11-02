@@ -1,7 +1,7 @@
 package de.otto.synapse.configuration.aws;
 
-import de.otto.synapse.compaction.aws.SnapshotReadService;
-import de.otto.synapse.compaction.aws.SnapshotWriteService;
+import de.otto.synapse.compaction.s3.SnapshotReadService;
+import de.otto.synapse.compaction.s3.SnapshotWriteService;
 import de.otto.synapse.messagestore.MessageStoreFactory;
 import de.otto.synapse.messagestore.SnapshotMessageStore;
 import de.otto.synapse.messagestore.aws.S3SnapshotMessageStore;

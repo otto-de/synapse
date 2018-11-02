@@ -1,0 +1,26 @@
+<configuration>
+
+    <contextName>example</contextName>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{ISO8601} %-5p logger="%c" message="%m" thread="%t" %n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="de.otto" level="INFO"/>
+
+    <logger name="software.amazon.awssdk" level="INFO"/>
+
+    <!-- Verbose wire logging for synchronous clients (e.g. Kinesis): -->
+    <!--logger name="org.apache.http.wire" level="DEBUG"/-->
+    <!-- Verbose wire logging for asynchronous clients (e.g. SQS): -->
+    <!--logger name="software.amazon.awssdk.http.nio.netty" level="DEBUG"/-->
+
+    <logger name="org" level="INFO"/>
+
+    <root level="DEBUG">
+        <appender-ref ref="console"/>
+    </root>
+
+</configuration>

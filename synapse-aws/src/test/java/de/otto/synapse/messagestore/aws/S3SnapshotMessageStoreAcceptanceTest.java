@@ -2,9 +2,9 @@ package de.otto.synapse.messagestore.aws;
 
 import de.otto.synapse.annotation.EnableEventSourcing;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.compaction.aws.CompactionService;
-import de.otto.synapse.compaction.aws.SnapshotReadService;
-import de.otto.synapse.compaction.aws.SnapshotWriteService;
+import de.otto.synapse.compaction.s3.CompactionService;
+import de.otto.synapse.compaction.s3.SnapshotReadService;
+import de.otto.synapse.compaction.s3.SnapshotWriteService;
 import de.otto.synapse.helper.s3.S3Helper;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.state.StateRepository;

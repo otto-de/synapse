@@ -1,6 +1,6 @@
 package de.otto.synapse.messagestore.aws;
 
-import de.otto.synapse.compaction.aws.SnapshotReadService;
+import de.otto.synapse.compaction.s3.SnapshotReadService;
 import de.otto.synapse.info.SnapshotReaderNotification;
 import de.otto.synapse.info.SnapshotReaderStatus;
 import org.junit.Test;

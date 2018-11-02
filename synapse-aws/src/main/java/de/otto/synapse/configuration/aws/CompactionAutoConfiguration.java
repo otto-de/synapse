@@ -1,7 +1,7 @@
 package de.otto.synapse.configuration.aws;
 
-import de.otto.synapse.compaction.aws.CompactionService;
-import de.otto.synapse.compaction.aws.SnapshotWriteService;
+import de.otto.synapse.compaction.s3.CompactionService;
+import de.otto.synapse.compaction.s3.SnapshotWriteService;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import de.otto.synapse.eventsource.EventSourceBuilder;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;

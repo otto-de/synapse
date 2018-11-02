@@ -77,7 +77,7 @@ uploadArchives {
                 name 'synapse-aws'
                 packaging 'jar'
                 description 'A library used at otto.de to implement Spring Boot based event-sourcing microserivces.'
-                url 'http://github.com/otto-de/edison-eventsourcing'
+                url 'http://github.com/otto-de/synapse'
 
                 scm {
                     url 'scm:git@github.com:otto-de/synapse.git'
