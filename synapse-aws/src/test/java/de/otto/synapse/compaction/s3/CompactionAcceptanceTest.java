@@ -1,14 +1,16 @@
 package de.otto.synapse.compaction.s3;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ContiguousSet;
+import com.google.common.collect.DiscreteDomain;
+import com.google.common.collect.Range;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import de.otto.synapse.annotation.EnableEventSourcing;
-import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.annotation.EnableMessageSenderEndpoint;
+import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
+import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.helper.s3.S3Helper;
-import de.otto.synapse.state.StateRepository;
-import de.otto.synapse.testsupport.KinesisChannelSetupUtils;
-import de.otto.synapse.testsupport.KinesisTestStreamSource;
 import net.minidev.json.JSONArray;
 import org.junit.After;
 import org.junit.Before;
@@ -22,9 +24,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.core.ResponseInputStream;
-import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
-import software.amazon.awssdk.services.kinesis.model.PutRecordRequest;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
@@ -40,46 +39,41 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
+import static de.otto.synapse.message.Message.message;
+import static java.lang.String.valueOf;
+import static java.lang.Thread.sleep;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
-@SpringBootTest(classes = CompactionAcceptanceTest.class)
+@SpringBootTest(classes = {CompactionAcceptanceTest.class, InMemoryMessageLogTestConfiguration.class})
 @TestPropertySource(properties = {
         "synapse.snapshot.bucket-name=de-otto-promo-compaction-test-snapshots",
         "synapse.compaction.enabled=true"}
 )
 @EnableEventSourcing
 @DirtiesContext
+@EnableMessageSenderEndpoint(name = "compactionTestSender", channelName = "promo-compaction-test")
 public class CompactionAcceptanceTest {
 
     private static final String INTEGRATION_TEST_STREAM = "promo-compaction-test";
     private static final String INTEGRATION_TEST_BUCKET = "de-otto-promo-compaction-test-snapshots";
-    private static final SdkBytes EMPTY_BYTE_BUFFER = SdkBytes.fromByteArray(new byte[]{});
 
     @Autowired
-    private KinesisAsyncClient kinesisClient;
+    private MessageSenderEndpoint compactionTestSender;
 
     @Autowired
     private S3Client s3Client;
 
     @Autowired
-    private SnapshotWriteService snapshotWriteService;
-
-
-    @Autowired
     private CompactionService compactionService;
-
-    @Autowired
-    private StateRepository<String> stateRepository;
 
     private S3Helper s3Helper;
 
     @Before
     public void setup() throws IOException {
-        KinesisChannelSetupUtils.createChannelIfNotExists(kinesisClient, INTEGRATION_TEST_STREAM, 2);
         deleteSnapshotFilesFromTemp();
         s3Helper = new S3Helper(s3Client);
         s3Helper.createBucket(INTEGRATION_TEST_BUCKET);
@@ -94,42 +88,35 @@ public class CompactionAcceptanceTest {
     @Test
     public void shouldCompactData() throws Exception {
         //given
-        int firstWriteElementCount = 10;
-        int secondWriteElementCount = 5;
-        int fakeElementCount = 2;
-        int deletedElementCount = 1;
-
-        ChannelPosition startSequenceNumbers = writeToStream(INTEGRATION_TEST_STREAM, "users_small1.txt").getFirstReadPosition();
-        createInitialEmptySnapshotWithSequenceNumbers(startSequenceNumbers);
+        sendTestMessages(Range.closed(1, 100), "first");
 
         String filenameBefore = compactionService.compact(INTEGRATION_TEST_STREAM);
 
         LinkedHashMap<String, JSONArray> json1 = fetchAndParseSnapshotFileFromS3(filenameBefore);
-        assertSnapshotFileStructureAndSize(json1, firstWriteElementCount);
+        assertSnapshotFileStructureAndSize(json1, 100);
 
         //when write additional data with partially existing ids
-        writeToStream(INTEGRATION_TEST_STREAM, "integrationtest-stream.txt");
+        sendTestMessages(Range.closed(50, 150), "second");
 
         //Write an emptyMessageStore object for key 100000 - should be removed during compaction
-        kinesisClient.putRecord(PutRecordRequest.builder().streamName(INTEGRATION_TEST_STREAM).partitionKey("100000").data(EMPTY_BYTE_BUFFER).build());
+        compactionTestSender.send(message("100000", null));
 
 
         String fileName = compactionService.compact(INTEGRATION_TEST_STREAM);
 
         //then
         LinkedHashMap<String, JSONArray> json2 = fetchAndParseSnapshotFileFromS3(fileName);
-        assertSnapshotFileStructureAndSize(json2, firstWriteElementCount + secondWriteElementCount + fakeElementCount - deletedElementCount);
-        assertUsernameForUserId(json2, "1", "Frank");
-        assertUsernameForUserId(json2, "2", "PGL08LJI");
-        assertUsernameForUserId(json2, "20000", "PGL08LJI");
-        assertUsernameForUserId(json2, "3", "Horst");
 
-        assertUserIdDoesNotExist(json2, "100000");
+        assertSnapshotFileStructureAndSize(json2, 150);
 
-    }
+        assertMessageForKey(json2, "1", "first-1");
+        assertMessageForKey(json2, "49", "first-49");
+        assertMessageForKey(json2, "50", "second-50");
+        assertMessageForKey(json2, "150", "second-150");
 
-    private void createInitialEmptySnapshotWithSequenceNumbers(ChannelPosition startSequenceNumbers) throws IOException {
-        snapshotWriteService.writeSnapshot(INTEGRATION_TEST_STREAM, startSequenceNumbers, stateRepository);
+        assertMessageDoesNotExist(json2, "151");
+        assertMessageDoesNotExist(json2, "100000");
+
     }
 
     @SuppressWarnings("unchecked")
@@ -155,20 +142,20 @@ public class CompactionAcceptanceTest {
         assertThat(json, hasJsonPath("$.data", hasSize(expectedNumberOfRecords)));
     }
 
-    private void assertUsernameForUserId(LinkedHashMap<String, JSONArray> json, final String userId, String expectedUserName) {
-        JSONArray jsonArray = JsonPath.read(json, "$.data[?(@." + userId + ")]." + userId);
-        assertThat(jsonArray.get(0).toString(), hasJsonPath("$.username", is(expectedUserName)));
+    private void assertMessageForKey(LinkedHashMap<String, JSONArray> json, final String key, String expectedPayload) {
+        JSONArray jsonArray = JsonPath.read(json, "$.data[?(@." + key + ")]." + key);
+        assertThat(jsonArray.get(0).toString(), is(expectedPayload));
     }
 
-    private void assertUserIdDoesNotExist(LinkedHashMap<String, JSONArray> json, final String userId) {
-        JSONArray jsonArray = JsonPath.read(json, "$.data[?(@." + userId + ")]." + userId);
+    private void assertMessageDoesNotExist(LinkedHashMap<String, JSONArray> json, final String key) {
+        JSONArray jsonArray = JsonPath.read(json, "$.data[?(@." + key + ")]." + key);
         assertThat(jsonArray.isEmpty(), is(true));
     }
 
-    private KinesisTestStreamSource writeToStream(String channelName, String fileName) {
-        KinesisTestStreamSource streamSource = new KinesisTestStreamSource(kinesisClient, channelName, fileName);
-        streamSource.writeToStream();
-        return streamSource;
+    private void sendTestMessages(final Range<Integer> messageKeyRange, final String payloadPrefix) throws InterruptedException {
+        ContiguousSet.create(messageKeyRange, DiscreteDomain.integers())
+                .forEach(key -> compactionTestSender.send(message(valueOf(key), payloadPrefix + "-" + key)));
+        sleep(20);
     }
 
     private void deleteSnapshotFilesFromTemp() throws IOException {

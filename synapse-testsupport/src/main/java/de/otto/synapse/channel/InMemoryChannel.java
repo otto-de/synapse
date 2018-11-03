@@ -73,13 +73,7 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
                     final int index = pos.incrementAndGet();
                     final Message<String> receivedMessage = eventQueue.get(index);
                     LOG.info("Received message from channel={} at position={}: message={}", getChannelName(), index, receivedMessage);
-                    final Message<String> interceptedMessage = intercept(
-                            Message.message(
-                                    receivedMessage.getKey(),
-                                    responseHeader(null, now()),
-                                    receivedMessage.getPayload()
-                            )
-                    );
+                    final Message<String> interceptedMessage = intercept(receivedMessage);
                     if (interceptedMessage != null) {
                         getMessageDispatcher().accept(interceptedMessage);
                         shouldStop = !until.isAfter(interceptedMessage.getHeader().getArrivalTimestamp());

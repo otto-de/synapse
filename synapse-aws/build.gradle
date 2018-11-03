@@ -5,12 +5,8 @@ dependencies {
 
     implementation "com.google.guava:guava:23.0"
     implementation "software.amazon.awssdk:s3:${awsSdkPreviewVersion}"
-    implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
-    implementation "software.amazon.awssdk:sqs:${awsSdkPreviewVersion}"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.3"
-    implementation "org.springframework.retry:spring-retry:1.2.1.RELEASE"
 
-    // Use JUnit test framework
+    testImplementation project(':synapse-testsupport')
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
     testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"

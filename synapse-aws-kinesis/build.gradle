@@ -1,23 +1,17 @@
 apply plugin: 'java-library'
 
 dependencies {
+    api project(':synapse-core:')
+    api project(':synapse-aws:')
 
-    implementation project(':synapse-core:')
-
-    // This dependency is used internally, and not exposed to consumers on their own compile classpath.
-    implementation "org.springframework:spring-context:${springVersion}"
-
-    implementation "org.springframework:spring-aop:${springVersion}"
-    implementation "org.aspectj:aspectjweaver:1.8.13"
-
+    implementation "com.google.guava:guava:23.0"
+    implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.3"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.3"
-
-    implementation("net.openhft:chronicle-map:3.14.1") {
-        exclude group: "com.intellij", module: "annotations"
-    }
+    implementation "org.springframework.retry:spring-retry:1.2.1.RELEASE"
 
     // Use JUnit test framework
+    testImplementation "software.amazon.awssdk:s3:${awsSdkPreviewVersion}"
+
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
     testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
@@ -27,6 +21,7 @@ dependencies {
     testImplementation "org.mockito:mockito-core:2.22.0"
     testImplementation "ch.qos.logback:logback-core:1.2.3"
     testImplementation "ch.qos.logback:logback-classic:1.2.3"
+
 }
 
 apply plugin: 'maven'
@@ -57,6 +52,23 @@ artifacts {
     archives sourcesJar
 }
 
+task startKinesisLocalStack(type:Exec) {
+    doFirst {
+        logger.lifecycle("Starting localstack for kinesis")
+    }
+    commandLine "docker", "run", "--name", "localstack_for_kinesis", "-d", "-p", "4567-4583:4567-4583", "localstack/localstack:latest"
+}
+
+task stopKinesisLocalStack(type: Exec) {
+    doFirst {
+        logger.lifecycle("Stopping localstack for kinesis")
+    }
+    commandLine 'docker', 'rm', '-f', 'localstack_for_kinesis'
+}
+
+test.dependsOn(startKinesisLocalStack)
+test.finalizedBy(stopKinesisLocalStack)
+
 uploadArchives {
     repositories {
         mavenDeployer {
@@ -70,9 +82,9 @@ uploadArchives {
             }
 
             pom.project {
-                name 'synapse-testsupport'
+                name 'synapse-aws-kinesis'
                 packaging 'jar'
-                description 'A library used at otto.de to implement Spring Boot based event-sourcing microservices.'
+                description 'Kinesis implementations for message logs in Synapse services.'
                 url 'http://github.com/otto-de/synapse'
 
                 scm {
@@ -113,10 +125,6 @@ uploadArchives {
                     developer {
                         id 'hstruebe'
                         name 'Henning Strueber'
-                    }
-                    developer {
-                        id 'sweiler'
-                        name 'Simon Weiler'
                     }
                 }
             }

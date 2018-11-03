@@ -26,8 +26,6 @@ import static com.google.common.io.ByteStreams.toByteArray;
 import static de.otto.synapse.testsupport.BucketItem.bucketItemBuilder;
 import static org.slf4j.LoggerFactory.getLogger;
 
-// TODO: remove duplicate LocalS3Client + dependency to S3 during tests
-
 public class LocalS3Client implements S3Client {
 
     private static final Logger LOG = getLogger(LocalS3Client.class);
@@ -144,6 +142,6 @@ public class LocalS3Client implements S3Client {
 
     @Override
     public String serviceName() {
-        return "s3";
+        return SERVICE_NAME;
     }
 }
