@@ -15,10 +15,13 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
+import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndpoint implements MessageQueueReceiverEndpoint {
@@ -70,7 +73,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
                 LOG.debug("Sending receiveMessage request...");
                 receiveAndProcess();
             } while (!stopSignal.get());
-        });
+        }, newSingleThreadExecutor());
     }
 
     private void receiveAndProcess() {
@@ -82,7 +85,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
                     .waitTimeSeconds(WAIT_TIME_SECONDS)
                     .build())
                     .thenAccept(this::processResponse)
-                    .get();
+                    .join();
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
             throw new RuntimeException(e);
@@ -139,12 +142,12 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
     private void deleteMessage(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
         try {
             LOG.debug("Deleting message with receiptHandle={}", sqsMessage.receiptHandle());
-            sqsAsyncClient.deleteMessage(
-                    DeleteMessageRequest.builder()
+            sqsAsyncClient
+                    .deleteMessage(DeleteMessageRequest.builder()
                             .queueUrl(queueUrl)
                             .receiptHandle(sqsMessage.receiptHandle())
-                            .build()
-            );
+                            .build())
+                    .join();
         } catch (final RuntimeException e) {
             LOG.error("Error deleting message: " + e.getMessage(), e);
             throw e;

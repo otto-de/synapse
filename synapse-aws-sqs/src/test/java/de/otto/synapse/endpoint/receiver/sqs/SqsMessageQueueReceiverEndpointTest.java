@@ -59,7 +59,7 @@ public class SqsMessageQueueReceiverEndpointTest {
         MockitoAnnotations.initMocks(this);
         when(sqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class)))
                 .thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl(QUEUE_URL).build()));
-
+        when(sqsAsyncClient.deleteMessage(any(DeleteMessageRequest.class))).thenReturn(completedFuture(null));
         sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", new MessageInterceptorRegistry(), sqsAsyncClient, objectMapper, null);
         sqsQueueReceiver.register(MessageConsumer.of(".*", String.class, (message) -> messages.add(message)));
 
