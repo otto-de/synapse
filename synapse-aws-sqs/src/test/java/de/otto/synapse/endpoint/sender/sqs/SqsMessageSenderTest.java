@@ -56,7 +56,7 @@ public class SqsMessageSenderTest {
                 .build()));
 
         // when
-        sqsMessageSender.send(message);
+        sqsMessageSender.send(message).join();
 
         // then
         verify(sqsAsyncClient).sendMessage(requestArgumentCaptor.capture());
@@ -81,7 +81,7 @@ public class SqsMessageSenderTest {
         sqsMessageSender.getInterceptorChain().register((m) -> message(m.getKey(), m.getHeader(), "{\"value\":\"apple\"}"));
 
         // when
-        sqsMessageSender.send(message);
+        sqsMessageSender.send(message).join();
 
         // then
         verify(sqsAsyncClient).sendMessage(requestArgumentCaptor.capture());
@@ -98,7 +98,7 @@ public class SqsMessageSenderTest {
         sqsMessageSender.getInterceptorChain().register((m) -> null);
 
         // when
-        sqsMessageSender.send(message);
+        sqsMessageSender.send(message).join();
 
         // then
         verifyZeroInteractions(sqsAsyncClient);
@@ -175,7 +175,7 @@ public class SqsMessageSenderTest {
                 .build()));
 
         //when
-        sqsMessageSender.send(message("", null));
+        sqsMessageSender.send(message("", null)).join();
 
         //then
         verify(sqsAsyncClient).sendMessage(requestArgumentCaptor.capture());

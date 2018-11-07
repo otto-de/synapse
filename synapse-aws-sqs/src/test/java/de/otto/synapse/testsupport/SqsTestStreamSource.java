@@ -38,6 +38,10 @@ public class SqsTestStreamSource {
                 queueUrl.toString(),
                 new MessageInterceptorRegistry(),
                 new JsonStringMessageTranslator(new ObjectMapper()), sqsAsyncClient, "SqsTestStreamSource");
+        messageSender.getInterceptorChain().register((message) -> {
+            LOG.info("Sent message {}", message.getKey());
+            return message;
+        });
     }
 
     public void writeToStream() {
@@ -53,11 +57,12 @@ public class SqsTestStreamSource {
         }
     }
 
-    protected void processInputStream(final InputStream inputStream) throws IOException, InterruptedException {
+    protected void processInputStream(final InputStream inputStream) throws IOException {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
+            int idx = 0;
             while ((line = br.readLine()) != null) {
-                messageSender.send(Message.message("some-message", line));
+                messageSender.send(Message.message("some-message-" + idx++, line)).join();
             }
         }
     }

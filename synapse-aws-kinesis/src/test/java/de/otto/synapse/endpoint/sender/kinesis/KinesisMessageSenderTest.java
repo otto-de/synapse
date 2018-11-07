@@ -63,7 +63,7 @@ public class KinesisMessageSenderTest {
                 .build()));
 
         // when
-        kinesisMessageSender.send(message);
+        kinesisMessageSender.send(message).join();
 
         // then
         verify(kinesisClient).putRecords(putRecordsRequestCaptor.capture());
@@ -92,7 +92,7 @@ public class KinesisMessageSenderTest {
         kinesisMessageSender.getInterceptorChain().register((m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"apple\"}"));
 
         // when
-        kinesisMessageSender.send(message);
+        kinesisMessageSender.send(message).join();
 
         // then
         verify(kinesisClient).putRecords(putRecordsRequestCaptor.capture());
@@ -210,7 +210,7 @@ public class KinesisMessageSenderTest {
                 .build()));
 
         //when
-        kinesisMessageSender.send(message("someKey", null));
+        kinesisMessageSender.send(message("someKey", null)).join();
 
         //then
         verify(kinesisClient).putRecords(putRecordsRequestCaptor.capture());

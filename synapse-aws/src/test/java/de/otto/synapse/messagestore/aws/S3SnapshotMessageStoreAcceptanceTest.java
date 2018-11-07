@@ -92,7 +92,7 @@ public class S3SnapshotMessageStoreAcceptanceTest {
     }
 
     @Test
-    public void shouldWriteIntoMessageStoreFromStream() throws IOException, InterruptedException {
+    public void shouldWriteIntoMessageStoreFromStream() throws InterruptedException {
         sendTestMessages(Range.closed(1, 10), "first");
 
         //when
@@ -111,7 +111,7 @@ public class S3SnapshotMessageStoreAcceptanceTest {
 
     private void sendTestMessages(final Range<Integer> messageKeyRange, final String payloadPrefix) throws InterruptedException {
         ContiguousSet.create(messageKeyRange, DiscreteDomain.integers())
-                .forEach(key -> compactionTestSender.send(message(valueOf(key), payloadPrefix + "-" + key)));
+                .forEach(key -> compactionTestSender.send(message(valueOf(key), payloadPrefix + "-" + key)).join());
         sleep(20);
     }
 

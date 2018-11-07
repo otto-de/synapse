@@ -65,7 +65,7 @@ public class SqsAcceptanceTest {
     @Test
     public void shouldSendAndReceiveSqsMessage() {
         final String expectedPayload = "some payload: " + LocalDateTime.now();
-        sqsSender.send(message("test-key-shouldSendAndReceiveSqsMessage", expectedPayload));
+        sqsSender.send(message("test-key-shouldSendAndReceiveSqsMessage", expectedPayload)).join();
         await()
                 .atMost(10, SECONDS)
                 .until(() -> lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals("test-key-shouldSendAndReceiveSqsMessage") && expectedPayload.equals(lastSqsMessage.get().getPayload()));

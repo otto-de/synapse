@@ -8,7 +8,7 @@
         </encoder>
     </appender>
 
-    <logger name="de.otto" level="INFO"/>
+    <logger name="de.otto" level="DEBUG"/>
 
     <logger name="software.amazon.awssdk" level="INFO"/>
 

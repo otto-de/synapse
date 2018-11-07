@@ -70,7 +70,7 @@ public class KinesisAcceptanceTest {
     @Test
     public void shouldSendAndReceiveKinesisMessage() {
         final String expectedPayload = "some payload: " + LocalDateTime.now();
-        kinesisSender.send(message("test-key-shouldSendAndReceiveKinesisMessage", expectedPayload));
+        kinesisSender.send(message("test-key-shouldSendAndReceiveKinesisMessage", expectedPayload)).join();
         await()
                 .atMost(10, SECONDS)
                 .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals("test-key-shouldSendAndReceiveKinesisMessage") && expectedPayload.equals(lastEventSourceMessage.get().getPayload()));

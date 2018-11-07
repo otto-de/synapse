@@ -84,7 +84,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
     private KinesisMessageLogReceiverEndpoint kinesisMessageLog;
 
     @Before
-    public void before() throws InterruptedException {
+    public void before() {
         /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
            when initializing it via @EnableEventSource
          */
@@ -180,7 +180,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
     public void consumeDeleteMessagesFromKinesis() throws ExecutionException, InterruptedException {
         // given
         final ChannelPosition startFrom = findCurrentPosition();
-        kinesis.send(message("deletedMessage", null));
+        kinesis.send(message("deletedMessage", null)).join();
 
         // when
         kinesisMessageLog.consumeUntil(
@@ -224,7 +224,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
     private void sendTestMessages(final Range<Integer> messageKeyRange,
                                   final String payloadPrefix) throws InterruptedException {
         ContiguousSet.create(messageKeyRange, DiscreteDomain.integers())
-                .forEach(key -> kinesis.send(message(valueOf(key), payloadPrefix + "-" + key)));
+                .forEach(key -> kinesis.send(message(valueOf(key), payloadPrefix + "-" + key)).join());
         sleep(20);
     }
 

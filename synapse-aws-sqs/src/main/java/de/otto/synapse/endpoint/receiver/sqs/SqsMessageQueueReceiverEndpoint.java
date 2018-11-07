@@ -15,13 +15,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
-import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndpoint implements MessageQueueReceiverEndpoint {
@@ -46,6 +45,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
     private final SqsAsyncClient sqsAsyncClient;
     private final String queueUrl;
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
+    private ExecutorService executorService = Executors.newFixedThreadPool(2);
 
     public SqsMessageQueueReceiverEndpoint(final @Nonnull String channelName,
                                            final @Nonnull MessageInterceptorRegistry interceptorRegistry,
@@ -73,7 +73,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
                 LOG.debug("Sending receiveMessage request...");
                 receiveAndProcess();
             } while (!stopSignal.get());
-        }, newSingleThreadExecutor());
+        }, executorService);
     }
 
     private void receiveAndProcess() {
@@ -84,7 +84,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
                     .messageAttributeNames(".*")
                     .waitTimeSeconds(WAIT_TIME_SECONDS)
                     .build())
-                    .thenAccept(this::processResponse)
+                    .thenAcceptAsync(this::processResponse, executorService)
                     .join();
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
@@ -147,6 +147,15 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
                             .queueUrl(queueUrl)
                             .receiptHandle(sqsMessage.receiptHandle())
                             .build())
+                    .handle((response, throwable) -> {
+                        if (response != null) {
+                            LOG.info("Received DeleteMessageResponse={}", response);
+                            return response;
+                        } else {
+                            LOG.info("Received exception while deleting message: " + throwable.getMessage());
+                            throw new RuntimeException(throwable);
+                        }
+                    })
                     .join();
         } catch (final RuntimeException e) {
             LOG.error("Error deleting message: " + e.getMessage(), e);

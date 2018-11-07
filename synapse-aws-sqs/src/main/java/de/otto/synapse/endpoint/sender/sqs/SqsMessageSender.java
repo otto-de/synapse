@@ -96,7 +96,7 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
                 LOG.error(String.format("Failed to send message %s", message), exception);
             }
             if (result != null) {
-                LOG.debug("Successfully sent message ", result);
+                LOG.debug("Successfully sent message {}", result);
             }
         };
     }

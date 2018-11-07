@@ -12,6 +12,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,6 +31,7 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.slf4j.LoggerFactory.getLogger;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
@@ -39,6 +41,7 @@ import static org.hamcrest.Matchers.notNullValue;
 @DirtiesContext
 public class SqsMessageQueueIntegrationTest {
 
+    private static final Logger LOG = getLogger(SqsMessageQueueIntegrationTest.class);
     private static final int EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET = 10;
 
     @Autowired
@@ -65,6 +68,7 @@ public class SqsMessageQueueIntegrationTest {
          */
         sqsMessageQueue = new SqsMessageQueueReceiverEndpoint(SQS_INTEGRATION_TEST_CHANNEL, messageInterceptorRegistry, sqsAsyncClient, objectMapper, null);
         sqsMessageQueue.register(MessageConsumer.of(".*", String.class, (message) -> {
+            LOG.info("Consumed message {}", message.getKey());
             messages.add(message);
             threads.add(Thread.currentThread().getName());
         }));
@@ -87,10 +91,10 @@ public class SqsMessageQueueIntegrationTest {
                 .atMost(Duration.FIVE_SECONDS)
                 .until(() -> messages.size() >= EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET);
         sqsMessageQueue.stop();
-        assertThat(messages.get(0).getKey(), is("some-message"));
+        assertThat(messages.get(0).getKey(), is("some-message-0"));
         assertThat(messages.get(0).getHeader().getShardPosition(), is(Optional.empty()));
         assertThat(messages.get(0).getHeader().getArrivalTimestamp(), is(notNullValue()));
-        assertThat(messages.get(0).getHeader().getAttribute("synapse_msg_key"), is("some-message"));
+        assertThat(messages.get(0).getHeader().getAttribute("synapse_msg_key"), is("some-message-0"));
         assertThat(messages.get(0).getHeader().getAttribute("synapse_msg_sender"), is("SqsTestStreamSource"));
     }
 
