@@ -45,7 +45,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
     private final SqsAsyncClient sqsAsyncClient;
     private final String queueUrl;
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
-    private ExecutorService executorService = Executors.newFixedThreadPool(2);
+    private ExecutorService executorService = Executors.newFixedThreadPool(1);
 
     public SqsMessageQueueReceiverEndpoint(final @Nonnull String channelName,
                                            final @Nonnull MessageInterceptorRegistry interceptorRegistry,
@@ -84,7 +84,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
                     .messageAttributeNames(".*")
                     .waitTimeSeconds(WAIT_TIME_SECONDS)
                     .build())
-                    .thenAcceptAsync(this::processResponse, executorService)
+                    .thenAccept(this::processResponse)
                     .join();
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
@@ -155,8 +155,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
                             LOG.info("Received exception while deleting message: " + throwable.getMessage());
                             throw new RuntimeException(throwable);
                         }
-                    })
-                    .join();
+                    });
         } catch (final RuntimeException e) {
             LOG.error("Error deleting message: " + e.getMessage(), e);
             throw e;
