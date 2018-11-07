@@ -1,4 +1,4 @@
-package de.otto.synapse.channel;
+package de.otto.synapse.channel.selector;
 
 /**
  * Specifies the implementation used for {@link de.otto.synapse.endpoint.sender.MessageSenderEndpoint message senders}
@@ -22,11 +22,11 @@ package de.otto.synapse.channel;
  * </p>
  * <pre><code>
  * {@literal @}Configuration
- * {@literal @}EnableMessageSenderEndpoint channelName="my-channel", selector={@link Selectors Selectors}.{@link Selectors.MessageQueue MessageQueue.class}
+ * {@literal @}EnableMessageSenderEndpoint channelName="my-channel", selector={@link MessageQueue MessageQueue.class}
  *
  * </code></pre>
- * @see Selectors.MessageLog
- * @see Selectors.MessageQueue
+ * @see MessageLog
+ * @see MessageQueue
  * @see de.otto.synapse.annotation.EnableMessageSenderEndpoint
  */
 public interface Selector {

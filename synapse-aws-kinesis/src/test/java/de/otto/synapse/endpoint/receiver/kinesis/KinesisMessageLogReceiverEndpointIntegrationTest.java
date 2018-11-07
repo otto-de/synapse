@@ -7,7 +7,7 @@ import com.google.common.collect.DiscreteDomain;
 import com.google.common.collect.Range;
 import de.otto.synapse.annotation.EnableMessageSenderEndpoint;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.aws.AwsSelectors;
+import de.otto.synapse.channel.selector.Kinesis;
 import de.otto.synapse.configuration.kinesis.TestMessageInterceptor;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
@@ -60,7 +60,7 @@ import static org.hamcrest.core.IsNot.not;
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
 @SpringBootTest(classes = KinesisMessageLogReceiverEndpointIntegrationTest.class)
-@EnableMessageSenderEndpoint(channelName = KINESIS_INTEGRATION_TEST_CHANNEL, selector = AwsSelectors.Kinesis.class)
+@EnableMessageSenderEndpoint(channelName = KINESIS_INTEGRATION_TEST_CHANNEL, selector = Kinesis.class)
 @DirtiesContext
 public class KinesisMessageLogReceiverEndpointIntegrationTest {
 

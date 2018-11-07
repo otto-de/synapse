@@ -1,6 +1,6 @@
 package de.otto.synapse.annotation;
 
-import de.otto.synapse.channel.Selector;
+import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.endpoint.sender.DelegateMessageSenderEndpoint;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.BeanCreationException;

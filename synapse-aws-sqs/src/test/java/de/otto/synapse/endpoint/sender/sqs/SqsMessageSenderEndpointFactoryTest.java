@@ -1,8 +1,9 @@
 package de.otto.synapse.endpoint.sender.sqs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.channel.Selectors;
-import de.otto.synapse.channel.aws.AwsSelectors;
+import de.otto.synapse.channel.selector.MessageLog;
+import de.otto.synapse.channel.selector.MessageQueue;
+import de.otto.synapse.channel.selector.Sqs;
 import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistration;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
@@ -42,8 +43,8 @@ public class SqsMessageSenderEndpointFactoryTest {
 
         final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, sqsAsyncClient, "test");
 
-        assertThat(factory.matches(Selectors.MessageQueue.class), is(true));
-        assertThat(factory.matches(AwsSelectors.Sqs.class), is(true));
+        assertThat(factory.matches(MessageQueue.class), is(true));
+        assertThat(factory.matches(Sqs.class), is(true));
     }
 
     @Test
@@ -54,8 +55,7 @@ public class SqsMessageSenderEndpointFactoryTest {
 
         final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, sqsAsyncClient, "test");
 
-        assertThat(factory.matches(Selectors.MessageLog.class), is(false));
-        assertThat(factory.matches(AwsSelectors.Kinesis.class), is(false));
+        assertThat(factory.matches(MessageLog.class), is(false));
     }
 
     @Test

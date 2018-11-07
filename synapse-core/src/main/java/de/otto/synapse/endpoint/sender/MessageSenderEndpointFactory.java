@@ -1,6 +1,6 @@
 package de.otto.synapse.endpoint.sender;
 
-import de.otto.synapse.channel.Selector;
+import de.otto.synapse.channel.selector.Selector;
 
 import javax.annotation.Nonnull;
 

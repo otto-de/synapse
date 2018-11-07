@@ -2,7 +2,7 @@ package de.otto.synapse.endpoint.sender;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.InMemoryChannels;
-import de.otto.synapse.channel.Selector;
+import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 

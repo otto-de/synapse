@@ -3,7 +3,7 @@ package de.otto.synapse.acceptance;
 import de.otto.synapse.annotation.EnableMessageQueueReceiverEndpoint;
 import de.otto.synapse.annotation.EnableMessageSenderEndpoint;
 import de.otto.synapse.annotation.MessageQueueConsumer;
-import de.otto.synapse.channel.Selectors.MessageQueue;
+import de.otto.synapse.channel.selector.MessageQueue;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 import org.junit.Before;
