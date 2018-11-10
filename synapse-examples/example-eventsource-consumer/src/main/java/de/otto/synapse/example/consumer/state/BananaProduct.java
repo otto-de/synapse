@@ -5,6 +5,18 @@ public class BananaProduct {
     private final String color;
     private final long price;
 
+    BananaProduct() {
+        this.id = null;
+        this.color = null;
+        this.price = 0;
+    }
+
+    BananaProduct(final String id, final String color, final long price) {
+        this.id = id;
+        this.color = color;
+        this.price = price;
+    }
+
     public String getId() {
         return id;
     }

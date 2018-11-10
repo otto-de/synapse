@@ -1,12 +1,13 @@
 package de.otto.synapse.example.consumer.configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.annotation.EnableEventSource;
 import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.example.consumer.state.BananaProduct;
-import de.otto.synapse.state.ConcurrentHashMapStateRepository;
+import de.otto.synapse.state.ChronicleMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import org.slf4j.Logger;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
@@ -27,8 +28,8 @@ public class ExampleConfiguration implements MessageEndpointConfigurer {
     private static final Logger LOG = getLogger(ExampleConfiguration.class);
 
     @Bean
-    public StateRepository<BananaProduct> bananaProductConcurrentStateRepository() {
-        return new ConcurrentHashMapStateRepository<>();
+    public StateRepository<BananaProduct> bananaProductConcurrentStateRepository(final ObjectMapper objectMapper) {
+        return ChronicleMapStateRepository.builder(BananaProduct.class).withObjectMapper(objectMapper).build();
     }
 
     @Bean

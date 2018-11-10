@@ -17,7 +17,7 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
     private static final double DEFAULT_VALUE_SIZE_BYTES = 512;
     private static final long DEFAULT_ENTRY_COUNT = 1_000_00;
 
-    private ChronicleMapStateRepository(ChronicleMap<String, V> chronicleMap) {
+    private ChronicleMapStateRepository(final ChronicleMap<String, V> chronicleMap) {
         super(chronicleMap);
     }
 
