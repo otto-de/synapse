@@ -3,7 +3,7 @@ package de.otto.synapse.configuration.kinesis;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import de.otto.synapse.configuration.aws.AwsProperties;
-import de.otto.synapse.configuration.aws.SynapseAwsConfiguration;
+import de.otto.synapse.configuration.aws.SynapseAwsAuthConfiguration;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import de.otto.synapse.endpoint.receiver.kinesis.KinesisMessageLogReceiverEndpointFactory;
@@ -27,7 +27,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import static software.amazon.awssdk.core.retry.RetryPolicy.defaultRetryPolicy;
 
 @Configuration
-@Import({SynapseAwsConfiguration.class, SynapseAutoConfiguration.class})
+@Import({SynapseAwsAuthConfiguration.class, SynapseAutoConfiguration.class})
 @EnableConfigurationProperties(AwsProperties.class)
 public class KinesisAutoConfiguration {
 

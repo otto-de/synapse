@@ -3,8 +3,12 @@ apply plugin: 'java-library'
 dependencies {
     api project(':synapse-core:')
 
-    implementation "com.google.guava:guava:23.0"
-    implementation "software.amazon.awssdk:s3:${awsSdkPreviewVersion}"
+    api "com.google.guava:guava:23.0"
+    api "software.amazon.awssdk:auth:${awsSdkVersion}"
+    api "software.amazon.awssdk:core:${awsSdkVersion}"
+    api "software.amazon.awssdk:profiles:${awsSdkVersion}"
+    api "software.amazon.awssdk:regions:${awsSdkVersion}"
+    api "software.amazon.awssdk:utils:${awsSdkVersion}"
 
     testImplementation project(':synapse-testsupport')
     testImplementation 'junit:junit:4.12'
@@ -47,16 +51,6 @@ artifacts {
     archives sourcesJar
 }
 
-task startLocalStack(type:Exec) {
-    commandLine "docker", "run", "--name", "localstack_for_testing", "-d", "-p", "4567-4583:4567-4583", "localstack/localstack:latest"
-}
-task stopLocalStack(type: Exec) {
-    commandLine 'docker', 'rm', '-f', 'localstack_for_testing'
-}
-
-test.dependsOn(startLocalStack)
-test.finalizedBy(stopLocalStack)
-
 uploadArchives {
     repositories {
         mavenDeployer {
@@ -70,9 +64,9 @@ uploadArchives {
             }
 
             pom.project {
-                name 'synapse-aws'
+                name 'synapse-aws-auth'
                 packaging 'jar'
-                description 'A library used at otto.de to implement Spring Boot based event-sourcing microserivces.'
+                description 'AWS authentication for Synapse'
                 url 'http://github.com/otto-de/synapse'
 
                 scm {

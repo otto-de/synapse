@@ -2,7 +2,7 @@ apply plugin: 'java-library'
 
 dependencies {
     api project(':synapse-core:')
-    api project(':synapse-aws:')
+    api project(':synapse-aws-auth:')
 
     implementation "com.google.guava:guava:23.0"
     implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
@@ -10,6 +10,7 @@ dependencies {
     implementation "org.springframework.retry:spring-retry:1.2.1.RELEASE"
 
     // Use JUnit test framework
+    testImplementation project(':synapse-compaction-aws-s3')
     testImplementation "software.amazon.awssdk:s3:${awsSdkPreviewVersion}"
 
     testImplementation 'junit:junit:4.12'

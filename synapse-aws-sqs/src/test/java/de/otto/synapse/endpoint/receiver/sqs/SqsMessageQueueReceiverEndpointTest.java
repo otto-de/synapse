@@ -67,7 +67,11 @@ public class SqsMessageQueueReceiverEndpointTest {
 
     @After
     public void after() {
-        sqsQueueReceiver.stop();
+        try {
+            sqsQueueReceiver.stop();
+        } catch (final Exception e) {
+            // ignore
+        }
     }
 
     @Test(expected = RuntimeException.class)

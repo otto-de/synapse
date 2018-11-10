@@ -8,26 +8,28 @@ import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
+import software.amazon.awssdk.awscore.AwsRequestOverrideConfiguration;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
+import static java.util.concurrent.Executors.newFixedThreadPool;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndpoint implements MessageQueueReceiverEndpoint {
 
     private static final Logger LOG = getLogger(SqsMessageQueueReceiverEndpoint.class);
 
-    // TODO: should be configurable!
+    // TODO: Timeouts etc. should be configurable!
 
     /**
      * The visibility timeout should be high enough to process the message, otherwise messages
@@ -37,7 +39,14 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
     /**
      * Duration for long-polling calls to the SQS service
      */
-    private static final int WAIT_TIME_SECONDS = 10;
+    private static final int WAIT_TIME_SECONDS = 2;
+    /**
+     * Duration to wait during stop(), until the receiver thread has to stop.
+     *
+     * Should be greater than WAIT_TIME_SECONDS
+     */
+    private static final int STOP_TIMEOUT_SECONDS = 3;
+
     private static final MessageAttributeValue EMPTY_STRING_ATTR = MessageAttributeValue.builder().dataType("String").stringValue("").build();
     private static final String MSG_KEY_ATTR = "synapse_msg_key";
 
@@ -45,7 +54,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
     private final SqsAsyncClient sqsAsyncClient;
     private final String queueUrl;
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
-    private ExecutorService executorService = Executors.newFixedThreadPool(1);
+    private final CompletableFuture<Void> stopped = new CompletableFuture<>();
 
     public SqsMessageQueueReceiverEndpoint(final @Nonnull String channelName,
                                            final @Nonnull MessageInterceptorRegistry interceptorRegistry,
@@ -58,10 +67,12 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
             this.queueUrl = sqsAsyncClient.getQueueUrl(GetQueueUrlRequest
                     .builder()
                     .queueName(channelName)
+                    .overrideConfiguration(AwsRequestOverrideConfiguration.builder().apiCallAttemptTimeout(Duration.ofMillis(2000)).build())
                     .build())
                     .get()
                     .queueUrl();
         } catch (Exception e) {
+            stopped.complete(null);
             throw new RuntimeException(e.getMessage(), e);
         }
     }
@@ -69,15 +80,19 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
     @Override
     public CompletableFuture<Void> consume() {
         return CompletableFuture.runAsync(() -> {
-            do {
-                LOG.debug("Sending receiveMessage request...");
-                receiveAndProcess();
-            } while (!stopSignal.get());
-        }, executorService);
+            try {
+                do {
+                    receiveAndProcess();
+                } while (!stopSignal.get());
+            } finally {
+                stopped.complete(null);
+            }
+        }, newFixedThreadPool(2));
     }
 
     private void receiveAndProcess() {
         try {
+            LOG.debug("Sending receiveMessage request...");
             sqsAsyncClient.receiveMessage(ReceiveMessageRequest.builder()
                     .queueUrl(queueUrl)
                     .visibilityTimeout(VISIBILITY_TIMEOUT)
@@ -169,6 +184,13 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
     public void stop() {
         LOG.info("Channel {} received stop signal.", getChannelName());
         stopSignal.set(true);
+        try {
+            stopped
+                    .thenAccept((v) -> LOG.info("SQS channel {} has been stopped", getChannelName()))
+                    .get(STOP_TIMEOUT_SECONDS, SECONDS);
+        } catch (final Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
     }
 
 }

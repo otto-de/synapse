@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.configuration.sqs.TestSqsMessageInterceptor;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.endpoint.SqsClientHelper;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.SqsTestStreamSource;
 import org.awaitility.Duration;
@@ -73,7 +72,6 @@ public class SqsMessageQueueIntegrationTest {
             messages.add(message);
             threads.add(Thread.currentThread().getName());
         }));
-        new SqsClientHelper(sqsAsyncClient).purgeQueue(SQS_INTEGRATION_TEST_CHANNEL);
     }
 
     @After

@@ -19,7 +19,6 @@ repositories {
 ext['jackson.version'] = "2.9.3"
 
 dependencies {
-    compile project(':synapse-aws:')
     compile project(':synapse-core:')
     compile "software.amazon.awssdk:sqs:${awsSdkPreviewVersion}"
 

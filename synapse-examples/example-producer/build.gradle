@@ -19,7 +19,6 @@ repositories {
 ext['jackson.version'] = "2.9.3"
 
 dependencies {
-    implementation project(':synapse-aws:')
     implementation project(':synapse-core:')
     implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
     implementation 'org.springframework.security:spring-security-core:4.2.3.RELEASE'

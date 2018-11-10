@@ -19,7 +19,6 @@ repositories {
 ext['jackson.version'] = "2.9.3"
 
 dependencies {
-    compile project(':synapse-aws:')
     compile project(':synapse-core:')
     compile project(':synapse-edison:')
     compile "software.amazon.awssdk:kinesis:${awsSdkVersion}"
@@ -38,7 +37,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testImplementation "org.springframework.boot:spring-boot-test"
     testImplementation "org.springframework:spring-test:4.3.12.RELEASE"
-    testImplementation "org.awaitility:awaitility:3.0.0"
+    testImplementation "org.awaitility:awaitility:3.1.1"
 }
 
 // Define the main class for the application

@@ -8,10 +8,8 @@ import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
-import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.zip.ZipInputStream;
 

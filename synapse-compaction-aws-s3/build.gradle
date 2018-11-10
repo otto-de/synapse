@@ -5,9 +5,9 @@ dependencies {
     api project(':synapse-aws-auth:')
 
     implementation "com.google.guava:guava:23.0"
-    implementation "software.amazon.awssdk:sqs:${awsSdkPreviewVersion}"
+    implementation "software.amazon.awssdk:s3:${awsSdkPreviewVersion}"
 
-    // Use JUnit test framework
+    testImplementation project(':synapse-testsupport')
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
     testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
@@ -48,15 +48,15 @@ artifacts {
     archives sourcesJar
 }
 
-task startSqsLocalStack(type:Exec) {
-    commandLine "docker", "run", "--name", "localstack_for_sqs", "-d", "-p", "4567-4583:4567-4583", "localstack/localstack:latest"
+task startS3LocalStack(type:Exec) {
+    commandLine "docker", "run", "--name", "localstack_for_s3", "-d", "-p", "4567-4583:4567-4583", "localstack/localstack:latest"
 }
-task stopSqsLocalStack(type: Exec) {
-    commandLine 'docker', 'rm', '-f', 'localstack_for_sqs'
+task stopS3LocalStack(type: Exec) {
+    commandLine 'docker', 'rm', '-f', 'localstack_for_s3'
 }
 
-test.dependsOn(startSqsLocalStack)
-test.finalizedBy(stopSqsLocalStack)
+test.dependsOn(startS3LocalStack)
+test.finalizedBy(stopS3LocalStack)
 
 uploadArchives {
     repositories {
@@ -71,9 +71,9 @@ uploadArchives {
             }
 
             pom.project {
-                name 'synapse-aws-sqs'
+                name 'synapse-compaction-aws-s3'
                 packaging 'jar'
-                description 'SQS implementations for message queues in Synapse services.'
+                description 'S3 implementation of Synapse compaction.'
                 url 'http://github.com/otto-de/synapse'
 
                 scm {

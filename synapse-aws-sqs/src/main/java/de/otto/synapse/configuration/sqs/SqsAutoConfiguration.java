@@ -3,10 +3,9 @@ package de.otto.synapse.configuration.sqs;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import de.otto.synapse.configuration.aws.AwsProperties;
-import de.otto.synapse.configuration.aws.SynapseAwsConfiguration;
+import de.otto.synapse.configuration.aws.SynapseAwsAuthConfiguration;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpointFactory;
-import de.otto.synapse.endpoint.receiver.sqs.SqsMessageQueueReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.sqs.SqsMessageQueueReceiverEndpointFactory;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.endpoint.sender.sqs.SqsMessageSenderEndpointFactory;
@@ -23,7 +22,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 @Configuration
-@Import({SynapseAwsConfiguration.class, SynapseAutoConfiguration.class})
+@Import({SynapseAwsAuthConfiguration.class, SynapseAutoConfiguration.class})
 @EnableConfigurationProperties(AwsProperties.class)
 public class SqsAutoConfiguration {
 

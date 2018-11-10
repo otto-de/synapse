@@ -10,12 +10,12 @@ import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import static de.otto.synapse.endpoint.sender.sqs.SqsMessageSender.MSG_KEY_ATTR;
 import static java.time.Instant.now;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
+import static java.util.stream.Collectors.toList;
 
 /**
  * A helper used to write tests for SQS senders or publishers. Not really recommended for production code.
@@ -48,7 +48,7 @@ public class SqsClientHelper {
     public List<URL> getQueueUrls() {
         try {
             final ListQueuesResponse queuesResponse = sqsAsyncClient.listQueues().get();
-            return queuesResponse.queueUrls().stream().map(this::toUrl).collect(Collectors.toList());
+            return queuesResponse.queueUrls().stream().map(this::toUrl).collect(toList());
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -72,35 +72,6 @@ public class SqsClientHelper {
                         .createQueue(CreateQueueRequest.builder()
                                 .queueName(channelName)
                                 .build()).get();
-            }
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
-
-    public void purgeQueue(final String channelName) {
-        try {
-            if (doesChannelExist(channelName)) {
-                final URL channelUrl = getQueueUrl(channelName);
-                sqsAsyncClient.purgeQueue(PurgeQueueRequest
-                        .builder()
-                        .queueUrl(channelUrl.toString())
-                        .build())
-                        .get();
-            }
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e.getMessage(), e);
-        }
-    }
-
-    public void purgeQueue(final URL channelUrl) {
-        try {
-            if (doesChannelExist(channelUrl)) {
-                sqsAsyncClient.purgeQueue(PurgeQueueRequest
-                        .builder()
-                        .queueUrl(channelUrl.toString())
-                        .build())
-                        .get();
             }
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e.getMessage(), e);

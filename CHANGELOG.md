@@ -1,6 +1,8 @@
 # Release Notes
 
 ## 0.11.0
+* Introduced new module `synapse-aws-auth` containing the configuration of an AwsCredentialsProvider.
+* Introduced new module `synapse-compaction-aws-s3` for message compaction using AWS S3.
 * Introduced new module `synapse-aws-sqs` for SQS message queues.
 * Introduced new module `synapse-aws-kinesis` for Kinesis message logs.
 * Updates from old synchronous KinesisClient to new KinesisAsyncClient.
@@ -8,7 +10,6 @@
 * Adds possibility to configure a RetryPolicy for Kinesis.
 * Moved annotations etc. from `de.otto.synapse.annotation.messagequeue` to `de.otto.synapse.annotation`.
 * Updates 3rd-party dependencies:
-    - awsSdkVersion = "2.0.6" (except SQS and S3 as these are not yet available)
     - springVersion = "4.3.20.RELEASE"
     - springBootVersion = "1.5.17.RELEASE"
     - edisonVersion = "1.2.30"
