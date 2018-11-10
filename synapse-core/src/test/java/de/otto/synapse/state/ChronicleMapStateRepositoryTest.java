@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static de.otto.synapse.state.ChronicleMapStateRepository.chronicleMapConcurrentMapStateRepositoryBuilder;
+import static de.otto.synapse.state.ChronicleMapStateRepository.builder;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -18,7 +18,7 @@ public class ChronicleMapStateRepositoryTest {
     @Test
     public void shouldRetrieveValueAfterPut() {
         // given
-        ChronicleMapStateRepository<SomePojo> repository = chronicleMapConcurrentMapStateRepositoryBuilder(SomePojo.class).build();
+        ChronicleMapStateRepository<SomePojo> repository = builder(SomePojo.class).build();
         // when
         repository.put("someKey", new SomePojo("A", 1));
         Optional<SomePojo> result = repository.get("someKey");
@@ -30,7 +30,7 @@ public class ChronicleMapStateRepositoryTest {
     @Test
     public void shouldReturnOptionalEmptyForUnknownKey() {
         // given
-        ChronicleMapStateRepository<SomePojo> repository = chronicleMapConcurrentMapStateRepositoryBuilder(SomePojo.class).build();
+        ChronicleMapStateRepository<SomePojo> repository = builder(SomePojo.class).build();
         // when
         Optional<SomePojo> result = repository.get("someUnknownKey");
         // then
@@ -40,7 +40,7 @@ public class ChronicleMapStateRepositoryTest {
     @Test
     public void shouldReturnOptionalEmptyForRemovedEntry() {
         // given
-        ChronicleMapStateRepository<SomePojo> repository = chronicleMapConcurrentMapStateRepositoryBuilder(SomePojo.class).build();
+        ChronicleMapStateRepository<SomePojo> repository = builder(SomePojo.class).build();
         repository.put("someKey", new SomePojo("A", 1));
         // when
         repository.remove("someKey");
@@ -52,7 +52,7 @@ public class ChronicleMapStateRepositoryTest {
     @Test
     public void shouldReturnCorrectEntrySize() {
         // given
-        ChronicleMapStateRepository<SomePojo> repository = chronicleMapConcurrentMapStateRepositoryBuilder(SomePojo.class).build();
+        ChronicleMapStateRepository<SomePojo> repository = builder(SomePojo.class).build();
         repository.put("someKeyA", new SomePojo("A", 1));
         repository.put("someKeyB", new SomePojo("B", 2));
         repository.put("someKeyC", new SomePojo("C", 3));
@@ -65,7 +65,7 @@ public class ChronicleMapStateRepositoryTest {
     @Test
     public void shouldIterateOverKeySet() {
         // given
-        ChronicleMapStateRepository<SomePojo> repository = chronicleMapConcurrentMapStateRepositoryBuilder(SomePojo.class).build();
+        ChronicleMapStateRepository<SomePojo> repository = builder(SomePojo.class).build();
         repository.put("someKeyA", new SomePojo("A", 1));
         repository.put("someKeyB", new SomePojo("B", 2));
         repository.put("someKeyC", new SomePojo("C", 3));
