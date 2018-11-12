@@ -40,6 +40,7 @@ public class NonCompactingMessageStoreTest {
     @Parameter
     public Supplier<WritableMessageStore> messageStoreBuilder;
 
+    @SuppressWarnings("Duplicates")
     @Test
     public void shouldCalculateUncompactedChannelPositions() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();

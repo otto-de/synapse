@@ -24,7 +24,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 /**
- * Tests specific for all compacting MessageStore implementations
+ * Tests specific for all RingBufferMessageStore implementations
  */
 @RunWith(Parameterized.class)
 public class RingBufferMessageStoreTest {
@@ -62,6 +62,7 @@ public class RingBufferMessageStoreTest {
         });
     }
 
+    @SuppressWarnings("Duplicates")
     @Test
     public void shouldCalculateMultiShardedChannelPosition() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
@@ -92,6 +93,7 @@ public class RingBufferMessageStoreTest {
         assertThat(messageStore.size(), is(100));
     }
 
+    @SuppressWarnings("Duplicates")
     @Test
     public void shouldCalculateChannelPosition() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();

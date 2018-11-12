@@ -14,7 +14,8 @@
     - springVersion = "4.3.20.RELEASE"
     - springBootVersion = "1.5.17.RELEASE"
     - edisonVersion = "1.2.30"
- 
+* Adds new module 'synapse-redis' containing a preliminary version of a RedisMessageStore
+
 ## 0.10.0
 * Updates to aws-java-sdk-preview-12
 * Fixes naming of ```MessageQueueReceiverEndpoint``` beans using ```@EnableMessageQueueReceiverEndpoint``` annotations

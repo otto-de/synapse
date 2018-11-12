@@ -29,7 +29,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 /**
- * Tests that must be successful for all MessageStore implementations
+ * Tests that must be successful for all WritableMessageStore implementations
  */
 @RunWith(Parameterized.class)
 public class WritableMessageStoreTest {
@@ -47,6 +47,7 @@ public class WritableMessageStoreTest {
     @Parameter
     public Supplier<WritableMessageStore> messageStoreBuilder;
 
+    @SuppressWarnings("Duplicates")
     @Test
     public void shouldAddMessagesWithoutHeaders() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
@@ -62,6 +63,7 @@ public class WritableMessageStoreTest {
         assertThat(messageStore.size(), is(10));
     }
 
+    @SuppressWarnings("Duplicates")
     @Test
     public void shouldKeepInsertionOrderOfMessages() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
