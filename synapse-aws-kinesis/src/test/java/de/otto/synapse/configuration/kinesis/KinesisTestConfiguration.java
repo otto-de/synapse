@@ -2,6 +2,7 @@ package de.otto.synapse.configuration.kinesis;
 
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.testsupport.LocalS3Client;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +15,8 @@ import software.amazon.awssdk.http.Protocol;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 
 import java.net.URI;
 
@@ -28,6 +31,7 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
 
     public static final int EXPECTED_NUMBER_OF_SHARDS = 2;
     public static final String KINESIS_INTEGRATION_TEST_CHANNEL = "kinesis-ml-test-channel";
+    private static final String INTEGRATION_TEST_SNAPSHOT_BUCKET = "de-otto-integrationtest-snapshots";
 
     @Override
     public void configureMessageInterceptors(final MessageInterceptorRegistry registry) {
@@ -72,6 +76,13 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
         }
         createChannelIfNotExists(kinesisClient, KINESIS_INTEGRATION_TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
         return kinesisClient;
+    }
+
+    @Bean
+    public S3Client fakeS3Client() {
+        final LocalS3Client localS3Client = new LocalS3Client();
+        localS3Client.createBucket(CreateBucketRequest.builder().bucket(INTEGRATION_TEST_SNAPSHOT_BUCKET).build());
+        return localS3Client;
     }
 
 }

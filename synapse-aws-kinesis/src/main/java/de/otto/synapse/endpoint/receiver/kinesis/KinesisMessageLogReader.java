@@ -190,7 +190,9 @@ public class KinesisMessageLogReader {
 
     public void stop() {
         LOG.info("Channel {} received stop signal.", getChannelName());
-        this.kinesisShardReaders.forEach(KinesisShardReader::stop);
+        if (kinesisShardReaders != null) {
+            kinesisShardReaders.forEach(KinesisShardReader::stop);
+        }
     }
 
     @VisibleForTesting
