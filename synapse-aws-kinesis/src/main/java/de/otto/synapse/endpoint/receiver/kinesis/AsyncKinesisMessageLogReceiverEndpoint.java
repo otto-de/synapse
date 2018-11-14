@@ -53,20 +53,17 @@ public class AsyncKinesisMessageLogReceiverEndpoint extends AbstractMessageLogRe
                             .build();
                     SubscribeToShardResponseHandler responseHandler = SubscribeToShardResponseHandler
                             .builder()
-                            .onError(t ->
-                                    LOG.error("Error received during SubscribeToShard - " + t.getMessage()))
-                            .subscriber(e -> {
-                                e.accept(SubscribeToShardResponseHandler.Visitor.builder().onSubscribeToShardEvent((event) -> {
-                                    LOG.info("Received event - " + e);
-                                    event.records().forEach(record -> {
-                                        Message<String> message = KinesisMessage.kinesisMessage(shardInfo.getShardName(), record);
-                                        getMessageDispatcher().accept(message);
-                                    });
-                                }).build());
-
-                            })
+                            .onError(t -> LOG.error("Error received during SubscribeToShard - {}", t.getMessage()))
+                            .subscriber(e -> e.accept(SubscribeToShardResponseHandler.Visitor.builder()
+                                    .onSubscribeToShardEvent(event -> {
+                                        LOG.info("Received event - {}", e);
+                                        event.records().forEach(record -> {
+                                            Message<String> message = KinesisMessage.kinesisMessage(shardInfo.getShardName(), record);
+                                            getMessageDispatcher().accept(message);
+                                        });
+                                    }).build()))
                             .build();
-                    LOG.info("Subscribing to shard " + shardInfo.getShardName());
+                    LOG.info("Subscribing to shard {}", shardInfo.getShardName());
                     kinesisAsyncClient.subscribeToShard(request, responseHandler);
                     LOG.info("Waiting after SubscribeToShard {} to become available again...", shardInfo.getShardName());
                     try {
@@ -95,7 +92,6 @@ public class AsyncKinesisMessageLogReceiverEndpoint extends AbstractMessageLogRe
 
 
         // TODO: fetch consumerName from somewhere...
-
 
 
         LOG.info("Registering consumer at stream ARN {}", streamARN);

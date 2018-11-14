@@ -96,7 +96,7 @@ public class SnapshotReadServiceTest {
         //given
         final S3Object obj1 = mock(S3Object.class);
         when(obj1.key()).thenReturn("compaction-test-snapshot-1.json.zip");
-        when(obj1.size()).thenReturn(123L);
+        when(obj1.size()).thenReturn(123);
         when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder().keyCount(1).contents(obj1).build());
         when(s3Client.getObject(any(GetObjectRequest.class), any(Path.class))).thenThrow(NoSuchKeyException.class);
 
@@ -112,7 +112,7 @@ public class SnapshotReadServiceTest {
         // given
         S3Object obj = S3Object.builder()
                 .key("compaction-testStream-snapshot-1.json.zip")
-                .size(0L)
+                .size(0)
                 .build();
         when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder().keyCount(1).contents(obj).build());
 

@@ -1,6 +1,7 @@
 package de.otto.synapse.testsupport;
 
 import org.slf4j.Logger;
+import shaded.org.apache.commons.io.FileUtils;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -22,7 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.google.common.io.ByteStreams.toByteArray;
 import static de.otto.synapse.testsupport.BucketItem.bucketItemBuilder;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -44,7 +44,7 @@ public class LocalS3Client implements S3Client {
                 .stream()
                 .map(bucketItem -> S3Object.builder()
                         .key(bucketItem.getName())
-                        .size((long) bucketItem.getData().length)
+                        .size((int) bucketItem.getData().contentLength())
                         .lastModified(bucketItem.getLastModified())
                         .build())
                 .collect(Collectors.toList());
@@ -64,17 +64,13 @@ public class LocalS3Client implements S3Client {
     @Override
     public PutObjectResponse putObject(final PutObjectRequest putObjectRequest,
                                        final RequestBody requestBody) throws S3Exception {
-        try {
-            bucketsWithContents.get(putObjectRequest.bucket()).put(putObjectRequest.key(),
-                    bucketItemBuilder()
-                            .withName(putObjectRequest.key())
-                            .withData(toByteArray(requestBody.asStream()))
-                            .withLastModifiedNow()
-                            .build());
-            return PutObjectResponse.builder().build();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        bucketsWithContents.get(putObjectRequest.bucket()).put(putObjectRequest.key(),
+                bucketItemBuilder()
+                        .withName(putObjectRequest.key())
+                        .withData(requestBody)
+                        .withLastModifiedNow()
+                        .build());
+        return PutObjectResponse.builder().build();
     }
 
     @Override
@@ -105,7 +101,7 @@ public class LocalS3Client implements S3Client {
         final BucketItem bucketItem = bucketItemMap.get(getObjectRequest.key());
 
         try {
-            Files.write(filePath, bucketItem.getData());
+            FileUtils.copyInputStreamToFile(bucketItem.getData().contentStreamProvider().newStream(), filePath.toFile());
         } catch (IOException e) {
             throw SdkClientException.create("", e);
         }
@@ -130,8 +126,9 @@ public class LocalS3Client implements S3Client {
         final Constructor<AbortableInputStream> constructor = AbortableInputStream.class.getDeclaredConstructor(InputStream.class, Abortable.class);
         constructor.setAccessible(true);
         return constructor.newInstance(
-                new ByteArrayInputStream(bucketItem.getData()),
-                (Abortable) () -> {}
+                bucketItem.getData().contentStreamProvider().newStream(),
+                (Abortable) () -> {
+                }
         );
     }
 

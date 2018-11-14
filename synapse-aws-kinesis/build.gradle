@@ -8,6 +8,7 @@ dependencies {
     implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.3"
     implementation "org.springframework.retry:spring-retry:1.2.1.RELEASE"
+    implementation('software.amazon.kinesis:amazon-kinesis-client:2.0.5-OTTO')
 
     // Use JUnit test framework
     testImplementation project(':synapse-compaction-aws-s3')

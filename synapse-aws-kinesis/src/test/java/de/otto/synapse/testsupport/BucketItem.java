@@ -1,13 +1,14 @@
 package de.otto.synapse.testsupport;
 
+import software.amazon.awssdk.core.sync.RequestBody;
+
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Objects;
 
 public class BucketItem {
 
     private final String name;
-    private final byte[] data;
+    private final RequestBody data;
 
     private final Instant lastModified;
 
@@ -15,7 +16,7 @@ public class BucketItem {
         return name;
     }
 
-    public byte[] getData() {
+    public RequestBody getData() {
         return data;
     }
 
@@ -39,7 +40,7 @@ public class BucketItem {
         if (o == null || getClass() != o.getClass()) return false;
         BucketItem that = (BucketItem) o;
         return Objects.equals(name, that.name) &&
-                Arrays.equals(data, that.data);
+                Objects.equals(data, that.data);
     }
 
     @Override
@@ -57,7 +58,7 @@ public class BucketItem {
 
     public static final class Builder {
         private String name;
-        private byte[] data;
+        private RequestBody data;
         private Instant lastModified;
 
         private Builder() {
@@ -68,7 +69,7 @@ public class BucketItem {
             return this;
         }
 
-        public Builder withData(byte[] val) {
+        public Builder withData(RequestBody val) {
             data = val;
             return this;
         }

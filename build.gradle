@@ -11,8 +11,8 @@ buildscript {
 
 ext {
     //awsSdkVersion = "2.0.6"
-    awsSdkVersion = "2.0.0-preview-12"
-    awsSdkPreviewVersion = "2.0.0-preview-12"
+    awsSdkVersion = "2.0.0-preview-13"
+    awsSdkPreviewVersion = "2.0.0-preview-13"
     springVersion = "4.3.20.RELEASE"
     springBootVersion = "1.5.17.RELEASE"
     edisonVersion = "1.2.30"
