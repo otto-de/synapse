@@ -1,23 +1,18 @@
 package de.otto.synapse.endpoint.sender.kinesis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.channel.selector.Kinesis;
+import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
-import org.slf4j.Logger;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
 import javax.annotation.Nonnull;
 
-import static org.slf4j.LoggerFactory.getLogger;
-
 public class KinesisMessageSenderEndpointFactory implements MessageSenderEndpointFactory {
-
-    private static final Logger LOG = getLogger(KinesisMessageSenderEndpointFactory.class);
 
     private final MessageInterceptorRegistry registry;
     private final MessageTranslator<String> messageTranslator;
