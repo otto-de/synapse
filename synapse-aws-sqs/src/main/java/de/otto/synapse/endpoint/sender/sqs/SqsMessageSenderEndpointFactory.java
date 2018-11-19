@@ -33,7 +33,7 @@ public class SqsMessageSenderEndpointFactory implements MessageSenderEndpointFac
     @Override
     public MessageSenderEndpoint create(final @Nonnull String channelName) {
         try {
-            return new SqsMessageSender(channelName, urlOf(channelName), registry, messageTranslator, sqsAsyncClient, messageSenderName);
+            return new SqsMessageSender(channelName, urlOf(channelName), registry, messageTranslator, sqsAsyncClient);
         } catch (Exception e) {
             throw new RuntimeException("Failed to get queueUrl for channel=" + channelName + ": " + e.getMessage(), e);
         }

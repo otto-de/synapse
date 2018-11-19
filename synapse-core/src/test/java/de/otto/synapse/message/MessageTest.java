@@ -13,7 +13,7 @@ import static org.hamcrest.Matchers.is;
 public class MessageTest {
 
     @Test
-    public void shouldBuildEventWithHeader() {
+    public void shouldBuildMessageWithHeader() {
         final Instant now = Instant.now();
         final Message<String> message = message(
                 "42",
@@ -28,7 +28,7 @@ public class MessageTest {
     }
 
     @Test
-    public void shouldBuildEventWithoutHeader() {
+    public void shouldBuildMessageWithoutHeader() {
         final Instant now = Instant.now();
         final Message<String> message = message(
                 "42",

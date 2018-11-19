@@ -44,7 +44,7 @@ public class SqsTestStreamSource {
                 channelName,
                 queueUrl.toString(),
                 interceptorRegistry,
-                new JsonStringMessageTranslator(new ObjectMapper()), sqsAsyncClient, "SqsTestStreamSource");
+                new JsonStringMessageTranslator(new ObjectMapper()), sqsAsyncClient);
     }
 
     public void writeToStream() {

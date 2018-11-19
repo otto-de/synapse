@@ -1,6 +1,9 @@
 package de.otto.synapse.channel;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.Objects;
@@ -58,21 +61,26 @@ public final class ShardPosition implements Serializable {
         return new ShardPosition(shardName, timestamp);
     }
 
+    @Nonnull
+    @JsonProperty
     public String shardName() {
         return shardName;
     }
 
-    @Nonnull
+    @Nullable
+    @JsonProperty
     public String position() {
         return position;
     }
 
-    @Nonnull
+    @Nullable
+    @JsonProperty
     public Instant timestamp() {
         return timestamp;
     }
 
     @Nonnull
+    @JsonProperty
     public StartFrom startFrom() {
         return startFrom;
     }

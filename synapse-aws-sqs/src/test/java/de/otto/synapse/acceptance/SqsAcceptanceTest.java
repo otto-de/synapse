@@ -1,10 +1,12 @@
 package de.otto.synapse.acceptance;
 
+import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.annotation.EnableMessageQueueReceiverEndpoint;
 import de.otto.synapse.annotation.EnableMessageSenderEndpoint;
 import de.otto.synapse.annotation.MessageQueueConsumer;
 import de.otto.synapse.channel.selector.MessageQueue;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
+import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,9 +24,14 @@ import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static de.otto.synapse.configuration.sqs.SqsTestConfiguration.SQS_INTEGRATION_TEST_CHANNEL;
+import static de.otto.synapse.endpoint.DefaultSenderHeadersInterceptor.*;
+import static de.otto.synapse.message.Header.requestHeader;
 import static de.otto.synapse.message.Message.message;
+import static java.time.Instant.ofEpochSecond;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @RunWith(SpringRunner.class)
@@ -69,5 +76,45 @@ public class SqsAcceptanceTest {
         await()
                 .atMost(10, SECONDS)
                 .until(() -> lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals("test-key-shouldSendAndReceiveSqsMessage") && expectedPayload.equals(lastSqsMessage.get().getPayload()));
+    }
+
+    @Test
+    public void shouldSendAndReceiveDefaultSqsMessageHeaders() {
+        sqsSender.send(
+                message(
+                        "test-key-shouldSendAndReceiveDefaultSqsMessageHeaders",
+                        ""))
+                .join();
+
+        await()
+                .atMost(10, SECONDS)
+                .until(() -> lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals("test-key-shouldSendAndReceiveDefaultSqsMessageHeaders"));
+
+        final ImmutableMap<String, String> attributes = lastSqsMessage.get().getHeader().getAttributes();
+        assertThat(attributes, hasEntry(equalTo(MSG_ID_ATTR), not(isEmptyOrNullString())));
+        assertThat(attributes, hasEntry(equalTo(MSG_TIMESTAMP_ATTR), not(isEmptyOrNullString())));
+        assertThat(attributes, hasEntry(MSG_SENDER_ATTR, "Synapse"));
+    }
+
+    @Test
+    public void shouldSendAndReceiveCustomSqsMessageHeaders() {
+        final Header header = requestHeader(ImmutableMap.of(
+                "string", "some value",
+                "timestamp", ofEpochSecond(42).toString())
+        );
+        sqsSender.send(
+                message(
+                        "test-key-shouldSendAndReceiveCustomSqsMessageHeaders",
+                        header,
+                        ""))
+                .join();
+
+        await()
+                .atMost(10, SECONDS)
+                .until(() -> lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals("test-key-shouldSendAndReceiveCustomSqsMessageHeaders"));
+
+        final ImmutableMap<String, String> attributes = lastSqsMessage.get().getHeader().getAttributes();
+        assertThat(attributes, hasEntry("string", "some value"));
+        assertThat(attributes, hasEntry("timestamp", "1970-01-01T00:00:42Z"));
     }
 }

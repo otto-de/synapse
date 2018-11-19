@@ -16,7 +16,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
-import static com.google.common.collect.ImmutableMap.of;
 import static java.lang.String.valueOf;
 import static java.util.stream.Collectors.toList;
 
@@ -25,22 +24,18 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
     private static final Logger LOG = LoggerFactory.getLogger(SqsMessageSender.class);
 
     public static final String MSG_KEY_ATTR = "synapse_msg_key";
-    public static final String MSG_SENDER_ATTR = "synapse_msg_sender";
 
     private final String queueUrl;
-    private final String messageSender;
     private final SqsAsyncClient sqsAsyncClient;
 
     public SqsMessageSender(final String channelName,
                             final String queueUrl,
                             final MessageInterceptorRegistry interceptorRegistry,
                             final MessageTranslator<String> messageTranslator,
-                            final SqsAsyncClient sqsAsyncClient,
-                            final String messageSender) {
+                            final SqsAsyncClient sqsAsyncClient) {
         super(channelName, interceptorRegistry, messageTranslator);
         this.queueUrl = queueUrl;
         this.sqsAsyncClient = sqsAsyncClient;
-        this.messageSender = messageSender;
     }
 
     @Override
@@ -69,11 +64,7 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
                 .entries(
                         messageStream.map(message -> SendMessageBatchRequestEntry.builder()
                                 .id(valueOf(id.getAndIncrement()))
-                                .messageAttributes(of(MSG_KEY_ATTR, MessageAttributeValue
-                                        .builder()
-                                        .dataType("String")
-                                        .stringValue(message.getKey())
-                                        .build()))
+                                .messageAttributes(of(message))
                                 .messageBody(message.getPayload())
                                 .build()).collect(toList())
                 )
@@ -83,11 +74,26 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
     private SendMessageRequest toSendMessageRequest(final @Nonnull Message<String> message) {
         return SendMessageRequest.builder()
                 .queueUrl(queueUrl)
-                .messageAttributes(ImmutableMap.of(
-                        MSG_KEY_ATTR, MessageAttributeValue.builder().dataType("String").stringValue(message.getKey()).build(),
-                        MSG_SENDER_ATTR, MessageAttributeValue.builder().dataType("String").stringValue(messageSender).build()))
+                .messageAttributes(of(message))
                 .messageBody(message.getPayload())
                 .build();
+    }
+
+    private ImmutableMap<String, MessageAttributeValue> of(@Nonnull Message<String> message) {
+        final ImmutableMap.Builder<String, MessageAttributeValue> messageAttributes = ImmutableMap.builder();
+        message.getHeader().getAttributes().entrySet().forEach(entry -> {
+            messageAttributes.put(entry.getKey(), MessageAttributeValue
+                    .builder()
+                    .dataType("String")
+                    .stringValue(entry.getValue())
+                    .build());
+        });
+        messageAttributes.put(MSG_KEY_ATTR, MessageAttributeValue
+                .builder()
+                .dataType("String")
+                .stringValue(message.getKey())
+                .build());
+        return messageAttributes.build();
     }
 
     private BiConsumer<SendMessageResponse, Throwable> logResponse(final @Nonnull Message<String> message) {

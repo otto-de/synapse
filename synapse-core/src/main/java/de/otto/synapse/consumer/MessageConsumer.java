@@ -1,6 +1,6 @@
 package de.otto.synapse.consumer;
 
-import de.otto.synapse.configuration.ConsumerProcessProperties;
+import de.otto.synapse.configuration.SynapseProperties;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceConsumerProcess;
 import de.otto.synapse.message.Message;
@@ -29,7 +29,7 @@ import static java.util.regex.Pattern.compile;
  * <p>
  * If you need to manually consume messages using MessageConsumers, auto-configuration of the
  * {@code EventSourceConsumerProcess} can be disabled by setting
- * {@link ConsumerProcessProperties#setEnabled(boolean)}  synapse.consumer-process.enabled=false}
+ * {@link SynapseProperties.ConsumerProcess#setEnabled(boolean) synapse.consumer-process.enabled=false}
  * </p>
  * <p>
  * MessageConsumers are expected to be thread-safe.

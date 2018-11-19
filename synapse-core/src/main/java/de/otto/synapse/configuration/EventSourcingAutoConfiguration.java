@@ -22,7 +22,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.beans.factory.config.BeanDefinition.ROLE_INFRASTRUCTURE;
 
 @ImportAutoConfiguration(SynapseAutoConfiguration.class)
-@EnableConfigurationProperties(ConsumerProcessProperties.class)
+@EnableConfigurationProperties(SynapseProperties.class)
 public class EventSourcingAutoConfiguration {
 
     private static final Logger LOG = getLogger(EventSourcingAutoConfiguration.class);

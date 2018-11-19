@@ -95,7 +95,6 @@ public class SqsMessageQueueIntegrationTest {
         assertThat(messages.get(0).getHeader().getShardPosition(), is(Optional.empty()));
         assertThat(messages.get(0).getHeader().getArrivalTimestamp(), is(notNullValue()));
         assertThat(messages.get(0).getHeader().getAttribute("synapse_msg_key"), is("some-message-0"));
-        assertThat(messages.get(0).getHeader().getAttribute("synapse_msg_sender"), is("SqsTestStreamSource"));
     }
 
     @Test

@@ -1,5 +1,20 @@
 # Release Notes
 
+## 0.12.0
+* Refactors registration of message interceptors: interceptors can now 
+  only be registered at the MessageInterceptorRegistry, not directly at 
+  an InterceptorChain anymore.
+  
+  This prevents bugs where interceptors are getting lost after registration like,
+  for example, in the MessageTrace configuration.
+* Adds possibility to send and receive custom headers for SQS and Kinesis channels
+* Adds new message transport format for Kinesis in order to be able to transfer header attributes
+* Introduces `DefaultSenderHeaderInterceptor` to automatically set some headers
+  when sending messages:
+    - message ID
+    - sender name
+    - sender timestamp
+  
 ## 0.11.1
 * Re-add method `purgeQueue`to `SqsClientHelper`
 * add further exceptions to retry template when consuming

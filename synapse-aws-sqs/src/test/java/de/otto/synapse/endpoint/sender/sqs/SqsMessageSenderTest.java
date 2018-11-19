@@ -18,7 +18,9 @@ import software.amazon.awssdk.services.sqs.model.*;
 
 import java.util.stream.Stream;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.senderChannelsWith;
+import static de.otto.synapse.message.Header.requestHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -45,7 +47,7 @@ public class SqsMessageSenderTest {
     @Before
     public void setUp() {
         interceptorRegistry = new MessageInterceptorRegistry();
-        sqsMessageSender = new SqsMessageSender("test", "https://example.com/test", interceptorRegistry, messageTranslator, sqsAsyncClient, "test");
+        sqsMessageSender = new SqsMessageSender("test", "https://example.com/test", interceptorRegistry, messageTranslator, sqsAsyncClient);
     }
 
     @Test
@@ -66,9 +68,51 @@ public class SqsMessageSenderTest {
         final SendMessageRequest capturedRequest = requestArgumentCaptor.getValue();
 
         assertThat(capturedRequest.queueUrl(), is("https://example.com/test"));
-        assertThat(capturedRequest.messageAttributes(), hasEntry("synapse_msg_key", MessageAttributeValue.builder().dataType("String").stringValue("some-key").build()));
-        assertThat(capturedRequest.messageAttributes(), hasEntry("synapse_msg_sender", MessageAttributeValue.builder().dataType("String").stringValue("test").build()));
         assertThat(capturedRequest.messageBody(), is("{\"value\":\"banana\"}"));
+    }
+
+    @Test
+    public void shouldSendKeyAsMessageHeader() {
+        // given
+        final Message<ExampleJsonObject> message = message("some-key", new ExampleJsonObject("banana"));
+
+        when(sqsAsyncClient.sendMessage(any(SendMessageRequest.class))).thenReturn(completedFuture(SendMessageResponse.builder()
+                .sequenceNumber("42")
+                .messageId("some-id")
+                .build()));
+
+        // when
+        sqsMessageSender.send(message).join();
+
+        // then
+        verify(sqsAsyncClient).sendMessage(requestArgumentCaptor.capture());
+        final SendMessageRequest capturedRequest = requestArgumentCaptor.getValue();
+
+        assertThat(capturedRequest.messageAttributes(), hasEntry("synapse_msg_key", MessageAttributeValue.builder().dataType("String").stringValue("some-key").build()));
+    }
+
+    @Test
+    public void shouldSendCustomMessageHeader() {
+        // given
+        final Message<ExampleJsonObject> message = message(
+                "some-key",
+                requestHeader(of("first", "one", "second", "two")),
+                new ExampleJsonObject("banana"));
+
+        when(sqsAsyncClient.sendMessage(any(SendMessageRequest.class))).thenReturn(completedFuture(SendMessageResponse.builder()
+                .sequenceNumber("42")
+                .messageId("some-id")
+                .build()));
+
+        // when
+        sqsMessageSender.send(message).join();
+
+        // then
+        verify(sqsAsyncClient).sendMessage(requestArgumentCaptor.capture());
+        final SendMessageRequest capturedRequest = requestArgumentCaptor.getValue();
+
+        assertThat(capturedRequest.messageAttributes(), hasEntry("first", MessageAttributeValue.builder().dataType("String").stringValue("one").build()));
+        assertThat(capturedRequest.messageAttributes(), hasEntry("second", MessageAttributeValue.builder().dataType("String").stringValue("two").build()));
     }
 
     @Test

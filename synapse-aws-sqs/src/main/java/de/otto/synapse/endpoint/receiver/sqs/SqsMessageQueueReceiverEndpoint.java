@@ -136,9 +136,9 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
                 : "";
     }
 
-    private ImmutableMap<String, Object> messageAttributesOf(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
+    private ImmutableMap<String, String> messageAttributesOf(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
         if (sqsMessage.messageAttributes() != null) {
-            final ImmutableMap.Builder<String, Object> attributeBuilder = ImmutableMap.builder();
+            final ImmutableMap.Builder<String, String> attributeBuilder = ImmutableMap.builder();
             sqsMessage.messageAttributes().entrySet().forEach(entry -> {
                 switch (entry.getValue().dataType()) {
                     case "String":

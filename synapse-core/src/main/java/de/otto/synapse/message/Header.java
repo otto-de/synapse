@@ -1,5 +1,6 @@
 package de.otto.synapse.message;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ShardPosition;
@@ -36,11 +37,13 @@ public class Header implements Serializable {
         return new Header(null, now(), ImmutableMap.of());
     }
 
-    public static Header requestHeader(final ImmutableMap<String, Object> attributes) {
+    public static Header requestHeader(final ImmutableMap<String, String> attributes) {
         return new Header(null, now(), attributes);
     }
 
-    public static Header responseHeader(final ShardPosition shardPosition, final Instant arrivalTimestamp, final ImmutableMap<String, Object> attributes) {
+    public static Header responseHeader(final ShardPosition shardPosition,
+                                        final Instant arrivalTimestamp,
+                                        final ImmutableMap<String, String> attributes) {
         return new Header(shardPosition, arrivalTimestamp, attributes);
     }
 
@@ -51,11 +54,11 @@ public class Header implements Serializable {
 
     private final ShardPosition shardPosition;
     private final Instant arrivalTimestamp;
-    private final ImmutableMap<String, Object> attributes;
+    private final ImmutableMap<String, String> attributes;
 
     private Header(final ShardPosition shardPosition,
                    final Instant approximateArrivalTimestamp,
-                   final ImmutableMap<String, Object> attributes) {
+                   final ImmutableMap<String, String> attributes) {
         this.shardPosition = shardPosition;
         this.arrivalTimestamp = requireNonNull(approximateArrivalTimestamp);
         this.attributes = attributes;
@@ -72,7 +75,8 @@ public class Header implements Serializable {
     }
 
     @Nonnull
-    public ImmutableMap<String, Object> getAttributes() {
+    @JsonAnyGetter
+    public ImmutableMap<String, String> getAttributes() {
         return attributes;
     }
 

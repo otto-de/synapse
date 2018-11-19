@@ -13,6 +13,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.springframework.boot.test.util.EnvironmentTestUtils.addEnvironment;
 import static org.springframework.core.Ordered.LOWEST_PRECEDENCE;
 
 public class MessageInterceptorBeanPostProcessorTest {
@@ -22,6 +23,7 @@ public class MessageInterceptorBeanPostProcessorTest {
     @Before
     public void init() {
         context = new AnnotationConfigApplicationContext();
+        addEnvironment(context, "synapse.sender.default-headers.enabled=false");
     }
 
     @After
