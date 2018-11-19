@@ -24,12 +24,12 @@ public class MessageInterceptorRegistry {
     @Nonnull
     public InterceptorChain getInterceptorChain(final String channelName,
                                                 final EndpointType endpointType) {
-        return interceptorChainCache.computeIfAbsent(channelName + "#" + endpointType.name(), (key) -> {
-            final InterceptorChain interceptorChain = new InterceptorChain();
-            getRegistrations(channelName, endpointType)
-                    .forEach(registration -> interceptorChain.register(registration.getInterceptor()));
-            return interceptorChain;
-        });
+        return interceptorChainCache.computeIfAbsent(channelName + "#" + endpointType.name(), (key) -> new InterceptorChain(
+                getRegistrations(channelName, endpointType)
+                        .stream()
+                        .map(MessageInterceptorRegistration::getInterceptor)
+                        .collect(toImmutableList())
+        ));
     }
 
     @Nonnull

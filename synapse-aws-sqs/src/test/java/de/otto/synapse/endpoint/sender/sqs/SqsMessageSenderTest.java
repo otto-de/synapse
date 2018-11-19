@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.sqs.model.*;
 
 import java.util.stream.Stream;
 
+import static de.otto.synapse.endpoint.MessageInterceptorRegistration.senderChannelsWith;
 import static de.otto.synapse.message.Message.message;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -39,10 +40,12 @@ public class SqsMessageSenderTest {
     private ArgumentCaptor<SendMessageBatchRequest> batchRequestArgumentCaptor;
     private ObjectMapper objectMapper = new ObjectMapper();
     private MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator(objectMapper);
+    private MessageInterceptorRegistry interceptorRegistry;
 
     @Before
     public void setUp() {
-        sqsMessageSender = new SqsMessageSender("test", "https://example.com/test", new MessageInterceptorRegistry(), messageTranslator, sqsAsyncClient, "test");
+        interceptorRegistry = new MessageInterceptorRegistry();
+        sqsMessageSender = new SqsMessageSender("test", "https://example.com/test", interceptorRegistry, messageTranslator, sqsAsyncClient, "test");
     }
 
     @Test
@@ -78,7 +81,7 @@ public class SqsMessageSenderTest {
                 .messageId("some-id")
                 .build()));
         // and especially
-        sqsMessageSender.getInterceptorChain().register((m) -> message(m.getKey(), m.getHeader(), "{\"value\":\"apple\"}"));
+        interceptorRegistry.register(senderChannelsWith((m) -> message(m.getKey(), m.getHeader(), "{\"value\":\"apple\"}")));
 
         // when
         sqsMessageSender.send(message).join();
@@ -95,7 +98,7 @@ public class SqsMessageSenderTest {
         // given
         final Message<ExampleJsonObject> message = message("", new ExampleJsonObject("banana"));
 
-        sqsMessageSender.getInterceptorChain().register((m) -> null);
+        interceptorRegistry.register(senderChannelsWith((m) -> null));
 
         // when
         sqsMessageSender.send(message).join();
@@ -148,8 +151,9 @@ public class SqsMessageSenderTest {
                 .build()));
 
         // and especially
-        final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
-        sqsMessageSender.getInterceptorChain().register((m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"Lovely day for a Guinness\"}"));
+        interceptorRegistry.register(
+                senderChannelsWith((m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"Lovely day for a Guinness\"}"))
+        );
 
         // when
         sqsMessageSender.sendBatch(Stream.of(

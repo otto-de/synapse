@@ -8,11 +8,7 @@ import org.slf4j.Logger;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-import static com.google.common.collect.ImmutableList.copyOf;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -39,28 +35,26 @@ public final class InterceptorChain implements MessageInterceptor {
 
     private static final Logger LOG = getLogger(InterceptorChain.class);
 
-    private final List<MessageInterceptor> interceptors;
+    private final ImmutableList<MessageInterceptor> interceptors;
 
     /**
-     * Creates an unknown InterceptorChain.
+     * Creates an empty InterceptorChain.
      */
     public InterceptorChain() {
-        this.interceptors = new CopyOnWriteArrayList<>();
+        this.interceptors = ImmutableList.of();
+    }
+
+    public InterceptorChain(final ImmutableList<MessageInterceptor> messageInterceptors) {
+        this.interceptors = messageInterceptors;
     }
 
     /**
-     * Returns the immutable list of {@link #register(MessageInterceptor) registered}
-     * {@link MessageInterceptor message interceptors}.
+     * Returns the immutable list of registered {@link MessageInterceptor message interceptors}.
      *
      * @return registered message interceptors
      */
     public ImmutableList<MessageInterceptor> getInterceptors() {
-        return copyOf(interceptors);
-    }
-
-    public void register(final MessageInterceptor messageInterceptor) {
-        // TODO: support ordering of interceptors via (org.springframework.core.annotation.Order)
-        interceptors.add(messageInterceptor);
+        return interceptors;
     }
 
     /**
@@ -98,16 +92,4 @@ public final class InterceptorChain implements MessageInterceptor {
         return resultingMessage;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        InterceptorChain chain = (InterceptorChain) o;
-        return Objects.equals(interceptors, chain.interceptors);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(interceptors);
-    }
 }

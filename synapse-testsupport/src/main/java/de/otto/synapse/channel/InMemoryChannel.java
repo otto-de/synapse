@@ -21,7 +21,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static de.otto.synapse.channel.ChannelPosition.channelPosition;
+import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
+import static de.otto.synapse.message.Message.message;
 import static java.time.Duration.between;
 import static java.time.Instant.now;
 import static java.util.Collections.synchronizedList;
@@ -49,8 +52,15 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
     }
 
     public synchronized void send(final Message<String> message) {
-        LOG.info("Sending {} to {} at position{}", message, getChannelName(), eventQueue.size());
-        eventQueue.add(message);
+        final int position = eventQueue.size();
+        LOG.info("Sending {} to {} at position{}", message, getChannelName(), position);
+        eventQueue.add(Message.message(
+                message.getKey(),
+                responseHeader(
+                        fromPosition(getChannelName(), String.valueOf(position)),
+                        Instant.now(),
+                        message.getHeader().getAttributes()),
+                message.getPayload()));
     }
 
     @Nonnull
@@ -88,7 +98,7 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
                 }
             } while (!shouldStop && !stopSignal.get());
             publishEvent(MessageReceiverStatus.FINISHED, "Finished InMemoryChannel " + getChannelName(), durationBehind);
-            return ChannelPosition.channelPosition(ShardPosition.fromPosition(getChannelName(), String.valueOf(pos)));
+            return channelPosition(fromPosition(getChannelName(), String.valueOf(pos)));
         }, newSingleThreadExecutor());
     }
 
@@ -105,7 +115,7 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
                 if (!eventQueue.isEmpty()) {
                     final Message<String> receivedMessage = eventQueue.remove(0);
                     final Message<String> interceptedMessage = intercept(
-                            Message.message(
+                            message(
                                     receivedMessage.getKey(),
                                     responseHeader(null, now()),
                                     receivedMessage.getPayload()

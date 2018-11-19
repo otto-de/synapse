@@ -110,7 +110,8 @@ public class S3SnapshotMessageStoreAcceptanceTest {
     }
 
     private void sendTestMessages(final Range<Integer> messageKeyRange, final String payloadPrefix) throws InterruptedException {
-        ContiguousSet.create(messageKeyRange, DiscreteDomain.integers())
+        ContiguousSet
+                .create(messageKeyRange, DiscreteDomain.integers())
                 .forEach(key -> compactionTestSender.send(message(valueOf(key), payloadPrefix + "-" + key)).join());
         sleep(20);
     }

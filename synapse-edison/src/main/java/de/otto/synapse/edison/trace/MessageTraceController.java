@@ -3,12 +3,10 @@ package de.otto.synapse.edison.trace;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import de.otto.edison.navigation.NavBar;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.message.Header;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +17,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.LinkedHashMap;
 
-import static de.otto.edison.navigation.NavBarItem.navBarItem;
-import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 @Controller
@@ -32,20 +28,9 @@ public class MessageTraceController {
 
     @Autowired
     MessageTraceController(final MessageTrace messageTrace,
-                           final NavBar rightNavBar,
-                           final ManagementServerProperties managementServerProperties,
                            final ObjectMapper objectMapper) {
         this.messageTrace = messageTrace;
         this.objectMapper = objectMapper;
-        rightNavBar.register(
-                navBarItem(10, "Message Trace", format("%s/messagetrace", managementServerProperties.getContextPath()))
-        );
-        messageTrace.getSenderChannels().forEach(channelName -> rightNavBar.register(
-                navBarItem(11, "Sender: " + channelName, format("%s/messagetrace/sender/%s", managementServerProperties.getContextPath(), channelName))
-        ));
-        messageTrace.getReceiverChannels().forEach(channelName -> rightNavBar.register(
-                navBarItem(12, "Receiver: " + channelName, format("%s/messagetrace/receiver/%s", managementServerProperties.getContextPath(), channelName))
-        ));
     }
 
     @GetMapping(

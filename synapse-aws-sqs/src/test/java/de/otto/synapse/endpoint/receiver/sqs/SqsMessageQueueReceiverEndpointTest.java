@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import static de.otto.synapse.endpoint.MessageInterceptorRegistration.receiverChannelsWith;
 import static de.otto.synapse.endpoint.sender.sqs.SqsMessageSender.MSG_KEY_ATTR;
 import static java.util.Collections.singletonMap;
 import static java.util.Collections.synchronizedList;
@@ -51,6 +52,7 @@ public class SqsMessageQueueReceiverEndpointTest {
 
     private SqsMessageQueueReceiverEndpoint sqsQueueReceiver;
     private List<Message<String>> messages = synchronizedList(new ArrayList<>());
+    private MessageInterceptorRegistry interceptorRegistry;
 
 
     @Before
@@ -60,7 +62,8 @@ public class SqsMessageQueueReceiverEndpointTest {
         when(sqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class)))
                 .thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl(QUEUE_URL).build()));
         when(sqsAsyncClient.deleteMessage(any(DeleteMessageRequest.class))).thenReturn(completedFuture(DeleteMessageResponse.builder().build()));
-        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", new MessageInterceptorRegistry(), sqsAsyncClient, objectMapper, null);
+        interceptorRegistry = new MessageInterceptorRegistry();
+        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", interceptorRegistry, sqsAsyncClient, objectMapper, null);
         sqsQueueReceiver.register(MessageConsumer.of(".*", String.class, (message) -> messages.add(message)));
 
     }
@@ -175,7 +178,9 @@ public class SqsMessageQueueReceiverEndpointTest {
         // given:
         addSqsMessagesToQueue(sqsMessage("some key", PAYLOAD_1));
 
-        sqsQueueReceiver.getInterceptorChain().register((message -> Message.message(message.getKey(), message.getHeader(), INTERCEPTED_PAYLOAD)));
+        interceptorRegistry.register(
+                receiverChannelsWith(message -> Message.message(message.getKey(), message.getHeader(), INTERCEPTED_PAYLOAD))
+        );
 
         // when: consumption is started
         sqsQueueReceiver.consume();
@@ -197,8 +202,9 @@ public class SqsMessageQueueReceiverEndpointTest {
         // given:
         addSqsMessagesToQueue(sqsMessage("some key", PAYLOAD_1), sqsMessage("some key", PAYLOAD_2));
 
-        sqsQueueReceiver.getInterceptorChain().register((message ->
-                message.getPayload().equals(PAYLOAD_1) ? null : message));
+        interceptorRegistry.register(
+                receiverChannelsWith(message -> message.getPayload().equals(PAYLOAD_1) ? null : message)
+        );
 
         // when: consumption is started
         sqsQueueReceiver.consume();

@@ -1,5 +1,6 @@
 package de.otto.synapse.eventsource;
 
+import com.google.common.collect.ImmutableList;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.InterceptorChain;
@@ -89,8 +90,7 @@ public class DefaultEventSourceTest {
         when(messageStore.stream()).thenReturn(Stream.of(message("1", responseHeader(null, arrivalTimestamp), null)));
         when(messageStore.getLatestChannelPosition()).thenReturn(fromHorizon());
         // and some InterceptorChain that is dropping messages:
-        final InterceptorChain interceptorChain = new InterceptorChain();
-        interceptorChain.register((m)->null);
+        final InterceptorChain interceptorChain = new InterceptorChain(ImmutableList.of((m)->null));
         // and some MessageLogReceiverEndpoint with our InterceptorChain:
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
         when(messageLog.consumeUntil(any(ChannelPosition.class), any(Instant.class))).thenReturn(completedFuture(fromHorizon()));
@@ -164,7 +164,7 @@ public class DefaultEventSourceTest {
     }
 
     @Test
-    public void shouldStopMessageLogReceiverEndpoint() throws Exception {
+    public void shouldStopMessageLogReceiverEndpoint() {
         // given
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
         final DefaultEventSource eventSource = new DefaultEventSource(emptyMessageStore(), messageLog);

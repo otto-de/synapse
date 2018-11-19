@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingSenderChannelsWith;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -46,10 +47,12 @@ public class KinesisMessageSenderTest {
     private ArgumentCaptor<PutRecordsRequest> putRecordsRequestCaptor;
     private ObjectMapper objectMapper = new ObjectMapper();
     private MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator(objectMapper);
+    private MessageInterceptorRegistry interceptorRegistry;
 
     @Before
     public void setUp() {
-        kinesisMessageSender = new KinesisMessageSender("test", new MessageInterceptorRegistry(), messageTranslator, kinesisClient);
+        interceptorRegistry = new MessageInterceptorRegistry();
+        kinesisMessageSender = new KinesisMessageSender("test", interceptorRegistry, messageTranslator, kinesisClient);
     }
 
     @Test
@@ -87,9 +90,13 @@ public class KinesisMessageSenderTest {
         when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(completedFuture(PutRecordsResponse.builder()
                 .failedRecordCount(0)
                 .records(PutRecordsResultEntry.builder().build())
-                .build()));
+                .build())
+        );
         // and especially
-        kinesisMessageSender.getInterceptorChain().register((m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"apple\"}"));
+        interceptorRegistry.register(matchingSenderChannelsWith(
+                "test",
+                (m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"apple\"}"))
+        );
 
         // when
         kinesisMessageSender.send(message).join();
@@ -116,7 +123,10 @@ public class KinesisMessageSenderTest {
                 .build()));
 
         // and especially
-        kinesisMessageSender.getInterceptorChain().register((m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"Lovely day for a Guinness\"}"));
+        interceptorRegistry.register(matchingSenderChannelsWith(
+                "test",
+                (m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"Lovely day for a Guinness\"}"))
+        );
 
         // when
         kinesisMessageSender.sendBatch(Stream.of(

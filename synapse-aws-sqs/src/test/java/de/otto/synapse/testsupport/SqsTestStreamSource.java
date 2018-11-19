@@ -17,6 +17,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 
+import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingSenderChannelsWith;
+
 /**
  * This class is a data source for supplying input to the Amazon Kinesis stream. It reads lines from the
  * input file specified in the constructor and emits them by calling String.getBytes() into the
@@ -33,15 +35,16 @@ public class SqsTestStreamSource {
         this.inputFile = inputFile;
         final SqsAsyncClient sqsAsyncClient = new SqsTestConfiguration().sqsAsyncClient();
         final URL queueUrl = new SqsClientHelper(sqsAsyncClient).getQueueUrl(channelName);
+        final MessageInterceptorRegistry interceptorRegistry = new MessageInterceptorRegistry();
+        interceptorRegistry.register(matchingSenderChannelsWith(channelName, (message) -> {
+            LOG.info("Sent message {}", message.getKey());
+            return message;
+        }));
         messageSender = new SqsMessageSender(
                 channelName,
                 queueUrl.toString(),
-                new MessageInterceptorRegistry(),
+                interceptorRegistry,
                 new JsonStringMessageTranslator(new ObjectMapper()), sqsAsyncClient, "SqsTestStreamSource");
-        messageSender.getInterceptorChain().register((message) -> {
-            LOG.info("Sent message {}", message.getKey());
-            return message;
-        });
     }
 
     public void writeToStream() {

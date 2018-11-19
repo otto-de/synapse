@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint;
 
+import com.google.common.collect.ImmutableList;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 
@@ -26,8 +27,7 @@ public class InterceptorChainTest {
     public void shouldReturnNull() {
         final MessageInterceptor interceptor = mock(MessageInterceptor.class);
         when(interceptor.intercept(any(Message.class))).thenReturn(null);
-        final InterceptorChain chain = new InterceptorChain();
-        chain.register(interceptor);
+        final InterceptorChain chain = new InterceptorChain(ImmutableList.of(interceptor));
         assertThat(chain.intercept(someMessage("foo")), is(nullValue()));
     }
 
@@ -37,9 +37,7 @@ public class InterceptorChainTest {
         final MessageInterceptor first = mock(MessageInterceptor.class);
         when(first.intercept(any(Message.class))).thenReturn(null);
         final MessageInterceptor second = mock(MessageInterceptor.class);
-        final InterceptorChain chain = new InterceptorChain();
-        chain.register(first);
-        chain.register(second);
+        final InterceptorChain chain = new InterceptorChain(ImmutableList.of(first, second));
         assertThat(chain.intercept(someMessage("foo")), is(nullValue()));
         verifyZeroInteractions(second);
     }
@@ -51,9 +49,7 @@ public class InterceptorChainTest {
         when(first.intercept(any(Message.class))).thenReturn(someMessage("foo"));
         final MessageInterceptor second = mock(MessageInterceptor.class);
         when(second.intercept(any(Message.class))).thenReturn(someMessage("bar"));
-        final InterceptorChain chain = new InterceptorChain();
-        chain.register(first);
-        chain.register(second);
+        final InterceptorChain chain = new InterceptorChain(ImmutableList.of(first, second));
         //noinspection ConstantConditions
         assertThat(chain.intercept(someMessage("foo")).getKey(), is("bar"));
     }

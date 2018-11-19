@@ -1,17 +1,20 @@
 package de.otto.synapse.edison.trace;
 
 import com.google.common.collect.EvictingQueue;
-import com.google.common.collect.ImmutableList;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.MessageEndpoint;
 
 import javax.annotation.concurrent.ThreadSafe;
-import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
-import java.util.stream.Collectors;
+import java.util.SortedSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.copyOf;
+import static com.google.common.collect.Sets.newTreeSet;
+import static java.lang.Boolean.TRUE;
 
 /**
  * Thread-safe in-memory implementation of a circular MessageStore that is storing all traceEntries in insertion order
@@ -38,43 +41,49 @@ public class MessageTrace {
         EndpointType getEndpointType() {
             return endpointType;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            RegisteredEndpoints that = (RegisteredEndpoints) o;
+            return Objects.equals(channelName, that.channelName) &&
+                    endpointType == that.endpointType;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(channelName, endpointType);
+        }
+
+        @Override
+        public String toString() {
+            return "RegisteredEndpoints{" +
+                    "channelName='" + channelName + '\'' +
+                    ", endpointType=" + endpointType +
+                    '}';
+        }
     }
 
     private final Queue<TraceEntry> traceEntries;
-    private final ImmutableList<RegisteredEndpoints> registeredEndpoints;
+    private final ConcurrentMap<String, Boolean> senders = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Boolean> receivers = new ConcurrentHashMap<>();
 
     /**
      * Creates a new instance with specified capacity.
      *
      * @param capacity the size of the underlying ring buffer.
      */
-    public MessageTrace(final int capacity, final Iterable<MessageEndpoint> endpoints) {
+    public MessageTrace(final int capacity) {
         traceEntries = EvictingQueue.create(capacity);
-        final ImmutableList.Builder<RegisteredEndpoints> builder = ImmutableList.builder();
-        endpoints.forEach(messageEndpoint -> {
-            builder.add(new RegisteredEndpoints(messageEndpoint));
-            messageEndpoint.getInterceptorChain().register(message -> {
-                add(new TraceEntry(messageEndpoint.getChannelName(), messageEndpoint.getEndpointType(), message));
-                return message;
-            });
-        });
-        registeredEndpoints = builder.build();
     }
 
-    public List<String> getSenderChannels() {
-        return registeredEndpoints
-                .stream()
-                .filter(registeredEndpoint -> registeredEndpoint.getEndpointType().equals(EndpointType.SENDER))
-                .map(RegisteredEndpoints::getChannelName)
-                .collect(Collectors.toList());
+    public SortedSet<String> getSenderChannels() {
+        return newTreeSet(senders.keySet());
     }
 
-    public List<String> getReceiverChannels() {
-        return registeredEndpoints
-                .stream()
-                .filter(registeredEndpoint -> registeredEndpoint.getEndpointType().equals(EndpointType.RECEIVER))
-                .map(RegisteredEndpoints::getChannelName)
-                .collect(Collectors.toList());
+    public SortedSet<String> getReceiverChannels() {
+        return newTreeSet(receivers.keySet());
     }
 
     /**
@@ -85,6 +94,11 @@ public class MessageTrace {
      */
     public synchronized void add(final TraceEntry traceEntry) {
         traceEntries.add(traceEntry);
+        if (traceEntry.getEndpointType() == EndpointType.RECEIVER) {
+            receivers.putIfAbsent(traceEntry.getChannelName(), TRUE);
+        } else if (traceEntry.getEndpointType() == EndpointType.SENDER) {
+            senders.putIfAbsent(traceEntry.getChannelName(), TRUE);
+        }
     }
 
     /**
