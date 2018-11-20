@@ -78,6 +78,35 @@ public class SqsClientHelper {
         }
     }
 
+    public void purgeQueue(final String channelName) {
+        try {
+            if (doesChannelExist(channelName)) {
+                final URL channelUrl = getQueueUrl(channelName);
+                sqsAsyncClient.purgeQueue(PurgeQueueRequest
+                        .builder()
+                        .queueUrl(channelUrl.toString())
+                        .build())
+                        .get();
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    public void purgeQueue(final URL channelUrl) {
+        try {
+            if (doesChannelExist(channelUrl)) {
+                sqsAsyncClient.purgeQueue(PurgeQueueRequest
+                        .builder()
+                        .queueUrl(channelUrl.toString())
+                        .build())
+                        .get();
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
     public List<Message> receiveMessages(final String channelName,
                                          final int seconds) {
         final Instant started = now();

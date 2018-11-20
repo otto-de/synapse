@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.11.1
+* Re-add method `purgeQueue`to `SqsClientHelper`
+
 ## 0.11.0
 * Introduced new module `synapse-aws-auth` containing the configuration of an AwsCredentialsProvider.
 * Introduced new module `synapse-compaction-aws-s3` for message compaction using AWS S3.
