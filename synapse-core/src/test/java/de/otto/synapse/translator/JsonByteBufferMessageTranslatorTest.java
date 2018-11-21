@@ -1,6 +1,5 @@
 package de.otto.synapse.translator;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
@@ -18,11 +17,10 @@ import static org.hamcrest.Matchers.nullValue;
 public class JsonByteBufferMessageTranslatorTest {
 
     private static final Instant NOW = Instant.now();
-    private final ObjectMapper objectMapper = new ObjectMapper();;
 
     @Test
     public void shouldTranslateMessage() {
-        final MessageTranslator<ByteBuffer> messageTranslator = new JsonByteBufferMessageTranslator(objectMapper);
+        final MessageTranslator<ByteBuffer> messageTranslator = new JsonByteBufferMessageTranslator();
         final Message<ByteBuffer> message = messageTranslator.translate(
                 message("test", singletonMap("foo", "bar"))
         );
@@ -34,7 +32,7 @@ public class JsonByteBufferMessageTranslatorTest {
 
     @Test
     public void shouldKeepHeadersOfMessage() {
-        final MessageTranslator<ByteBuffer> messageTranslator = new JsonByteBufferMessageTranslator(objectMapper);
+        final MessageTranslator<ByteBuffer> messageTranslator = new JsonByteBufferMessageTranslator();
         final Message<ByteBuffer> message = messageTranslator.translate(
                 message("test", Header.responseHeader(null, NOW), singletonMap("foo", "bar"))
         );
@@ -43,7 +41,7 @@ public class JsonByteBufferMessageTranslatorTest {
 
     @Test
     public void shouldTranslateDeleteMessage() {
-        final MessageTranslator<ByteBuffer> messageTranslator = new JsonByteBufferMessageTranslator(objectMapper);
+        final MessageTranslator<ByteBuffer> messageTranslator = new JsonByteBufferMessageTranslator();
         final Message<ByteBuffer> message = messageTranslator.translate(
                 message("test", null)
         );

@@ -1,6 +1,5 @@
 package de.otto.synapse.edison.trace;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import de.otto.synapse.channel.ShardPosition;
@@ -17,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.LinkedHashMap;
 
+import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
 import static java.util.stream.Collectors.toList;
 
 @Controller
@@ -24,13 +24,10 @@ import static java.util.stream.Collectors.toList;
 public class MessageTraceController {
 
     private final MessageTrace messageTrace;
-    private final ObjectMapper objectMapper;
 
     @Autowired
-    MessageTraceController(final MessageTrace messageTrace,
-                           final ObjectMapper objectMapper) {
+    MessageTraceController(final MessageTrace messageTrace) {
         this.messageTrace = messageTrace;
-        this.objectMapper = objectMapper;
     }
 
     @GetMapping(
@@ -87,8 +84,8 @@ public class MessageTraceController {
 
     private String prettyPrint(final String json) {
         try {
-            Object jsonObject = objectMapper.readValue(json, Object.class);
-            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
+            Object jsonObject = defaultObjectMapper().readValue(json, Object.class);
+            return defaultObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
         } catch (final Exception e) {
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -101,7 +98,7 @@ public class MessageTraceController {
             map.put("shardPosition", header.getShardPosition().map(ShardPosition::toString).orElse(""));
             map.put("arrivalTimestamp", header.getArrivalTimestamp().toString());
             map.put("attributes", header.getAttributes());
-            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(map);
+            return defaultObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(map);
         } catch (final Exception e) {
             throw new RuntimeException(e.getMessage(), e);
         }

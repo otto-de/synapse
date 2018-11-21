@@ -60,10 +60,10 @@ public class KinesisShardReader {
                 final KinesisShardIterator kinesisShardIterator = new KinesisShardIterator(kinesisClient, channelName, startFrom);
                 boolean stopRetrieval;
                 do {
-                /*
-                Poison-Pill injected by a test. This is helpful, if you want to write tests that should terminate
-                after a number of iterated shards.
-                 */
+                    /*
+                    Poison-Pill injected by a test. This is helpful, if you want to write tests that should terminate
+                    after a number of iterated shards.
+                     */
                     if (kinesisShardIterator.isPoison()) {
                         LOG.warn("Received Poison-Pill - This should only happen during tests!");
                         break;

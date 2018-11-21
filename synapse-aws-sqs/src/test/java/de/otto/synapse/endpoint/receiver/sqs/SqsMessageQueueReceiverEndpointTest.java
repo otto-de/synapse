@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.receiver.sqs;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
@@ -45,8 +44,6 @@ public class SqsMessageQueueReceiverEndpointTest {
     private static final String QUEUE_URL = "http://example.org/test";
 
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-
     @Mock
     private SqsAsyncClient sqsAsyncClient;
 
@@ -63,7 +60,7 @@ public class SqsMessageQueueReceiverEndpointTest {
                 .thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl(QUEUE_URL).build()));
         when(sqsAsyncClient.deleteMessage(any(DeleteMessageRequest.class))).thenReturn(completedFuture(DeleteMessageResponse.builder().build()));
         interceptorRegistry = new MessageInterceptorRegistry();
-        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", interceptorRegistry, sqsAsyncClient, objectMapper, null);
+        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", interceptorRegistry, sqsAsyncClient, null);
         sqsQueueReceiver.register(MessageConsumer.of(".*", String.class, (message) -> messages.add(message)));
 
     }
@@ -85,7 +82,7 @@ public class SqsMessageQueueReceiverEndpointTest {
                 .thenThrow(RuntimeException.class);
 
 
-        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", new MessageInterceptorRegistry(), sqsAsyncClient, objectMapper, null);
+        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", new MessageInterceptorRegistry(), sqsAsyncClient, null);
     }
 
     @Test
@@ -124,7 +121,7 @@ public class SqsMessageQueueReceiverEndpointTest {
                 sqsMessage("matching-key", PAYLOAD_2),
                 sqsMessage("non-matching-key", PAYLOAD_3));
 
-        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", new MessageInterceptorRegistry(), sqsAsyncClient, objectMapper, null);
+        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", new MessageInterceptorRegistry(), sqsAsyncClient, null);
         sqsQueueReceiver.register(MessageConsumer.of("matching-key", String.class, (message) -> messages.add(message)));
 
         // when: consumption is started

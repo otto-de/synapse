@@ -1,6 +1,5 @@
 package de.otto.synapse.configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.InMemoryChannels;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.InMemoryMessageLogReceiverEndpointFactory;
@@ -39,10 +38,9 @@ public class InMemoryMessageLogTestConfiguration {
 
     @Bean
     public MessageSenderEndpointFactory messageLogSenderEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
-                                                                            final InMemoryChannels inMemoryChannels,
-                                                                            final ObjectMapper objectMapper) {
+                                                                            final InMemoryChannels inMemoryChannels) {
         LOG.warn("Creating InMemoryMessageSenderEndpointFactory. This should only be used in tests");
-        return new InMemoryMessageSenderFactory(interceptorRegistry, inMemoryChannels, objectMapper);
+        return new InMemoryMessageSenderFactory(interceptorRegistry, inMemoryChannels);
     }
 
     @Bean

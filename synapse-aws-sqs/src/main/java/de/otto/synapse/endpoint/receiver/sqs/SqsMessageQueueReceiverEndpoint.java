@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.receiver.sqs;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
@@ -59,9 +58,8 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
     public SqsMessageQueueReceiverEndpoint(final @Nonnull String channelName,
                                            final @Nonnull MessageInterceptorRegistry interceptorRegistry,
                                            final @Nonnull SqsAsyncClient sqsAsyncClient,
-                                           final @Nonnull ObjectMapper objectMapper,
                                            final @Nullable ApplicationEventPublisher eventPublisher) {
-        super(channelName, interceptorRegistry, objectMapper, eventPublisher);
+        super(channelName, interceptorRegistry, eventPublisher);
         this.sqsAsyncClient = sqsAsyncClient;
         try {
             this.queueUrl = sqsAsyncClient.getQueueUrl(GetQueueUrlRequest

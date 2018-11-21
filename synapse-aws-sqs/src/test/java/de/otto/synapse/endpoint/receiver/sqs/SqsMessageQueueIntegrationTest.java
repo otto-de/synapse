@@ -1,7 +1,6 @@
 package de.otto.synapse.endpoint.receiver.sqs;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.configuration.sqs.TestSqsMessageInterceptor;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
@@ -48,9 +47,6 @@ public class SqsMessageQueueIntegrationTest {
     private SqsAsyncClient sqsAsyncClient;
 
     @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
     private MessageInterceptorRegistry messageInterceptorRegistry;
 
     @Autowired
@@ -66,7 +62,7 @@ public class SqsMessageQueueIntegrationTest {
         /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
            when initializing it via @EnableEventSource
          */
-        sqsMessageQueue = new SqsMessageQueueReceiverEndpoint(SQS_INTEGRATION_TEST_CHANNEL, messageInterceptorRegistry, sqsAsyncClient, objectMapper, null);
+        sqsMessageQueue = new SqsMessageQueueReceiverEndpoint(SQS_INTEGRATION_TEST_CHANNEL, messageInterceptorRegistry, sqsAsyncClient, null);
         sqsMessageQueue.register(MessageConsumer.of(".*", String.class, (message) -> {
             LOG.info("Consumed message {}", message.getKey());
             messages.add(message);

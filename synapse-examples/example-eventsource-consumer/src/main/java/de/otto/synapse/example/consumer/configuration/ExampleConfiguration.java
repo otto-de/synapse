@@ -1,6 +1,5 @@
 package de.otto.synapse.example.consumer.configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.annotation.EnableEventSource;
 import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
@@ -28,8 +27,8 @@ public class ExampleConfiguration implements MessageEndpointConfigurer {
     private static final Logger LOG = getLogger(ExampleConfiguration.class);
 
     @Bean
-    public StateRepository<BananaProduct> bananaProductConcurrentStateRepository(final ObjectMapper objectMapper) {
-        return ChronicleMapStateRepository.builder(BananaProduct.class).withObjectMapper(objectMapper).build();
+    public StateRepository<BananaProduct> bananaProductConcurrentStateRepository() {
+        return ChronicleMapStateRepository.builder(BananaProduct.class).build();
     }
 
     @Bean

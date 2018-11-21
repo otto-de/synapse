@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.receiver.kinesis;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
@@ -15,33 +14,29 @@ public class KinesisMessageLogReceiverEndpointFactory implements MessageLogRecei
 
     private final MessageInterceptorRegistry interceptorRegistry;
     private final KinesisAsyncClient kinesisClient;
-    private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
     @Autowired
     public KinesisMessageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
                                                     final KinesisAsyncClient kinesisClient,
-                                                    final ObjectMapper objectMapper,
                                                     final ApplicationEventPublisher eventPublisher) {
-        this(interceptorRegistry, kinesisClient, objectMapper, eventPublisher, Clock.systemDefaultZone());
+        this(interceptorRegistry, kinesisClient, eventPublisher, Clock.systemDefaultZone());
     }
 
     public KinesisMessageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
                                                     final KinesisAsyncClient kinesisClient,
-                                                    final ObjectMapper objectMapper,
                                                     final ApplicationEventPublisher eventPublisher,
                                                     final Clock clock) {
         this.interceptorRegistry = interceptorRegistry;
         this.kinesisClient = kinesisClient;
-        this.objectMapper = objectMapper;
         this.eventPublisher = eventPublisher;
         this.clock = clock;
     }
 
     @Override
     public MessageLogReceiverEndpoint create(@Nonnull String channelName) {
-        return new KinesisMessageLogReceiverEndpoint(channelName, interceptorRegistry, kinesisClient, objectMapper, eventPublisher, clock);
+        return new KinesisMessageLogReceiverEndpoint(channelName, interceptorRegistry, kinesisClient, eventPublisher, clock);
     }
 
 }

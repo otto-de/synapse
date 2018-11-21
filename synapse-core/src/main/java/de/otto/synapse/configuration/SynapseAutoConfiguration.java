@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Role;
 
 import java.util.Map;
 
-import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS;
+import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.beans.factory.config.BeanDefinition.ROLE_INFRASTRUCTURE;
 
@@ -29,10 +29,7 @@ public class SynapseAutoConfiguration {
 
     @Bean
     public ObjectMapper objectMapper() {
-        final ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.findAndRegisterModules();
-        objectMapper.disable(WRITE_DATES_AS_TIMESTAMPS);
-        return objectMapper;
+        return defaultObjectMapper();
     }
 
     @Bean

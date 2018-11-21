@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
+import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
+
 public class ChronicleMapStateRepository<V> extends StateRepository<V> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ChronicleMapStateRepository.class);
@@ -59,7 +61,7 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
 
     public static final class Builder<V> {
 
-        private ObjectMapper objectMapper;
+        private ObjectMapper objectMapper = defaultObjectMapper();
 
         private final Class<V> clazz;
         private ChronicleMapBuilder<String, V> chronicleMapBuilder;
@@ -89,9 +91,6 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
 
             boolean doesClassNeedToBeSerialized = clazz != String.class;
             if (doesClassNeedToBeSerialized) {
-                if (objectMapper == null) {
-                    objectMapper = new ObjectMapper();
-                }
                 chronicleMapBuilder.valueMarshaller(new ChronicleMapBytesMarshaller<>(objectMapper, clazz));
             }
 

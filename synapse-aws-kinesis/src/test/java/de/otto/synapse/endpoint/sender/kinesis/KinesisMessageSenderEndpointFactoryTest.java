@@ -1,9 +1,8 @@
 package de.otto.synapse.endpoint.sender.kinesis;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import de.otto.synapse.channel.selector.Kinesis;
 import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.channel.selector.MessageQueue;
-import de.otto.synapse.channel.selector.Kinesis;
 import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistration;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
@@ -22,11 +21,10 @@ public class KinesisMessageSenderEndpointFactoryTest {
 
     @Test
     public void shouldBuildKinesisMessageSender() {
-        final ObjectMapper objectMapper = mock(ObjectMapper.class);
         final KinesisAsyncClient kinesisClient = mock(KinesisAsyncClient.class);
         when(kinesisClient.listStreams()).thenReturn(completedFuture(ListStreamsResponse.builder().build()));
 
-        final KinesisMessageSenderEndpointFactory factory = new KinesisMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, kinesisClient);
+        final KinesisMessageSenderEndpointFactory factory = new KinesisMessageSenderEndpointFactory(new MessageInterceptorRegistry(), kinesisClient);
 
         final MessageSenderEndpoint sender = factory.create("foo-stream");
         assertThat(sender.getChannelName(), is("foo-stream"));
@@ -36,10 +34,9 @@ public class KinesisMessageSenderEndpointFactoryTest {
     @Test
     public void shouldMatchMessageLogSelectors() {
         final MessageInterceptorRegistry interceptorRegistry = mock(MessageInterceptorRegistry.class);
-        final ObjectMapper objectMapper = mock(ObjectMapper.class);
         final KinesisAsyncClient kinesisClient = mock(KinesisAsyncClient.class);
 
-        final KinesisMessageSenderEndpointFactory factory = new KinesisMessageSenderEndpointFactory(interceptorRegistry, objectMapper, kinesisClient);
+        final KinesisMessageSenderEndpointFactory factory = new KinesisMessageSenderEndpointFactory(interceptorRegistry, kinesisClient);
 
         assertThat(factory.matches(MessageLog.class), is(true));
         assertThat(factory.matches(Kinesis.class), is(true));
@@ -48,24 +45,22 @@ public class KinesisMessageSenderEndpointFactoryTest {
     @Test
     public void shouldNotMatchMessageQueueSelectors() {
         final MessageInterceptorRegistry interceptorRegistry = mock(MessageInterceptorRegistry.class);
-        final ObjectMapper objectMapper = mock(ObjectMapper.class);
         final KinesisAsyncClient kinesisClient = mock(KinesisAsyncClient.class);
 
-        final KinesisMessageSenderEndpointFactory factory = new KinesisMessageSenderEndpointFactory(interceptorRegistry, objectMapper, kinesisClient);
+        final KinesisMessageSenderEndpointFactory factory = new KinesisMessageSenderEndpointFactory(interceptorRegistry, kinesisClient);
 
         assertThat(factory.matches(MessageQueue.class), is(false));
     }
 
     @Test
     public void shouldRegisterMessageInterceptor() {
-        final ObjectMapper objectMapper = mock(ObjectMapper.class);
         final KinesisAsyncClient kinesisClient = mock(KinesisAsyncClient.class);
 
         final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
         final MessageInterceptor interceptor = mock(MessageInterceptor.class);
         registry.register(MessageInterceptorRegistration.allChannelsWith(interceptor));
 
-        final KinesisMessageSenderEndpointFactory factory = new KinesisMessageSenderEndpointFactory(registry, objectMapper, kinesisClient);
+        final KinesisMessageSenderEndpointFactory factory = new KinesisMessageSenderEndpointFactory(registry, kinesisClient);
 
         final MessageSenderEndpoint sender = factory.create("foo-stream");
 

@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.receiver.kinesis;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelDurationBehind;
@@ -89,18 +88,16 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
     public KinesisMessageLogReceiverEndpoint(final String channelName,
                                              final MessageInterceptorRegistry interceptorRegistry,
                                              final KinesisAsyncClient kinesisClient,
-                                             final ObjectMapper objectMapper,
                                              final ApplicationEventPublisher eventPublisher) {
-        this(channelName, interceptorRegistry, kinesisClient, objectMapper, eventPublisher, Clock.systemDefaultZone());
+        this(channelName, interceptorRegistry, kinesisClient, eventPublisher, Clock.systemDefaultZone());
     }
 
     public KinesisMessageLogReceiverEndpoint(final String channelName,
                                              final MessageInterceptorRegistry interceptorRegistry,
                                              final KinesisAsyncClient kinesisClient,
-                                             final ObjectMapper objectMapper,
                                              final ApplicationEventPublisher eventPublisher,
                                              final Clock clock) {
-        super(channelName, interceptorRegistry, objectMapper, eventPublisher);
+        super(channelName, interceptorRegistry, eventPublisher);
         this.eventPublisher = eventPublisher;
         this.kinesisMessageLogReader = new KinesisMessageLogReader(channelName, kinesisClient, clock);
         this.interceptorRegistry = interceptorRegistry;

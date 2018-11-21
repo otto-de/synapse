@@ -1,6 +1,5 @@
 package de.otto.synapse.compaction.s3;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.StartFrom;
@@ -19,16 +18,15 @@ import static org.junit.Assert.assertThat;
 
 public class SnapshotParserTest {
 
-    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private SnapshotParser testee;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         testee = new SnapshotParser();
     }
 
     @Test
-    public void shouldConsumeSnapshotFile() throws Exception {
+    public void shouldConsumeSnapshotFile() {
         //given
         File file = new File(getClass().getClassLoader().getResource("compaction-integrationtest-snapshot-2017-09-29T09-02Z-3053797267191232636.json.zip").getFile());
         Map<String, Map> allData = new HashMap<>();
@@ -38,7 +36,7 @@ public class SnapshotParserTest {
         });
         final ChannelPosition shardPositions = testee.parse(
                 file,
-                new MessageDispatcher(OBJECT_MAPPER, Collections.singletonList(messageConsumer)));
+                new MessageDispatcher(Collections.singletonList(messageConsumer)));
         //then
         assertThat(shardPositions.shards().size(), is(2));
         assertThat(shardPositions.shard("shardId-000000000000").startFrom(), is(StartFrom.HORIZON));

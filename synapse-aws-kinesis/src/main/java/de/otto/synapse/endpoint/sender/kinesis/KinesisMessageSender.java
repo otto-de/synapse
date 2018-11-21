@@ -47,11 +47,11 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
         return allOf(
                 partition(entries, PUT_RECORDS_BATCH_SIZE)
                         .stream()
-                        .map(batch -> kinesisAsyncClient.putRecords(createPutRecordRequest(batch)))
+                        .map(batch -> kinesisAsyncClient.putRecords(createPutRecordsRequest(batch)))
                         .toArray(CompletableFuture[]::new));
     }
 
-    private PutRecordsRequest createPutRecordRequest(final List<PutRecordsRequestEntry> batch) {
+    private PutRecordsRequest createPutRecordsRequest(final List<PutRecordsRequestEntry> batch) {
         return PutRecordsRequest.builder()
                 .streamName(getChannelName())
                 .records(batch)
@@ -64,6 +64,13 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
                 .collect(toCollection(ArrayList::new));
     }
 
+    private PutRecordsRequest createPutRecordRequest(final @Nonnull Message<String> message) {
+        return PutRecordsRequest.builder()
+                .streamName(getChannelName())
+                .records(requestEntryFor(message.getKey(), message.getPayload()))
+                .build();
+    }
+
     private PutRecordsRequestEntry requestEntryFor(final String key,
                                                    final String payload) {
         final SdkBytes sdkBytesPayload = payload != null
@@ -72,13 +79,6 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
         return PutRecordsRequestEntry.builder()
                 .partitionKey(key)
                 .data(sdkBytesPayload)
-                .build();
-    }
-
-    private PutRecordsRequest createPutRecordRequest(final @Nonnull Message<String> message) {
-        return PutRecordsRequest.builder()
-                .streamName(getChannelName())
-                .records(requestEntryFor(message.getKey(), message.getPayload()))
                 .build();
     }
 

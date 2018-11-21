@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.receiver.kinesis;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Message;
@@ -51,7 +50,6 @@ public class KinesisMessageLogReaderTest {
     private static final Logger LOG = getLogger(KinesisMessageLogReaderTest.class);
 
     private static final Pattern MATCH_ALL = Pattern.compile(".*");
-    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final TestClock clock = TestClock.now();
 
     @Mock

@@ -1,6 +1,5 @@
 package de.otto.synapse.consumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 
@@ -10,6 +9,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static de.otto.synapse.message.Message.message;
+import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.regex.Pattern.compile;
@@ -36,17 +36,13 @@ public class MessageDispatcher implements MessageConsumer<String> {
     private static final Pattern ACCEPT_ALL = compile(".*");
 
     private final List<MessageConsumer<?>> messageConsumers;
-    private final ObjectMapper objectMapper;
 
-    public MessageDispatcher(final ObjectMapper objectMapper) {
+    public MessageDispatcher() {
         this.messageConsumers = synchronizedList(new ArrayList<>());
-        this.objectMapper = objectMapper;
     }
 
-    public MessageDispatcher(final ObjectMapper objectMapper,
-                             final List<MessageConsumer<?>> messageConsumers) {
+    public MessageDispatcher(final List<MessageConsumer<?>> messageConsumers) {
         this.messageConsumers = synchronizedList(new ArrayList<>(messageConsumers));
-        this.objectMapper = objectMapper;
     }
 
     public void add(final MessageConsumer<?> messageConsumer) {
@@ -102,7 +98,7 @@ public class MessageDispatcher implements MessageConsumer<String> {
                         } else {
                             Object payload = null;
                             if (message.getPayload() != null) {
-                                payload = objectMapper.readValue(message.getPayload(), payloadType);
+                                payload = defaultObjectMapper().readValue(message.getPayload(), payloadType);
                             }
                             final Message<?> tMessage = message(message.getKey(), message.getHeader(), payload);
                             consumer.accept(tMessage);

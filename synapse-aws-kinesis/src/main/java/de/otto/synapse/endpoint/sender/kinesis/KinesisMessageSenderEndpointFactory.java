@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.sender.kinesis;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.selector.Kinesis;
 import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
@@ -19,10 +18,9 @@ public class KinesisMessageSenderEndpointFactory implements MessageSenderEndpoin
     private final KinesisAsyncClient kinesisClient;
 
     public KinesisMessageSenderEndpointFactory(final MessageInterceptorRegistry registry,
-                                               final ObjectMapper objectMapper,
                                                final KinesisAsyncClient kinesisClient) {
         this.registry = registry;
-        this.messageTranslator = new JsonStringMessageTranslator(objectMapper);
+        this.messageTranslator = new JsonStringMessageTranslator();
         this.kinesisClient = kinesisClient;
     }
 

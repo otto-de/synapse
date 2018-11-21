@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.receiver;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelDurationBehind;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
@@ -30,10 +29,9 @@ public class AbstractMessageReceiverEndpoint extends AbstractMessageEndpoint imp
 
     public AbstractMessageReceiverEndpoint(final @Nonnull String channelName,
                                            final @Nonnull MessageInterceptorRegistry interceptorRegistry,
-                                           final @Nonnull ObjectMapper objectMapper,
                                            final @Nullable ApplicationEventPublisher eventPublisher) {
         super(channelName, interceptorRegistry);
-        messageDispatcher = new MessageDispatcher(objectMapper);
+        messageDispatcher = new MessageDispatcher();
         this.eventPublisher = eventPublisher;
     }
 

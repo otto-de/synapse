@@ -1,6 +1,5 @@
 package de.otto.synapse.channel;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.info.MessageReceiverNotification;
 import de.otto.synapse.info.MessageReceiverStatus;
@@ -17,13 +16,12 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 public class InMemoryChannelTest {
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
 
     @Test
     public void shouldPublishStartedAndFinishedEvents() throws ExecutionException, InterruptedException {
         // given
-        InMemoryChannel inMemoryChannel = new InMemoryChannel("some-stream", new MessageInterceptorRegistry(), objectMapper, eventPublisher);
+        InMemoryChannel inMemoryChannel = new InMemoryChannel("some-stream", new MessageInterceptorRegistry(), eventPublisher);
 
         // when
         inMemoryChannel.consumeUntil(fromHorizon(), Instant.now()).get();

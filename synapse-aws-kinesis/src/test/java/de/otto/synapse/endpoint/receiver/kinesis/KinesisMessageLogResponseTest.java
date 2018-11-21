@@ -2,7 +2,6 @@ package de.otto.synapse.endpoint.receiver.kinesis;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelDurationBehind;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
@@ -28,6 +27,7 @@ import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
+import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
 import static java.nio.charset.Charset.forName;
 import static java.time.Instant.now;
 import static java.util.Arrays.asList;
@@ -102,7 +102,7 @@ public class KinesisMessageLogResponseTest {
         final MessageTranslator<TestPayload> messageTranslator = MessageTranslator.of((payload -> {
             try {
                 final String json = Objects.toString(payload, "{}");
-                return new ObjectMapper().readValue(json, TestPayload.class);
+                return defaultObjectMapper().readValue(json, TestPayload.class);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -128,7 +128,7 @@ public class KinesisMessageLogResponseTest {
                 )
         );
         final MessageConsumer<TestPayload> consumer = spy(testMessageConsumer());
-        response.dispatchMessages(new MessageDispatcher(new ObjectMapper(), singletonList(consumer)));
+        response.dispatchMessages(new MessageDispatcher(singletonList(consumer)));
         verify(consumer).accept(message("a", responseHeader(fromPosition("foo", "1"), now), new TestPayload("first")));
         verify(consumer).accept(message("b", responseHeader(fromPosition("foo", "2"), now), new TestPayload("second")));
     }

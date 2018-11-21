@@ -1,7 +1,6 @@
 package de.otto.synapse.endpoint.sender.sqs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
@@ -40,8 +39,7 @@ public class SqsMessageSenderTest {
     private ArgumentCaptor<SendMessageRequest> requestArgumentCaptor;
     @Captor
     private ArgumentCaptor<SendMessageBatchRequest> batchRequestArgumentCaptor;
-    private ObjectMapper objectMapper = new ObjectMapper();
-    private MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator(objectMapper);
+    private MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator();
     private MessageInterceptorRegistry interceptorRegistry;
 
     @Before

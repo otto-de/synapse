@@ -7,6 +7,7 @@ import de.otto.synapse.message.Message;
 import javax.annotation.Nonnull;
 
 import static de.otto.synapse.message.Messages.stringMessage;
+import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
 
 /**
  * A MessageTranslator that converts messages into messages with String JSON payloads.
@@ -22,6 +23,10 @@ import static de.otto.synapse.message.Messages.stringMessage;
 public class JsonStringMessageTranslator implements MessageTranslator<String> {
 
     private final ObjectMapper objectMapper;
+
+    public JsonStringMessageTranslator() {
+        this.objectMapper = defaultObjectMapper();
+    }
 
     public JsonStringMessageTranslator(final @Nonnull ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;

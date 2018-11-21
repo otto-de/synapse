@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.sender.sqs;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.channel.selector.Sqs;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
@@ -18,16 +17,12 @@ public class SqsMessageSenderEndpointFactory implements MessageSenderEndpointFac
     private final MessageInterceptorRegistry registry;
     private final MessageTranslator<String> messageTranslator;
     private final SqsAsyncClient sqsAsyncClient;
-    private final String messageSenderName;
 
     public SqsMessageSenderEndpointFactory(final MessageInterceptorRegistry registry,
-                                           final ObjectMapper objectMapper,
-                                           final SqsAsyncClient sqsAsyncClient,
-                                           final String messageSenderName) {
+                                           final SqsAsyncClient sqsAsyncClient) {
         this.registry = registry;
-        this.messageTranslator = new JsonStringMessageTranslator(objectMapper);
+        this.messageTranslator = new JsonStringMessageTranslator();
         this.sqsAsyncClient = sqsAsyncClient;
-        this.messageSenderName = messageSenderName;
     }
 
     @Override

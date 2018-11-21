@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.receiver.kinesis;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
@@ -19,7 +18,6 @@ import static org.mockito.Mockito.when;
 
 public class KinesisMessageLogReceiverEndpointFactoryTest {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
     private final MessageInterceptorRegistry registry = mock(MessageInterceptorRegistry.class);
     private final KinesisAsyncClient kinesisClient = someKinesisClient();
@@ -27,7 +25,7 @@ public class KinesisMessageLogReceiverEndpointFactoryTest {
     @Test
     public void shouldBuildEventSource() {
         // given
-        final KinesisMessageLogReceiverEndpointFactory factory = new KinesisMessageLogReceiverEndpointFactory(registry, kinesisClient, objectMapper, eventPublisher);
+        final KinesisMessageLogReceiverEndpointFactory factory = new KinesisMessageLogReceiverEndpointFactory(registry, kinesisClient, eventPublisher);
         // when
         final MessageLogReceiverEndpoint endpoint = factory.create("some-channel");
         // then
@@ -43,7 +41,7 @@ public class KinesisMessageLogReceiverEndpointFactoryTest {
         final MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
         // when
         registry.register(matchingReceiverChannelsWith("some-channel", interceptor));
-        final KinesisMessageLogReceiverEndpointFactory factory = new KinesisMessageLogReceiverEndpointFactory(registry, kinesisClient, objectMapper, eventPublisher);
+        final KinesisMessageLogReceiverEndpointFactory factory = new KinesisMessageLogReceiverEndpointFactory(registry, kinesisClient, eventPublisher);
         final MessageLogReceiverEndpoint endpoint = factory.create("some-channel");
         // then
         assertThat(endpoint.getInterceptorChain().getInterceptors(), contains(interceptor));
@@ -59,7 +57,7 @@ public class KinesisMessageLogReceiverEndpointFactoryTest {
         // when
         registry.register(matchingReceiverChannelsWith("some-channel", receiverInterceptor));
         registry.register(matchingSenderChannelsWith("some-channel", senderInterceptor));
-        final KinesisMessageLogReceiverEndpointFactory factory = new KinesisMessageLogReceiverEndpointFactory(registry, kinesisClient, objectMapper, eventPublisher);
+        final KinesisMessageLogReceiverEndpointFactory factory = new KinesisMessageLogReceiverEndpointFactory(registry, kinesisClient, eventPublisher);
         final MessageLogReceiverEndpoint endpoint = factory.create("some-channel");
 
         // then
@@ -76,7 +74,7 @@ public class KinesisMessageLogReceiverEndpointFactoryTest {
         // when
         registry.register(matchingChannelsWith("some-channel", someInterceptor));
         registry.register(matchingChannelsWith("some-other-channel", someOtherInterceptor));
-        final KinesisMessageLogReceiverEndpointFactory factory = new KinesisMessageLogReceiverEndpointFactory(registry, kinesisClient, objectMapper, eventPublisher);
+        final KinesisMessageLogReceiverEndpointFactory factory = new KinesisMessageLogReceiverEndpointFactory(registry, kinesisClient, eventPublisher);
         final MessageLogReceiverEndpoint endpoint = factory.create("some-channel");
 
         // then

@@ -1,6 +1,5 @@
 package de.otto.synapse.configuration.sqs;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import de.otto.synapse.configuration.aws.AwsProperties;
 import de.otto.synapse.configuration.aws.SynapseAwsAuthConfiguration;
@@ -45,20 +44,18 @@ public class SqsAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = "messageQueueSenderEndpointFactory")
     public MessageSenderEndpointFactory messageQueueSenderEndpointFactory(final MessageInterceptorRegistry registry,
-                                                                          final ObjectMapper objectMapper,
                                                                           final SqsAsyncClient sqsAsyncClient,
                                                                           final @Value("${spring.application.name:Synapse Service}") String messageSenderName) {
-        return new SqsMessageSenderEndpointFactory(registry, objectMapper, sqsAsyncClient, messageSenderName);
+        return new SqsMessageSenderEndpointFactory(registry, sqsAsyncClient);
     }
 
     @Bean
     @ConditionalOnMissingBean(name = "messageQueueReceiverEndpointFactory")
     public MessageQueueReceiverEndpointFactory messageQueueReceiverEndpointFactory(final MessageInterceptorRegistry registry,
-                                                                                   final ObjectMapper objectMapper,
                                                                                    final SqsAsyncClient sqsAsyncClient,
                                                                                    final ApplicationEventPublisher eventPublisher) {
 
-        return new SqsMessageQueueReceiverEndpointFactory(registry, objectMapper, sqsAsyncClient, eventPublisher);
+        return new SqsMessageQueueReceiverEndpointFactory(registry, sqsAsyncClient, eventPublisher);
     }
 
 }

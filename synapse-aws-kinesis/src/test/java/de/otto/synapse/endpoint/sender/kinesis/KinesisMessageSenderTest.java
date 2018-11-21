@@ -1,7 +1,6 @@
 package de.otto.synapse.endpoint.sender.kinesis;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
@@ -28,6 +27,7 @@ import java.util.stream.Stream;
 
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingSenderChannelsWith;
 import static de.otto.synapse.message.Message.message;
+import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
 import static java.lang.String.valueOf;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.hamcrest.Matchers.hasSize;
@@ -45,8 +45,7 @@ public class KinesisMessageSenderTest {
     private KinesisAsyncClient kinesisClient;
     @Captor
     private ArgumentCaptor<PutRecordsRequest> putRecordsRequestCaptor;
-    private ObjectMapper objectMapper = new ObjectMapper();
-    private MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator(objectMapper);
+    private MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator();
     private MessageInterceptorRegistry interceptorRegistry;
 
     @Before
@@ -77,7 +76,7 @@ public class KinesisMessageSenderTest {
         assertThat(caputuredRequest.records().get(0).partitionKey(), is("someKey"));
 
         final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data().asByteBuffer());
-        ExampleJsonObject jsonObject = objectMapper.readValue(inputStream, ExampleJsonObject.class);
+        ExampleJsonObject jsonObject = defaultObjectMapper().readValue(inputStream, ExampleJsonObject.class);
         assertThat(jsonObject.value, is("banana"));
 
     }
@@ -106,7 +105,7 @@ public class KinesisMessageSenderTest {
         final PutRecordsRequest caputuredRequest = putRecordsRequestCaptor.getValue();
 
         final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data().asByteBuffer());
-        ExampleJsonObject jsonObject = objectMapper.readValue(inputStream, ExampleJsonObject.class);
+        ExampleJsonObject jsonObject = defaultObjectMapper().readValue(inputStream, ExampleJsonObject.class);
         assertThat(jsonObject.value, is("apple"));
     }
 
@@ -144,14 +143,14 @@ public class KinesisMessageSenderTest {
         final PutRecordsRequestEntry firstEntry = caputuredRequest.records().get(0);
         assertThat(firstEntry.partitionKey(), is("b"));
 
-        assertThat(objectMapper.readValue(
+        assertThat(defaultObjectMapper().readValue(
                 new ByteBufferBackedInputStream(firstEntry.data().asByteBuffer()), ExampleJsonObject.class).value,
                 is("Lovely day for a Guinness"));
 
         final PutRecordsRequestEntry secondEntry = caputuredRequest.records().get(1);
         assertThat(secondEntry.partitionKey(), is("a"));
 
-        assertThat(objectMapper.readValue(
+        assertThat(defaultObjectMapper().readValue(
                 new ByteBufferBackedInputStream(secondEntry.data().asByteBuffer()), ExampleJsonObject.class).value,
                 is("Lovely day for a Guinness"));
     }
@@ -183,14 +182,14 @@ public class KinesisMessageSenderTest {
         final PutRecordsRequestEntry firstEntry = caputuredRequest.records().get(0);
         assertThat(firstEntry.partitionKey(), is("b"));
 
-        assertThat(objectMapper.readValue(
+        assertThat(defaultObjectMapper().readValue(
                 new ByteBufferBackedInputStream(firstEntry.data().asByteBuffer()), ExampleJsonObject.class).value,
                 is("banana"));
 
         final PutRecordsRequestEntry secondEntry = caputuredRequest.records().get(1);
         assertThat(secondEntry.partitionKey(), is("a"));
 
-        assertThat(objectMapper.readValue(
+        assertThat(defaultObjectMapper().readValue(
                 new ByteBufferBackedInputStream(secondEntry.data().asByteBuffer()), ExampleJsonObject.class).value,
                 is("apple"));
     }

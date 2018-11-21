@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.Map;
 
+import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
 import static java.util.Collections.singletonMap;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.ResponseEntity.ok;
@@ -28,9 +29,8 @@ public class HistoryController {
     @GetMapping(
             value = "${management.context-path}/history/{type}/{entityId}",
             produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, History>> getHistoryAsJson (final @PathVariable String type,
-                                                                  final @PathVariable String entityId) {
-        final Map<String, History> history = singletonMap("history", historyService.getHistory(type, entityId));
-        return ok(history);
+    public ResponseEntity<Map<String, ?>> getHistoryAsJson (final @PathVariable String type,
+                                                            final @PathVariable String entityId) {
+        return ok(singletonMap("history", defaultObjectMapper().convertValue(historyService.getHistory(type, entityId), Map.class)));
     }
 }

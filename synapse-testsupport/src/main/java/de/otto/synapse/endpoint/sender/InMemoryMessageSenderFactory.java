@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.sender;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.InMemoryChannels;
 import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
@@ -11,14 +10,11 @@ import javax.annotation.Nonnull;
 public class InMemoryMessageSenderFactory implements MessageSenderEndpointFactory {
 
     private final MessageInterceptorRegistry registry;
-    private final ObjectMapper objectMapper;
     private final InMemoryChannels inMemoryChannels;
 
     public InMemoryMessageSenderFactory(final MessageInterceptorRegistry registry,
-                                        final InMemoryChannels inMemoryChannels,
-                                        final ObjectMapper objectMapper) {
+                                        final InMemoryChannels inMemoryChannels) {
         this.registry = registry;
-        this.objectMapper = objectMapper;
         this.inMemoryChannels = inMemoryChannels;
     }
 
@@ -26,7 +22,7 @@ public class InMemoryMessageSenderFactory implements MessageSenderEndpointFactor
     public InMemoryMessageSender create(@Nonnull final String channelName) {
         final InMemoryMessageSender messageSender = new InMemoryMessageSender(
                 registry,
-                new JsonStringMessageTranslator(objectMapper),
+                new JsonStringMessageTranslator(),
                 inMemoryChannels.getChannel(channelName));
         return messageSender;
     }

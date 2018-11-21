@@ -1,6 +1,5 @@
 package de.otto.synapse.example.edison.configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.annotation.EnableEventSource;
 import de.otto.synapse.annotation.EnableMessageQueueReceiverEndpoint;
 import de.otto.synapse.channel.InMemoryChannels;
@@ -39,22 +38,19 @@ public class ExampleConfiguration {
 
     @Bean
     public MessageSenderEndpoint bananaMessageSender(final MyServiceProperties properties,
-                                                     final ObjectMapper objectMapper,
                                                      final InMemoryChannels inMemoryChannels) {
-        return buildMessageSender(properties.getBananaChannel(), objectMapper, inMemoryChannels);
+        return buildMessageSender(properties.getBananaChannel(), inMemoryChannels);
     }
 
     @Bean
     public MessageSenderEndpoint productMessageSender(final MyServiceProperties properties,
-                                                      final ObjectMapper objectMapper,
                                                       final InMemoryChannels inMemoryChannels) {
-        return buildMessageSender(properties.getProductChannel(), objectMapper, inMemoryChannels);
+        return buildMessageSender(properties.getProductChannel(), inMemoryChannels);
     }
 
     private MessageSenderEndpoint buildMessageSender(final String channelName,
-                                                     final ObjectMapper objectMapper,
                                                      final InMemoryChannels inMemoryChannels) {
-        final MessageTranslator<String> translator = new JsonStringMessageTranslator(objectMapper);
+        final MessageTranslator<String> translator = new JsonStringMessageTranslator();
         return new InMemoryMessageSender(interceptorRegistry, translator, inMemoryChannels.getChannel(channelName));
     }
 }

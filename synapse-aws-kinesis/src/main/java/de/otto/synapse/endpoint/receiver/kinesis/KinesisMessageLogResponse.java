@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static de.otto.synapse.channel.ChannelDurationBehind.channelDurationBehind;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -37,7 +38,7 @@ public class KinesisMessageLogResponse {
     }
 
     public ChannelDurationBehind getChannelDurationBehind() {
-        final ChannelDurationBehind.Builder durationBehind = ChannelDurationBehind.channelDurationBehind();
+        final ChannelDurationBehind.Builder durationBehind = channelDurationBehind();
         shardResponses.forEach((response) -> durationBehind.with(response.getShardName(), response.getDurationBehind()));
         return durationBehind.build();
     }

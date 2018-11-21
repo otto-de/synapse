@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.sender.sqs;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.channel.selector.MessageQueue;
 import de.otto.synapse.channel.selector.Sqs;
@@ -24,11 +23,10 @@ public class SqsMessageSenderEndpointFactoryTest {
 
     @Test
     public void shouldBuildSqsMessageSender() {
-        final ObjectMapper objectMapper = mock(ObjectMapper.class);
         final SqsAsyncClient sqsAsyncClient = mock(SqsAsyncClient.class);
         when(sqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl("http://example.com").build()));
 
-        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, sqsAsyncClient, "test");
+        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), sqsAsyncClient);
 
         final MessageSenderEndpoint sender = factory.create("foo-stream");
         assertThat(sender.getChannelName(), is("foo-stream"));
@@ -38,10 +36,9 @@ public class SqsMessageSenderEndpointFactoryTest {
     @Test
     public void shouldMatchMessageQueueSelectors() {
         final MessageInterceptorRegistry interceptorRegistry = mock(MessageInterceptorRegistry.class);
-        final ObjectMapper objectMapper = mock(ObjectMapper.class);
         final SqsAsyncClient sqsAsyncClient = mock(SqsAsyncClient.class);
 
-        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, sqsAsyncClient, "test");
+        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), sqsAsyncClient);
 
         assertThat(factory.matches(MessageQueue.class), is(true));
         assertThat(factory.matches(Sqs.class), is(true));
@@ -50,17 +47,15 @@ public class SqsMessageSenderEndpointFactoryTest {
     @Test
     public void shouldNotMatchMessageLogSelectors() {
         final MessageInterceptorRegistry interceptorRegistry = mock(MessageInterceptorRegistry.class);
-        final ObjectMapper objectMapper = mock(ObjectMapper.class);
         final SqsAsyncClient sqsAsyncClient = mock(SqsAsyncClient.class);
 
-        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), objectMapper, sqsAsyncClient, "test");
+        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), sqsAsyncClient);
 
         assertThat(factory.matches(MessageLog.class), is(false));
     }
 
     @Test
     public void shouldRegisterMessageInterceptor() {
-        final ObjectMapper objectMapper = mock(ObjectMapper.class);
         final SqsAsyncClient sqsAsyncClient = mock(SqsAsyncClient.class);
         when(sqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class))).thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl("http://example.com").build()));
 
@@ -68,7 +63,7 @@ public class SqsMessageSenderEndpointFactoryTest {
         final MessageInterceptor interceptor = mock(MessageInterceptor.class);
         registry.register(MessageInterceptorRegistration.allChannelsWith(interceptor));
 
-        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(registry, objectMapper, sqsAsyncClient, "test");
+        final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(registry, sqsAsyncClient);
 
         final MessageSenderEndpoint sender = factory.create("foo-stream");
 

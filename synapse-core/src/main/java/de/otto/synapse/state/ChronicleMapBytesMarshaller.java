@@ -8,6 +8,8 @@ import net.openhft.chronicle.hash.serialization.BytesWriter;
 
 import java.io.IOException;
 
+import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
+
 public final class ChronicleMapBytesMarshaller<V> implements
         BytesWriter<V>,
         BytesReader<V>,
@@ -15,6 +17,11 @@ public final class ChronicleMapBytesMarshaller<V> implements
 
     private final ObjectMapper objectMapper;
     private final Class<V> clazz;
+
+    public ChronicleMapBytesMarshaller(Class<V> clazz) {
+        this.objectMapper = defaultObjectMapper();
+        this.clazz = clazz;
+    }
 
     public ChronicleMapBytesMarshaller(ObjectMapper objectMapper,
                                        Class<V> clazz) {

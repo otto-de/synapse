@@ -1,10 +1,8 @@
 package de.otto.synapse.consumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 
-import java.time.Duration;
 import java.time.Instant;
 
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
@@ -17,8 +15,6 @@ import static org.mockito.Mockito.*;
 
 public class MessageDispatcherTest {
 
-    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
     @Test
     @SuppressWarnings("unchecked")
     public void shouldDelegateEventsToAllConsumers() {
@@ -27,7 +23,7 @@ public class MessageDispatcherTest {
         TestMessageConsumer<Object> eventConsumerB = spy(testEventConsumer(".*", Object.class));
         TestMessageConsumer<Object> eventConsumerC = spy(testEventConsumer(".*", Object.class));
 
-        MessageDispatcher messageDispatcher = new MessageDispatcher(OBJECT_MAPPER);
+        MessageDispatcher messageDispatcher = new MessageDispatcher();
         messageDispatcher.add(eventConsumerA);
         messageDispatcher.add(eventConsumerB);
         messageDispatcher.add(eventConsumerC);
@@ -55,7 +51,7 @@ public class MessageDispatcherTest {
         TestMessageConsumer<Banana> eventConsumerBanana = spy(testEventConsumer("banana.*", Banana.class));
         TestMessageConsumer<Cherry> eventConsumerCherry = spy(testEventConsumer("cherry.*", Cherry.class));
 
-        MessageDispatcher messageDispatcher = new MessageDispatcher(OBJECT_MAPPER, asList(eventConsumerApple, eventConsumerBanana, eventConsumerCherry));
+        MessageDispatcher messageDispatcher = new MessageDispatcher(asList(eventConsumerApple, eventConsumerBanana, eventConsumerCherry));
 
         // when
         final Instant now = Instant.now();

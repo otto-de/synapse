@@ -1,6 +1,5 @@
 package de.otto.synapse.compaction.s3;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
@@ -43,7 +42,6 @@ import static org.mockito.Mockito.when;
 public class SnapshotWriteServiceTest {
 
     private static final String STREAM_NAME = "teststream";
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private SnapshotWriteService testee;
     private S3Client s3Client;
@@ -98,7 +96,7 @@ public class SnapshotWriteServiceTest {
                 (event) -> data.put(event.getKey(), event.getPayload()));
         ChannelPosition actualChannelPosition = new SnapshotParser().parse(
                 snapshot,
-                new MessageDispatcher(OBJECT_MAPPER, singletonList(messageConsumer)));
+                new MessageDispatcher(singletonList(messageConsumer)));
 
         assertThat(actualChannelPosition, is(channelPosition));
         assertThat(data.get("testKey"), is(of("testValue1", "value1")));

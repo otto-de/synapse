@@ -8,6 +8,7 @@ import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 
 import static de.otto.synapse.message.Messages.byteBufferMessage;
+import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
 import static java.nio.ByteBuffer.wrap;
 
 /**
@@ -24,6 +25,10 @@ import static java.nio.ByteBuffer.wrap;
 public class JsonByteBufferMessageTranslator implements MessageTranslator<ByteBuffer> {
 
     private final ObjectMapper objectMapper;
+
+    public JsonByteBufferMessageTranslator() {
+        this.objectMapper = defaultObjectMapper();
+    }
 
     public JsonByteBufferMessageTranslator(final @Nonnull ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;

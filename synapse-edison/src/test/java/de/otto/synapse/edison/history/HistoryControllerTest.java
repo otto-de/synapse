@@ -1,7 +1,5 @@
 package de.otto.synapse.edison.history;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,7 +23,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
@@ -39,9 +37,6 @@ public class HistoryControllerTest {
     @Autowired
     private WebApplicationContext context;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @MockBean
     private HistoryService historyService;
 
@@ -49,7 +44,6 @@ public class HistoryControllerTest {
 
     @Before
     public void setup() {
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         mockMvc = webAppContextSetup(context).build();
     }
 
@@ -63,7 +57,7 @@ public class HistoryControllerTest {
         when(historyService.getHistory(any(String.class), any(String.class))).thenReturn(someHistory());
         mockMvc
                 .perform(get("/internal/history/foo/4711"))
-                .andDo(print())
+                .andDo(log())
                 .andExpect(status().isOk())
                 .andExpect(content().string(is("{\"history\":{\"entityId\":\"4711\",\"entries\":[{\"messageKey\":\"4711\",\"messagePayload\":{\"price\":45},\"arrivalTimestamp\":\"1970-01-01T00:00:00.005Z\",\"channelName\":\"test-products\",\"diffs\":[{\"key\":\"price\",\"previousValue\":46,\"newValue\":45,\"equal\":false}]},{\"messageKey\":\"4711\",\"messagePayload\":{\"price\":42},\"arrivalTimestamp\":\"1970-01-01T00:00:00.010Z\",\"channelName\":\"test-products\",\"diffs\":[{\"key\":\"price\",\"previousValue\":45,\"newValue\":42,\"equal\":false}]}]}}")));
     }
