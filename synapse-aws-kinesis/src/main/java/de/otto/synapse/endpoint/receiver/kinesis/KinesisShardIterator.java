@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.*;
 
 import javax.annotation.Nonnull;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
@@ -171,7 +172,8 @@ public class KinesisShardIterator {
         SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy(
                 RETRY_MAX_ATTEMPTS,
                 ImmutableMap.of(KinesisException.class, true,
-                        SdkClientException.class, true));
+                        SdkClientException.class, true,
+                        CompletionException.class, true));
 
         ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
         backOffPolicy.setInitialInterval(RETRY_BACK_OFF_POLICY_INITIAL_INTERVAL);

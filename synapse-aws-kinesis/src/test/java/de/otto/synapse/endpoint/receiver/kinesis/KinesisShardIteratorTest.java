@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import static de.otto.synapse.channel.ShardPosition.*;
 import static java.time.Instant.now;
@@ -260,7 +261,7 @@ public class KinesisShardIteratorTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class)))
                 .thenThrow(KinesisException.builder().message("forced test exception").build())
                 .thenThrow(KinesisException.builder().message("forced test exception").build())
-                .thenThrow(KinesisException.builder().message("forced test exception").build())
+                .thenThrow(new CompletionException(ProvisionedThroughputExceededException.builder().message("forced test exception").build()))
                 .thenThrow(KinesisException.builder().message("forced test exception").build())
                 .thenReturn(completedFuture(response));
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromHorizon("someShard"));
