@@ -12,6 +12,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -120,4 +122,39 @@ public class Header implements Serializable {
                 '}';
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static Builder copyOf(final Header header) {
+        return new Builder()
+                .withApproximateArrivalTimestamp(header.arrivalTimestamp)
+                .withShardPosition(header.shardPosition)
+                .withAttributes(header.getAttributes());
+    }
+
+    public static class Builder {
+        private ShardPosition shardPosition;
+        private Instant approximateArrivalTimestamp;
+        private final Map<String, String> attributes = new HashMap<>();
+
+        public Builder withShardPosition(final ShardPosition shardPosition) {
+            this.shardPosition = shardPosition;
+            return this;
+        }
+
+        public Builder withApproximateArrivalTimestamp(final Instant approximateArrivalTimestamp) {
+            this.approximateArrivalTimestamp = approximateArrivalTimestamp;
+            return this;
+        }
+
+        public Builder withAttributes(final Map<String, String> attributes) {
+            this.attributes.putAll(attributes);
+            return this;
+        }
+
+        public Header build() {
+            return new Header(shardPosition, approximateArrivalTimestamp, ImmutableMap.copyOf(attributes));
+        }
+    }
 }

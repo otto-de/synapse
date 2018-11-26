@@ -83,8 +83,8 @@ public class DefaultSenderHeadersInterceptor {
                                            final Set<Capability> capabilities,
                                            final Clock clock) {
         this.senderName = senderProperties.getName();
-        this.capabilities = EnumSet.allOf(Capability.class);
-        this.clock = Clock.systemDefaultZone();
+        this.capabilities = capabilities;
+        this.clock = clock;
     }
 
     @Nullable

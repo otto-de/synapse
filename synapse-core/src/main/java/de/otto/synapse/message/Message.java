@@ -95,4 +95,40 @@ public class Message<T> implements Serializable {
                 ", header=" + header +
                 '}';
     }
+
+    public static <T> Builder<T> builder(final Class<T> payloadType) {
+        return new Builder<>();
+    }
+
+    public static <T> Builder<T> copyOf(final Message<T> message) {
+        return new Builder<T>()
+                .withKey(message.getKey())
+                .withHeader(message.getHeader())
+                .withPayload(message.getPayload());
+    }
+
+    public static class Builder<T> {
+        private String key;
+        private Header header;
+        private T payload;
+
+        public Builder<T> withKey(final String key) {
+            this.key = key;
+            return this;
+        }
+
+        public Builder<T> withHeader(final Header header) {
+            this.header = header;
+            return this;
+        }
+
+        public Builder<T> withPayload(final T payload) {
+            this.payload = payload;
+            return this;
+        }
+
+        public Message<T> build() {
+            return new Message<>(key, header, payload);
+        }
+    }
 }

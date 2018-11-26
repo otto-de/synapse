@@ -23,8 +23,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import static de.otto.synapse.configuration.kinesis.KinesisTestConfiguration.KINESIS_INTEGRATION_TEST_CHANNEL;
 import static de.otto.synapse.message.Message.message;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @RunWith(SpringRunner.class)
@@ -63,8 +64,7 @@ public class KinesisAcceptanceTest {
 
     @Test
     public void shouldRegisterMessageLogReceiverEndpoint() {
-        assertThat(kinesisMessageLogReceiverEndpoint.getChannelName())
-                .isEqualTo(KINESIS_INTEGRATION_TEST_CHANNEL);
+        assertThat(kinesisMessageLogReceiverEndpoint.getChannelName(), is(KINESIS_INTEGRATION_TEST_CHANNEL));
     }
 
     @Test
