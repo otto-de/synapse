@@ -36,7 +36,7 @@ subprojects {
     apply plugin: 'eclipse'
     apply from: "${rootDir}/jacoco.gradle"
 
-    version = '0.11.1-SNAPSHOT'
+    version = '0.11.1'
     group = 'de.otto.synapse'
 
     repositories {

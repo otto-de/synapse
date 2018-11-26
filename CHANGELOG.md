@@ -2,6 +2,7 @@
 
 ## 0.11.1
 * Re-add method `purgeQueue`to `SqsClientHelper`
+* add further exceptions to retry template when consuming
 
 ## 0.11.0
 * Introduced new module `synapse-aws-auth` containing the configuration of an AwsCredentialsProvider.
