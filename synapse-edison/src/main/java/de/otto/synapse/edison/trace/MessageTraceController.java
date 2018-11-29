@@ -1,5 +1,6 @@
 package de.otto.synapse.edison.trace;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import de.otto.synapse.channel.ShardPosition;
@@ -85,7 +86,11 @@ public class MessageTraceController {
     private String prettyPrint(final String json) {
         try {
             Object jsonObject = defaultObjectMapper().readValue(json, Object.class);
-            return defaultObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
+            if (jsonObject != null) {
+                return defaultObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
+            } else {
+                return "null";
+            }
         } catch (final Exception e) {
             throw new RuntimeException(e.getMessage(), e);
         }
