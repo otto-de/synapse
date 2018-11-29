@@ -2,7 +2,11 @@ package de.otto.synapse.configuration.kinesis;
 
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
+import de.otto.synapse.endpoint.sender.kinesis.KinesisMessageSender;
+import de.otto.synapse.message.kinesis.KinesisMessage;
 import de.otto.synapse.testsupport.LocalS3Client;
+import de.otto.synapse.translator.JsonStringMessageTranslator;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -75,6 +79,18 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
         }
         createChannelIfNotExists(kinesisClient, KINESIS_INTEGRATION_TEST_CHANNEL, EXPECTED_NUMBER_OF_SHARDS);
         return kinesisClient;
+    }
+
+    @Bean
+    public MessageSenderEndpoint kinesisV1Sender(final MessageInterceptorRegistry registry,
+                                          final KinesisAsyncClient kinesisClient) {
+        return new KinesisMessageSender(KINESIS_INTEGRATION_TEST_CHANNEL, registry, new JsonStringMessageTranslator(), kinesisClient, KinesisMessage.Format.V1);
+    }
+
+    @Bean
+    public MessageSenderEndpoint kinesisV2Sender(final MessageInterceptorRegistry registry,
+                                          final KinesisAsyncClient kinesisClient) {
+        return new KinesisMessageSender(KINESIS_INTEGRATION_TEST_CHANNEL, registry, new JsonStringMessageTranslator(), kinesisClient, KinesisMessage.Format.V2);
     }
 
     // TODO: remove me

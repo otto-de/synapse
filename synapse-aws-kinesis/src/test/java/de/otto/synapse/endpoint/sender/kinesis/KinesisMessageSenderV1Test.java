@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.kinesis.KinesisMessage;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
 import org.junit.Before;
@@ -37,7 +38,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class KinesisMessageSenderTest {
+public class KinesisMessageSenderV1Test {
 
     private KinesisMessageSender kinesisMessageSender;
 
@@ -51,7 +52,7 @@ public class KinesisMessageSenderTest {
     @Before
     public void setUp() {
         interceptorRegistry = new MessageInterceptorRegistry();
-        kinesisMessageSender = new KinesisMessageSender("test", interceptorRegistry, messageTranslator, kinesisClient);
+        kinesisMessageSender = new KinesisMessageSender("test", interceptorRegistry, messageTranslator, kinesisClient, KinesisMessage.Format.V1);
     }
 
     @Test

@@ -59,7 +59,7 @@ import static org.hamcrest.core.IsNot.not;
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
 @SpringBootTest(classes = KinesisMessageLogReceiverEndpointIntegrationTest.class)
-@EnableMessageSenderEndpoint(channelName = KINESIS_INTEGRATION_TEST_CHANNEL, selector = Kinesis.class)
+@EnableMessageSenderEndpoint(name = "kinesisSender", channelName = KINESIS_INTEGRATION_TEST_CHANNEL, selector = Kinesis.class)
 @DirtiesContext
 public class KinesisMessageLogReceiverEndpointIntegrationTest {
 
@@ -73,7 +73,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
     private TestMessageInterceptor testMessageInterceptor;
 
     @Autowired
-    private MessageSenderEndpoint kinesis;
+    private MessageSenderEndpoint kinesisSender;
 
     private List<Message<String>> messages = synchronizedList(new ArrayList<>());
     private Set<String> threads = synchronizedSet(new HashSet<>());
@@ -176,7 +176,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
     public void consumeDeleteMessagesFromKinesis() throws ExecutionException, InterruptedException {
         // given
         final ChannelPosition startFrom = findCurrentPosition();
-        kinesis.send(message("deletedMessage", null)).join();
+        kinesisSender.send(message("deletedMessage", null)).join();
 
         // when
         kinesisMessageLog.consumeUntil(
@@ -220,7 +220,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
     private void sendTestMessages(final Range<Integer> messageKeyRange,
                                   final String payloadPrefix) throws InterruptedException {
         ContiguousSet.create(messageKeyRange, DiscreteDomain.integers())
-                .forEach(key -> kinesis.send(message(valueOf(key), payloadPrefix + "-" + key)).join());
+                .forEach(key -> kinesisSender.send(message(valueOf(key), payloadPrefix + "-" + key)).join());
         sleep(20);
     }
 

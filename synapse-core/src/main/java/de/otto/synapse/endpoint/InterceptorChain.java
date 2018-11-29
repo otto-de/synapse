@@ -72,24 +72,24 @@ public final class InterceptorChain implements MessageInterceptor {
      *     logging, monitoring or other things.
      * </p>
      *
-     * @param interceptedMessage the message to intercept
+     * @param message the message to intercept
      * @return the (possibly modified) message, or null if the message should be dropped.
      */
     @Nullable
-    public Message<String> intercept(final @Nonnull Message<String> interceptedMessage) {
-        Message<String> resultingMessage = interceptedMessage;
+    public Message<String> intercept(final @Nonnull Message<String> message) {
+        Message<String> interceptedMessage = message;
         for (final MessageInterceptor interceptor : interceptors) {
-            if (resultingMessage == null) {
+            if (interceptedMessage == null) {
                 break;
             }
-            resultingMessage = interceptor.intercept(resultingMessage);
+            interceptedMessage = interceptor.intercept(interceptedMessage);
         }
-        if (resultingMessage != null) {
-            LOG.debug("Intercepted message '{}' converted to {}", interceptedMessage, resultingMessage);
+        if (interceptedMessage != null) {
+            LOG.debug("Intercepted message '{}' converted to {}", message, interceptedMessage);
         } else {
-            LOG.debug("Intercepted message '{}' converted to <null> - dropping message", interceptedMessage);
+            LOG.debug("Intercepted message '{}' converted to <null> - dropping message", message);
         }
-        return resultingMessage;
+        return interceptedMessage;
     }
 
 }
