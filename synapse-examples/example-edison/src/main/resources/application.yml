@@ -1,8 +1,9 @@
-edison:
-    application:
-      name: example-edison
+spring:
+  application:
+    name: Edison Example
+
 management:
-    context-path: /internal
+  context-path: /internal
 
 synapse:
   consumer-process:
