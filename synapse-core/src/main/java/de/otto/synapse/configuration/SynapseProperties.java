@@ -5,26 +5,23 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "synapse")
 public class SynapseProperties {
-    private ConsumerProcess consumerProcess = new ConsumerProcess();
-    private Sender sender = new Sender();
+    private final ConsumerProcess consumerProcess = new ConsumerProcess();
+    private final Sender sender;
+
+    public SynapseProperties(@Value("${spring.application.name:Synapse}") String defaultName) {
+        this.sender = new Sender(defaultName);
+    }
 
     public ConsumerProcess getConsumerProcess() {
         return consumerProcess;
-    }
-
-    public void setConsumerProcess(ConsumerProcess consumerProcess) {
-        this.consumerProcess = consumerProcess;
     }
 
     public Sender getSender() {
         return sender;
     }
 
-    public void setSender(Sender sender) {
-        this.sender = sender;
-    }
-
     public static class Sender {
+
         /**
          * The name of the message-sending service. By default, this is the same property
          * 'spring.application.name'.
@@ -32,9 +29,13 @@ public class SynapseProperties {
          * If synapse.sender.default-headers are enabled, messages will be sent with a header attribute
          * 'synapse_msg_sender', containing the value of this property.
          */
-        @Value("${spring.application.name}")
-        private String name = "Synapse";
-        private DefaultHeaders defaultHeaders = new DefaultHeaders();
+        private String name;
+
+        private final DefaultHeaders defaultHeaders = new DefaultHeaders();
+
+        private Sender(final String defaultName) {
+            this.name = defaultName;
+        }
 
         public String getName() {
             return name;
@@ -48,11 +49,8 @@ public class SynapseProperties {
             return defaultHeaders;
         }
 
-        public void setDefaultHeaders(DefaultHeaders defaultHeaders) {
-            this.defaultHeaders = defaultHeaders;
-        }
 
-        public static class DefaultHeaders {
+        public class DefaultHeaders {
             private boolean enabled = true;
 
             public boolean isEnabled() {

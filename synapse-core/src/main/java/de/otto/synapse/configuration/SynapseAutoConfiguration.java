@@ -62,7 +62,7 @@ public class SynapseAutoConfiguration {
             havingValue = "true",
             matchIfMissing = true)
     public DefaultSenderHeadersInterceptor defaultSenderHeadersInterceptor(final SynapseProperties synapseProperties) {
-        return new DefaultSenderHeadersInterceptor(synapseProperties.getSender());
+        return new DefaultSenderHeadersInterceptor(synapseProperties);
     }
 
     /**

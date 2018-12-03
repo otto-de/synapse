@@ -64,10 +64,10 @@ public class DefaultSenderHeadersInterceptor {
      * <p>
      *     By default, all {@link Capability capabilites} are enabled.
      * </p>
-     * @param senderProperties the properties used to configure the interceptor
+     * @param synapseProperties the properties used to configure the interceptor
      */
-    public DefaultSenderHeadersInterceptor(final SynapseProperties.Sender senderProperties) {
-        this.senderName = senderProperties.getName();
+    public DefaultSenderHeadersInterceptor(final SynapseProperties synapseProperties) {
+        this.senderName = synapseProperties.getSender().getName();
         this.capabilities = EnumSet.allOf(Capability.class);
         this.clock = Clock.systemDefaultZone();
     }
