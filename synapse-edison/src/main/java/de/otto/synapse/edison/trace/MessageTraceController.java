@@ -1,6 +1,5 @@
 package de.otto.synapse.edison.trace;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import de.otto.synapse.channel.ShardPosition;
@@ -8,6 +7,7 @@ import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.message.Header;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
 import static java.util.stream.Collectors.toList;
 
+@DependsOn("messageTraceAutoConfiguration")
 @Controller
 @ConditionalOnBean(MessageTrace.class)
 public class MessageTraceController {
