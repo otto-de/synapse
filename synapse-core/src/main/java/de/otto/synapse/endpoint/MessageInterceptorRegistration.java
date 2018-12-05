@@ -3,7 +3,6 @@ package de.otto.synapse.endpoint;
 import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
-import jdk.nashorn.internal.ir.annotations.Immutable;
 
 import javax.annotation.Nonnull;
 import java.util.EnumSet;
