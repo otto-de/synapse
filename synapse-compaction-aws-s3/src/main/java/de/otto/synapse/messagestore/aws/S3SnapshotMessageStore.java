@@ -33,9 +33,7 @@ import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.info.SnapshotReaderStatus.*;
-import static de.otto.synapse.message.Header.responseHeader;
-import static de.otto.synapse.message.Message.message;
-import static de.otto.synapse.translator.MessageVersionMapper.messageFromBody;
+import static de.otto.synapse.translator.MessageCodec.decode;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @NotThreadSafe
@@ -208,7 +206,7 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
                             final Header.Builder headerBuilder = Header.builder()
                                     .withApproximateArrivalTimestamp(arrivalTimestamp);
 
-                            nextMessage = messageFromBody(jsonParser.nextTextValue(), messageBuilder, headerBuilder);
+                            nextMessage = decode(jsonParser.nextTextValue(), headerBuilder, messageBuilder);
                             break;
                         }
                     }

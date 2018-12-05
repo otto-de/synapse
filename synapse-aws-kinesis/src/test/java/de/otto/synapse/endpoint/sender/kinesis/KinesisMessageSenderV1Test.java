@@ -4,10 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.message.kinesis.KinesisMessage;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
+import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.MessageTranslator;
-import de.otto.synapse.translator.MessageVersionMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,7 +52,7 @@ public class KinesisMessageSenderV1Test {
     @Before
     public void setUp() {
         interceptorRegistry = new MessageInterceptorRegistry();
-        kinesisMessageSender = new KinesisMessageSender("test", interceptorRegistry, messageTranslator, kinesisClient, MessageVersionMapper.Format.V1);
+        kinesisMessageSender = new KinesisMessageSender("test", interceptorRegistry, messageTranslator, kinesisClient, MessageFormat.V1);
     }
 
     @Test

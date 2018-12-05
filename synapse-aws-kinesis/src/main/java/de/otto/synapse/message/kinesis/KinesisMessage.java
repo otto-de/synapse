@@ -9,7 +9,7 @@ import javax.annotation.Nonnull;
 import java.util.function.Function;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
-import static de.otto.synapse.translator.MessageVersionMapper.messageFromBody;
+import static de.otto.synapse.translator.MessageCodec.decode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static software.amazon.awssdk.core.SdkBytes.fromByteArray;
 
@@ -41,7 +41,7 @@ public class KinesisMessage {
 
         final String body = SDK_BYTES_STRING.apply(record.data());
 
-        return messageFromBody(body, messageBuilder, headerBuilder);
+        return decode(body, headerBuilder, messageBuilder);
     }
 
 

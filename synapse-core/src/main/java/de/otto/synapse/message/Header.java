@@ -135,7 +135,7 @@ public class Header implements Serializable {
 
     public static class Builder {
         private ShardPosition shardPosition;
-        private Instant approximateArrivalTimestamp;
+        private Instant approximateArrivalTimestamp = Instant.now();
         private final Map<String, String> attributes = new HashMap<>();
 
         public Builder withShardPosition(final ShardPosition shardPosition) {
