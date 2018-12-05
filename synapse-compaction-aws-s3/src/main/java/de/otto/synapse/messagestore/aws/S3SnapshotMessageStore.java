@@ -11,6 +11,7 @@ import de.otto.synapse.compaction.s3.SnapshotFileHelper;
 import de.otto.synapse.compaction.s3.SnapshotReadService;
 import de.otto.synapse.info.SnapshotReaderNotification;
 import de.otto.synapse.info.SnapshotReaderStatus;
+import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.messagestore.SnapshotMessageStore;
 import org.slf4j.Logger;
@@ -34,6 +35,7 @@ import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.info.SnapshotReaderStatus.*;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
+import static de.otto.synapse.translator.MessageVersionMapper.messageFromBody;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @NotThreadSafe
@@ -199,11 +201,14 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
                         JsonToken currentToken = jsonParser.currentToken();
                         if (currentToken == JsonToken.FIELD_NAME) {
                             final String key = jsonParser.getValueAsString();
-                            nextMessage = message(
-                                    key,
-                                    responseHeader(null, arrivalTimestamp),
-                                    jsonParser.nextTextValue()
-                            );
+
+                            final Message.Builder<String> messageBuilder = Message.builder(String.class)
+                                    .withKey(key);
+
+                            final Header.Builder headerBuilder = Header.builder()
+                                    .withApproximateArrivalTimestamp(arrivalTimestamp);
+
+                            nextMessage = messageFromBody(jsonParser.nextTextValue(), messageBuilder, headerBuilder);
                             break;
                         }
                     }

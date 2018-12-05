@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.message.kinesis.KinesisMessage;
 import de.otto.synapse.translator.MessageTranslator;
+import de.otto.synapse.translator.MessageVersionMapper;
 import de.otto.synapse.translator.ObjectMappers;
 import org.slf4j.Logger;
 import software.amazon.awssdk.core.SdkBytes;
@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.Lists.partition;
-import static de.otto.synapse.message.kinesis.KinesisMessage.Format.V2;
+import static de.otto.synapse.translator.MessageVersionMapper.Format.V2;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.stream.Collectors.toCollection;
@@ -33,20 +33,20 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
     private static final int PUT_RECORDS_BATCH_SIZE = 500;
 
     private final KinesisAsyncClient kinesisAsyncClient;
-    private final KinesisMessage.Format messageFormat;
+    private final MessageVersionMapper.Format messageFormat;
 
     public KinesisMessageSender(final String channelName,
                                 final MessageInterceptorRegistry interceptorRegistry,
                                 final MessageTranslator<String> messageTranslator,
                                 final KinesisAsyncClient kinesisClient) {
-        this(channelName, interceptorRegistry, messageTranslator, kinesisClient, KinesisMessage.Format.V1);
+        this(channelName, interceptorRegistry, messageTranslator, kinesisClient, MessageVersionMapper.Format.V1);
     }
 
     public KinesisMessageSender(final String channelName,
                                 final MessageInterceptorRegistry interceptorRegistry,
                                 final MessageTranslator<String> messageTranslator,
                                 final KinesisAsyncClient kinesisClient,
-                                final KinesisMessage.Format messageFormat) {
+                                final MessageVersionMapper.Format messageFormat) {
         super(channelName, interceptorRegistry, messageTranslator);
         this.kinesisAsyncClient = kinesisClient;
         this.messageFormat = messageFormat;

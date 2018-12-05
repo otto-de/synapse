@@ -7,6 +7,7 @@ import de.otto.synapse.message.Message;
 import de.otto.synapse.message.kinesis.KinesisMessage;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
+import de.otto.synapse.translator.MessageVersionMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,7 +53,7 @@ public class KinesisMessageSenderV1Test {
     @Before
     public void setUp() {
         interceptorRegistry = new MessageInterceptorRegistry();
-        kinesisMessageSender = new KinesisMessageSender("test", interceptorRegistry, messageTranslator, kinesisClient, KinesisMessage.Format.V1);
+        kinesisMessageSender = new KinesisMessageSender("test", interceptorRegistry, messageTranslator, kinesisClient, MessageVersionMapper.Format.V1);
     }
 
     @Test

@@ -9,6 +9,7 @@ import de.otto.synapse.message.Message;
 import de.otto.synapse.message.kinesis.KinesisMessage;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
+import de.otto.synapse.translator.MessageVersionMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,6 +35,7 @@ import static de.otto.synapse.endpoint.MessageInterceptorRegistration.senderChan
 import static de.otto.synapse.message.Header.requestHeader;
 import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.message.kinesis.KinesisMessage.*;
+import static de.otto.synapse.translator.MessageVersionMapper.SYNAPSE_MSG_FORMAT;
 import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
 import static java.lang.String.valueOf;
 import static java.util.Collections.singletonMap;
@@ -58,7 +60,7 @@ public class KinesisMessageSenderV2Test {
     @Before
     public void setUp() {
         interceptorRegistry = new MessageInterceptorRegistry();
-        kinesisMessageSender = new KinesisMessageSender("test", interceptorRegistry, messageTranslator, kinesisClient, KinesisMessage.Format.V2);
+        kinesisMessageSender = new KinesisMessageSender("test", interceptorRegistry, messageTranslator, kinesisClient, MessageVersionMapper.Format.V2);
     }
 
     @Test
