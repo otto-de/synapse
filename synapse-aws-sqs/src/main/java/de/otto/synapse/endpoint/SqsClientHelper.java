@@ -1,5 +1,7 @@
 package de.otto.synapse.endpoint;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.*;
 
@@ -22,10 +24,13 @@ import static java.util.stream.Collectors.toList;
  */
 public class SqsClientHelper {
 
+    private static final Logger LOG = LoggerFactory.getLogger(SqsClientHelper.class);
+
     private final SqsAsyncClient sqsAsyncClient;
 
     public SqsClientHelper(final SqsAsyncClient sqsAsyncClient) {
         this.sqsAsyncClient = sqsAsyncClient;
+        waitForSqsToBeReady();
     }
 
     public boolean doesChannelExist(final String channelName) {
@@ -61,6 +66,7 @@ public class SqsClientHelper {
                     .get()
                     .queueUrl());
         } catch (InterruptedException | ExecutionException e) {
+            LOG.error("Error fetching queueUrl for SQS channel " + channelName + ": " + e.getMessage(), e);
             throw new RuntimeException(e.getMessage(), e);
         }
     }
@@ -201,5 +207,24 @@ public class SqsClientHelper {
         } catch (MalformedURLException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
+    }
+
+    public void waitForSqsToBeReady() {
+        while (true) {
+
+            try {
+                LOG.info("Waiting for SQS to be available");
+                CompletableFuture<ListQueuesResponse> queues = sqsAsyncClient.listQueues();
+                LOG.info("Following queues are present: " + queues.get().queueUrls());
+                break;
+            } catch (final Exception ignored) {
+                try {
+                    Thread.sleep(500);
+                } catch (final InterruptedException e) {
+                    throw new RuntimeException(e.getMessage(), e);
+                }
+            }
+        }
+        LOG.info("SQS is available");
     }
 }
