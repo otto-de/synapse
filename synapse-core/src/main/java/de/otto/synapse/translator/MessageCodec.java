@@ -32,7 +32,8 @@ public class MessageCodec {
         return encode(message, defaultMessageFormat());
     }
 
-    public static String encode(final Message<String> message, final MessageFormat messageFormat) {
+    public static String encode(final Message<String> message,
+                                final MessageFormat messageFormat) {
         switch (messageFormat) {
             case V1:
                 return message.getPayload();

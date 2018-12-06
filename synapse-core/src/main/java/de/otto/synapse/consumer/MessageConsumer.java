@@ -75,7 +75,7 @@ public interface MessageConsumer<T> extends Consumer<Message<T>> {
     Class<T> payloadType();
 
     /**
-     * Returns the pattern of {@link de.otto.synapse.message.Message#getKey() event keys} accepted by this consumer.
+     * Returns the pattern of {@link de.otto.synapse.message.Message#getKey() message keys} accepted by this consumer.
      *
      * @return Pattern
      */

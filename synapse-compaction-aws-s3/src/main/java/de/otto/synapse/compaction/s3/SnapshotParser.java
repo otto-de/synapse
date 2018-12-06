@@ -7,7 +7,9 @@ import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.translator.MessageCodec;
 
 import java.io.*;
 import java.time.Instant;
@@ -20,6 +22,7 @@ import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
+import static de.otto.synapse.translator.MessageCodec.decode;
 
 public class SnapshotParser {
 
@@ -68,18 +71,20 @@ public class SnapshotParser {
     private <T> void processSnapshotData(final JsonParser parser,
                                          final ChannelPosition channelPosition,
                                          final MessageConsumer<String> messageConsumer) throws IOException {
-        // TODO: Would be better to store event meta data together with key+value:
         final ShardPosition shardPosition = channelPosition.shard(channelPosition.shards().iterator().next());
         final Instant arrivalTimestamp = Instant.EPOCH;
         while (parser.nextToken() != JsonToken.END_ARRAY) {
             JsonToken currentToken = parser.currentToken();
             if (currentToken == JsonToken.FIELD_NAME) {
                 final String key = parser.getValueAsString();
-                final Message<String> message = message(
-                        key,
-                        responseHeader(shardPosition, arrivalTimestamp),
-                        parser.nextTextValue()
-                );
+                final Header.Builder headerBuilder = Header
+                        .builder()
+                        .withShardPosition(shardPosition)
+                        .withApproximateArrivalTimestamp(arrivalTimestamp);
+                final Message.Builder messageBuilder = Message
+                        .builder(String.class)
+                        .withKey(key);
+                final Message<String> message = decode(parser.nextTextValue(), headerBuilder, messageBuilder);
                 messageConsumer.accept(message);
             }
         }
