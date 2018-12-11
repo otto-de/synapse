@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.12.1
+* Fixes + refactorings
+
 ## 0.12.0
 * Introduces ObjectMappers.defaultObjectMapper() and removes usage of 
   ObjectMapper from Spring Boot, as this is not under control of Synapse 
