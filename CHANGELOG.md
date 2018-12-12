@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.12.2
+* Fix serialization error on polymorph payload objects
+
 ## 0.12.1
 * Fixes + refactorings
 
