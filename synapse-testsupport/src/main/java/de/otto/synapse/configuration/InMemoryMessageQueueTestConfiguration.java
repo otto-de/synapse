@@ -1,6 +1,7 @@
 package de.otto.synapse.configuration;
 
 import de.otto.synapse.channel.InMemoryChannels;
+import de.otto.synapse.channel.selector.MessageQueue;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.InMemoryMessageQueueReceiverEndpointFactory;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpointFactory;
@@ -36,7 +37,7 @@ public class InMemoryMessageQueueTestConfiguration {
     public MessageSenderEndpointFactory messageQueueSenderEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
                                                                         final InMemoryChannels inMemoryChannels) {
         LOG.warn("Creating InMemoryMessageSenderEndpointFactory. This should only be used in tests");
-        return new InMemoryMessageSenderFactory(interceptorRegistry, inMemoryChannels);
+        return new InMemoryMessageSenderFactory(interceptorRegistry, inMemoryChannels, MessageQueue.class);
     }
 
     @Bean
