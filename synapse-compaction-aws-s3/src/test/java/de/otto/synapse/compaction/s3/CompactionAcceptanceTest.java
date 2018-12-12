@@ -8,6 +8,7 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import de.otto.synapse.annotation.EnableEventSourcing;
 import de.otto.synapse.annotation.EnableMessageSenderEndpoint;
+import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.helper.s3.S3Helper;
@@ -55,7 +56,7 @@ import static org.junit.Assert.assertThat;
 )
 @EnableEventSourcing
 @DirtiesContext
-@EnableMessageSenderEndpoint(name = "compactionTestSender", channelName = "promo-compaction-test")
+@EnableMessageSenderEndpoint(name = "compactionTestSender", channelName = "promo-compaction-test", selector = MessageLog.class)
 public class CompactionAcceptanceTest {
 
     private static final String INTEGRATION_TEST_STREAM = "promo-compaction-test";

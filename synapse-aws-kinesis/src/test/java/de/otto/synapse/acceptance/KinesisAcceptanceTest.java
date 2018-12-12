@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.annotation.EnableEventSource;
 import de.otto.synapse.annotation.EnableMessageSenderEndpoint;
 import de.otto.synapse.annotation.EventSourceConsumer;
+import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Header;
@@ -49,7 +50,8 @@ import static org.slf4j.LoggerFactory.getLogger;
         channelName = KINESIS_INTEGRATION_TEST_CHANNEL)
 @EnableMessageSenderEndpoint(
         name = "kinesisSender",
-        channelName = KINESIS_INTEGRATION_TEST_CHANNEL)
+        channelName = KINESIS_INTEGRATION_TEST_CHANNEL,
+        selector = MessageLog.class)
 @DirtiesContext
 public class KinesisAcceptanceTest {
 

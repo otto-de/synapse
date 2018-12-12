@@ -1,5 +1,6 @@
 package de.otto.synapse.annotation;
 
+import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.configuration.InMemoryMessageQueueTestConfiguration;
 import de.otto.synapse.endpoint.sender.DelegateMessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
@@ -22,26 +23,26 @@ public class MessageSenderEndpointBeanRegistrarTest {
         }
     }
 
-    @EnableMessageSenderEndpoint(name = "testQueue", channelName = "test-channel")
+    @EnableMessageSenderEndpoint(name = "testQueue", channelName = "test-channel", selector = MessageLog.class)
     private static class SingleQueueSenderConfig {
     }
 
-    @EnableMessageSenderEndpoint(channelName = "test-channel")
+    @EnableMessageSenderEndpoint(channelName = "test-channel", selector = MessageLog.class)
     private static class SingleUnnamedQueueSenderConfig {
     }
 
-    @EnableMessageSenderEndpoint(name = "broken", channelName = "some-channel")
-    @EnableMessageSenderEndpoint(name = "broken", channelName = "some-channel")
+    @EnableMessageSenderEndpoint(name = "broken", channelName = "some-channel", selector = MessageLog.class)
+    @EnableMessageSenderEndpoint(name = "broken", channelName = "some-channel", selector = MessageLog.class)
     private static class RepeatableQueueSenderConfigWithSameNames {
     }
 
-    @EnableMessageSenderEndpoint(channelName = "some-channel")
-    @EnableMessageSenderEndpoint(channelName = "other-channel")
+    @EnableMessageSenderEndpoint(channelName = "some-channel", selector = MessageLog.class)
+    @EnableMessageSenderEndpoint(channelName = "other-channel", selector = MessageLog.class)
     private static class RepeatableUnnamedQueueSenderConfigWithDifferentChannels {
     }
 
-    @EnableMessageSenderEndpoint(name = "firstQueue", channelName = "first-channel")
-    @EnableMessageSenderEndpoint(name = "secondQueue", channelName = "${test.channel-name}")
+    @EnableMessageSenderEndpoint(name = "firstQueue", channelName = "first-channel", selector = MessageLog.class)
+    @EnableMessageSenderEndpoint(name = "secondQueue", channelName = "${test.channel-name}", selector = MessageLog.class)
     private static class RepeatableQueueSenderConfig {
     }
 

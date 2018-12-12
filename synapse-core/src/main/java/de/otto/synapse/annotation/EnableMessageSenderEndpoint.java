@@ -2,7 +2,6 @@ package de.otto.synapse.annotation;
 
 import de.otto.synapse.channel.selector.MessageQueue;
 import de.otto.synapse.channel.selector.Selector;
-import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import org.springframework.context.annotation.Import;
 
@@ -61,7 +60,7 @@ public @interface EnableMessageSenderEndpoint {
      * </code></pre>
      * @return Selector class
      */
-    Class<? extends Selector> selector() default MessageLog.class;
+    Class<? extends Selector> selector();
 
 }
 

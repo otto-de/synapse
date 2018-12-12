@@ -6,6 +6,7 @@ import com.google.common.collect.Range;
 import de.otto.synapse.annotation.EnableEventSourcing;
 import de.otto.synapse.annotation.EnableMessageSenderEndpoint;
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.compaction.s3.CompactionService;
 import de.otto.synapse.compaction.s3.SnapshotReadService;
 import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
@@ -54,7 +55,7 @@ import static org.junit.Assert.assertThat;
         "synapse.compaction.enabled=true"}
 )
 @EnableEventSourcing
-@EnableMessageSenderEndpoint(name = "compactionTestSender", channelName = "promo-compaction-test")
+@EnableMessageSenderEndpoint(name = "compactionTestSender", channelName = "promo-compaction-test", selector = MessageLog.class)
 @DirtiesContext
 public class S3SnapshotMessageStoreAcceptanceTest {
 
