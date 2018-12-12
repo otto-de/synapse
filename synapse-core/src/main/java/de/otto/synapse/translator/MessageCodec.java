@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import static de.otto.synapse.translator.MessageFormat.defaultMessageFormat;
-import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
+import static de.otto.synapse.translator.ObjectMappers.currentObjectMapper;
 import static java.util.Collections.emptyMap;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -58,7 +58,7 @@ public class MessageCodec {
             } else {
                 // TODO: Das kann nur passieren, wenn man an der üblichen Serialisierung vorbei geht.
                 try {
-                    jsonPayload = defaultObjectMapper().writeValueAsString(message.getPayload());
+                    jsonPayload = currentObjectMapper().writeValueAsString(message.getPayload());
                 } catch (JsonProcessingException e) {
                     throw new IllegalArgumentException("Unable to generate message payload from " + message.getPayload() + ": " + e.getMessage(), e);
                 }
@@ -66,7 +66,7 @@ public class MessageCodec {
         }
         String jsonHeaders;
         try {
-            jsonHeaders = defaultObjectMapper().writeValueAsString(message.getHeader().getAttributes());
+            jsonHeaders = currentObjectMapper().writeValueAsString(message.getHeader().getAttributes());
         } catch (final JsonProcessingException e) {
             LOG.error("Failed to convert message headers={} into JSON message format v2: {}", message.getHeader(), e.getMessage());
             jsonHeaders = "{}";
@@ -115,7 +115,7 @@ public class MessageCodec {
     private static Map<String, String> attributesFrom(final JsonNode json) {
         final JsonNode headersJson = json.get(SYNAPSE_MSG_HEADERS);
         if (headersJson != null) {
-            return defaultObjectMapper().convertValue(
+            return currentObjectMapper().convertValue(
                     headersJson,
                     MAP_TYPE_REFERENCE
             );
@@ -139,7 +139,7 @@ public class MessageCodec {
 
     private static JsonNode parseRecordBody(String body) {
         try {
-            return defaultObjectMapper().readTree(body);
+            return currentObjectMapper().readTree(body);
         } catch (IOException e) {
             LOG.error("Error parsing body={} from Kinesis record: {}", body, e.getMessage());
             throw new IllegalStateException(e.getMessage(), e);

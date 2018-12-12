@@ -2,6 +2,7 @@
 
 ## 0.13.0
 * @EnableMessageSenderEndpoint does not use a default value for selectors anymore as this is prone to errors.
+* Adds possibility to override the ObjectMapper used by Synapse
  
 ## 0.12.2
 * Fix serialization error on polymorph payload objects

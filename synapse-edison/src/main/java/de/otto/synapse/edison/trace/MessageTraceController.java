@@ -6,9 +6,7 @@ import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.message.Header;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,7 +16,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.LinkedHashMap;
 
-import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
+import static de.otto.synapse.translator.ObjectMappers.currentObjectMapper;
 import static java.util.stream.Collectors.toList;
 
 @Controller
@@ -90,9 +88,9 @@ public class MessageTraceController {
 
     private String prettyPrint(final String json) {
         try {
-            Object jsonObject = defaultObjectMapper().readValue(json, Object.class);
+            Object jsonObject = currentObjectMapper().readValue(json, Object.class);
             if (jsonObject != null) {
-                return defaultObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
+                return currentObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
             } else {
                 return "null";
             }
@@ -108,7 +106,7 @@ public class MessageTraceController {
             map.put("shardPosition", header.getShardPosition().map(ShardPosition::toString).orElse(""));
             map.put("arrivalTimestamp", header.getArrivalTimestamp().toString());
             map.put("attributes", header.getAttributes());
-            return defaultObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(map);
+            return currentObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(map);
         } catch (final Exception e) {
             throw new RuntimeException(e.getMessage(), e);
         }

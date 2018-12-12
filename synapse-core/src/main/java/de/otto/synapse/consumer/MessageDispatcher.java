@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import static de.otto.synapse.message.Message.message;
-import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
+import static de.otto.synapse.translator.ObjectMappers.currentObjectMapper;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.regex.Pattern.compile;
@@ -98,7 +98,7 @@ public class MessageDispatcher implements MessageConsumer<String> {
                         } else {
                             Object payload = null;
                             if (message.getPayload() != null) {
-                                payload = defaultObjectMapper().readValue(message.getPayload(), payloadType);
+                                payload = currentObjectMapper().readValue(message.getPayload(), payloadType);
                             }
                             final Message<?> tMessage = message(message.getKey(), message.getHeader(), payload);
                             consumer.accept(tMessage);

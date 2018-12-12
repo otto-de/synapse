@@ -36,7 +36,7 @@ import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.message.kinesis.KinesisMessage.SYNAPSE_MSG_HEADERS;
 import static de.otto.synapse.message.kinesis.KinesisMessage.SYNAPSE_MSG_PAYLOAD;
 import static de.otto.synapse.translator.MessageCodec.SYNAPSE_MSG_FORMAT;
-import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
+import static de.otto.synapse.translator.ObjectMappers.currentObjectMapper;
 import static java.lang.String.valueOf;
 import static java.util.Collections.singletonMap;
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -86,7 +86,7 @@ public class KinesisMessageSenderV2Test {
 
         final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data().asByteBuffer());
 
-        final JsonNode json = defaultObjectMapper().readTree(inputStream);
+        final JsonNode json = currentObjectMapper().readTree(inputStream);
         assertThat(json.get(SYNAPSE_MSG_FORMAT).asText(), is("v2"));
     }
 
@@ -113,9 +113,9 @@ public class KinesisMessageSenderV2Test {
 
         final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data().asByteBuffer());
 
-        final JsonNode json = defaultObjectMapper().readTree(inputStream);
+        final JsonNode json = currentObjectMapper().readTree(inputStream);
 
-        assertThat(defaultObjectMapper().convertValue(json.get(SYNAPSE_MSG_HEADERS), Map.class), is(ImmutableMap.of("attr-key", "attr-value")));
+        assertThat(currentObjectMapper().convertValue(json.get(SYNAPSE_MSG_HEADERS), Map.class), is(ImmutableMap.of("attr-key", "attr-value")));
     }
 
     @Test
@@ -141,8 +141,8 @@ public class KinesisMessageSenderV2Test {
 
         final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data().asByteBuffer());
 
-        final JsonNode json = defaultObjectMapper().readTree(inputStream);
-        final ExampleJsonObject jsonObject = defaultObjectMapper().convertValue(json.get(SYNAPSE_MSG_PAYLOAD), ExampleJsonObject.class);
+        final JsonNode json = currentObjectMapper().readTree(inputStream);
+        final ExampleJsonObject jsonObject = currentObjectMapper().convertValue(json.get(SYNAPSE_MSG_PAYLOAD), ExampleJsonObject.class);
         assertThat(jsonObject.value, is("banana"));
     }
 
@@ -222,7 +222,7 @@ public class KinesisMessageSenderV2Test {
         final PutRecordsRequest caputuredRequest = putRecordsRequestCaptor.getValue();
 
         final String recordBody = caputuredRequest.records().get(0).data().asUtf8String();
-        final String payload = defaultObjectMapper().readTree(recordBody).get(SYNAPSE_MSG_PAYLOAD).toString();
+        final String payload = currentObjectMapper().readTree(recordBody).get(SYNAPSE_MSG_PAYLOAD).toString();
         assertThat(payload, is("{\"value\":\"apple\"}"));
     }
 
@@ -254,14 +254,14 @@ public class KinesisMessageSenderV2Test {
         final PutRecordsRequestEntry firstEntry = caputuredRequest.records().get(0);
         assertThat(firstEntry.partitionKey(), is("b"));
 
-        assertThat(defaultObjectMapper().readValue(
+        assertThat(currentObjectMapper().readValue(
                 new ByteBufferBackedInputStream(firstEntry.data().asByteBuffer()), Map.class).get(SYNAPSE_MSG_PAYLOAD),
                 is(singletonMap("value", "banana")));
 
         final PutRecordsRequestEntry secondEntry = caputuredRequest.records().get(1);
         assertThat(secondEntry.partitionKey(), is("a"));
 
-        assertThat(defaultObjectMapper().readValue(
+        assertThat(currentObjectMapper().readValue(
                 new ByteBufferBackedInputStream(secondEntry.data().asByteBuffer()), Map.class).get(SYNAPSE_MSG_PAYLOAD),
                 is(singletonMap("value", "apple")));
     }
@@ -295,14 +295,14 @@ public class KinesisMessageSenderV2Test {
         final PutRecordsRequestEntry firstEntry = caputuredRequest.records().get(0);
         assertThat(firstEntry.partitionKey(), is("b"));
 
-        assertThat(defaultObjectMapper().readValue(
+        assertThat(currentObjectMapper().readValue(
                 new ByteBufferBackedInputStream(firstEntry.data().asByteBuffer()), Map.class).get(SYNAPSE_MSG_PAYLOAD),
                 is(singletonMap("m", "Lovely day for a Guinness")));
 
         final PutRecordsRequestEntry secondEntry = caputuredRequest.records().get(1);
         assertThat(secondEntry.partitionKey(), is("a"));
 
-        assertThat(defaultObjectMapper().readValue(
+        assertThat(currentObjectMapper().readValue(
                 new ByteBufferBackedInputStream(secondEntry.data().asByteBuffer()), Map.class).get(SYNAPSE_MSG_PAYLOAD),
                 is(singletonMap("m", "Lovely day for a Guinness")));
     }
@@ -340,7 +340,7 @@ public class KinesisMessageSenderV2Test {
 
         final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data().asByteBuffer());
 
-        final JsonNode json = defaultObjectMapper().readTree(inputStream);
+        final JsonNode json = currentObjectMapper().readTree(inputStream);
         assertThat(json.get(SYNAPSE_MSG_PAYLOAD).textValue(), is(nullValue()));
     }
 

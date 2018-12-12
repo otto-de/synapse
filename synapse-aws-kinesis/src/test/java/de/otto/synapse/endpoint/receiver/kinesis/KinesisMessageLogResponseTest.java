@@ -27,7 +27,7 @@ import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
-import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
+import static de.otto.synapse.translator.ObjectMappers.currentObjectMapper;
 import static java.nio.charset.Charset.forName;
 import static java.time.Instant.now;
 import static java.util.Arrays.asList;
@@ -102,7 +102,7 @@ public class KinesisMessageLogResponseTest {
         final MessageTranslator<TestPayload> messageTranslator = MessageTranslator.of((payload -> {
             try {
                 final String json = Objects.toString(payload, "{}");
-                return defaultObjectMapper().readValue(json, TestPayload.class);
+                return currentObjectMapper().readValue(json, TestPayload.class);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingSenderChannelsWith;
 import static de.otto.synapse.message.Message.message;
-import static de.otto.synapse.translator.ObjectMappers.defaultObjectMapper;
+import static de.otto.synapse.translator.ObjectMappers.currentObjectMapper;
 import static java.lang.String.valueOf;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.hamcrest.Matchers.hasSize;
@@ -77,7 +77,7 @@ public class KinesisMessageSenderV1Test {
         assertThat(caputuredRequest.records().get(0).partitionKey(), is("someKey"));
 
         final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data().asByteBuffer());
-        ExampleJsonObject jsonObject = defaultObjectMapper().readValue(inputStream, ExampleJsonObject.class);
+        ExampleJsonObject jsonObject = currentObjectMapper().readValue(inputStream, ExampleJsonObject.class);
         assertThat(jsonObject.value, is("banana"));
 
     }
@@ -106,7 +106,7 @@ public class KinesisMessageSenderV1Test {
         final PutRecordsRequest caputuredRequest = putRecordsRequestCaptor.getValue();
 
         final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data().asByteBuffer());
-        ExampleJsonObject jsonObject = defaultObjectMapper().readValue(inputStream, ExampleJsonObject.class);
+        ExampleJsonObject jsonObject = currentObjectMapper().readValue(inputStream, ExampleJsonObject.class);
         assertThat(jsonObject.value, is("apple"));
     }
 
@@ -144,14 +144,14 @@ public class KinesisMessageSenderV1Test {
         final PutRecordsRequestEntry firstEntry = caputuredRequest.records().get(0);
         assertThat(firstEntry.partitionKey(), is("b"));
 
-        assertThat(defaultObjectMapper().readValue(
+        assertThat(currentObjectMapper().readValue(
                 new ByteBufferBackedInputStream(firstEntry.data().asByteBuffer()), ExampleJsonObject.class).value,
                 is("Lovely day for a Guinness"));
 
         final PutRecordsRequestEntry secondEntry = caputuredRequest.records().get(1);
         assertThat(secondEntry.partitionKey(), is("a"));
 
-        assertThat(defaultObjectMapper().readValue(
+        assertThat(currentObjectMapper().readValue(
                 new ByteBufferBackedInputStream(secondEntry.data().asByteBuffer()), ExampleJsonObject.class).value,
                 is("Lovely day for a Guinness"));
     }
@@ -183,14 +183,14 @@ public class KinesisMessageSenderV1Test {
         final PutRecordsRequestEntry firstEntry = caputuredRequest.records().get(0);
         assertThat(firstEntry.partitionKey(), is("b"));
 
-        assertThat(defaultObjectMapper().readValue(
+        assertThat(currentObjectMapper().readValue(
                 new ByteBufferBackedInputStream(firstEntry.data().asByteBuffer()), ExampleJsonObject.class).value,
                 is("banana"));
 
         final PutRecordsRequestEntry secondEntry = caputuredRequest.records().get(1);
         assertThat(secondEntry.partitionKey(), is("a"));
 
-        assertThat(defaultObjectMapper().readValue(
+        assertThat(currentObjectMapper().readValue(
                 new ByteBufferBackedInputStream(secondEntry.data().asByteBuffer()), ExampleJsonObject.class).value,
                 is("apple"));
     }
