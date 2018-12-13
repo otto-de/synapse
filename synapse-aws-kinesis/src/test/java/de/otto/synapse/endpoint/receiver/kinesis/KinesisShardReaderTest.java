@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -98,6 +99,56 @@ public class KinesisShardReaderTest {
         assertThat(shardResponse.getShardPosition(), is(fromPosition("someShard", "2")));
         assertThat(shardResponse.getDurationBehind(), is(ofMillis(1234L)));
         assertThat(shardResponse.getMessages(), hasSize(2));
+        assertThat(shardPosition.position(), is("2"));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void shouldcatchUp() throws ExecutionException, InterruptedException {
+        final Instant now = now();
+        final Instant future = now.plus(1, SECONDS);
+        // given
+        final Record record1 = Record.builder()
+                .sequenceNumber("1")
+                .approximateArrivalTimestamp(future)
+                .partitionKey("first")
+                .build();
+        final GetRecordsResponse response1 = GetRecordsResponse.builder()
+                .records(record1)
+                .nextShardIterator("nextShardIterator")
+                .millisBehindLatest(1234L)
+                .build();
+
+        final Record record2 = Record.builder()
+                .sequenceNumber("2")
+                .approximateArrivalTimestamp(future)
+                .partitionKey("second")
+                .build();
+        final GetRecordsResponse response2= GetRecordsResponse.builder()
+                .records(record2)
+                .nextShardIterator("nextShardIterator")
+                .millisBehindLatest(0L)
+                .build();
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(
+                completedFuture(response1),
+                completedFuture(response2));
+
+        // when
+        final ShardPosition shardPosition = kinesisShardReader.catchUp(fromHorizon("someShard"), consumer).get();
+
+        // then
+        final ArgumentCaptor<KinesisShardResponse> argumentCaptor = ArgumentCaptor.forClass(KinesisShardResponse.class);
+        verify(consumer, times(2)).accept(argumentCaptor.capture());
+        verifyNoMoreInteractions(consumer);
+
+        List<KinesisShardResponse> allValues = argumentCaptor.getAllValues();
+        assertThat(allValues, hasSize(2));
+        final KinesisShardResponse lastResponse = allValues.get(1);
+        assertThat(lastResponse.getChannelName(), is("someChannel"));
+        assertThat(lastResponse.getShardName(), is("someShard"));
+        assertThat(lastResponse.getShardPosition(), is(fromPosition("someShard", "2")));
+        assertThat(lastResponse.getDurationBehind(), is(ofMillis(0L)));
+        assertThat(lastResponse.getMessages(), hasSize(1));
         assertThat(shardPosition.position(), is("2"));
     }
 

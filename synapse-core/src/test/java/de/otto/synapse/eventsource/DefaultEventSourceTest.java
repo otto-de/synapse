@@ -150,6 +150,26 @@ public class DefaultEventSourceTest {
     }
 
     @Test
+    public void shouldReturnChannelPositionFromMessageLog() throws ExecutionException, InterruptedException {
+        // given
+        final ChannelPosition messageStoreChannelPosition = channelPosition(fromPosition("bar", "42"));
+        final ChannelPosition expectedChannelPosition = channelPosition(fromPosition("bar", "4711"));
+        // and some message store having a single message
+        final MessageStore messageStore = mockMessageStore(messageStoreChannelPosition);
+        // and some MessageLogReceiverEndpoint with our InterceptorChain:
+        final MessageLogReceiverEndpoint messageLog = mockMessageLogReceiverEndpoint(expectedChannelPosition);
+        // and our famous DefaultEventSource:
+        final DefaultEventSource eventSource = new DefaultEventSource(messageStore, messageLog);
+
+        // when
+        final ChannelPosition finalChannelPosition = eventSource.consume().get();
+
+        // then
+        verify(messageLog).consumeUntil(messageStoreChannelPosition, Instant.MAX);
+        assertThat(finalChannelPosition, is(expectedChannelPosition));
+    }
+
+    @Test
     public void shouldCloseMessageStore() throws Exception {
         // given
         final MessageStore messageStore = mockMessageStore(fromHorizon());
@@ -180,6 +200,12 @@ public class DefaultEventSourceTest {
     private MessageLogReceiverEndpoint mockMessageLogReceiverEndpoint() {
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
         when(messageLog.consumeUntil(any(ChannelPosition.class), any(Instant.class))).thenReturn(completedFuture(fromHorizon()));
+        return messageLog;
+    }
+
+    private MessageLogReceiverEndpoint mockMessageLogReceiverEndpoint(final ChannelPosition channelPosition) {
+        final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
+        when(messageLog.consumeUntil(any(ChannelPosition.class), any(Instant.class))).thenReturn(completedFuture(channelPosition));
         return messageLog;
     }
 

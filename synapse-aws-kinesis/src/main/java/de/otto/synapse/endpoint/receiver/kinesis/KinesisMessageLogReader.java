@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
@@ -127,7 +128,36 @@ public class KinesisMessageLogReader {
         try {
             final List<CompletableFuture<ShardPosition>> futureShardPositions = kinesisShardReaders
                     .stream()
-                    .map(shard -> shard.consumeUntil(startFrom.shard(shard.getShardName()), until, consumer))
+                    .map(shard -> shard.consumeUntil(startFrom.shard(shard.getShardName()), Instant.now(clock), consumer))
+                    .collect(toList());
+            // don't chain futureShardPositions with CompletableFuture::join as lazy execution will prevent threads from
+            // running in parallel
+            return supplyAsync(() -> channelPosition(futureShardPositions
+                    .stream()
+                    .map(CompletableFuture::join)
+                    .collect(toList()))
+            ).exceptionally((throwable -> {
+                shutdownExecutor();
+                throw new RuntimeException(throwable.getMessage(), throwable);
+            }));
+        } catch (final RuntimeException e) {
+            shutdownExecutor();
+            throw e;
+        }
+    }
+
+    /**
+     * @deprecated to be removed soon
+     */
+    public CompletableFuture<ChannelPosition> catchUp(final ChannelPosition startFrom,
+                                                      final Consumer<KinesisShardResponse> consumer) {
+        if (isNull(executorService)) {
+            initExecutorService();
+        }
+        try {
+            final List<CompletableFuture<ShardPosition>> futureShardPositions = kinesisShardReaders
+                    .stream()
+                    .map(shard -> shard.catchUp(startFrom.shard(shard.getShardName()), consumer))
                     .collect(toList());
             // don't chain futureShardPositions with CompletableFuture::join as lazy execution will prevent threads from
             // running in parallel

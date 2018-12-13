@@ -80,6 +80,14 @@ public interface MessageLogReceiverEndpoint extends MessageReceiverEndpoint {
                                                     @Nonnull Instant until);
 
     /**
+     * Consumes all events until the current latest event of the EventSource is consumed.
+     *
+     * @param startFrom the start position used to proceed message consumption
+     * @return the new read position
+     */
+    @Nonnull CompletableFuture<ChannelPosition> catchUp(@Nonnull ChannelPosition startFrom);
+
+    /**
      * Stops consumption of messages and shuts down the {@code MessageLogReceiverEndpoint}.
      */
     void stop();

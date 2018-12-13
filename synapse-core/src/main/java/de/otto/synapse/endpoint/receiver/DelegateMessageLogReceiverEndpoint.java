@@ -29,6 +29,12 @@ public class DelegateMessageLogReceiverEndpoint implements MessageLogReceiverEnd
         return delegate.consumeUntil(startFrom, until);
     }
 
+    @Nonnull
+    @Override
+    public CompletableFuture<ChannelPosition> catchUp(@Nonnull ChannelPosition startFrom) {
+        return delegate.catchUp(startFrom);
+    }
+
     @Override
     public void stop() {
         delegate.stop();

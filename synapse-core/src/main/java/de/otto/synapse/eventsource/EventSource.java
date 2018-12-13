@@ -82,6 +82,13 @@ public interface EventSource {
      */
     @Nonnull CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull Instant until);
 
+    /**
+     * Consumes all events until the current latest event of the EventSource is consumed.
+     *
+     * @return the new read position
+     */
+    @Nonnull CompletableFuture<ChannelPosition> catchUp();
+
 
     void stop();
 

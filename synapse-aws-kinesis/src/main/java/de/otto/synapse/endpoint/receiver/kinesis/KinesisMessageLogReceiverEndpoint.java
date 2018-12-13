@@ -103,6 +103,43 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
         this.interceptorRegistry = interceptorRegistry;
     }
 
+    @Nonnull
+    @Override
+    public CompletableFuture<ChannelPosition> catchUp(@Nonnull ChannelPosition startFrom) {
+        try {
+            publishEvent(STARTING, "Consuming messages from Kinesis.", null);
+            final long t1 = System.currentTimeMillis();
+            final List<String> shards = kinesisMessageLogReader.getOpenShards();
+
+            publishEvent(STARTED, "Received shards from Kinesis.", null);
+
+            final KinesisShardResponseConsumer consumer = new KinesisShardResponseConsumer(shards, interceptorRegistry, getMessageDispatcher(), eventPublisher);
+
+            return kinesisMessageLogReader.catchUp(startFrom, consumer)
+                    .exceptionally((throwable) -> {
+                        LOG.error("Failed to consume from Kinesis stream {}: {}", getChannelName(), throwable.getMessage());
+                        publishEvent(FAILED, "Failed to consume messages from Kinesis: " + throwable.getMessage(), null);
+                        // When an exception occurs in a completable future's thread, other threads continue running.
+                        // Stop all before proceeding.
+                        stop();
+                        throw new RuntimeException(throwable.getMessage(), throwable);
+                    })
+                    .thenApply((channelPosition -> {
+                        final long t2 = System.currentTimeMillis();
+                        info(LOG, ImmutableMap.of("runtime", (t2-t1)), "Consume events from Kinesis", null);
+                        publishEvent(FINISHED, "Finished consuming messages from Kinesis", null);
+                        return channelPosition;
+                    }));
+        } catch (final Exception e) {
+            LOG.error("Failed to consume from Kinesis stream {}: {}", getChannelName(), e.getMessage());
+            publishEvent(FAILED, "Failed to consume messages from Kinesis: " + e.getMessage(), null);
+            // When an exception occurs in a completable future's thread, other threads continue running.
+            // Stop all before proceeding.
+            stop();
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
     @Override
     @Nonnull
     public CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull ChannelPosition startFrom,

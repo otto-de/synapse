@@ -105,6 +105,12 @@ public class DelegateEventSource implements EventSource {
         return delegate.consumeUntil(until);
     }
 
+    @Nonnull
+    @Override
+    public CompletableFuture<ChannelPosition> catchUp() {
+        return delegate.catchUp();
+    }
+
     @Override
     public void stop() {
         delegate.stop();

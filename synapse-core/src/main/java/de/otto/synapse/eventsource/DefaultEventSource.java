@@ -11,6 +11,8 @@ import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadFactory;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -30,8 +32,18 @@ public class DefaultEventSource extends AbstractEventSource {
     @Nonnull
     @Override
     public CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull Instant until) {
+        return consume(messageLogStartPosition -> getMessageLogReceiverEndpoint().consumeUntil(messageLogStartPosition, until));
+    }
+
+    @Nonnull
+    @Override
+    public CompletableFuture<ChannelPosition> catchUp() {
+        return consume(messageLogStartPosition -> getMessageLogReceiverEndpoint().catchUp(messageLogStartPosition));
+    }
+
+    private CompletableFuture<ChannelPosition> consume(Function<ChannelPosition, CompletableFuture<ChannelPosition>> messageLogSupplier){
         return consumeMessageStore()
-                .thenCompose(messageLogStartPosition -> getMessageLogReceiverEndpoint().consumeUntil(messageLogStartPosition, until))
+                .thenCompose(messageLogSupplier)
                 .handle((channelPosition, throwable) -> {
                     if (throwable != null) {
                         LOG.error("Failed to start consuming from EventSource {}: {}. Closing MessageStore.", getChannelName(), throwable.getMessage(), throwable);
@@ -44,6 +56,7 @@ public class DefaultEventSource extends AbstractEventSource {
                     return channelPosition;
                 });
     }
+
 
     private CompletableFuture<ChannelPosition> consumeMessageStore() {
         final ThreadFactory threadFactory = new CustomizableThreadFactory("kinesis-eventsource-");

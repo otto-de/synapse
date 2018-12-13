@@ -8,11 +8,13 @@ import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * @deprecated to be removed soon
@@ -51,7 +53,22 @@ public class KinesisShardReader {
     public CompletableFuture<ShardPosition> consumeUntil(final ShardPosition startFrom,
                                                          final Instant until,
                                                          final Consumer<KinesisShardResponse> responseConsumer) {
+        return consumeUntil(startFrom,  r -> !until.isAfter(Instant.now(clock)), responseConsumer);
+    }
 
+    public CompletableFuture<ShardPosition> consume(final ShardPosition startFrom,
+                                                            final Consumer<KinesisShardResponse> responseConsumer) {
+        return consumeUntil(startFrom,  r -> false, responseConsumer);
+    }
+
+    public CompletableFuture<ShardPosition> catchUp(final ShardPosition startFrom,
+                                                            final Consumer<KinesisShardResponse> responseConsumer) {
+        return consumeUntil(startFrom,  r -> Duration.ZERO.equals(r.getDurationBehind()), responseConsumer);
+    }
+
+    private CompletableFuture<ShardPosition> consumeUntil(final ShardPosition startFrom,
+                                                         final Predicate<KinesisShardResponse> predicate,
+                                                         final Consumer<KinesisShardResponse> responseConsumer) {
         return CompletableFuture.supplyAsync(() -> {
             MDC.put("channelName", channelName);
             MDC.put("shardName", shardName);
@@ -72,7 +89,7 @@ public class KinesisShardReader {
                     final KinesisShardResponse response = kinesisShardIterator.next();
                     responseConsumer.accept(response);
 
-                    stopRetrieval = !until.isAfter(Instant.now(clock)) || isStopping() || waitABit();
+                    stopRetrieval = predicate.test(response) || isStopping() || waitABit();
 
                 } while (!stopRetrieval);
                 return kinesisShardIterator.getShardPosition();
