@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelDurationBehind;
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ShardResponse;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
@@ -34,7 +35,7 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
     private static final Logger LOG = LoggerFactory.getLogger(KinesisMessageLogReceiverEndpoint.class);
 
 
-    private static class KinesisShardResponseConsumer implements Consumer<KinesisShardResponse> {
+    private static class KinesisShardResponseConsumer implements Consumer<ShardResponse> {
         private final AtomicReference<ChannelDurationBehind> channelDurationBehind = new AtomicReference<>();
         private final MessageInterceptorRegistry interceptorRegistry;
         private final MessageDispatcher messageDispatcher;
@@ -51,7 +52,7 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
         }
 
         @Override
-        public void accept(KinesisShardResponse response) {
+        public void accept(final ShardResponse response) {
             final InterceptorChain interceptorChain = interceptorRegistry.getInterceptorChain(response.getChannelName(), RECEIVER);
             response.getMessages().forEach(message -> {
                 try {

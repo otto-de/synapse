@@ -1,6 +1,7 @@
 package de.otto.synapse.endpoint.receiver.kinesis;
 
 import de.otto.synapse.channel.ShardPosition;
+import de.otto.synapse.channel.ShardResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -52,23 +53,18 @@ public class KinesisShardReader {
 
     public CompletableFuture<ShardPosition> consumeUntil(final ShardPosition startFrom,
                                                          final Instant until,
-                                                         final Consumer<KinesisShardResponse> responseConsumer) {
+                                                         final Consumer<ShardResponse> responseConsumer) {
         return consumeUntil(startFrom,  r -> !until.isAfter(Instant.now(clock)), responseConsumer);
     }
 
-    public CompletableFuture<ShardPosition> consume(final ShardPosition startFrom,
-                                                            final Consumer<KinesisShardResponse> responseConsumer) {
-        return consumeUntil(startFrom,  r -> false, responseConsumer);
-    }
-
     public CompletableFuture<ShardPosition> catchUp(final ShardPosition startFrom,
-                                                            final Consumer<KinesisShardResponse> responseConsumer) {
+                                                    final Consumer<ShardResponse> responseConsumer) {
         return consumeUntil(startFrom,  r -> Duration.ZERO.equals(r.getDurationBehind()), responseConsumer);
     }
 
     private CompletableFuture<ShardPosition> consumeUntil(final ShardPosition startFrom,
-                                                         final Predicate<KinesisShardResponse> predicate,
-                                                         final Consumer<KinesisShardResponse> responseConsumer) {
+                                                         final Predicate<ShardResponse> stopCondition,
+                                                         final Consumer<ShardResponse> responseConsumer) {
         return CompletableFuture.supplyAsync(() -> {
             MDC.put("channelName", channelName);
             MDC.put("shardName", shardName);
@@ -86,10 +82,10 @@ public class KinesisShardReader {
                         break;
                     }
 
-                    final KinesisShardResponse response = kinesisShardIterator.next();
+                    final ShardResponse response = kinesisShardIterator.next();
                     responseConsumer.accept(response);
 
-                    stopRetrieval = predicate.test(response) || isStopping() || waitABit();
+                    stopRetrieval = stopCondition.test(response) || isStopping() || waitABit();
 
                 } while (!stopRetrieval);
                 return kinesisShardIterator.getShardPosition();

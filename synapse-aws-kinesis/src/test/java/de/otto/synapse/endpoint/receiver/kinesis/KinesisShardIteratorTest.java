@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint.receiver.kinesis;
 
+import de.otto.synapse.channel.ShardResponse;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -70,7 +71,7 @@ public class KinesisShardIteratorTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
 
         final KinesisShardIterator iterator = new KinesisShardIterator(kinesisClient, "", fromPosition("someShard", "42"), 1);
-        final KinesisShardResponse shardResponse = iterator.next();
+        final ShardResponse shardResponse = iterator.next();
 
         assertThat(shardResponse.getMessages(), hasSize(1));
         final Message<String> message = shardResponse.getMessages().get(0);
@@ -219,7 +220,7 @@ public class KinesisShardIteratorTest {
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromHorizon("someShard"));
 
         // when
-        final KinesisShardResponse fetchedResponse = shardIterator.next();
+        final ShardResponse fetchedResponse = shardIterator.next();
 
         // then
         assertThat(fetchedResponse.getShardPosition(), is(fromPosition("someShard", "someSeqNumber")));

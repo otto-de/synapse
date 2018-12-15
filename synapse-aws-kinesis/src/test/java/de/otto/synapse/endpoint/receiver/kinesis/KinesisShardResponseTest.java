@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint.receiver.kinesis;
 
+import de.otto.synapse.channel.ShardResponse;
 import org.junit.Test;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
@@ -9,6 +10,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.endpoint.receiver.kinesis.KinesisShardResponse.kinesisShardResponse;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -22,18 +24,19 @@ public class KinesisShardResponseTest {
 
     @Test
     public void shouldImplementEqualsAndHashCode() {
+        final Instant now = now();
         final GetRecordsResponse response = GetRecordsResponse
                 .builder()
                 .records(Record.builder()
                         .sequenceNumber("1")
                         .partitionKey("first")
-                        .approximateArrivalTimestamp(now())
+                        .approximateArrivalTimestamp(now)
                         .build())
                 .nextShardIterator("nextIter")
                 .millisBehindLatest(0L)
                 .build();
-        final KinesisShardResponse first = new KinesisShardResponse("channel", fromPosition("shard", "42"), response, 1234);
-        final KinesisShardResponse second = new KinesisShardResponse("channel", fromPosition("shard", "42"), response, 1234);
+        final ShardResponse first = kinesisShardResponse("channel", fromPosition("shard", "42"), response, 1234);
+        final ShardResponse second = kinesisShardResponse("channel", fromPosition("shard", "42"), response, 1234);
 
         assertThat(first.equals(second), is(true));
         assertThat(first.hashCode(), is(second.hashCode()));
@@ -62,12 +65,12 @@ public class KinesisShardResponseTest {
                 .nextShardIterator("nextIter")
                 .millisBehindLatest(1L)
                 .build();
-        final KinesisShardResponse response = new KinesisShardResponse("channel", fromPosition("shard", "42"), recordsResponse, 1234);
+        final ShardResponse response = kinesisShardResponse("channel", fromPosition("shard", "42"), recordsResponse, 1234);
 
         assertThat(response.getChannelName(), is("channel"));
         assertThat(response.getShardName(), is("shard"));
         assertThat(response.getDurationBehind(), is(Duration.ofMillis(1L)));
-        assertThat(response.getRuntime(), is(1234L));
+        assertThat(response.getRuntime(), is(Duration.ofMillis(1234L)));
         assertThat(response.getShardPosition(), is(fromPosition("shard", "42")));
         assertThat(response.getMessages(), contains(
                 message("first", responseHeader(fromPosition("shard", "1"), firstArrival), "content"),

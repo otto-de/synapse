@@ -1,6 +1,8 @@
 # Release Notes
 
 ## 0.13.0
+* Adds ChannelResponse and ShardResponse to the core packages and introduces new possibility to stop message-consumption
+  using predicates in MessageLogReceiverEndpoints.
 * @EnableMessageSenderEndpoint does not use a default value for selectors anymore as this is prone to errors.
 * Adds possibility to override the ObjectMapper used by Synapse
  

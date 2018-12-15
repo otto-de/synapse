@@ -3,7 +3,9 @@ package de.otto.synapse.endpoint.receiver.kinesis;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.channel.ShardPosition;
+import de.otto.synapse.channel.ShardResponse;
 import org.slf4j.Logger;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
@@ -13,7 +15,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
@@ -82,13 +83,13 @@ public class KinesisMessageLogReader {
         }
     }
 
-    public CompletableFuture<KinesisMessageLogResponse> read(final KinesisMessageLogIterator iterator) {
+    public CompletableFuture<ChannelResponse> read(final KinesisMessageLogIterator iterator) {
         if (isNull(executorService)) {
             initExecutorService();
         }
         try {
 
-            final List<CompletableFuture<KinesisShardResponse>> futureShardPositions = kinesisShardReaders
+            final List<CompletableFuture<ShardResponse>> futureShardPositions = kinesisShardReaders
                     .stream()
                     .map(shardReader -> supplyAsync(
                             () -> {
@@ -97,7 +98,7 @@ public class KinesisMessageLogReader {
                             },
                             executorService))
                     .collect(toList());
-            return supplyAsync(() -> new KinesisMessageLogResponse(channelName, futureShardPositions
+            return supplyAsync(() -> new ChannelResponse(channelName, futureShardPositions
                     .stream()
                     .map(CompletableFuture::join)
                     .collect(toImmutableList())), executorService);
@@ -107,9 +108,9 @@ public class KinesisMessageLogReader {
         }
     }
 
-    private KinesisShardResponse fetchNext(final KinesisShardIterator shardIterator, int skipNextParts) {
+    private ShardResponse fetchNext(final KinesisShardIterator shardIterator, int skipNextParts) {
         final String id = shardIterator.getId();
-        final KinesisShardResponse shardResponse = shardIterator.next();
+        final ShardResponse shardResponse = shardIterator.next();
         if(shardResponse.getMessages().isEmpty() && !shardIterator.isPoison() && !Objects.equals(shardIterator.getId(), id) && skipNextParts > 0) {
             return fetchNext(shardIterator, --skipNextParts);
         }
@@ -121,14 +122,14 @@ public class KinesisMessageLogReader {
      */
     public CompletableFuture<ChannelPosition> consumeUntil(final ChannelPosition startFrom,
                                                            final Instant until,
-                                                           final Consumer<KinesisShardResponse> consumer) {
+                                                           final Consumer<ShardResponse> consumer) {
         if (isNull(executorService)) {
             initExecutorService();
         }
         try {
             final List<CompletableFuture<ShardPosition>> futureShardPositions = kinesisShardReaders
                     .stream()
-                    .map(shard -> shard.consumeUntil(startFrom.shard(shard.getShardName()), Instant.now(clock), consumer))
+                    .map(shard -> shard.consumeUntil(startFrom.shard(shard.getShardName()), until, consumer))
                     .collect(toList());
             // don't chain futureShardPositions with CompletableFuture::join as lazy execution will prevent threads from
             // running in parallel
@@ -150,7 +151,7 @@ public class KinesisMessageLogReader {
      * @deprecated to be removed soon
      */
     public CompletableFuture<ChannelPosition> catchUp(final ChannelPosition startFrom,
-                                                      final Consumer<KinesisShardResponse> consumer) {
+                                                      final Consumer<ShardResponse> consumer) {
         if (isNull(executorService)) {
             initExecutorService();
         }

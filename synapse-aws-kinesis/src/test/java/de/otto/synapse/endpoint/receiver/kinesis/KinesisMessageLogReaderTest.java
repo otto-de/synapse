@@ -2,6 +2,8 @@ package de.otto.synapse.endpoint.receiver.kinesis;
 
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ChannelResponse;
+import de.otto.synapse.channel.ShardResponse;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.TestClock;
 import org.junit.Test;
@@ -56,9 +58,9 @@ public class KinesisMessageLogReaderTest {
     private KinesisAsyncClient kinesisClient;
 
     @Captor
-    private ArgumentCaptor<KinesisShardResponse> responseArgumentCaptor;
+    private ArgumentCaptor<ShardResponse> responseArgumentCaptor;
     @Mock
-    private Consumer<KinesisShardResponse> responseConsumer;
+    private Consumer<ShardResponse> responseConsumer;
 
     private KinesisMessageLogReader logReader;
     private AtomicInteger nextKey = new AtomicInteger(0);
@@ -186,7 +188,7 @@ public class KinesisMessageLogReaderTest {
 
         // then
         verify(responseConsumer, times(4)).accept(responseArgumentCaptor.capture());
-        List<KinesisShardResponse> responses = responseArgumentCaptor.getAllValues();
+        List<ShardResponse> responses = responseArgumentCaptor.getAllValues();
 
         assertThat(responses, hasSize(4));
         // first response:
@@ -218,7 +220,7 @@ public class KinesisMessageLogReaderTest {
 
         // when
         final KinesisMessageLogIterator iterator = logReader.getMessageLogIterator(fromHorizon());
-        KinesisMessageLogResponse response = logReader.read(iterator).get();
+        ChannelResponse response = logReader.read(iterator).get();
         // then (skip empty records)
         // assertThat(response.getMessages(), hasSize(0));
         // when
@@ -249,7 +251,7 @@ public class KinesisMessageLogReaderTest {
 
         // when
         final KinesisMessageLogIterator iterator = logReader.getMessageLogIterator(fromHorizon());
-        KinesisMessageLogResponse response = logReader.read(iterator).get();
+        ChannelResponse response = logReader.read(iterator).get();
         // then (skip empty records)
         //        assertThat(response.getMessages(), hasSize(0));
         //        assertThat(response.getShardNames(), containsInAnyOrder("shard1", "shard2"));
@@ -318,7 +320,7 @@ public class KinesisMessageLogReaderTest {
         final Set<String> shardNames = responseArgumentCaptor
                 .getAllValues()
                 .stream()
-                .map(KinesisShardResponse::getShardName)
+                .map(ShardResponse::getShardName)
                 .collect(toSet());
         assertThat(shardNames, containsInAnyOrder("shard1", "shard2", "shard3"));
     }

@@ -19,7 +19,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
@@ -66,23 +65,23 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
     @Override
     public CompletableFuture<ChannelPosition> consumeUntil(@Nonnull final ChannelPosition startFrom,
                                                            @Nonnull final Instant until) {
-        return consumeUntil(startFrom, (shardPosition) -> until.isAfter(now()) ) ;
+        return consumeUntil(startFrom, (shardPosition) -> !until.isAfter(now()) ) ;
     }
 
     @Nonnull
     @Override
     public CompletableFuture<ChannelPosition> catchUp(@Nonnull ChannelPosition startFrom) {
         return consumeUntil(startFrom, (shardPosition) -> {
-            AtomicInteger pos = new AtomicInteger(shardPosition.startFrom() == StartFrom.HORIZON
+            final AtomicInteger pos = new AtomicInteger(shardPosition.startFrom() == StartFrom.HORIZON
                     ? -1
                     : Integer.valueOf(shardPosition.position()));
-            return hasMessageAfter(pos.get());
+            return !hasMessageAfter(pos.get());
         });
     }
 
     @Nonnull
     private CompletableFuture<ChannelPosition> consumeUntil(@Nonnull final ChannelPosition startFrom,
-                                                           @Nonnull final Predicate<ShardPosition> stopCondition) {
+                                                            @Nonnull final Predicate<ShardPosition> stopCondition) {
         publishEvent(MessageReceiverStatus.STARTING, "Starting InMemoryChannel " + getChannelName(), null);
         final Message<String> lastMessage = eventQueue.isEmpty() ? null : Iterables.getLast(eventQueue);
         final ChannelDurationBehind durationBehind = lastMessage != null
@@ -111,10 +110,11 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
                         /* ignore */
                     }
                 }
+                shardPosition = fromPosition(getChannelName(), String.valueOf(pos));
                 shouldStop = stopCondition.test(shardPosition);
             } while (!shouldStop && !stopSignal.get());
             publishEvent(MessageReceiverStatus.FINISHED, "Finished InMemoryChannel " + getChannelName(), durationBehind);
-            return channelPosition(fromPosition(getChannelName(), String.valueOf(pos)));
+            return channelPosition(shardPosition);
         }, newSingleThreadExecutor());
     }
 

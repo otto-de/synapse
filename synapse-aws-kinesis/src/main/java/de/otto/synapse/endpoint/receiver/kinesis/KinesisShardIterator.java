@@ -4,6 +4,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ShardPosition;
+import de.otto.synapse.channel.ShardResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.retry.RetryCallback;
@@ -109,7 +110,7 @@ public class KinesisShardIterator {
         stopSignal.set(true);
     }
 
-    public KinesisShardResponse next() {
+    public ShardResponse next() {
         try {
             final Stopwatch stopwatch = Stopwatch.createStarted();
             final GetRecordsResponse recordsResponse = retryTemplate.execute((RetryCallback<GetRecordsResponse, Throwable>) context -> {
@@ -118,7 +119,7 @@ public class KinesisShardIterator {
                 }
                 return tryNext();
             });
-            return new KinesisShardResponse(channelName, shardPosition, recordsResponse, stopwatch.elapsed(MILLISECONDS));
+            return KinesisShardResponse.kinesisShardResponse(channelName, shardPosition, recordsResponse, stopwatch.elapsed(MILLISECONDS));
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }

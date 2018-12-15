@@ -1,6 +1,7 @@
 package de.otto.synapse.endpoint.receiver.kinesis;
 
 import de.otto.synapse.channel.ShardPosition;
+import de.otto.synapse.channel.ShardResponse;
 import de.otto.synapse.testsupport.TestClock;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +43,7 @@ public class KinesisShardReaderTest {
     private KinesisAsyncClient kinesisClient;
 
     @Mock
-    private Consumer<KinesisShardResponse> consumer;
+    private Consumer<ShardResponse> consumer;
 
     private Clock clock = TestClock.now();
     private KinesisShardReader kinesisShardReader;
@@ -89,11 +90,11 @@ public class KinesisShardReaderTest {
         final ShardPosition shardPosition = kinesisShardReader.consumeUntil(fromHorizon("someShard"), now, consumer).get();
 
         // then
-        final ArgumentCaptor<KinesisShardResponse> argumentCaptor = ArgumentCaptor.forClass(KinesisShardResponse.class);
+        final ArgumentCaptor<ShardResponse> argumentCaptor = ArgumentCaptor.forClass(ShardResponse.class);
         verify(consumer).accept(argumentCaptor.capture());
         verifyNoMoreInteractions(consumer);
 
-        final KinesisShardResponse shardResponse = argumentCaptor.getValue();
+        final ShardResponse shardResponse = argumentCaptor.getValue();
         assertThat(shardResponse.getChannelName(), is("someChannel"));
         assertThat(shardResponse.getShardName(), is("someShard"));
         assertThat(shardResponse.getShardPosition(), is(fromPosition("someShard", "2")));
@@ -137,13 +138,13 @@ public class KinesisShardReaderTest {
         final ShardPosition shardPosition = kinesisShardReader.catchUp(fromHorizon("someShard"), consumer).get();
 
         // then
-        final ArgumentCaptor<KinesisShardResponse> argumentCaptor = ArgumentCaptor.forClass(KinesisShardResponse.class);
+        final ArgumentCaptor<ShardResponse> argumentCaptor = ArgumentCaptor.forClass(ShardResponse.class);
         verify(consumer, times(2)).accept(argumentCaptor.capture());
         verifyNoMoreInteractions(consumer);
 
-        List<KinesisShardResponse> allValues = argumentCaptor.getAllValues();
+        List<ShardResponse> allValues = argumentCaptor.getAllValues();
         assertThat(allValues, hasSize(2));
-        final KinesisShardResponse lastResponse = allValues.get(1);
+        final ShardResponse lastResponse = allValues.get(1);
         assertThat(lastResponse.getChannelName(), is("someChannel"));
         assertThat(lastResponse.getShardName(), is("someShard"));
         assertThat(lastResponse.getShardPosition(), is(fromPosition("someShard", "2")));
@@ -166,7 +167,7 @@ public class KinesisShardReaderTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
 
         // when
-        ArgumentCaptor<KinesisShardResponse> argumentCaptor = ArgumentCaptor.forClass(KinesisShardResponse.class);
+        ArgumentCaptor<ShardResponse> argumentCaptor = ArgumentCaptor.forClass(ShardResponse.class);
         final ShardPosition shardPosition = kinesisShardReader.consumeUntil(fromHorizon("someShard"), now.minus(1, SECONDS), consumer).get();
 
         // then
@@ -174,7 +175,7 @@ public class KinesisShardReaderTest {
         verifyNoMoreInteractions(consumer);
 
         assertThat(shardPosition.startFrom(), is(HORIZON));
-        final KinesisShardResponse shardResponse = argumentCaptor.getValue();
+        final ShardResponse shardResponse = argumentCaptor.getValue();
         assertThat(shardResponse.getChannelName(), is("someChannel"));
         assertThat(shardResponse.getShardName(), is("someShard"));
         assertThat(shardResponse.getShardPosition(), is(fromHorizon("someShard")));
@@ -207,7 +208,7 @@ public class KinesisShardReaderTest {
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
 
         // when
-        ArgumentCaptor<KinesisShardResponse> argumentCaptor = ArgumentCaptor.forClass(KinesisShardResponse.class);
+        ArgumentCaptor<ShardResponse> argumentCaptor = ArgumentCaptor.forClass(ShardResponse.class);
         final CompletableFuture<ShardPosition> shardPosition = kinesisShardReader.consumeUntil(fromHorizon("someShard"), now, consumer);
         kinesisShardReader.stop();
         shardPosition.get();
@@ -217,7 +218,7 @@ public class KinesisShardReaderTest {
         verifyNoMoreInteractions(consumer);
         assertThat(kinesisShardReader.isStopping(), is(true));
         assertThat(shardPosition.get(), is(fromPosition("someShard", "2")));
-        final KinesisShardResponse shardResponse = argumentCaptor.getValue();
+        final ShardResponse shardResponse = argumentCaptor.getValue();
         assertThat(shardResponse.getChannelName(), is("someChannel"));
         assertThat(shardResponse.getShardName(), is("someShard"));
         assertThat(shardResponse.getShardPosition(), is(fromPosition("someShard", "2")));
@@ -242,7 +243,7 @@ public class KinesisShardReaderTest {
         ShardPosition shardPosition = kinesisShardReader.consumeUntil(fromPosition("someShard", "42"), now(), consumer).get();
 
         // then
-        verify(consumer).accept(any(KinesisShardResponse.class));
+        verify(consumer).accept(any(ShardResponse.class));
         assertThat(shardPosition.position(), is("42"));
     }
 
