@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
@@ -121,7 +122,7 @@ public class KinesisMessageLogReader {
      * @deprecated to be removed soon
      */
     public CompletableFuture<ChannelPosition> consumeUntil(final ChannelPosition startFrom,
-                                                           final Instant until,
+                                                           final Predicate<ShardResponse> stopCondition,
                                                            final Consumer<ShardResponse> consumer) {
         if (isNull(executorService)) {
             initExecutorService();
@@ -129,36 +130,7 @@ public class KinesisMessageLogReader {
         try {
             final List<CompletableFuture<ShardPosition>> futureShardPositions = kinesisShardReaders
                     .stream()
-                    .map(shard -> shard.consumeUntil(startFrom.shard(shard.getShardName()), until, consumer))
-                    .collect(toList());
-            // don't chain futureShardPositions with CompletableFuture::join as lazy execution will prevent threads from
-            // running in parallel
-            return supplyAsync(() -> channelPosition(futureShardPositions
-                    .stream()
-                    .map(CompletableFuture::join)
-                    .collect(toList()))
-            ).exceptionally((throwable -> {
-                shutdownExecutor();
-                throw new RuntimeException(throwable.getMessage(), throwable);
-            }));
-        } catch (final RuntimeException e) {
-            shutdownExecutor();
-            throw e;
-        }
-    }
-
-    /**
-     * @deprecated to be removed soon
-     */
-    public CompletableFuture<ChannelPosition> catchUp(final ChannelPosition startFrom,
-                                                      final Consumer<ShardResponse> consumer) {
-        if (isNull(executorService)) {
-            initExecutorService();
-        }
-        try {
-            final List<CompletableFuture<ShardPosition>> futureShardPositions = kinesisShardReaders
-                    .stream()
-                    .map(shard -> shard.catchUp(startFrom.shard(shard.getShardName()), consumer))
+                    .map(shard -> shard.consumeUntil(startFrom.shard(shard.getShardName()), stopCondition, consumer))
                     .collect(toList());
             // don't chain futureShardPositions with CompletableFuture::join as lazy execution will prevent threads from
             // running in parallel

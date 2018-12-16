@@ -9,8 +9,6 @@ import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -52,17 +50,6 @@ public class KinesisShardReader {
     }
 
     public CompletableFuture<ShardPosition> consumeUntil(final ShardPosition startFrom,
-                                                         final Instant until,
-                                                         final Consumer<ShardResponse> responseConsumer) {
-        return consumeUntil(startFrom,  r -> !until.isAfter(Instant.now(clock)), responseConsumer);
-    }
-
-    public CompletableFuture<ShardPosition> catchUp(final ShardPosition startFrom,
-                                                    final Consumer<ShardResponse> responseConsumer) {
-        return consumeUntil(startFrom,  r -> Duration.ZERO.equals(r.getDurationBehind()), responseConsumer);
-    }
-
-    private CompletableFuture<ShardPosition> consumeUntil(final ShardPosition startFrom,
                                                          final Predicate<ShardResponse> stopCondition,
                                                          final Consumer<ShardResponse> responseConsumer) {
         return CompletableFuture.supplyAsync(() -> {
@@ -106,7 +93,7 @@ public class KinesisShardReader {
         try {
             /*Wait one second as documented by amazon: https://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetRecords.html*/
             Thread.sleep(1000);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             LOG.warn("Thread got interrupted");
             return true;
         }

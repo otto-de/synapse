@@ -37,6 +37,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static de.otto.synapse.channel.ChannelPosition.*;
+import static de.otto.synapse.channel.StopCondition.endOfChannel;
 import static de.otto.synapse.configuration.kinesis.KinesisTestConfiguration.EXPECTED_NUMBER_OF_SHARDS;
 import static de.otto.synapse.configuration.kinesis.KinesisTestConfiguration.KINESIS_INTEGRATION_TEST_CHANNEL;
 import static de.otto.synapse.message.Message.message;
@@ -106,7 +108,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
         // when
         kinesisMessageLog.consumeUntil(
                 startFrom,
-                now().plus(200, MILLIS)
+                endOfChannel()
         ).get();
 
         // then
@@ -121,10 +123,9 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
         sendTestMessages(Range.closed(1, 10), "some payload");
 
         // then
-        kinesisMessageLog.consumeUntil(
-                startFrom,
-                now().plus(200, MILLIS)
-        ).get();
+        kinesisMessageLog
+                .consumeUntil(startFrom, endOfChannel())
+                .get();
 
         assertThat(threads, hasSize(2));
     }
@@ -136,10 +137,9 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
         sendTestMessages(Range.closed(1, 10), "some payload");
 
         // then
-        kinesisMessageLog.consumeUntil(
-                startFrom,
-                now().plus(20, MILLIS)
-        ).get();
+        kinesisMessageLog
+                .consumeUntil(startFrom, endOfChannel())
+                .get();
 
         final List<Message<String>> interceptedMessages = testMessageInterceptor.getInterceptedMessages();
         assertThat(interceptedMessages, not(empty()));
@@ -179,10 +179,9 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
         kinesisSender.send(message("deletedMessage", null)).join();
 
         // when
-        kinesisMessageLog.consumeUntil(
-                startFrom,
-                now().plus(20, MILLIS)
-        ).get();
+        kinesisMessageLog
+                .consumeUntil(startFrom, endOfChannel())
+                .get();
 
         // then
         assertThat(messages, hasSize(1));
@@ -198,7 +197,9 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
         sendTestMessages(Range.closed(11, 15), "some other payload");
 
         // then
-        ChannelPosition next = kinesisMessageLog.consumeUntil(startFrom, now().plus(100, MILLIS)).get();
+        ChannelPosition next = kinesisMessageLog
+                .consumeUntil(startFrom, endOfChannel())
+                .get();
 
         assertThat(messages, hasSize(5));
         assertThat(next.shards(), hasSize(EXPECTED_NUMBER_OF_SHARDS));
@@ -207,10 +208,9 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
 
     private ChannelPosition findCurrentPosition() throws InterruptedException {
         sleep(50);
-        final ChannelPosition channelPosition = kinesisMessageLog.consumeUntil(
-                ChannelPosition.fromHorizon(),
-                now().plus(200, MILLIS)
-        ).join();
+        final ChannelPosition channelPosition = kinesisMessageLog
+                .consumeUntil(fromHorizon(), endOfChannel())
+                .join();
         threads.clear();
         messages.clear();
         testMessageInterceptor.clear();

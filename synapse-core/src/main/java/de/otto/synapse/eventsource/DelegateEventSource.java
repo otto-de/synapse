@@ -1,6 +1,7 @@
 package de.otto.synapse.eventsource;
 
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ShardResponse;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
@@ -9,6 +10,7 @@ import org.springframework.context.ApplicationContext;
 import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 
 public class DelegateEventSource implements EventSource {
 
@@ -64,7 +66,7 @@ public class DelegateEventSource implements EventSource {
     /**
      * Returns the name of the EventSource.
      * <p>
-     * For streaming event-sources, this is the name of the event stream.
+     *     For streaming event-sources, this is the name of the event stream.
      * </p>
      *
      * @return name
@@ -96,19 +98,13 @@ public class DelegateEventSource implements EventSource {
      *     the number of events retrieved from the EventSource.
      * </p>
      *
-     * @param until the timestamp until the messages should be consumed
+     * @param stopCondition the stop condition used to determine whether or not message-consumption should stop
      * @return the new read position
      */
     @Nonnull
     @Override
-    public CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull Instant until) {
-        return delegate.consumeUntil(until);
-    }
-
-    @Nonnull
-    @Override
-    public CompletableFuture<ChannelPosition> catchUp() {
-        return delegate.catchUp();
+    public CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull Predicate<ShardResponse> stopCondition) {
+        return delegate.consumeUntil(stopCondition);
     }
 
     @Override

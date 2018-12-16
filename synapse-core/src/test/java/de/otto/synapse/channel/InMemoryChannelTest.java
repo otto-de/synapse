@@ -2,15 +2,15 @@ package de.otto.synapse.channel;
 
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.info.MessageReceiverNotification;
-import de.otto.synapse.info.MessageReceiverStatus;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
 
-import java.time.Instant;
 import java.util.concurrent.ExecutionException;
 
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
+import static de.otto.synapse.channel.StopCondition.endOfChannel;
+import static de.otto.synapse.info.MessageReceiverStatus.*;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
@@ -24,24 +24,24 @@ public class InMemoryChannelTest {
         InMemoryChannel inMemoryChannel = new InMemoryChannel("some-stream", new MessageInterceptorRegistry(), eventPublisher);
 
         // when
-        inMemoryChannel.consumeUntil(fromHorizon(), Instant.now()).get();
+        inMemoryChannel.consumeUntil(fromHorizon(), endOfChannel()).get();
 
         // then
         ArgumentCaptor<MessageReceiverNotification> notificationArgumentCaptor = ArgumentCaptor.forClass(MessageReceiverNotification.class);
         verify(eventPublisher, times(3)).publishEvent(notificationArgumentCaptor.capture());
 
         MessageReceiverNotification startingNotification = notificationArgumentCaptor.getAllValues().get(0);
-        assertThat(startingNotification.getStatus(), is(MessageReceiverStatus.STARTING));
+        assertThat(startingNotification.getStatus(), is(STARTING));
         assertThat(startingNotification.getChannelDurationBehind().isPresent(), is(false));
         assertThat(startingNotification.getChannelName(), is("some-stream"));
 
         MessageReceiverNotification startedNotification = notificationArgumentCaptor.getAllValues().get(1);
-        assertThat(startedNotification.getStatus(), is(MessageReceiverStatus.STARTED));
+        assertThat(startedNotification.getStatus(), is(STARTED));
         assertThat(startedNotification.getChannelDurationBehind().isPresent(), is(false));
         assertThat(startedNotification.getChannelName(), is("some-stream"));
 
         MessageReceiverNotification finishedNotification = notificationArgumentCaptor.getAllValues().get(2);
-        assertThat(finishedNotification.getStatus(), is(MessageReceiverStatus.FINISHED));
+        assertThat(finishedNotification.getStatus(), is(FINISHED));
         assertThat(finishedNotification.getChannelDurationBehind().isPresent(), is(false));
         assertThat(finishedNotification.getChannelName(), is("some-stream"));
     }

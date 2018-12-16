@@ -1,6 +1,7 @@
 package de.otto.synapse.eventsource;
 
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ShardResponse;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.messagestore.MessageStore;
@@ -12,6 +13,7 @@ import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -31,19 +33,9 @@ public class DefaultEventSource extends AbstractEventSource {
 
     @Nonnull
     @Override
-    public CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull Instant until) {
-        return consume(messageLogStartPosition -> getMessageLogReceiverEndpoint().consumeUntil(messageLogStartPosition, until));
-    }
-
-    @Nonnull
-    @Override
-    public CompletableFuture<ChannelPosition> catchUp() {
-        return consume(messageLogStartPosition -> getMessageLogReceiverEndpoint().catchUp(messageLogStartPosition));
-    }
-
-    private CompletableFuture<ChannelPosition> consume(Function<ChannelPosition, CompletableFuture<ChannelPosition>> messageLogSupplier){
+    public CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull Predicate<ShardResponse> stopCondition) {
         return consumeMessageStore()
-                .thenCompose(messageLogSupplier)
+                .thenCompose(channelPosition -> getMessageLogReceiverEndpoint().consumeUntil(channelPosition, stopCondition))
                 .handle((channelPosition, throwable) -> {
                     if (throwable != null) {
                         LOG.error("Failed to start consuming from EventSource {}: {}. Closing MessageStore.", getChannelName(), throwable.getMessage(), throwable);

@@ -1,6 +1,9 @@
 package de.otto.synapse.eventsource;
 
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ShardPosition;
+import de.otto.synapse.channel.ShardResponse;
+import de.otto.synapse.channel.StopCondition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
@@ -10,6 +13,9 @@ import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+
+import static de.otto.synapse.channel.StopCondition.shutdown;
 
 /**
  * An event source of {@link Message events}.
@@ -67,7 +73,7 @@ public interface EventSource {
      * @return the new read position
      */
     default CompletableFuture<ChannelPosition> consume() {
-        return consumeUntil(Instant.MAX);
+        return consumeUntil(shutdown());
     }
 
     /**
@@ -77,18 +83,10 @@ public interface EventSource {
      *     the number of events retrieved from the EventSource.
      * </p>
      *
-     * @param until the timestamp until the messages should be consumed
+     * @param stopCondition the stop condition used to determine whether or not message-consumption should stop
      * @return the new read position
      */
-    @Nonnull CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull Instant until);
-
-    /**
-     * Consumes all events until the current latest event of the EventSource is consumed.
-     *
-     * @return the new read position
-     */
-    @Nonnull CompletableFuture<ChannelPosition> catchUp();
-
+    @Nonnull CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull Predicate<ShardResponse> stopCondition);
 
     void stop();
 

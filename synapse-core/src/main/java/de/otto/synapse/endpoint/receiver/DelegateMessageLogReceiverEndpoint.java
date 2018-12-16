@@ -1,6 +1,7 @@
 package de.otto.synapse.endpoint.receiver;
 
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ShardResponse;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.EndpointType;
@@ -12,6 +13,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
 
 public class DelegateMessageLogReceiverEndpoint implements MessageLogReceiverEndpoint {
 
@@ -25,14 +27,8 @@ public class DelegateMessageLogReceiverEndpoint implements MessageLogReceiverEnd
     @Nonnull
     @Override
     public CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull ChannelPosition startFrom,
-                                                           final @Nonnull Instant until) {
-        return delegate.consumeUntil(startFrom, until);
-    }
-
-    @Nonnull
-    @Override
-    public CompletableFuture<ChannelPosition> catchUp(@Nonnull ChannelPosition startFrom) {
-        return delegate.catchUp(startFrom);
+                                                           final @Nonnull Predicate<ShardResponse> stopCondition) {
+        return delegate.consumeUntil(startFrom, stopCondition);
     }
 
     @Override

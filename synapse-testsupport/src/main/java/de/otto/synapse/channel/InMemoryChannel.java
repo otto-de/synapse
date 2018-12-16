@@ -1,5 +1,6 @@
 package de.otto.synapse.channel;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.AbstractMessageLogReceiverEndpoint;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.Nonnull;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,11 +22,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
+import static com.google.common.collect.Iterables.getLast;
+import static de.otto.synapse.channel.ChannelDurationBehind.channelDurationBehind;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.channel.StartFrom.HORIZON;
+import static de.otto.synapse.info.MessageReceiverStatus.*;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
-import static java.time.Duration.between;
+import static java.time.Duration.*;
 import static java.time.Instant.now;
 import static java.util.Collections.synchronizedList;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -62,48 +68,27 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
     }
 
     @Nonnull
-    @Override
     public CompletableFuture<ChannelPosition> consumeUntil(@Nonnull final ChannelPosition startFrom,
-                                                           @Nonnull final Instant until) {
-        return consumeUntil(startFrom, (shardPosition) -> !until.isAfter(now()) ) ;
-    }
-
-    @Nonnull
-    @Override
-    public CompletableFuture<ChannelPosition> catchUp(@Nonnull ChannelPosition startFrom) {
-        return consumeUntil(startFrom, (shardPosition) -> {
-            final AtomicInteger pos = new AtomicInteger(shardPosition.startFrom() == StartFrom.HORIZON
-                    ? -1
-                    : Integer.valueOf(shardPosition.position()));
-            return !hasMessageAfter(pos.get());
-        });
-    }
-
-    @Nonnull
-    private CompletableFuture<ChannelPosition> consumeUntil(@Nonnull final ChannelPosition startFrom,
-                                                            @Nonnull final Predicate<ShardPosition> stopCondition) {
-        publishEvent(MessageReceiverStatus.STARTING, "Starting InMemoryChannel " + getChannelName(), null);
-        final Message<String> lastMessage = eventQueue.isEmpty() ? null : Iterables.getLast(eventQueue);
-        final ChannelDurationBehind durationBehind = lastMessage != null
-                ? ChannelDurationBehind.channelDurationBehind().with(getChannelName(), between(lastMessage.getHeader().getArrivalTimestamp(), now())).build()
-                : null;
-        publishEvent(MessageReceiverStatus.STARTED, "Started InMemoryChannel " + getChannelName(), durationBehind);
+                                                           @Nonnull final Predicate<ShardResponse> stopCondition) {
+        publishEvent(STARTING, "Starting InMemoryChannel " + getChannelName(), null);
+        publishEvent(STARTED, "Started InMemoryChannel " + getChannelName(), null);
         return CompletableFuture.supplyAsync(() -> {
-            boolean shouldStop = false;
+            boolean shouldStop;
             ShardPosition shardPosition = startFrom.shard(getChannelName());
-            AtomicInteger pos = new AtomicInteger(shardPosition.startFrom() == StartFrom.HORIZON
-                    ? -1
-                    : Integer.valueOf(shardPosition.position()));
+            AtomicInteger pos = new AtomicInteger(positionOf(shardPosition));
             do {
+                final ImmutableList<Message<String>> messages;
                 if (hasMessageAfter(pos.get())) {
                     final int index = pos.incrementAndGet();
                     final Message<String> receivedMessage = eventQueue.get(index);
+                    messages = ImmutableList.of(receivedMessage);
                     LOG.info("Received message from channel={} at position={}: message={}", getChannelName(), index, receivedMessage);
                     final Message<String> interceptedMessage = intercept(receivedMessage);
                     if (interceptedMessage != null) {
                         getMessageDispatcher().accept(interceptedMessage);
                     }
                 } else {
+                    messages = ImmutableList.of();
                     try {
                         Thread.sleep(100);
                     } catch (final InterruptedException e) {
@@ -111,21 +96,43 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
                     }
                 }
                 shardPosition = fromPosition(getChannelName(), String.valueOf(pos));
-                shouldStop = stopCondition.test(shardPosition);
+                shouldStop = stopCondition.test(new ShardResponse(getChannelName(), messages, shardPosition, ZERO, durationBehind(pos.get())));
             } while (!shouldStop && !stopSignal.get());
-            publishEvent(MessageReceiverStatus.FINISHED, "Finished InMemoryChannel " + getChannelName(), durationBehind);
+            publishEvent(FINISHED, "Finished InMemoryChannel " + getChannelName(), null);
             return channelPosition(shardPosition);
         }, newSingleThreadExecutor());
     }
 
+    private int positionOf(ShardPosition shardPosition) {
+        return shardPosition.startFrom() == HORIZON
+                ? -1
+                : Integer.valueOf(shardPosition.position());
+    }
+
+    private Duration durationBehind(final int currentPos) {
+        if (currentPos == -1 && eventQueue.size() > 0) {
+            return Duration.between(
+                    getLast(eventQueue).getHeader().getArrivalTimestamp(),
+                    eventQueue.get(eventQueue.size()-1).getHeader().getArrivalTimestamp())
+                    .abs();
+        } else if (currentPos >= 0 && currentPos <= eventQueue.size()) {
+            return Duration.between(
+                    getLast(eventQueue).getHeader().getArrivalTimestamp(),
+                    eventQueue.get(currentPos).getHeader().getArrivalTimestamp())
+                    .abs();
+        } else {
+            return ZERO;
+        }
+    }
+
     @Override
     public CompletableFuture<Void> consume() {
-        publishEvent(MessageReceiverStatus.STARTING, "Starting InMemoryChannel " + getChannelName(), null);
-        final Message<String> lastMessage = eventQueue.isEmpty() ? null : Iterables.getLast(eventQueue);
+        publishEvent(STARTING, "Starting InMemoryChannel " + getChannelName(), null);
+        final Message<String> lastMessage = eventQueue.isEmpty() ? null : getLast(eventQueue);
         final ChannelDurationBehind durationBehind = lastMessage != null
-                ? ChannelDurationBehind.channelDurationBehind().with(getChannelName(), between(lastMessage.getHeader().getArrivalTimestamp(), now())).build()
+                ? channelDurationBehind().with(getChannelName(), between(lastMessage.getHeader().getArrivalTimestamp(), now())).build()
                 : null;
-        publishEvent(MessageReceiverStatus.STARTED, "Started InMemoryChannel " + getChannelName(), durationBehind);
+        publishEvent(STARTED, "Started InMemoryChannel " + getChannelName(), durationBehind);
         return CompletableFuture.supplyAsync(() -> {
             do {
                 if (!eventQueue.isEmpty()) {
@@ -148,7 +155,7 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
                     }
                 }
             } while (!stopSignal.get());
-            publishEvent(MessageReceiverStatus.FINISHED, "Finished InMemoryChannel " + getChannelName(), durationBehind);
+            publishEvent(FINISHED, "Finished InMemoryChannel " + getChannelName(), durationBehind);
             return null;
         }, Executors.newSingleThreadExecutor());
     }

@@ -2,6 +2,7 @@ package de.otto.synapse.eventsource;
 
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.StopCondition;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
@@ -11,11 +12,13 @@ import org.junit.Test;
 
 import java.time.Instant;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.channel.StopCondition.shutdown;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.messagestore.MessageStores.emptyMessageStore;
@@ -52,7 +55,7 @@ public class DefaultEventSourceTest {
         eventSource.consume().get();
 
         // then
-        verify(messageLog).consumeUntil(fromHorizon(), Instant.MAX);
+        verify(messageLog).consumeUntil(fromHorizon(), shutdown());
     }
 
     @Test
@@ -67,7 +70,7 @@ public class DefaultEventSourceTest {
         final InterceptorChain interceptorChain = mock(InterceptorChain.class);
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
         when(messageLog.getInterceptorChain()).thenReturn(interceptorChain);
-        when(messageLog.consumeUntil(any(ChannelPosition.class), any(Instant.class))).thenReturn(completedFuture(fromHorizon()));
+        when(messageLog.consumeUntil(any(ChannelPosition.class), any(Predicate.class))).thenReturn(completedFuture(fromHorizon()));
 
         // and our famous DefaultEventSource:
         final DefaultEventSource eventSource = new DefaultEventSource(messageStore, messageLog);
@@ -93,7 +96,7 @@ public class DefaultEventSourceTest {
         final InterceptorChain interceptorChain = new InterceptorChain(ImmutableList.of((m)->null));
         // and some MessageLogReceiverEndpoint with our InterceptorChain:
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
-        when(messageLog.consumeUntil(any(ChannelPosition.class), any(Instant.class))).thenReturn(completedFuture(fromHorizon()));
+        when(messageLog.consumeUntil(any(ChannelPosition.class), any(Predicate.class))).thenReturn(completedFuture(fromHorizon()));
         when(messageLog.getInterceptorChain()).thenReturn(interceptorChain);
         final MessageDispatcher messageDispatcher = mock(MessageDispatcher.class);
         when(messageLog.getMessageDispatcher()).thenReturn(messageDispatcher);
@@ -118,7 +121,7 @@ public class DefaultEventSourceTest {
         // and some MessageLogReceiverEndpoint with our InterceptorChain:
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
         when(messageLog.getInterceptorChain()).thenReturn(new InterceptorChain());
-        when(messageLog.consumeUntil(any(ChannelPosition.class), any(Instant.class))).thenReturn(completedFuture(fromHorizon()));
+        when(messageLog.consumeUntil(any(ChannelPosition.class), any(Predicate.class))).thenReturn(completedFuture(fromHorizon()));
         final MessageDispatcher messageDispatcher = mock(MessageDispatcher.class);
         when(messageLog.getMessageDispatcher()).thenReturn(messageDispatcher);
         // and our famous DefaultEventSource:
@@ -146,7 +149,7 @@ public class DefaultEventSourceTest {
         eventSource.consume().get();
 
         // then
-        verify(messageLog).consumeUntil(expectedChannelPosition, Instant.MAX);
+        verify(messageLog).consumeUntil(expectedChannelPosition, shutdown());
     }
 
     @Test
@@ -165,7 +168,7 @@ public class DefaultEventSourceTest {
         final ChannelPosition finalChannelPosition = eventSource.consume().get();
 
         // then
-        verify(messageLog).consumeUntil(messageStoreChannelPosition, Instant.MAX);
+        verify(messageLog).consumeUntil(messageStoreChannelPosition, shutdown());
         assertThat(finalChannelPosition, is(expectedChannelPosition));
     }
 
@@ -199,13 +202,13 @@ public class DefaultEventSourceTest {
 
     private MessageLogReceiverEndpoint mockMessageLogReceiverEndpoint() {
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
-        when(messageLog.consumeUntil(any(ChannelPosition.class), any(Instant.class))).thenReturn(completedFuture(fromHorizon()));
+        when(messageLog.consumeUntil(any(ChannelPosition.class), any(Predicate.class))).thenReturn(completedFuture(fromHorizon()));
         return messageLog;
     }
 
     private MessageLogReceiverEndpoint mockMessageLogReceiverEndpoint(final ChannelPosition channelPosition) {
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
-        when(messageLog.consumeUntil(any(ChannelPosition.class), any(Instant.class))).thenReturn(completedFuture(channelPosition));
+        when(messageLog.consumeUntil(any(ChannelPosition.class), any(Predicate.class))).thenReturn(completedFuture(channelPosition));
         return messageLog;
     }
 

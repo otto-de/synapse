@@ -3,9 +3,11 @@ package de.otto.synapse.endpoint.receiver.kinesis;
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ChannelResponse;
+import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.channel.ShardResponse;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.TestClock;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -30,9 +32,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
+import static com.google.common.collect.ImmutableList.of;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.channel.StopCondition.*;
 import static de.otto.synapse.endpoint.receiver.kinesis.KinesisShardIterator.POISON_SHARD_ITER;
 import static java.time.Duration.ofMillis;
 import static java.util.Collections.emptyList;
@@ -63,12 +67,18 @@ public class KinesisMessageLogReaderTest {
     private Consumer<ShardResponse> responseConsumer;
 
     private KinesisMessageLogReader logReader;
-    private AtomicInteger nextKey = new AtomicInteger(0);
+
+    private final AtomicInteger nextKey = new AtomicInteger(0);
+
+    @Before
+    public void before() {
+        nextKey.set(0);
+    }
 
     @Test
     public void shouldRetrieveEmptyListOfShards() {
         // given
-        describeStreamResponse(ImmutableList.of());
+        describeStreamResponse(of());
         logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
 
         // when
@@ -81,7 +91,7 @@ public class KinesisMessageLogReaderTest {
     @Test
     public void shouldRetrieveSingleOpenShard() {
         // given
-        describeStreamResponse(ImmutableList.of(someShard("shard1", true)));
+        describeStreamResponse(of(someShard("shard1", true)));
         logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
 
         // when
@@ -95,7 +105,7 @@ public class KinesisMessageLogReaderTest {
     @Test
     public void shouldGetOpenShards() {
         // given
-        describeStreamResponse(ImmutableList.of(
+        describeStreamResponse(of(
                 someShard("shard1", true),
                 someShard("shard2", false),
                 someShard("shard3", true)
@@ -114,7 +124,7 @@ public class KinesisMessageLogReaderTest {
     public void shouldRetrieveOnlyOpenShards() {
         // given
         describeStreamResponse(
-                ImmutableList.of(
+                of(
                         someShard("shard1", true),
                         someShard("shard2", false),
                         someShard("shard3", true)));
@@ -133,10 +143,10 @@ public class KinesisMessageLogReaderTest {
     public void shouldRetrieveShardsOfMultipleResponses() {
         // given
         describeStreamResponse(
-                ImmutableList.of(
+                of(
                         someShard("shard1", true),
                         someShard("shard2", true)),
-                ImmutableList.of(
+                of(
                         someShard("shard3", true),
                         someShard("shard4", true)));
         logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
@@ -156,10 +166,10 @@ public class KinesisMessageLogReaderTest {
     public void shouldRetrieveShardsOfMultipleResponsesWithFirstShardsClosed() {
         // given
         describeStreamResponse(
-                ImmutableList.of(
+                of(
                         someShard("shard1", false),
                         someShard("shard2", false)),
-                ImmutableList.of(
+                of(
                         someShard("shard3", true),
                         someShard("shard4", true)));
         logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
@@ -174,17 +184,17 @@ public class KinesisMessageLogReaderTest {
     }
 
     @Test
-    public void shouldConsumeAllResponsesFromKinesis() throws ExecutionException, InterruptedException {
+    public void shouldConsumeAllResponses() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
-                ImmutableList.of(
+                of(
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", true);
 
         logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
 
         // when
-        ChannelPosition position = logReader.consumeUntil(fromHorizon(), Instant.MAX, responseConsumer).get();
+        ChannelPosition position = logReader.consumeUntil(fromHorizon(), shutdown(), responseConsumer).get();
 
         // then
         verify(responseConsumer, times(4)).accept(responseArgumentCaptor.capture());
@@ -209,10 +219,70 @@ public class KinesisMessageLogReaderTest {
     }
 
     @Test
+    public void shouldConsumeAllResponsesUntilEndOfChannel() throws ExecutionException, InterruptedException {
+        // given
+        describeStreamResponse(
+                of(
+                        someShard("shard1", true)));
+        describeRecordsForShard("shard1", false);
+
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
+
+        // when
+        ChannelPosition position = logReader.consumeUntil(fromHorizon(), endOfChannel(), responseConsumer).get();
+
+        // then
+        verify(responseConsumer, times(3)).accept(responseArgumentCaptor.capture());
+        List<ShardResponse> responses = responseArgumentCaptor.getAllValues();
+
+        assertThat(responses, hasSize(3));
+        // first response:
+        List<Message<String>> messages = responses.get(0).getMessages();
+        assertThat(messages, is(empty()));
+        // second response:
+        messages = responses.get(1).getMessages();
+        assertThat(messages, hasSize(1));
+        assertThat(messages.get(0).getPayload(), is("{\"data\":\"blue\"}"));
+        // third response:
+        messages = responses.get(2).getMessages();
+        assertThat(messages, hasSize(2));
+        assertThat(messages.get(0).getPayload(), is(nullValue()));
+        assertThat(messages.get(1).getPayload(), is("{\"data\":\"green\"}"));
+    }
+
+    @Test
+    public void shouldConsumeAllResponsesFromMultipleShardsTilEndOfChannel() throws ExecutionException, InterruptedException {
+        // given
+        describeStreamResponse(
+                of(
+                        someShard("shard1", true),
+                        someShard("shard2", true)
+                )
+        );
+        describeRecordsForShard("shard1", false);
+        describeRecordsForShard("shard2", false);
+
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
+
+        // when
+        ChannelPosition position = logReader.consumeUntil(fromHorizon(), endOfChannel(), responseConsumer).get();
+
+        // then
+        verify(responseConsumer, times(6)).accept(responseArgumentCaptor.capture());
+        List<ShardResponse> responses = responseArgumentCaptor.getAllValues();
+
+        assertThat(responses, hasSize(6));
+        assertThat(position, is(channelPosition(
+                fromPosition("shard1", "2"),
+                fromPosition("shard2", "5"))
+        ));
+    }
+
+    @Test
     public void shouldIterateResponses() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
-                ImmutableList.of(
+                of(
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", true);
 
@@ -241,7 +311,7 @@ public class KinesisMessageLogReaderTest {
     public void shouldIterateResponsesWithMultipleShards() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
-                ImmutableList.of(
+                of(
                         someShard("shard1", true),
                         someShard("shard2", true)));
         describeRecordsForShard("shard1", false);
@@ -298,7 +368,7 @@ public class KinesisMessageLogReaderTest {
     public void shouldConsumeAllMessagesFromMultipleShards() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
-                ImmutableList.of(
+                of(
                         someShard("shard1", true),
                         someShard("shard2", true),
                         someShard("shard3", true))
@@ -311,7 +381,7 @@ public class KinesisMessageLogReaderTest {
         // when
         logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
 
-        final CompletableFuture<ChannelPosition> futurePosition = logReader.consumeUntil(fromHorizon(), Instant.MAX, responseConsumer);
+        final CompletableFuture<ChannelPosition> futurePosition = logReader.consumeUntil(fromHorizon(), shutdown(), responseConsumer);
         futurePosition.get();
 
         // then
@@ -329,14 +399,14 @@ public class KinesisMessageLogReaderTest {
     public void shouldShutdownOnStop() throws ExecutionException, InterruptedException, TimeoutException {
         // given
         describeStreamResponse(
-                ImmutableList.of(
+                of(
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", false);
 
         logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
 
         // when
-        final CompletableFuture<ChannelPosition> finalChannelPosition = logReader.consumeUntil(fromHorizon(), Instant.MAX, responseConsumer);
+        final CompletableFuture<ChannelPosition> finalChannelPosition = logReader.consumeUntil(fromHorizon(), shutdown(), responseConsumer);
         Thread.sleep(200);
         logReader.stop();
 
@@ -350,7 +420,7 @@ public class KinesisMessageLogReaderTest {
     public void shouldStopShardsOnStop() throws InterruptedException, ExecutionException, TimeoutException {
         // given
         describeStreamResponse(
-                ImmutableList.of(
+                of(
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", false);
 
@@ -358,7 +428,7 @@ public class KinesisMessageLogReaderTest {
 
 
         // when
-        final CompletableFuture<ChannelPosition> futureChannelPosition = logReader.consumeUntil(fromHorizon(), Instant.MAX, responseConsumer);
+        final CompletableFuture<ChannelPosition> futureChannelPosition = logReader.consumeUntil(fromHorizon(), shutdown(), responseConsumer);
         logReader.stop();
         futureChannelPosition.get(3, TimeUnit.SECONDS);
         // then
@@ -370,7 +440,7 @@ public class KinesisMessageLogReaderTest {
     public void shouldShutdownOnException() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
-                ImmutableList.of(
+                of(
                         someShard("shard1", true),
                         someShard("failing-shard2", true))
         );
@@ -379,34 +449,34 @@ public class KinesisMessageLogReaderTest {
         logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
 
         // when
-        logReader.consumeUntil(fromHorizon(), Instant.MAX, responseConsumer).get();
+        logReader.consumeUntil(fromHorizon(), shutdown(), responseConsumer).get();
     }
 
     @Test
     public void shouldBeAbleToRestartConsumeAfterException() throws ExecutionException, InterruptedException {
         // given
         describeStreamResponse(
-                ImmutableList.of(
+                of(
                         someShard("failing-shard", true))
         );
         describeRecordsForShard("failing-shard", true);
         logReader = new KinesisMessageLogReader("channelName", kinesisClient, clock);
         try {
-            logReader.consumeUntil(fromHorizon(), Instant.MAX, responseConsumer).get();
+            logReader.consumeUntil(fromHorizon(), shutdown(), responseConsumer).get();
         } catch (ExecutionException e) {
         }
 
 
         // when
         describeStreamResponse(
-                ImmutableList.of(
+                of(
                         someShard("shard1", true),
                         someShard("shard2", true))
         );
         describeRecordsForShard("shard1", true);
         describeRecordsForShard("shard2", true);
 
-        logReader.consumeUntil(fromHorizon(), Instant.MAX, responseConsumer).get();
+        logReader.consumeUntil(fromHorizon(), shutdown(), responseConsumer).get();
 
         // then
         verify(responseConsumer, times(8)).accept(responseArgumentCaptor.capture());
@@ -463,7 +533,7 @@ public class KinesisMessageLogReaderTest {
                 .build();
         GetRecordsResponse response3 = withPoison
                 ? GetRecordsResponse.builder().records(emptyList()).millisBehindLatest(0L).nextShardIterator(POISON_SHARD_ITER).build()
-                : GetRecordsResponse.builder().records(emptyList()).millisBehindLatest(0L).nextShardIterator(shardName + "-pos3").build();
+                : GetRecordsResponse.builder().records(emptyList()).millisBehindLatest(0L).nextShardIterator(shardName + "-pos4").build();
 
         when(kinesisClient.getRecords(argThat((GetRecordsRequest req) -> isFailingShardIter(shardName, req))))
                 .thenThrow(new RuntimeException("boo!"));

@@ -1,6 +1,7 @@
 package de.otto.synapse.compaction.s3;
 
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.StopCondition;
 import de.otto.synapse.consumer.StatefulMessageConsumer;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 
+import static de.otto.synapse.channel.StopCondition.*;
 import static java.time.Instant.now;
 
 public class CompactionService {
@@ -59,7 +61,13 @@ public class CompactionService {
         );
 
         try {
-            final ChannelPosition currentPosition = compactingKinesisEventSource.catchUp().get();
+            final ChannelPosition currentPosition = compactingKinesisEventSource
+                    .consumeUntil(
+                            endOfChannel()
+                                    .and(emptyResponse())
+                                    .or(arrivalTimeAfterNow(clock))
+                    )
+                    .get();
 
             LOG.info("Finished updating snapshot data. StateRepository now holds {} entries.", stateRepository.size());
 
