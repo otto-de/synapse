@@ -1,12 +1,10 @@
 package de.otto.synapse.channel;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.AbstractMessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
-import de.otto.synapse.info.MessageReceiverStatus;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
@@ -30,7 +28,8 @@ import static de.otto.synapse.channel.StartFrom.HORIZON;
 import static de.otto.synapse.info.MessageReceiverStatus.*;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
-import static java.time.Duration.*;
+import static java.time.Duration.ZERO;
+import static java.time.Duration.between;
 import static java.time.Instant.now;
 import static java.util.Collections.synchronizedList;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -96,7 +95,7 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
                     }
                 }
                 shardPosition = fromPosition(getChannelName(), String.valueOf(pos));
-                shouldStop = stopCondition.test(new ShardResponse(getChannelName(), messages, shardPosition, ZERO, durationBehind(pos.get())));
+                shouldStop = stopCondition.test(new ShardResponse(getChannelName(), messages, shardPosition, durationBehind(pos.get())));
             } while (!shouldStop && !stopSignal.get());
             publishEvent(FINISHED, "Finished InMemoryChannel " + getChannelName(), null);
             return channelPosition(shardPosition);

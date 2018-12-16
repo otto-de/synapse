@@ -13,12 +13,11 @@ import java.util.function.Predicate;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.StopCondition.*;
-import static de.otto.synapse.channel.StopCondition.timestamp;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.time.Duration.ZERO;
 import static java.time.Duration.ofMillis;
-import static java.time.Instant.*;
+import static java.time.Instant.now;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -125,7 +124,6 @@ public class StopConditionTest {
                 "",
                 messages,
                 fromPosition("some-shard", "42"),
-                Duration.ZERO,
                 durationBehind);
     }
 

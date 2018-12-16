@@ -10,18 +10,15 @@ import java.util.Objects;
 public final class ShardResponse {
     private final String channelName;
     private final Duration durationBehind;
-    private final Duration runtime;
     private final ShardPosition shardPosition;
     private final List<Message<String>> messages;
 
     public ShardResponse(final String channelName,
                          final ImmutableList<Message<String>> messages,
                          final ShardPosition shardPosition,
-                         final Duration runtime,
                          final Duration durationBehind) {
 
         this.channelName = channelName;
-        this.runtime = runtime;
         this.shardPosition = shardPosition;
         this.messages = messages;
         this.durationBehind = durationBehind;
@@ -43,10 +40,6 @@ public final class ShardResponse {
         return durationBehind;
     }
 
-    public Duration getRuntime() {
-        return runtime;
-    }
-
     public List<Message<String>> getMessages() {
         return messages;
     }
@@ -58,14 +51,13 @@ public final class ShardResponse {
         ShardResponse that = (ShardResponse) o;
         return Objects.equals(channelName, that.channelName) &&
                 Objects.equals(durationBehind, that.durationBehind) &&
-                Objects.equals(runtime, that.runtime) &&
                 Objects.equals(shardPosition, that.shardPosition) &&
                 Objects.equals(messages, that.messages);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(channelName, durationBehind, runtime, shardPosition, messages);
+        return Objects.hash(channelName, durationBehind, shardPosition, messages);
     }
 
     @Override
@@ -73,7 +65,6 @@ public final class ShardResponse {
         return "ShardResponse{" +
                 "channelName='" + channelName + '\'' +
                 ", durationBehind=" + durationBehind +
-                ", runtime=" + runtime +
                 ", shardPosition=" + shardPosition +
                 ", messages=" + messages +
                 '}';

@@ -12,12 +12,11 @@ public class KinesisShardResponse {
 
     public static ShardResponse kinesisShardResponse(final String channelName,
                                                             final ShardPosition shardPosition,
-                                                            final GetRecordsResponse recordsResponse,
-                                                            final long runtime) {
+                                                            final GetRecordsResponse recordsResponse) {
         return new ShardResponse(channelName, recordsResponse.records()
                                 .stream()
                                 .map(record -> kinesisMessage(shardPosition.shardName(), record))
-                                .collect(toImmutableList()), shardPosition, ofMillis(runtime), ofMillis(recordsResponse.millisBehindLatest()));
+                                .collect(toImmutableList()), shardPosition, ofMillis(recordsResponse.millisBehindLatest()));
     }
 
 }

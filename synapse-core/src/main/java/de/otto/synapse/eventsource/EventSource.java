@@ -1,16 +1,13 @@
 package de.otto.synapse.eventsource;
 
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.channel.ShardResponse;
-import de.otto.synapse.channel.StopCondition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.message.Message;
 
 import javax.annotation.Nonnull;
-import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -77,10 +74,13 @@ public interface EventSource {
     }
 
     /**
-     * Consumes all events from the EventSource until the timestamp is reached.
+     * Consumes all messages from the EventSource until the predicate returns true.
      * <p>
      *     The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
-     *     the number of events retrieved from the EventSource.
+     *     the number of messages retrieved from the EventSource.
+     * </p>
+     * <p>
+     *     In many cases
      * </p>
      *
      * @param stopCondition the stop condition used to determine whether or not message-consumption should stop

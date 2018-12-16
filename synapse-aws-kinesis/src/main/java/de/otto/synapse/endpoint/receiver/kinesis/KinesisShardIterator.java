@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.receiver.kinesis;
 
-import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ShardPosition;
@@ -23,7 +22,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.logging.LogHelper.warn;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static software.amazon.awssdk.services.kinesis.model.ShardIteratorType.*;
 
 /**
@@ -112,14 +110,13 @@ public class KinesisShardIterator {
 
     public ShardResponse next() {
         try {
-            final Stopwatch stopwatch = Stopwatch.createStarted();
             final GetRecordsResponse recordsResponse = retryTemplate.execute((RetryCallback<GetRecordsResponse, Throwable>) context -> {
                 if (stopSignal.get()) {
                     context.setExhaustedOnly();
                 }
                 return tryNext();
             });
-            return KinesisShardResponse.kinesisShardResponse(channelName, shardPosition, recordsResponse, stopwatch.elapsed(MILLISECONDS));
+            return KinesisShardResponse.kinesisShardResponse(channelName, shardPosition, recordsResponse);
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }

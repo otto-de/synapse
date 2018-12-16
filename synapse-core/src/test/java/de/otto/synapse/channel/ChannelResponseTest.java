@@ -26,8 +26,8 @@ public class ChannelResponseTest {
         final ChannelResponse response = new ChannelResponse(
                 "foo",
                 of(
-                        new ShardResponse("foo", ImmutableList.of(), fromHorizon("foo"), Duration.ZERO, Duration.ZERO),
-                        new ShardResponse("foo", ImmutableList.of(), fromPosition("bar", "42"), Duration.ZERO, Duration.ZERO)
+                        new ShardResponse("foo", ImmutableList.of(), fromHorizon("foo"), Duration.ZERO),
+                        new ShardResponse("foo", ImmutableList.of(), fromPosition("bar", "42"), Duration.ZERO)
                 )
         );
         assertThat(response.getChannelPosition(), is(channelPosition(fromHorizon("foo"), fromPosition("bar", "42"))));
@@ -40,7 +40,7 @@ public class ChannelResponseTest {
         final ChannelResponse response = new ChannelResponse(
                 "foo",
                 of(
-                        new ShardResponse("foo", of(first, second), fromHorizon("foo"), Duration.ZERO, Duration.ZERO)
+                        new ShardResponse("foo", of(first, second), fromHorizon("foo"), Duration.ZERO)
                 )
         );
         assertThat(response.getMessages(), contains(first, second));
@@ -56,8 +56,8 @@ public class ChannelResponseTest {
         new ChannelResponse(
                 "foo",
                 of(
-                        new ShardResponse("foo", ImmutableList.of(), fromHorizon("foo"), Duration.ZERO, Duration.ZERO),
-                        new ShardResponse("bar", ImmutableList.of(), fromHorizon("bar"), Duration.ZERO, Duration.ZERO)
+                        new ShardResponse("foo", ImmutableList.of(), fromHorizon("foo"), Duration.ZERO),
+                        new ShardResponse("bar", ImmutableList.of(), fromHorizon("bar"), Duration.ZERO)
                 )
         );
     }
@@ -88,7 +88,7 @@ public class ChannelResponseTest {
 
     private ShardResponse someShardResponse(final String shardName,
                                             final long millisBehind) {
-        return new ShardResponse("foo", ImmutableList.of(), fromPosition(shardName, "5"), Duration.ofMillis(0L), Duration.ofMillis(millisBehind));
+        return new ShardResponse("foo", ImmutableList.of(), fromPosition(shardName, "5"), Duration.ofMillis(millisBehind));
     }
 
 
