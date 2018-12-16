@@ -35,8 +35,8 @@ public class KinesisShardResponseTest {
                 .nextShardIterator("nextIter")
                 .millisBehindLatest(0L)
                 .build();
-        final ShardResponse first = kinesisShardResponse("channel", fromPosition("shard", "42"), response);
-        final ShardResponse second = kinesisShardResponse("channel", fromPosition("shard", "42"), response);
+        final ShardResponse first = kinesisShardResponse(fromPosition("shard", "42"), response);
+        final ShardResponse second = kinesisShardResponse(fromPosition("shard", "42"), response);
 
         assertThat(first.equals(second), is(true));
         assertThat(first.hashCode(), is(second.hashCode()));
@@ -65,9 +65,8 @@ public class KinesisShardResponseTest {
                 .nextShardIterator("nextIter")
                 .millisBehindLatest(1L)
                 .build();
-        final ShardResponse response = kinesisShardResponse("channel", fromPosition("shard", "42"), recordsResponse);
+        final ShardResponse response = kinesisShardResponse(fromPosition("shard", "42"), recordsResponse);
 
-        assertThat(response.getChannelName(), is("channel"));
         assertThat(response.getShardName(), is("shard"));
         assertThat(response.getDurationBehind(), is(Duration.ofMillis(1L)));
         assertThat(response.getShardPosition(), is(fromPosition("shard", "42")));

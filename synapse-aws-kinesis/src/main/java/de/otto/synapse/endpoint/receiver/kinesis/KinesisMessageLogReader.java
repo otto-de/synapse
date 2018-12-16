@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
 import java.time.Clock;
-import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -22,6 +21,7 @@ import java.util.function.Predicate;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
+import static de.otto.synapse.channel.ChannelResponse.channelResponse;
 import static java.util.Objects.isNull;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.concurrent.Executors.newFixedThreadPool;
@@ -99,7 +99,7 @@ public class KinesisMessageLogReader {
                             },
                             executorService))
                     .collect(toList());
-            return supplyAsync(() -> new ChannelResponse(channelName, futureShardPositions
+            return supplyAsync(() -> channelResponse(channelName, futureShardPositions
                     .stream()
                     .map(CompletableFuture::join)
                     .collect(toImmutableList())), executorService);

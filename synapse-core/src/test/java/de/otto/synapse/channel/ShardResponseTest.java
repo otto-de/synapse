@@ -1,6 +1,5 @@
 package de.otto.synapse.channel;
 
-import com.google.common.collect.ImmutableList;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 
@@ -16,8 +15,8 @@ public class ShardResponseTest {
     @Test
     public void shouldImplementEqualsAndHashCode() {
         final Message<String> message = message("", null);
-        final ShardResponse first = new ShardResponse("channel", ImmutableList.of(message), fromPosition("shard", "42"), Duration.ofMillis(4711));
-        final ShardResponse second = new ShardResponse("channel", ImmutableList.of(message), fromPosition("shard", "42"), Duration.ofMillis(4711));
+        final ShardResponse first = ShardResponse.shardResponse(fromPosition("shard", "42"), Duration.ofMillis(4711), message);
+        final ShardResponse second = ShardResponse.shardResponse(fromPosition("shard", "42"), Duration.ofMillis(4711), message);
 
         assertThat(first.equals(second), is(true));
         assertThat(first.hashCode(), is(second.hashCode()));

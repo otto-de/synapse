@@ -2,7 +2,9 @@ package de.otto.synapse.endpoint.receiver.kinesis;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-import de.otto.synapse.channel.*;
+import de.otto.synapse.channel.ChannelDurationBehind;
+import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ShardResponse;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
@@ -15,7 +17,6 @@ import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
 import javax.annotation.Nonnull;
 import java.time.Clock;
-import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
@@ -24,8 +25,6 @@ import java.util.function.Predicate;
 
 import static de.otto.synapse.channel.ChannelDurationBehind.copyOf;
 import static de.otto.synapse.channel.ChannelDurationBehind.unknown;
-import static de.otto.synapse.channel.StopCondition.endOfChannel;
-import static de.otto.synapse.channel.StopCondition.timestamp;
 import static de.otto.synapse.endpoint.EndpointType.RECEIVER;
 import static de.otto.synapse.info.MessageReceiverNotification.builder;
 import static de.otto.synapse.info.MessageReceiverStatus.*;
@@ -39,13 +38,16 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
     private static class KinesisShardResponseConsumer implements Consumer<ShardResponse> {
         private final AtomicReference<ChannelDurationBehind> channelDurationBehind = new AtomicReference<>();
         private final MessageInterceptorRegistry interceptorRegistry;
+        private final String channelName;
         private final MessageDispatcher messageDispatcher;
         private final ApplicationEventPublisher eventPublisher;
 
-        private KinesisShardResponseConsumer(final List<String> shardNames,
+        private KinesisShardResponseConsumer(final String channelName,
+                                             final List<String> shardNames,
                                              final MessageInterceptorRegistry interceptorRegistry,
                                              final MessageDispatcher messageDispatcher,
                                              final ApplicationEventPublisher eventPublisher) {
+            this.channelName = channelName;
             this.messageDispatcher = messageDispatcher;
             this.interceptorRegistry = interceptorRegistry;
             this.eventPublisher = eventPublisher;
@@ -54,7 +56,7 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
 
         @Override
         public void accept(final ShardResponse response) {
-            final InterceptorChain interceptorChain = interceptorRegistry.getInterceptorChain(response.getChannelName(), RECEIVER);
+            final InterceptorChain interceptorChain = interceptorRegistry.getInterceptorChain(channelName, RECEIVER);
             response.getMessages().forEach(message -> {
                 try {
                     final Message<String> interceptedMessage = interceptorChain.intercept(message);
@@ -71,7 +73,7 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
 
             if (eventPublisher != null) {
                 eventPublisher.publishEvent(builder()
-                        .withChannelName(response.getChannelName())
+                        .withChannelName(channelName)
                         .withChannelDurationBehind(channelDurationBehind.get())
                         .withStatus(RUNNING)
                         .withMessage("Reading from kinesis shard.")
@@ -114,7 +116,7 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
 
             publishEvent(STARTED, "Received shards from Kinesis.", null);
 
-            final KinesisShardResponseConsumer consumer = new KinesisShardResponseConsumer(shards, interceptorRegistry, getMessageDispatcher(), eventPublisher);
+            final KinesisShardResponseConsumer consumer = new KinesisShardResponseConsumer(getChannelName(), shards, interceptorRegistry, getMessageDispatcher(), eventPublisher);
 
             return kinesisMessageLogReader.consumeUntil(startFrom, stopCondition, consumer)
                     .thenApply((channelPosition -> {

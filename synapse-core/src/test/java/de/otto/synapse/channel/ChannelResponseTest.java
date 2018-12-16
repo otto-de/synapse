@@ -6,29 +6,24 @@ import de.otto.synapse.message.Message;
 import org.junit.Test;
 
 import java.time.Duration;
-import java.time.Instant;
 
 import static com.google.common.collect.ImmutableList.of;
 import static de.otto.synapse.channel.ChannelDurationBehind.channelDurationBehind;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.channel.ShardResponse.shardResponse;
 import static de.otto.synapse.message.Message.message;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 public class ChannelResponseTest {
 
-    private Instant now;
-
     @Test
     public void shouldCalculateChannelPosition() {
-        final ChannelResponse response = new ChannelResponse(
-                "foo",
-                of(
-                        new ShardResponse("foo", ImmutableList.of(), fromHorizon("foo"), Duration.ZERO),
-                        new ShardResponse("foo", ImmutableList.of(), fromPosition("bar", "42"), Duration.ZERO)
-                )
+        final ChannelResponse response = ChannelResponse.channelResponse("foo",
+                shardResponse(fromHorizon("foo"), Duration.ZERO, ImmutableList.of()),
+                shardResponse(fromPosition("bar", "42"), Duration.ZERO, ImmutableList.of())
         );
         assertThat(response.getChannelPosition(), is(channelPosition(fromHorizon("foo"), fromPosition("bar", "42"))));
     }
@@ -37,34 +32,30 @@ public class ChannelResponseTest {
     public void shouldReturnMessages() {
         final Message<String> first = message("a", null);
         final Message<String> second = message("b", null);
-        final ChannelResponse response = new ChannelResponse(
+        final ChannelResponse response = ChannelResponse.channelResponse(
                 "foo",
-                of(
-                        new ShardResponse("foo", of(first, second), fromHorizon("foo"), Duration.ZERO)
-                )
+                shardResponse(fromHorizon("foo"), Duration.ZERO, of(first, second))
         );
         assertThat(response.getMessages(), contains(first, second));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldFailToCreateResponseWithoutAnyShardResponses() {
-        new ChannelResponse("foo", of());
+        ChannelResponse.channelResponse("foo", of());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldFailToCreateResponseFromDifferentChannels() {
-        new ChannelResponse(
+        ChannelResponse.channelResponse(
                 "foo",
-                of(
-                        new ShardResponse("foo", ImmutableList.of(), fromHorizon("foo"), Duration.ZERO),
-                        new ShardResponse("bar", ImmutableList.of(), fromHorizon("bar"), Duration.ZERO)
-                )
+                shardResponse(fromHorizon("foo"), Duration.ZERO, ImmutableList.of()),
+                shardResponse(fromHorizon("bar"), Duration.ZERO, ImmutableList.of())
         );
     }
 
     @Test
     public void shouldCalculateDurationBehind() {
-        final ChannelResponse response = new ChannelResponse("foo", of(
+        final ChannelResponse response = ChannelResponse.channelResponse("foo", of(
                 someShardResponse("first", 42000L),
                 someShardResponse("second", 0L))
         );
@@ -78,7 +69,7 @@ public class ChannelResponseTest {
 
     @Test
     public void shouldReturnShardNames() {
-        final ChannelResponse response = new ChannelResponse("foo", of(
+        final ChannelResponse response = ChannelResponse.channelResponse("foo", of(
                 someShardResponse("first", 0L),
                 someShardResponse("second", 0L))
         );
@@ -88,7 +79,7 @@ public class ChannelResponseTest {
 
     private ShardResponse someShardResponse(final String shardName,
                                             final long millisBehind) {
-        return new ShardResponse("foo", ImmutableList.of(), fromPosition(shardName, "5"), Duration.ofMillis(millisBehind));
+        return shardResponse(fromPosition(shardName, "5"), Duration.ofMillis(millisBehind), ImmutableList.of());
     }
 
 

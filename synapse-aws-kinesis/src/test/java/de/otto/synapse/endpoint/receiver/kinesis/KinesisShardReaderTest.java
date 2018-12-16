@@ -96,7 +96,6 @@ public class KinesisShardReaderTest {
         verifyNoMoreInteractions(consumer);
 
         final ShardResponse shardResponse = argumentCaptor.getValue();
-        assertThat(shardResponse.getChannelName(), is("someChannel"));
         assertThat(shardResponse.getShardName(), is("someShard"));
         assertThat(shardResponse.getShardPosition(), is(fromPosition("someShard", "2")));
         assertThat(shardResponse.getDurationBehind(), is(ofMillis(1234L)));
@@ -146,7 +145,6 @@ public class KinesisShardReaderTest {
         List<ShardResponse> allValues = argumentCaptor.getAllValues();
         assertThat(allValues, hasSize(2));
         final ShardResponse lastResponse = allValues.get(1);
-        assertThat(lastResponse.getChannelName(), is("someChannel"));
         assertThat(lastResponse.getShardName(), is("someShard"));
         assertThat(lastResponse.getShardPosition(), is(fromPosition("someShard", "2")));
         assertThat(lastResponse.getDurationBehind(), is(ofMillis(0L)));
@@ -175,7 +173,6 @@ public class KinesisShardReaderTest {
 
         assertThat(shardPosition.startFrom(), is(HORIZON));
         final ShardResponse shardResponse = argumentCaptor.getValue();
-        assertThat(shardResponse.getChannelName(), is("someChannel"));
         assertThat(shardResponse.getShardName(), is("someShard"));
         assertThat(shardResponse.getShardPosition(), is(fromHorizon("someShard")));
         assertThat(shardResponse.getDurationBehind(), is(ofMillis(0L)));
@@ -218,7 +215,6 @@ public class KinesisShardReaderTest {
         assertThat(kinesisShardReader.isStopping(), is(true));
         assertThat(shardPosition.get(), is(fromPosition("someShard", "2")));
         final ShardResponse shardResponse = argumentCaptor.getValue();
-        assertThat(shardResponse.getChannelName(), is("someChannel"));
         assertThat(shardResponse.getShardName(), is("someShard"));
         assertThat(shardResponse.getShardPosition(), is(fromPosition("someShard", "2")));
         assertThat(shardResponse.getDurationBehind(), is(ofMillis(1234L)));

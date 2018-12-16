@@ -24,6 +24,7 @@ import static com.google.common.collect.Iterables.getLast;
 import static de.otto.synapse.channel.ChannelDurationBehind.channelDurationBehind;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.channel.ShardResponse.shardResponse;
 import static de.otto.synapse.channel.StartFrom.HORIZON;
 import static de.otto.synapse.info.MessageReceiverStatus.*;
 import static de.otto.synapse.message.Header.responseHeader;
@@ -95,7 +96,7 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
                     }
                 }
                 shardPosition = fromPosition(getChannelName(), String.valueOf(pos));
-                shouldStop = stopCondition.test(new ShardResponse(getChannelName(), messages, shardPosition, durationBehind(pos.get())));
+                shouldStop = stopCondition.test(shardResponse(shardPosition, durationBehind(pos.get()), messages));
             } while (!shouldStop && !stopSignal.get());
             publishEvent(FINISHED, "Finished InMemoryChannel " + getChannelName(), null);
             return channelPosition(shardPosition);

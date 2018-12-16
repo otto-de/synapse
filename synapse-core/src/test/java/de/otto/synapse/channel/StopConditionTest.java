@@ -1,6 +1,5 @@
 package de.otto.synapse.channel;
 
-import com.google.common.collect.ImmutableList;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.TestClock;
@@ -12,6 +11,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.function.Predicate;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.channel.ShardResponse.shardResponse;
 import static de.otto.synapse.channel.StopCondition.*;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
@@ -64,11 +64,11 @@ public class StopConditionTest {
         final Predicate<ShardResponse> predicate = arrivalTimeAfterNow();
         final  Instant past = now().minus(1, ChronoUnit.HOURS);
         final ShardResponse pastResponse = someShardResponseWithMessages(
-                ImmutableList.of(message(
+                ofMillis(42),
+                message(
                         "foo",
                         arrivalTime(past),
-                        "bar")),
-                ofMillis(42));
+                        "bar"));
         assertThat(predicate.test(pastResponse), is(false));
     }
 
@@ -77,11 +77,8 @@ public class StopConditionTest {
         final Predicate<ShardResponse> predicate = arrivalTimeAfterNow();
         final  Instant future = now().plus(1, ChronoUnit.HOURS);
         final ShardResponse futureResponse = someShardResponseWithMessages(
-                ImmutableList.of(message(
-                        "foo",
-                        arrivalTime(future),
-                        "bar")),
-                ofMillis(42));
+                ofMillis(42),
+                message("foo", arrivalTime(future), "bar"));
         assertThat(predicate.test(futureResponse), is(true));
     }
 
@@ -107,24 +104,21 @@ public class StopConditionTest {
     }
 
     private ShardResponse someShardResponse(final Duration durationBehind) {
-        return someShardResponseWithMessages(
-                ImmutableList.of(),
-                durationBehind);
+        return someShardResponseWithMessages(durationBehind);
     }
 
     private ShardResponse someShardResponseWithMessages(final Duration durationBehind) {
         return someShardResponseWithMessages(
-                ImmutableList.of(message("foo", "bar")),
-                durationBehind);
+                durationBehind,
+                message("foo", "bar"));
     }
 
-    private ShardResponse someShardResponseWithMessages(final ImmutableList<Message<String>> messages,
-                                                        final Duration durationBehind) {
-        return new ShardResponse(
-                "",
-                messages,
+    private ShardResponse someShardResponseWithMessages(final Duration durationBehind,
+                                                        final Message<String>... messages) {
+        return shardResponse(
                 fromPosition("some-shard", "42"),
-                durationBehind);
+                durationBehind,
+                messages);
     }
 
     private Header arrivalTime(final Instant arrivalTime) {

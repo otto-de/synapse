@@ -116,7 +116,7 @@ public class KinesisShardIterator {
                 }
                 return tryNext();
             });
-            return KinesisShardResponse.kinesisShardResponse(channelName, shardPosition, recordsResponse);
+            return KinesisShardResponse.kinesisShardResponse(shardPosition, recordsResponse);
         } catch (Throwable t) {
             throw new RuntimeException(t);
         }

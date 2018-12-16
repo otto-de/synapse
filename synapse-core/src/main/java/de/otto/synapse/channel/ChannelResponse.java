@@ -17,14 +17,26 @@ public class ChannelResponse {
     private final String channelName;
     private final ImmutableList<ShardResponse> shardResponses;
 
-    public ChannelResponse(final String channelName,
-                           final ImmutableList<ShardResponse> shardResponses) {
+    public static ChannelResponse channelResponse(final String channelName,
+                                                  final ImmutableList<ShardResponse> shardResponses) {
+        return new ChannelResponse(channelName, shardResponses);
+    }
+
+    public static ChannelResponse channelResponse(final String channelName,
+                                                  final ShardResponse... shardResponses) {
+        return new ChannelResponse(
+                channelName,
+                shardResponses != null
+                        ? ImmutableList.copyOf(shardResponses)
+                        : ImmutableList.of());
+    }
+
+    private ChannelResponse(final String channelName,
+                            final ImmutableList<ShardResponse> shardResponses) {
         if (shardResponses.isEmpty()) {
             throw new IllegalArgumentException("Unable to create ChannelResponse without KinesisShardResponses");
         }
-        if (shardResponses.stream().anyMatch(response -> !response.getChannelName().equals(channelName))) {
-            throw new IllegalArgumentException("Unable to create ChannelResponse from KinesisShardResponses returned by different message channels");
-        }        this.channelName = channelName;
+        this.channelName = channelName;
         this.shardResponses = shardResponses;
     }
 

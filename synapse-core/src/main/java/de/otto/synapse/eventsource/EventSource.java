@@ -79,9 +79,6 @@ public interface EventSource {
      *     The registered {@link MessageConsumer consumers} will be called zero or more times, depending on
      *     the number of messages retrieved from the EventSource.
      * </p>
-     * <p>
-     *     In many cases
-     * </p>
      *
      * @param stopCondition the stop condition used to determine whether or not message-consumption should stop
      * @return the new read position
