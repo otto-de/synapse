@@ -44,15 +44,6 @@ public class ChannelResponseTest {
         ChannelResponse.channelResponse("foo", of());
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void shouldFailToCreateResponseFromDifferentChannels() {
-        ChannelResponse.channelResponse(
-                "foo",
-                shardResponse(fromHorizon("foo"), Duration.ZERO, ImmutableList.of()),
-                shardResponse(fromHorizon("bar"), Duration.ZERO, ImmutableList.of())
-        );
-    }
-
     @Test
     public void shouldCalculateDurationBehind() {
         final ChannelResponse response = ChannelResponse.channelResponse("foo", of(

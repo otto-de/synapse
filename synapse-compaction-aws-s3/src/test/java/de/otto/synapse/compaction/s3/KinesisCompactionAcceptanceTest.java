@@ -9,7 +9,7 @@ import com.jayway.jsonpath.JsonPath;
 import de.otto.synapse.annotation.EnableEventSourcing;
 import de.otto.synapse.annotation.EnableMessageSenderEndpoint;
 import de.otto.synapse.channel.selector.MessageLog;
-import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
+import de.otto.synapse.configuration.aws.KinesisTestConfiguration;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.helper.s3.S3Helper;
 import net.minidev.json.JSONArray;
@@ -49,18 +49,21 @@ import static org.junit.Assert.assertThat;
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
-@SpringBootTest(classes = {CompactionAcceptanceTest.class, InMemoryMessageLogTestConfiguration.class})
+@SpringBootTest(classes = {KinesisTestConfiguration.class, KinesisCompactionAcceptanceTest.class})
 @TestPropertySource(properties = {
-        "synapse.snapshot.bucket-name=de-otto-promo-compaction-test-snapshots",
+        "synapse.snapshot.bucket-name=de-otto-kinesis-compaction-test-snapshots",
         "synapse.compaction.enabled=true"}
 )
 @EnableEventSourcing
 @DirtiesContext
-@EnableMessageSenderEndpoint(name = "compactionTestSender", channelName = "promo-compaction-test", selector = MessageLog.class)
-public class CompactionAcceptanceTest {
+@EnableMessageSenderEndpoint(
+        name = "compactionTestSender",
+        channelName = "kinesis-compaction-test",
+        selector = MessageLog.class)
+public class KinesisCompactionAcceptanceTest {
 
-    private static final String INTEGRATION_TEST_STREAM = "promo-compaction-test";
-    private static final String INTEGRATION_TEST_BUCKET = "de-otto-promo-compaction-test-snapshots";
+    private static final String INTEGRATION_TEST_STREAM = "kinesis-compaction-test";
+    private static final String INTEGRATION_TEST_BUCKET = "de-otto-kinesis-compaction-test-snapshots";
 
     @Autowired
     private MessageSenderEndpoint compactionTestSender;
@@ -136,7 +139,8 @@ public class CompactionAcceptanceTest {
         }
     }
 
-    private void assertSnapshotFileStructureAndSize(LinkedHashMap<String, JSONArray> json, int expectedNumberOfRecords) {
+    private void assertSnapshotFileStructureAndSize(LinkedHashMap<String, JSONArray> json,
+                                                    int expectedNumberOfRecords) {
         assertThat(json, hasJsonPath("$.startSequenceNumbers[0].shard", not(empty())));
         assertThat(json, hasJsonPath("$.startSequenceNumbers[0].sequenceNumber", not(empty())));
 
@@ -172,7 +176,7 @@ public class CompactionAcceptanceTest {
 
     private List<Path> getSnapshotFilePaths() throws IOException {
         return Files.list(Paths.get(System.getProperty("java.io.tmpdir")))
-                .filter(p -> p.toFile().getName().startsWith("compaction-promo-compaction-test-snapshot-"))
+                .filter(p -> p.toFile().getName().startsWith("compaction-kinesis-compaction-test-snapshot-"))
                 .collect(Collectors.toList());
     }
 

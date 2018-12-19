@@ -4,7 +4,10 @@ import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.kinesis.KinesisMessageSender;
-import de.otto.synapse.testsupport.LocalS3Client;
+import de.otto.synapse.eventsource.DefaultEventSource;
+import de.otto.synapse.eventsource.EventSourceBuilder;
+import de.otto.synapse.messagestore.InMemoryMessageStore;
+import de.otto.synapse.messagestore.MessageStore;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageFormat;
 import org.slf4j.Logger;
@@ -19,8 +22,6 @@ import software.amazon.awssdk.http.Protocol;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 
 import java.net.URI;
 
@@ -39,6 +40,14 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
     @Override
     public void configureMessageInterceptors(final MessageInterceptorRegistry registry) {
         registry.register(receiverChannelsWith(testMessageInterceptor()));
+    }
+
+    @Bean
+    public EventSourceBuilder eventSourceBuilder() {
+        return (messageLog) -> {
+            final MessageStore messageStore = new InMemoryMessageStore();
+            return new DefaultEventSource(messageStore, messageLog);
+        };
     }
 
     @Bean
@@ -93,13 +102,4 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
         return new KinesisMessageSender(KINESIS_INTEGRATION_TEST_CHANNEL, registry, new JsonStringMessageTranslator(), kinesisClient, MessageFormat.V2);
     }
 
-    // TODO: remove me
-    private static final String INTEGRATION_TEST_SNAPSHOT_BUCKET = "de-otto-integrationtest-snapshots";
-    @Bean
-    public S3Client fakeS3Client() {
-        final LocalS3Client localS3Client = new LocalS3Client();
-        localS3Client.createBucket(CreateBucketRequest.builder().bucket(INTEGRATION_TEST_SNAPSHOT_BUCKET).build());
-        return localS3Client;
-    }
-    // TODO: /remove me
 }

@@ -25,7 +25,7 @@ public class StopConditionTest {
 
     @Test
     public void shouldNeverStop() {
-        final ShardResponse shardResponse = someShardResponse(ofMillis(1000));
+        final ShardResponse shardResponse = someEmptyShardResponse(ofMillis(1000));
         final Predicate<ShardResponse> predicate = shutdown();
         final boolean shouldStop = predicate.test(shardResponse);
         assertThat(shouldStop, is(false));
@@ -34,28 +34,28 @@ public class StopConditionTest {
     @Test
     public void shouldStopAtEndOfChannel() {
         final Predicate<ShardResponse> predicate = endOfChannel();
-        assertThat(predicate.test(someShardResponseWithMessages(ofMillis(1))), is(false));
-        assertThat(predicate.test(someShardResponseWithMessages(ZERO)), is(true));
+        assertThat(predicate.test(someShardResponseWithSingleMessage(ofMillis(1))), is(false));
+        assertThat(predicate.test(someShardResponseWithSingleMessage(ZERO)), is(true));
     }
 
     @Test
     public void shouldStopAtEndOfChannelWithNoMoreMessages() {
         final Predicate<ShardResponse> predicate = endOfChannel().and(emptyResponse());
-        assertThat(predicate.test(someShardResponseWithMessages(ZERO)), is(false));
-        assertThat(predicate.test(someShardResponse(ZERO)), is(true));
+        assertThat(predicate.test(someShardResponseWithSingleMessage(ZERO)), is(false));
+        assertThat(predicate.test(someEmptyShardResponse(ZERO)), is(true));
     }
 
     @Test
     public void shouldStopOnEmptyResponse() {
         final Predicate<ShardResponse> predicate = emptyResponse();
-        assertThat(predicate.test(someShardResponseWithMessages(ofMillis(42))), is(false));
-        assertThat(predicate.test(someShardResponse(ofMillis(42))), is(true));
+        assertThat(predicate.test(someShardResponseWithSingleMessage(ofMillis(42))), is(false));
+        assertThat(predicate.test(someEmptyShardResponse(ofMillis(42))), is(true));
     }
 
     @Test
     public void shouldNotStopOnEmptyMessages() {
         final Predicate<ShardResponse> predicate = arrivalTimeAfterNow();
-        final ShardResponse emptyResponse = someShardResponse(ZERO);
+        final ShardResponse emptyResponse = someEmptyShardResponse(ZERO);
         assertThat(predicate.test(emptyResponse), is(false));
     }
 
@@ -87,7 +87,7 @@ public class StopConditionTest {
         final TestClock clock = TestClock.now();
         final Instant inThousandMillis = clock.instant().plusMillis(1000);
 
-        final ShardResponse shardResponse = someShardResponse(ofMillis(1000));
+        final ShardResponse shardResponse = someEmptyShardResponse(ofMillis(1000));
 
         // when timestamp in future:
         final Predicate<ShardResponse> predicate = timestamp(inThousandMillis, clock);
@@ -103,11 +103,11 @@ public class StopConditionTest {
         assertThat(predicate.test(shardResponse), is(true));
     }
 
-    private ShardResponse someShardResponse(final Duration durationBehind) {
+    private ShardResponse someEmptyShardResponse(final Duration durationBehind) {
         return someShardResponseWithMessages(durationBehind);
     }
 
-    private ShardResponse someShardResponseWithMessages(final Duration durationBehind) {
+    private ShardResponse someShardResponseWithSingleMessage(final Duration durationBehind) {
         return someShardResponseWithMessages(
                 durationBehind,
                 message("foo", "bar"));

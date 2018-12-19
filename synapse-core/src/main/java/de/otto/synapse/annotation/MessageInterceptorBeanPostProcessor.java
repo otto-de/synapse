@@ -87,7 +87,7 @@ public class MessageInterceptorBeanPostProcessor implements BeanPostProcessor, O
                 );
             }
         }
-        LOG.info("{} @EventSourceConsumer methods processed on bean {} : {}'", annotatedMethods.size(), beanName, annotatedMethods);
+        LOG.info("{} @MessageInterceptor methods processed on bean {} : {}'", annotatedMethods.size(), beanName, annotatedMethods);
     }
 
     private MessageInterceptorRegistration registrationFor(MessageInterceptor interceptorAnnotation, de.otto.synapse.endpoint.MessageInterceptor interceptor) {

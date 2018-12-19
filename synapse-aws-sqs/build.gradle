@@ -48,16 +48,6 @@ artifacts {
     archives sourcesJar
 }
 
-task startSqsLocalStack(type:Exec) {
-    commandLine "docker", "run", "--name", "localstack_for_sqs", "-d", "-p", "4567-4583:4567-4583", "localstack/localstack:latest"
-}
-task stopSqsLocalStack(type: Exec) {
-    commandLine 'docker', 'rm', '-f', 'localstack_for_sqs'
-}
-
-test.dependsOn(startSqsLocalStack)
-test.finalizedBy(stopSqsLocalStack)
-
 uploadArchives {
     repositories {
         mavenDeployer {

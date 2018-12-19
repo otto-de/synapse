@@ -14,10 +14,10 @@ locally, without having to access the "real" AWS services.
 
 Follow the instructions here: https://github.com/localstack/localstack
 
-2. Setup AWS Region + Credentials
+2. Building Synapse
 
-https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html
-
-3. Building Synapse
-
-Run ```./gradlew build```
+```
+./gradlew startLocalStack
+./gradlew build
+./gradlew stopLocalStack
+```

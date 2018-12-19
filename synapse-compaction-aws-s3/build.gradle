@@ -7,6 +7,8 @@ dependencies {
     implementation "com.google.guava:guava:23.0"
     implementation "software.amazon.awssdk:s3:${awsSdkPreviewVersion}"
 
+    testImplementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
+    testImplementation project(':synapse-aws-kinesis')
     testImplementation project(':synapse-testsupport')
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
@@ -47,16 +49,6 @@ artifacts {
     archives javadocJar
     archives sourcesJar
 }
-
-task startS3LocalStack(type:Exec) {
-    commandLine "docker", "run", "--name", "localstack_for_s3", "-d", "-p", "4567-4583:4567-4583", "localstack/localstack:latest"
-}
-task stopS3LocalStack(type: Exec) {
-    commandLine 'docker', 'rm', '-f', 'localstack_for_s3'
-}
-
-test.dependsOn(startS3LocalStack)
-test.finalizedBy(stopS3LocalStack)
 
 uploadArchives {
     repositories {

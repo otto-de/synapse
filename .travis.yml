@@ -26,7 +26,9 @@ script:
   #- ./gradlew startLocalStack
   #- aws --endpoint-url=http://localhost:4568 kinesis list-streams
   #- ./gradlew stopLocalStack
+  - ./gradlew startLocalStack
   - ./gradlew check # --info
+  - ./gradlew stopLocalStack
 
 after_success:
   - ./gradlew jacocoRootReport
