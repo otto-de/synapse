@@ -7,7 +7,6 @@ import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Message;
 
 import javax.annotation.Nonnull;
-import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
@@ -62,8 +61,12 @@ public interface MessageLogReceiverEndpoint extends MessageReceiverEndpoint {
 
     /**
      * Beginning at the {@code startFrom} position, messages are consumed from the message log, until the
-     * {@code stopCondition} is true.
+     * {@link de.otto.synapse.channel.StopCondition stopCondition} is true.
      *
+     * <p>
+     *     If the message-log is sharded, the predicate must be true for every shard: otherwise, message consumption
+     *     would continue on other shards.
+     * </p>
      * <p>
      *     Takes zero or more messages from the channel, calls {@link #intercept(Message)} for every message, and
      *     notifies the registered consumers with the intercepted message, or drops the message, if {@code intercept}
@@ -86,7 +89,8 @@ public interface MessageLogReceiverEndpoint extends MessageReceiverEndpoint {
      * </p>
      *
      * @param startFrom the start position used to proceed message consumption
-     * @param stopCondition the predicate used to test if message consumption should be stopped
+     * @param stopCondition the predicate used to test if message consumption should be stopped. In most cases, the
+     *                      predicates defined in {@link de.otto.synapse.channel.StopCondition} should be sufficient.
      * @return ChannelPosition
      */
     @Nonnull
