@@ -7,8 +7,6 @@ import org.mockito.Mock;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import java.util.Collections;
-
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.messagestore.redis.RedisMessageStore.messageOf;
 import static de.otto.synapse.messagestore.redis.RedisMessageStore.toRedisValue;
@@ -16,7 +14,6 @@ import static java.util.Collections.emptyMap;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -50,7 +47,7 @@ public class RedisMessageStoreTest {
     public void shouldConvertMessageToRedisValueAndViceVersa() {
         final Message<String> message = Message.message("some key","{}");
         final String redisValue = toRedisValue(message);
-        assertThat(redisValue, is("{\"key\":\"some key\",\"header\":{},\"payload\":{}}"));
+        assertThat(redisValue, is("{\"key\":\"some key\",\"message\":{\"_synapse_msg_format\":\"v2\",\"_synapse_msg_headers\":{},\"_synapse_msg_payload\":{}}}"));
         final Message<String> transformed = messageOf(redisValue);
         assertThat(transformed.getKey(), is(message.getKey()));
         assertThat(transformed.getPayload(), is(message.getPayload()));
@@ -60,7 +57,7 @@ public class RedisMessageStoreTest {
     public void shouldConvertMessageWithNullPayloadToRedisValueAndViceVersa() {
         final Message<String> message = Message.message("some key", null);
         final String redisValue = toRedisValue(message);
-        assertThat(redisValue, is("{\"key\":\"some key\",\"header\":{},\"payload\":null}"));
+        assertThat(redisValue, is("{\"key\":\"some key\",\"message\":{\"_synapse_msg_format\":\"v2\",\"_synapse_msg_headers\":{},\"_synapse_msg_payload\":null}}"));
         final Message<String> transformed = messageOf(redisValue);
         assertThat(transformed.getKey(), is(message.getKey()));
         assertThat(transformed.getPayload(), is(message.getPayload()));

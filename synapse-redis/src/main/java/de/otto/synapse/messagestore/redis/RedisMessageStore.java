@@ -2,8 +2,11 @@ package de.otto.synapse.messagestore.redis;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
+import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.messagestore.WritableMessageStore;
+import de.otto.synapse.translator.MessageCodec;
+import de.otto.synapse.translator.MessageFormat;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,7 +24,6 @@ import java.util.stream.StreamSupport;
 
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
-import static de.otto.synapse.message.Message.message;
 import static java.util.Arrays.asList;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.regex.Pattern.compile;
@@ -29,7 +31,7 @@ import static java.util.regex.Pattern.compile;
 public class RedisMessageStore implements WritableMessageStore {
 
     private static final int CHARACTERISTICS = Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE;
-    private static final String MESSAGE_STRUCTURE = "\\{\"key\":\"(.*)\",\"header\":(.*),\"payload\":(.*)\\}";
+    private static final String MESSAGE_STRUCTURE = "\\{\"key\":\"(.*)\",\"message\":(.*)\\}";
     private static final Pattern MESSAGE_STRUCTURE_PATTERN = compile(MESSAGE_STRUCTURE);
 
     private final String channelName;
@@ -115,8 +117,8 @@ public class RedisMessageStore implements WritableMessageStore {
         final Matcher m = MESSAGE_STRUCTURE_PATTERN.matcher(redisValue);
         if (m.find()) {
             final String key = m.group(1);
-            final String payload = m.group(3);
-            return message(key, payload.equals("null") ? null : payload);
+            final String message = m.group(2);
+            return MessageCodec.decode(message, Header.builder(), Message.builder(String.class).withKey(key));
         } else {
             throw new IllegalStateException("Unable to parse redis value " + redisValue);
         }
@@ -124,7 +126,7 @@ public class RedisMessageStore implements WritableMessageStore {
 
     // TODO: Serialize message headers
     static String toRedisValue(final Message<String> message) {
-        return "{\"key\":\"" + message.getKey() + "\",\"header\":{},\"payload\":" + message.getPayload() + "}";
+        return "{\"key\":\"" + message.getKey() + "\",\"message\":" + MessageCodec.encode(message, MessageFormat.V2) + "}";
     }
 
     public void clear() {
