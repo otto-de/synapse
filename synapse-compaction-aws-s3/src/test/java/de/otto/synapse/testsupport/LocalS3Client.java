@@ -70,7 +70,7 @@ public class LocalS3Client implements S3Client {
             bucketsWithContents.get(putObjectRequest.bucket()).put(putObjectRequest.key(),
                     bucketItemBuilder()
                             .withName(putObjectRequest.key())
-                            .withData(toByteArray(requestBody.asStream()))
+                            .withData(toByteArray(requestBody.contentStreamProvider().newStream()))
                             .withLastModifiedNow()
                             .build());
             return PutObjectResponse.builder().build();

@@ -5,7 +5,7 @@ dependencies {
     api project(':synapse-aws-auth:')
 
     implementation "com.google.guava:guava:23.0"
-    implementation "software.amazon.awssdk:s3:${awsSdkPreviewVersion}"
+    implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
 
     testImplementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
     testImplementation project(':synapse-aws-kinesis')
