@@ -98,6 +98,14 @@ public class Header implements Serializable {
         return Objects.toString(attributes.get(key), null);
     }
 
+    @Nullable
+    @JsonIgnore
+    public Instant getInstantAttribute(final String key) {
+        return hasAttribute(key)
+                ? Instant.parse(attributes.get(key))
+                : null;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
