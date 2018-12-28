@@ -4,6 +4,8 @@ package de.otto.synapse.endpoint.receiver.sqs;
 import de.otto.synapse.configuration.sqs.TestSqsMessageInterceptor;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.endpoint.SqsClientHelper;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.SqsTestStreamSource;
 import org.awaitility.Duration;
@@ -59,9 +61,7 @@ public class SqsMessageQueueIntegrationTest {
     @Before
     public void before() {
         messages.clear();
-        /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
-           when initializing it via @EnableEventSource
-         */
+        new SqsClientHelper(sqsAsyncClient).purgeQueue(SQS_INTEGRATION_TEST_CHANNEL);
         sqsMessageQueue = new SqsMessageQueueReceiverEndpoint(SQS_INTEGRATION_TEST_CHANNEL, messageInterceptorRegistry, sqsAsyncClient, null);
         sqsMessageQueue.register(MessageConsumer.of(".*", String.class, (message) -> {
             LOG.info("Consumed message {}", message.getKey());
@@ -87,7 +87,8 @@ public class SqsMessageQueueIntegrationTest {
                 .atMost(Duration.FIVE_SECONDS)
                 .until(() -> messages.size() >= EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET);
         sqsMessageQueue.stop();
-        assertThat(messages.get(0).getKey(), is("some-message-0"));
+
+        assertThat(messages.get(0).getKey(), is(Key.of("some-message-0")));
         assertThat(messages.get(0).getHeader().getShardPosition(), is(Optional.empty()));
         assertThat(messages.get(0).getHeader().getArrivalTimestamp(), is(notNullValue()));
         assertThat(messages.get(0).getHeader().getAttribute("synapse_msg_key"), is("some-message-0"));

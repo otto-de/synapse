@@ -2,6 +2,7 @@ package de.otto.synapse.endpoint.receiver.kinesis;
 
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.channel.ShardResponse;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.testsupport.TestClock;
 import org.junit.Before;
 import org.junit.Test;
@@ -219,8 +220,8 @@ public class KinesisShardReaderTest {
         assertThat(shardResponse.getShardPosition(), is(fromPosition("someShard", "2")));
         assertThat(shardResponse.getDurationBehind(), is(ofMillis(1234L)));
         assertThat(shardResponse.getMessages(), hasSize(2));
-        assertThat(shardResponse.getMessages().get(0).getKey(), is("first"));
-        assertThat(shardResponse.getMessages().get(1).getKey(), is("second"));
+        assertThat(shardResponse.getMessages().get(0).getKey(), is(Key.of("first")));
+        assertThat(shardResponse.getMessages().get(1).getKey(), is(Key.of("second")));
     }
 
     @Test

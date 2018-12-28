@@ -20,7 +20,7 @@ public class MessageTest {
                 responseHeader(fromPosition("some-channel", "00001"), now),
                 "ßome dätä"
         );
-        assertThat(message.getKey(), is("42"));
+        assertThat(message.getKey(), is(Key.of("42")));
         assertThat(message.getPayload(), is("ßome dätä"));
         assertThat(message.getHeader().getArrivalTimestamp(), is(now));
         assertThat(message.getHeader().getShardPosition().get().shardName(), is("some-channel"));
@@ -34,7 +34,7 @@ public class MessageTest {
                 "42",
                 "ßome dätä"
         );
-        assertThat(message.getKey(), is("42"));
+        assertThat(message.getKey(), is(Key.of("42")));
         assertThat(message.getPayload(), is("ßome dätä"));
         assertThat(message.getHeader().getArrivalTimestamp().isBefore(now), is(false));
         assertThat(message.getHeader().getShardPosition().isPresent(), is(false));

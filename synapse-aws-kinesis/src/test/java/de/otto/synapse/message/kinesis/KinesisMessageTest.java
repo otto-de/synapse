@@ -1,6 +1,7 @@
 package de.otto.synapse.message.kinesis;
 
 import com.google.common.collect.ImmutableMap;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 import software.amazon.awssdk.core.SdkBytes;
@@ -30,7 +31,7 @@ public class KinesisMessageTest {
         final Message<String> message = kinesisMessage(
                 "some-shard",
                 record);
-        assertThat(message.getKey(), is("42"));
+        assertThat(message.getKey(), is(Key.of("42")));
         assertThat(message.getPayload(), is("ßome dätä"));
         assertThat(message.getHeader().getArrivalTimestamp(), is(now));
         assertThat(message.getHeader().getShardPosition(), is(Optional.of(fromPosition("some-shard", "00001"))));
@@ -52,7 +53,31 @@ public class KinesisMessageTest {
         final Message<String> message = kinesisMessage(
                 "some-shard",
                 record);
-        assertThat(message.getKey(), is("42"));
+        assertThat(message.getKey(), is(Key.of("42")));
+        assertThat(message.getPayload(), is("{\"some\":\"payload\"}"));
+        assertThat(message.getHeader().getArrivalTimestamp(), is(now));
+        assertThat(message.getHeader().getShardPosition(), is(Optional.of(fromPosition("some-shard", "00001"))));
+        assertThat(message.getHeader().getAttributes(), is(ImmutableMap.of("attr", "value")));
+    }
+
+    @Test
+    public void shouldBuildKinesisMessageV2WithCompoundKey() {
+        final String json = "{\"_synapse_msg_format\":\"v2\","
+                + "\"_synapse_msg_key\":{\"partitionKey\":\"1\",\"compactionKey\":\"2\"},"
+                + "\"_synapse_msg_headers\":{\"attr\":\"value\"},"
+                + "\"_synapse_msg_payload\":{\"some\":\"payload\"}}";
+
+        final Instant now = Instant.now();
+        final Record record = Record.builder()
+                .partitionKey("42")
+                .data(SdkBytes.fromString(json,UTF_8))
+                .approximateArrivalTimestamp(now)
+                .sequenceNumber("00001")
+                .build();
+        final Message<String> message = kinesisMessage(
+                "some-shard",
+                record);
+        assertThat(message.getKey(), is(Key.of("1", "2")));
         assertThat(message.getPayload(), is("{\"some\":\"payload\"}"));
         assertThat(message.getHeader().getArrivalTimestamp(), is(now));
         assertThat(message.getHeader().getShardPosition(), is(Optional.of(fromPosition("some-shard", "00001"))));
@@ -75,7 +100,7 @@ public class KinesisMessageTest {
         final Message<String> message = kinesisMessage(
                 "some-shard",
                 record);
-        assertThat(message.getKey(), is("42"));
+        assertThat(message.getKey(), is(Key.of("42")));
         assertThat(message.getPayload(), is(nullValue()));
         assertThat(message.getHeader().getArrivalTimestamp(), is(now));
         assertThat(message.getHeader().getShardPosition(), is(Optional.of(fromPosition("some-shard", "00001"))));
@@ -98,7 +123,7 @@ public class KinesisMessageTest {
         final Message<String> message = kinesisMessage(
                 "some-shard",
                 record);
-        assertThat(message.getKey(), is("42"));
+        assertThat(message.getKey(), is(Key.of("42")));
         assertThat(message.getPayload(), is(nullValue()));
         assertThat(message.getHeader().getArrivalTimestamp(), is(now));
         assertThat(message.getHeader().getShardPosition(), is(Optional.of(fromPosition("some-shard", "00001"))));
@@ -119,7 +144,7 @@ public class KinesisMessageTest {
         final Message<String> message = kinesisMessage(
                 "some-shard",
                 record);
-        assertThat(message.getKey(), is("42"));
+        assertThat(message.getKey(), is(Key.of("42")));
         assertThat(message.getPayload(), is(nullValue()));
         assertThat(message.getHeader().getArrivalTimestamp(), is(now));
         assertThat(message.getHeader().getShardPosition(), is(Optional.of(fromPosition("some-shard", "00001"))));

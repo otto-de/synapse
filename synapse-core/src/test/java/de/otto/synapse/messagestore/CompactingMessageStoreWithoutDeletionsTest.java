@@ -1,5 +1,6 @@
 package de.otto.synapse.messagestore;
 
+import de.otto.synapse.message.Key;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -43,10 +44,10 @@ public class CompactingMessageStoreWithoutDeletionsTest {
     public void shouldNotRemoveMessagesWithoutChannelPositionWithNullPayload() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
-            messageStore.add(message(valueOf(i), "some payload"));
+            messageStore.add(message(Key.of(valueOf(i)), "some payload"));
         }
         for (int i=0; i<10; ++i) {
-            messageStore.add(message(valueOf(i), null));
+            messageStore.add(message(Key.of(valueOf(i)), null));
         }
         assertThat(messageStore.size(), is(10));
         assertThat(messageStore.getLatestChannelPosition(), is(fromHorizon()));
@@ -59,17 +60,17 @@ public class CompactingMessageStoreWithoutDeletionsTest {
         final Instant now = Instant.now().minus(1, ChronoUnit.DAYS);
         for (int i=0; i<10; ++i) {
             messageStore.add(message(
-                    valueOf(i),
+                    Key.of(valueOf(i), "foo:" + i),
                     responseHeader(fromPosition("foo", valueOf(i)), yesterday),
                     "some foo payload"));
             messageStore.add(message(
-                    valueOf(i),
+                    Key.of(valueOf(i), "bar:" + i),
                     responseHeader(fromPosition("bar", valueOf(i)), yesterday),
                     "some bar payload"));
         }
         for (int i=0; i<10; ++i) {
-            messageStore.add(message(valueOf(i), responseHeader(fromPosition("foo", valueOf(20 + i)), now), null));
-            messageStore.add(message(valueOf(i), responseHeader(fromPosition("bar", valueOf(42 + i)), now), null));
+            messageStore.add(message(Key.of(valueOf(i), "foo:" + i), responseHeader(fromPosition("foo", valueOf(20 + i)), now), null));
+            messageStore.add(message(Key.of(valueOf(i), "bar:" + i), responseHeader(fromPosition("bar", valueOf(42 + i)), now), null));
         }
         assertThat(messageStore.getLatestChannelPosition(), is(channelPosition(fromPosition("foo", "29"), fromPosition("bar", "51"))));
         assertThat(messageStore.size(), is(20));

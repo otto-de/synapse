@@ -1,5 +1,6 @@
 package de.otto.synapse.translator;
 
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 
@@ -22,7 +23,7 @@ public class JsonStringMessageTranslatorTest {
         final Message<String> message = messageTranslator.translate(
                 message("test", singletonMap("foo", "bar"))
         );
-        assertThat(message.getKey(), is("test"));
+        assertThat(message.getKey(), is(Key.of("test")));
         assertThat(message.getPayload(), is("{\"foo\":\"bar\"}"));
     }
 
@@ -41,7 +42,7 @@ public class JsonStringMessageTranslatorTest {
         final Message<String> message = messageTranslator.translate(
                 message("test", null)
         );
-        assertThat(message.getKey(), is("test"));
+        assertThat(message.getKey(), is(Key.of("test")));
         assertThat(message.getPayload(), is(nullValue()));
     }
 }

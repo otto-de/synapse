@@ -16,8 +16,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Spliterator;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -26,13 +24,10 @@ import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static java.util.Arrays.asList;
 import static java.util.Spliterators.spliteratorUnknownSize;
-import static java.util.regex.Pattern.compile;
 
 public class RedisMessageStore implements WritableMessageStore {
 
     private static final int CHARACTERISTICS = Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE;
-    private static final String MESSAGE_STRUCTURE = "\\{\"key\":\"(.*)\",\"message\":(.*)\\}";
-    private static final Pattern MESSAGE_STRUCTURE_PATTERN = compile(MESSAGE_STRUCTURE);
 
     private final String channelName;
     private final RedisTemplate<String, String> redisTemplate;
@@ -112,21 +107,12 @@ public class RedisMessageStore implements WritableMessageStore {
     public void close() {
     }
 
-    // TODO: Parse message headers
     static Message<String> messageOf(final String redisValue) {
-        final Matcher m = MESSAGE_STRUCTURE_PATTERN.matcher(redisValue);
-        if (m.find()) {
-            final String key = m.group(1);
-            final String message = m.group(2);
-            return MessageCodec.decode(message, Header.builder(), Message.builder(String.class).withKey(key));
-        } else {
-            throw new IllegalStateException("Unable to parse redis value " + redisValue);
-        }
+        return MessageCodec.decode(redisValue, Header.builder(), Message.builder(String.class));
     }
 
-    // TODO: Serialize message headers
     static String toRedisValue(final Message<String> message) {
-        return "{\"key\":\"" + message.getKey() + "\",\"message\":" + MessageCodec.encode(message, MessageFormat.V2) + "}";
+        return MessageCodec.encode(message, MessageFormat.V2);
     }
 
     public void clear() {

@@ -12,6 +12,7 @@ import de.otto.synapse.compaction.s3.SnapshotReadService;
 import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.helper.s3.S3Helper;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.junit.After;
 import org.junit.Before;
@@ -104,7 +105,7 @@ public class S3SnapshotMessageStoreAcceptanceTest {
             final List<Message<String>> messages = new ArrayList<>();
             snapshotMessageStore.stream().forEach(messages::add);
             assertThat(messages, hasSize(10));
-            assertThat(messages.stream().map(Message::getKey).collect(toList()), contains("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"));
+            assertThat(messages.stream().map(Message::getKey).map(Key::partitionKey).collect(toList()), contains("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"));
             final ChannelPosition channelPosition = snapshotMessageStore.getLatestChannelPosition();
             assertThat(channelPosition, is(channelPosition(fromPosition("promo-compaction-test", "9"))));
         }

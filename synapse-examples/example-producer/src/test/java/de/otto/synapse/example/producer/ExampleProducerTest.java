@@ -3,13 +3,13 @@ package de.otto.synapse.example.producer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
 import org.junit.Before;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
-
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -43,7 +43,7 @@ public class ExampleProducerTest {
         testee.produceSampleData();
 
         //then
-        assertThat(sentMessage.getKey(), is("1"));
+        assertThat(sentMessage.getKey(), is(Key.of("1")));
         assertThat(sentMessage.getPayload(), is("received"));
     }
 

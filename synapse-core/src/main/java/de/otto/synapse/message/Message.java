@@ -23,47 +23,52 @@ import static de.otto.synapse.message.Header.emptyHeader;
  * sender to the receiver) until it succeeds.
  * </p>
  *
- * @param <T> The type of the Message payload
+ * @param <P> The type of the Message payload
  * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/Message.html">EIP: Message</a>
  */
-public class Message<T> implements Serializable {
+public class Message<P> implements Serializable {
 
-    public static <T> Message<T> message(final @Nonnull String key,
-                                         final @Nullable T payload) {
+    public static <P> Message<P> message(final @Nonnull Key key,
+                                         final @Nullable P payload) {
         return new Message<>(key, emptyHeader(), payload);
     }
 
-    public static <T> Message<T> message(final @Nonnull String key,
+    public static <P> Message<P> message(final @Nonnull Key key,
                                          final @Nonnull Header header,
-                                         final @Nullable T payload) {
+                                         final @Nullable P payload) {
         return new Message<>(key, header, payload);
     }
 
-    // TODO: Message sollte keinen key haben. Eine abgeleitete, spezielle Message einführen oder den Key zum Header hinzufügen.
-    // TODO: Von einer DocumentMessage könnte man eventuell einen Entity-Key oder einen aus Entity-Key +
-    // TODO: Message-Type zusammengesetzten Schlüssel erwarten.
-    // TODO: Kinesis verwendet beispielsweise nur einen "Partition-Key", der (anders als bei Kafka)
-    // TODO: nicht für die Compaction, sondern nur für die Partitionierung verwendet wird. Insofern:
-    // TODO: Key als Aggregate aus partitionKey(), entityId(), messageType()
-    private final String key;
-    private final Header header;
-    private final T payload;
+    public static <P> Message<P> message(final @Nonnull String key,
+                                         final @Nullable P payload) {
+        return new Message<>(Key.of(key), emptyHeader(), payload);
+    }
 
-    protected Message(final @Nonnull String key,
+    public static <P> Message<P> message(final @Nonnull String key,
+                                         final @Nonnull Header header,
+                                         final @Nullable P payload) {
+        return new Message<>(Key.of(key), header, payload);
+    }
+
+    private final Key key;
+    private final Header header;
+    private final P payload;
+
+    protected Message(final @Nonnull Key key,
                       final @Nonnull Header header,
-                      final @Nullable T payload) {
+                      final @Nullable P payload) {
         this.key = key;
         this.payload = payload;
         this.header = header;
     }
 
     @Nonnull
-    public String getKey() {
+    public Key getKey() {
         return key;
     }
 
     @Nullable
-    public T getPayload() {
+    public P getPayload() {
         return payload;
     }
 
@@ -90,44 +95,49 @@ public class Message<T> implements Serializable {
     @Override
     public String toString() {
         return "Message{" +
-                "key='" + key + '\'' +
+                "of='" + key + '\'' +
                 ", payload=" + payload +
                 ", header=" + header +
                 '}';
     }
 
-    public static <T> Builder<T> builder(final Class<T> payloadType) {
+    public static <P> Builder<P> builder(final Class<P> payloadType) {
         return new Builder<>();
     }
 
-    public static <T> Builder<T> copyOf(final Message<T> message) {
-        return new Builder<T>()
+    public static <P> Builder<P> copyOf(final Message<P> message) {
+        return new Builder<P>()
                 .withKey(message.getKey())
                 .withHeader(message.getHeader())
                 .withPayload(message.getPayload());
     }
 
-    public static class Builder<T> {
-        private String key;
+    public static class Builder<P> {
+        private Key key = Key.of();
         private Header header;
-        private T payload;
+        private P payload;
 
-        public Builder<T> withKey(final String key) {
+        public Builder<P> withKey(final String key) {
+            this.key = Key.of(key);
+            return this;
+        }
+
+        public Builder<P> withKey(final Key key) {
             this.key = key;
             return this;
         }
 
-        public Builder<T> withHeader(final Header header) {
+        public Builder<P> withHeader(final Header header) {
             this.header = header;
             return this;
         }
 
-        public Builder<T> withPayload(final T payload) {
+        public Builder<P> withPayload(final P payload) {
             this.payload = payload;
             return this;
         }
 
-        public Message<T> build() {
+        public Message<P> build() {
             return new Message<>(key, header, payload);
         }
     }

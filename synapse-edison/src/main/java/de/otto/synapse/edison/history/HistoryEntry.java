@@ -24,7 +24,7 @@ public class HistoryEntry {
     public HistoryEntry(final Message<?> message,
                         final String channelName,
                         final List<Diff> diffs) {
-        this.messageKey = message.getKey();
+        this.messageKey = message.getKey().partitionKey();
         this.messagePayload = message.getPayload();
         this.arrivalTimestamp = message.getHeader().getArrivalTimestamp();
         this.channelName = channelName;

@@ -4,11 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import de.otto.synapse.message.Header;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import static de.otto.synapse.translator.MessageFormat.defaultMessageFormat;
@@ -18,7 +20,12 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 public class MessageCodec {
 
+    // TODO: MessageCodec als Bean, damit man den Codec bei Bedarf austauschen / anpassen kann. Eine weitere Bean MessageCodecs könnte sich um das Format kümmern.
+
     public static final String SYNAPSE_MSG_FORMAT = "_synapse_msg_format";
+    public static final String SYNAPSE_MSG_KEY = "_synapse_msg_key";
+    public static final String SYNAPSE_MSG_COMPACTIONKEY = "compactionKey";
+    public static final String SYNAPSE_MSG_PARTITIONKEY = "partitionKey";
     public static final String SYNAPSE_MSG_HEADERS = "_synapse_msg_headers";
     public static final String SYNAPSE_MSG_PAYLOAD = "_synapse_msg_payload";
 
@@ -71,9 +78,14 @@ public class MessageCodec {
             LOG.error("Failed to convert message headers={} into JSON message format v2: {}", message.getHeader(), e.getMessage());
             jsonHeaders = "{}";
         }
-        return "{\"_synapse_msg_format\":\"v2\","
-                + "\"_synapse_msg_headers\":" + jsonHeaders + ","
-                + "\"_synapse_msg_payload\":" + jsonPayload + "}";
+        return "{\"" + SYNAPSE_MSG_FORMAT + "\":\"v2\","
+                + "\"" + SYNAPSE_MSG_KEY + "\":{\"" + SYNAPSE_MSG_PARTITIONKEY + "\":\"" + message.getKey().partitionKey() + "\",\"" + SYNAPSE_MSG_COMPACTIONKEY + "\":\"" + message.getKey().compactionKey() + "\"},"
+                + "\"" + SYNAPSE_MSG_HEADERS + "\":" + jsonHeaders + ","
+                + "\""+ SYNAPSE_MSG_PAYLOAD + "\":" + jsonPayload + "}";
+    }
+
+    public static Message<String> decode(final String body) {
+        return decode(body, Header.builder(), Message.builder(String.class));
     }
 
     public static Message<String> decode(final String body,
@@ -88,6 +100,7 @@ public class MessageCodec {
             case V2:
                 try {
                     final JsonNode json = parseRecordBody(body);
+                    keyFrom(json).ifPresent(messageBuilder::withKey);
                     return messageBuilder
                             .withHeader(headerBuilder
                                     .withAttributes(attributesFrom(json))
@@ -124,16 +137,29 @@ public class MessageCodec {
         }
     }
 
-    private static String payloadFrom(final JsonNode json) {
-        final JsonNode payloadJson = json.get(SYNAPSE_MSG_PAYLOAD);
-        if (payloadJson == null || payloadJson.isNull()) {
-            return null;
-        } else if (payloadJson.isObject() || payloadJson.isArray()) {
-            return payloadJson.toString();
+    private static Optional<Key> keyFrom(final JsonNode json) {
+        final JsonNode keyNode = json.get(SYNAPSE_MSG_KEY);
+        if (keyNode == null || keyNode.isNull()) {
+            return Optional.empty();
+        } else if (keyNode.isObject()) {
+            final String partitionKey = keyNode.get(SYNAPSE_MSG_PARTITIONKEY).textValue();
+            final String compactionKey = keyNode.get(SYNAPSE_MSG_COMPACTIONKEY).textValue();
+            return Optional.of(Key.of(partitionKey, compactionKey));
         } else {
             final String msg = "Unexpected json node containing " + json + ": ";
             LOG.error(msg);
             throw new IllegalStateException(msg);
+        }
+    }
+
+    private static String payloadFrom(final JsonNode json) {
+        final JsonNode payloadJson = json.get(SYNAPSE_MSG_PAYLOAD);
+        if (payloadJson == null || payloadJson.isNull()) {
+            return null;
+        } else if (payloadJson.isObject()) {
+            return payloadJson.toString();
+        } else {
+            return payloadJson.asText();
         }
     }
 

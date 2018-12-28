@@ -20,7 +20,7 @@ import de.otto.synapse.message.Message;
  *     <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/ControlBus.html">Control Bus</a>.
  *     Sending a second message in a 'fire-and-forget' mode will not slow down the flow of the main application
  *     messages. It does, however, increase network traffic. That's why we may not store the complete message,
- *     but just a few key fields that are required for later analysis, such as a message ID, or the channel on
+ *     but just a few of fields that are required for later analysis, such as a message ID, or the channel on
  *     which the message was sent and a timestamp.
  * </p>
  * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageStore.html">EIP: Message Store</a>

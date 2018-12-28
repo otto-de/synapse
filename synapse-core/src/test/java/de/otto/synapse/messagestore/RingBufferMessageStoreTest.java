@@ -1,6 +1,7 @@
 package de.otto.synapse.messagestore;
 
 import de.otto.synapse.channel.StartFrom;
+import de.otto.synapse.message.Key;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -56,7 +57,7 @@ public class RingBufferMessageStoreTest {
         }
         final AtomicInteger expectedKey = new AtomicInteger(2);
         messageStore.stream().forEach(message -> {
-            assertThat(message.getKey(), is(valueOf(expectedKey.get())));
+            assertThat(message.getKey(), is(Key.of(valueOf(expectedKey.get()))));
             assertThat(message.getPayload(), is("some payload"));
             expectedKey.incrementAndGet();
         });

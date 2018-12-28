@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint;
 
+import de.otto.synapse.message.Key;
 import org.junit.Test;
 
 import static de.otto.synapse.endpoint.MessageFilter.messageFilter;
@@ -12,11 +13,11 @@ public class MessageInterceptorRegistrationTest {
 
     @Test
     public void shouldCreateMessageFilterRegistration() {
-        final MessageFilter messageFilter = messageFilter((m) -> m.getKey().equals("foo"));
+        final MessageFilter messageFilter = messageFilter((m) -> m.getKey().equals(Key.of("foo")));
 
         final MessageInterceptorRegistration registration = senderChannelsWith(messageFilter);
-        assertThat(registration.getInterceptor().intercept(message("foo", null)), is(notNullValue()));
-        assertThat(registration.getInterceptor().intercept(message("bar", null)), is(nullValue()));
+        assertThat(registration.getInterceptor().intercept(message(Key.of("foo"), null)), is(notNullValue()));
+        assertThat(registration.getInterceptor().intercept(message(Key.of("bar"), null)), is(nullValue()));
     }
 
     @Test

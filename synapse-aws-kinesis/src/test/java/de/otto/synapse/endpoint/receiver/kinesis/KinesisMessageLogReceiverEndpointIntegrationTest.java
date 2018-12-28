@@ -11,6 +11,7 @@ import de.otto.synapse.configuration.kinesis.TestMessageInterceptor;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.awaitility.Awaitility;
 import org.junit.After;
@@ -37,15 +38,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static de.otto.synapse.channel.ChannelPosition.*;
+import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.StopCondition.endOfChannel;
 import static de.otto.synapse.configuration.kinesis.KinesisTestConfiguration.EXPECTED_NUMBER_OF_SHARDS;
 import static de.otto.synapse.configuration.kinesis.KinesisTestConfiguration.KINESIS_INTEGRATION_TEST_CHANNEL;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
 import static java.lang.Thread.sleep;
-import static java.time.Instant.now;
-import static java.time.temporal.ChronoUnit.MILLIS;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.synchronizedSet;
 import static java.util.stream.Collectors.toList;
@@ -185,7 +184,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
 
         // then
         assertThat(messages, hasSize(1));
-        assertThat(messages.get(0).getKey(), is("deletedMessage"));
+        assertThat(messages.get(0).getKey(), is(Key.of("deletedMessage")));
         assertThat(messages.get(0).getPayload(), is(nullValue()));
     }
 
@@ -203,7 +202,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
 
         assertThat(messages, hasSize(5));
         assertThat(next.shards(), hasSize(EXPECTED_NUMBER_OF_SHARDS));
-        assertThat(messages.stream().map(Message::getKey).sorted().collect(toList()), contains("11", "12", "13", "14", "15"));
+        assertThat(messages.stream().map(Message::getKey).map(Key::toString).sorted().collect(toList()), contains("11", "12", "13", "14", "15"));
     }
 
     private ChannelPosition findCurrentPosition() throws InterruptedException {

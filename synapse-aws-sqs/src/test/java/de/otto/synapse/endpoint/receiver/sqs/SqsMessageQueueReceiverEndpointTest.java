@@ -3,6 +3,7 @@ package de.otto.synapse.endpoint.receiver.sqs;
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.awaitility.Duration;
 import org.junit.After;
@@ -105,11 +106,11 @@ public class SqsMessageQueueReceiverEndpointTest {
         // and:
         // expect the payload to be the added messages
         assertThat(messages.size(), is(3));
-        assertThat(messages.get(0).getKey(), is("first"));
+        assertThat(messages.get(0).getKey(), is(Key.of("first")));
         assertThat(messages.get(0).getPayload(), is(PAYLOAD_1));
-        assertThat(messages.get(1).getKey(), is("second"));
+        assertThat(messages.get(1).getKey(), is(Key.of("second")));
         assertThat(messages.get(1).getPayload(), is(PAYLOAD_2));
-        assertThat(messages.get(2).getKey(), is("third"));
+        assertThat(messages.get(2).getKey(), is(Key.of("third")));
         assertThat(messages.get(2).getPayload(), is(PAYLOAD_3));
     }
 
@@ -117,12 +118,12 @@ public class SqsMessageQueueReceiverEndpointTest {
     public void shouldOnlyConsumeMessagesWithMatchingKey() {
         // given:
         addSqsMessagesToQueue(
-                sqsMessage("matching-key", PAYLOAD_1),
-                sqsMessage("matching-key", PAYLOAD_2),
-                sqsMessage("non-matching-key", PAYLOAD_3));
+                sqsMessage("matching-of", PAYLOAD_1),
+                sqsMessage("matching-of", PAYLOAD_2),
+                sqsMessage("non-matching-of", PAYLOAD_3));
 
         sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", new MessageInterceptorRegistry(), sqsAsyncClient, null);
-        sqsQueueReceiver.register(MessageConsumer.of("matching-key", String.class, (message) -> messages.add(message)));
+        sqsQueueReceiver.register(MessageConsumer.of("matching-of", String.class, (message) -> messages.add(message)));
 
         // when: consumption is started
         sqsQueueReceiver.consume();
@@ -136,17 +137,17 @@ public class SqsMessageQueueReceiverEndpointTest {
         // and:
         // expect the payload to be the added messages
         assertThat(messages.size(), is(2));
-        assertThat(messages.get(0).getKey(), is("matching-key"));
-        assertThat(messages.get(1).getKey(), is("matching-key"));
+        assertThat(messages.get(0).getKey(), is(Key.of("matching-of")));
+        assertThat(messages.get(1).getKey(), is(Key.of("matching-of")));
     }
 
     @Test
     public void shouldDeleteMessageAfterConsume() {
         //given
         addSqsMessagesToQueue(
-                sqsMessage("some key", PAYLOAD_1),
-                sqsMessage("some key", PAYLOAD_2),
-                sqsMessage("some key", PAYLOAD_3));
+                sqsMessage("some of", PAYLOAD_1),
+                sqsMessage("some of", PAYLOAD_2),
+                sqsMessage("some of", PAYLOAD_3));
 
         ArgumentCaptor<DeleteMessageRequest> deleteRequestCaptor = ArgumentCaptor.forClass(DeleteMessageRequest.class);
 
@@ -173,7 +174,7 @@ public class SqsMessageQueueReceiverEndpointTest {
     @Test
     public void shouldInterceptMessages() {
         // given:
-        addSqsMessagesToQueue(sqsMessage("some key", PAYLOAD_1));
+        addSqsMessagesToQueue(sqsMessage("some of", PAYLOAD_1));
 
         interceptorRegistry.register(
                 receiverChannelsWith(message -> Message.message(message.getKey(), message.getHeader(), INTERCEPTED_PAYLOAD))
@@ -197,7 +198,7 @@ public class SqsMessageQueueReceiverEndpointTest {
     @Test
     public void shouldNotConsumeMessagesDroppedByInterceptor() {
         // given:
-        addSqsMessagesToQueue(sqsMessage("some key", PAYLOAD_1), sqsMessage("some key", PAYLOAD_2));
+        addSqsMessagesToQueue(sqsMessage("some of", PAYLOAD_1), sqsMessage("some of", PAYLOAD_2));
 
         interceptorRegistry.register(
                 receiverChannelsWith(message -> message.getPayload().equals(PAYLOAD_1) ? null : message)
@@ -231,7 +232,7 @@ public class SqsMessageQueueReceiverEndpointTest {
     @Test(expected = RuntimeException.class)
     public void shouldShutdownServiceOnRuntimeExceptionOnDelete() throws Throwable {
         //given
-        addSqsMessagesToQueue(sqsMessage("some key", PAYLOAD_1));
+        addSqsMessagesToQueue(sqsMessage("some of", PAYLOAD_1));
         when(sqsAsyncClient.deleteMessage(any(DeleteMessageRequest.class))).thenThrow(RuntimeException.class); // could be SdkException, SQSException etc.
 
         //then

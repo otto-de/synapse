@@ -7,7 +7,6 @@ import de.otto.synapse.example.edison.state.BananaProduct;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;
 import de.otto.synapse.state.StateRepository;
-import org.hamcrest.CoreMatchers;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -15,6 +14,7 @@ import java.time.Instant;
 import java.util.Optional;
 
 import static de.otto.synapse.message.Header.responseHeader;
+import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class ExampleConsumerTest {
@@ -36,12 +36,12 @@ public class ExampleConsumerTest {
         bananaPayload.setColor("green");
 
         // when
-        exampleConsumer.consumeBananas(testEvent("banana_id", bananaPayload));
+        exampleConsumer.consumeBananas(testMessage("banana_id", bananaPayload));
 
         // then
         Optional<BananaProduct> retrievedBanana = stateRepository.get("banana_id");
-        assertThat(retrievedBanana.map(BananaProduct::getId), CoreMatchers.is(Optional.of("banana_id")));
-        assertThat(retrievedBanana.map(BananaProduct::getColor), CoreMatchers.is(Optional.of("green")));
+        assertThat(retrievedBanana.map(BananaProduct::getId), is(Optional.of("banana_id")));
+        assertThat(retrievedBanana.map(BananaProduct::getColor), is(Optional.of("green")));
     }
 
     @Test
@@ -52,12 +52,12 @@ public class ExampleConsumerTest {
         productPayload.setPrice(300L);
 
         // when
-        exampleConsumer.consumeProducts(testEvent("banana_id", productPayload));
+        exampleConsumer.consumeProducts(testMessage("banana_id", productPayload));
 
         // then
         Optional<BananaProduct> retrievedBanana = stateRepository.get("banana_id");
-        assertThat(retrievedBanana.map(BananaProduct::getId), CoreMatchers.is(Optional.of("banana_id")));
-        assertThat(retrievedBanana.map(BananaProduct::getPrice), CoreMatchers.is(Optional.of(300L)));
+        assertThat(retrievedBanana.map(BananaProduct::getId).map(Object::toString), is(Optional.of("banana_id")));
+        assertThat(retrievedBanana.map(BananaProduct::getPrice), is(Optional.of(300L)));
     }
 
     @Test
@@ -71,17 +71,17 @@ public class ExampleConsumerTest {
         bananaPayload.setColor("green");
 
         // when
-        exampleConsumer.consumeProducts(testEvent("banana_id", productPayload));
-        exampleConsumer.consumeBananas(testEvent("banana_id", bananaPayload));
+        exampleConsumer.consumeProducts(testMessage("banana_id", productPayload));
+        exampleConsumer.consumeBananas(testMessage("banana_id", bananaPayload));
 
         // then
         Optional<BananaProduct> retrievedBanana = stateRepository.get("banana_id");
-        assertThat(retrievedBanana.map(BananaProduct::getId), CoreMatchers.is(Optional.of("banana_id")));
-        assertThat(retrievedBanana.map(BananaProduct::getColor), CoreMatchers.is(Optional.of("green")));
-        assertThat(retrievedBanana.map(BananaProduct::getPrice), CoreMatchers.is(Optional.of(300L)));
+        assertThat(retrievedBanana.map(BananaProduct::getId), is(Optional.of("banana_id")));
+        assertThat(retrievedBanana.map(BananaProduct::getColor), is(Optional.of("green")));
+        assertThat(retrievedBanana.map(BananaProduct::getPrice), is(Optional.of(300L)));
     }
 
-    private <T> Message<T> testEvent(String key, T payload) {
+    private <T> Message<T> testMessage(String key, T payload) {
         return Message.message(
                 key,
                 responseHeader(ShardPosition.fromHorizon(""), Instant.now()),

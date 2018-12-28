@@ -8,7 +8,9 @@ import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Header;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.SimpleKey;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -86,19 +88,48 @@ public class KinesisAcceptanceTest {
     @Test
     public void shouldSendAndReceiveKinesisMessage() {
         final String expectedPayload = "some payload: " + LocalDateTime.now();
-        kinesisSender.send(message("test-key-shouldSendAndReceiveKinesisMessage", expectedPayload)).join();
+        kinesisSender.send(message("shouldSendAndReceiveKinesisMessage", expectedPayload)).join();
         await()
                 .atMost(10, SECONDS)
-                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals("test-key-shouldSendAndReceiveKinesisMessage") && expectedPayload.equals(lastEventSourceMessage.get().getPayload()));
+                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveKinesisMessage")) && expectedPayload.equals(lastEventSourceMessage.get().getPayload()));
     }
 
     @Test
-    // TODO: V1 format as default format is subject to change in 0.13.0 or later
-    public void shouldSendAndReceiveKinesisMessageInDefaultFormat() {
-        kinesisSender.send(message("test-key-shouldSendAndReceiveKinesisMessageInDefaultFormat", "")).join();
+    // TODO: V1 format as default format is subject to change in 0.15.0 or later
+    public void shouldSendAndReceiveDefaultKinesisMessageWithCompoundKey() {
+        final String expectedPayload = "some payload: " + LocalDateTime.now();
+        kinesisV1Sender.send(message(Key.of("shouldSendAndReceiveDefaultKinesisMessageWithCompoundKey", "0815"), expectedPayload)).join();
         await()
                 .atMost(10, SECONDS)
-                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals("test-key-shouldSendAndReceiveKinesisMessageInDefaultFormat"));
+                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveDefaultKinesisMessageWithCompoundKey")) && expectedPayload.equals(lastEventSourceMessage.get().getPayload()));
+    }
+
+    @Test
+    public void shouldSendAndReceiveV1KinesisMessageWithCompoundKey() {
+        final String expectedPayload = "some payload: " + LocalDateTime.now();
+        kinesisV1Sender.send(message(Key.of("shouldSendAndReceiveV1KinesisMessageWithCompoundKey", "0815"), expectedPayload)).join();
+        await()
+                .atMost(10, SECONDS)
+                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveV1KinesisMessageWithCompoundKey")) && expectedPayload.equals(lastEventSourceMessage.get().getPayload()));
+    }
+
+    @Test
+    public void shouldSendAndReceiveV2KinesisMessageWithCompoundKey() {
+        final String expectedPayload = "shouldSendAndReceiveV2KinesisMessageWithCompoundKey payload: " + LocalDateTime.now();
+        kinesisV2Sender.send(message(Key.of("shouldSendAndReceiveV2KinesisMessageWithCompoundKey", "0815"), expectedPayload)).join();
+        await()
+                .atMost(10, SECONDS)
+                .until(() -> lastEventSourceMessage.get() != null && expectedPayload.equals(lastEventSourceMessage.get().getPayload()));
+        assertThat(lastEventSourceMessage.get().getKey(), is(Key.of("shouldSendAndReceiveV2KinesisMessageWithCompoundKey", "0815")));
+    }
+
+    @Test
+    // TODO: V1 format as default format is subject to change in 0.15.0 or later
+    public void shouldSendAndReceiveKinesisMessageInDefaultFormat() {
+        kinesisSender.send(message("shouldSendAndReceiveKinesisMessageInDefaultFormat", "")).join();
+        await()
+                .atMost(10, SECONDS)
+                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveKinesisMessageInDefaultFormat")));
 
         final ImmutableMap<String, String> attributes = lastEventSourceMessage.get().getHeader().getAttributes();
         assertThat(attributes, is(emptyMap()));
@@ -107,11 +138,11 @@ public class KinesisAcceptanceTest {
     @Test
     public void shouldSendAndReceiveKinesisMessageInV1Format() {
         kinesisV1Sender.send(
-                message("test-key-shouldSendAndReceiveKinesisMessageInV1Format","no special payload"))
+                message("shouldSendAndReceiveKinesisMessageInV1Format","no special payload"))
                 .join();
         await()
                 .atMost(10, SECONDS)
-                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals("test-key-shouldSendAndReceiveKinesisMessageInV1Format"));
+                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveKinesisMessageInV1Format")));
 
         final ImmutableMap<String, String> attributes = lastEventSourceMessage.get().getHeader().getAttributes();
         assertThat(attributes, is(emptyMap()));
@@ -120,12 +151,12 @@ public class KinesisAcceptanceTest {
     @Test
     public void shouldSendAndReceiveKinesisMessageInV2FormatWithDefaultHeaders() {
         final Instant started = now();
-        kinesisV2Sender.send(message("test-key-shouldSendAndReceiveKinesisMessageWithDefaultHeaders", "{}")).join();
+        kinesisV2Sender.send(message("shouldSendAndReceiveKinesisMessageWithDefaultHeaders", "{}")).join();
         await()
                 .atMost(10, SECONDS)
                 .until(() ->
                         lastEventSourceMessage.get() != null
-                                && lastEventSourceMessage.get().getKey().equals("test-key-shouldSendAndReceiveKinesisMessageWithDefaultHeaders")
+                                && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveKinesisMessageWithDefaultHeaders"))
                                 && lastEventSourceMessage.get().getHeader().getArrivalTimestamp().isAfter(started));
 
         final ImmutableMap<String, String> attributes = lastEventSourceMessage.get().getHeader().getAttributes();
@@ -133,6 +164,7 @@ public class KinesisAcceptanceTest {
         assertThat(attributes, hasEntry(equalTo(MSG_TIMESTAMP_ATTR), not(isEmptyOrNullString())));
         assertThat(attributes, hasEntry(MSG_SENDER_ATTR, "Synapse"));
         assertThat(lastEventSourceMessage.get().getPayload(), is("{}"));
+        assertThat(lastEventSourceMessage.get().getKey(), is(instanceOf(SimpleKey.class)));
     }
 
     @Test
@@ -141,10 +173,10 @@ public class KinesisAcceptanceTest {
                 "string", "some value",
                 "timestamp", ofEpochSecond(42).toString())
         );
-        kinesisV2Sender.send(message("test-key-shouldSendAndReceiveKinesisMessageWithCustomHeaders", header, "")).join();
+        kinesisV2Sender.send(message("shouldSendAndReceiveKinesisMessageWithCustomHeaders", header, "")).join();
         await()
                 .atMost(10, SECONDS)
-                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals("test-key-shouldSendAndReceiveKinesisMessageWithCustomHeaders"));
+                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveKinesisMessageWithCustomHeaders")));
         final ImmutableMap<String, String> attributes = lastEventSourceMessage.get().getHeader().getAttributes();
         assertThat(attributes, hasEntry("string", "some value"));
         assertThat(attributes, hasEntry("timestamp", "1970-01-01T00:00:42Z"));

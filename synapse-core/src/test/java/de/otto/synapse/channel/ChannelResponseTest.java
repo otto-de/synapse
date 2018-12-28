@@ -2,6 +2,7 @@ package de.otto.synapse.channel;
 
 
 import com.google.common.collect.ImmutableList;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 
@@ -30,8 +31,8 @@ public class ChannelResponseTest {
 
     @Test
     public void shouldReturnMessages() {
-        final Message<String> first = message("a", null);
-        final Message<String> second = message("b", null);
+        final Message<String> first = message(Key.of("a"), null);
+        final Message<String> second = message(Key.of("b"), null);
         final ChannelResponse response = ChannelResponse.channelResponse(
                 "foo",
                 shardResponse(fromHorizon("foo"), Duration.ZERO, of(first, second))

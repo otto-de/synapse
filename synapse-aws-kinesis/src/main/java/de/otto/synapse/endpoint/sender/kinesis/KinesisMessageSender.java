@@ -94,7 +94,7 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
                 : SdkBytes.fromByteArray(new byte[]{});
 
         return PutRecordsRequestEntry.builder()
-                .partitionKey(message.getKey())
+                .partitionKey(message.getKey().partitionKey())
                 .data(sdkBytes)
                 .build();
     }

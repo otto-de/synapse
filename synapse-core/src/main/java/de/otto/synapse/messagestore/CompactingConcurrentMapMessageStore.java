@@ -15,7 +15,7 @@ import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ChannelPosition.merge;
 
 /**
- * Concurrent implementation of a MessageStore that is compacting messages by {@link Message#getKey() key}.
+ * Concurrent implementation of a MessageStore that is compacting messages by {@link Message#getKey() of}.
  * <p>
  *     The ordering of messages is guaranteed by using a (on-heap) ConcurrentSkipListSet for keys.
  * </p>
@@ -57,7 +57,7 @@ public class CompactingConcurrentMapMessageStore implements WritableMessageStore
 
     @Override
     public void add(final Message<String> message) {
-        final String messageKey = message.getHeader().getShardPosition().map(pos -> pos.shardName() + "-" + message.getKey()).orElse(message.getKey());
+        final String messageKey = message.getKey().compactionKey();
         if (message.getPayload() == null && removeNullPayloadMessages) {
             messages.remove(messageKey);
             compactedAndOrderedKeys.remove(messageKey);

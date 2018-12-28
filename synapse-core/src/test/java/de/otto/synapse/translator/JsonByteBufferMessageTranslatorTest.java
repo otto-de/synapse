@@ -1,6 +1,7 @@
 package de.otto.synapse.translator;
 
 import de.otto.synapse.message.Header;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 
@@ -22,9 +23,9 @@ public class JsonByteBufferMessageTranslatorTest {
     public void shouldTranslateMessage() {
         final MessageTranslator<ByteBuffer> messageTranslator = new JsonByteBufferMessageTranslator();
         final Message<ByteBuffer> message = messageTranslator.translate(
-                message("test", singletonMap("foo", "bar"))
+                message(Key.of("test"), singletonMap("foo", "bar"))
         );
-        assertThat(message.getKey(), is("test"));
+        assertThat(message.getKey(), is(Key.of("test")));
         final ByteBuffer payload = message.getPayload();
         final String s = new String(payload.array(), Charset.forName("UTF-8"));
         assertThat(s, is("{\"foo\":\"bar\"}"));
@@ -34,7 +35,7 @@ public class JsonByteBufferMessageTranslatorTest {
     public void shouldKeepHeadersOfMessage() {
         final MessageTranslator<ByteBuffer> messageTranslator = new JsonByteBufferMessageTranslator();
         final Message<ByteBuffer> message = messageTranslator.translate(
-                message("test", Header.responseHeader(null, NOW), singletonMap("foo", "bar"))
+                message(Key.of("test"), Header.responseHeader(null, NOW), singletonMap("foo", "bar"))
         );
         assertThat(message.getHeader().getArrivalTimestamp(), is(NOW));
     }
@@ -43,9 +44,9 @@ public class JsonByteBufferMessageTranslatorTest {
     public void shouldTranslateDeleteMessage() {
         final MessageTranslator<ByteBuffer> messageTranslator = new JsonByteBufferMessageTranslator();
         final Message<ByteBuffer> message = messageTranslator.translate(
-                message("test", null)
+                message(Key.of("test"), null)
         );
-        assertThat(message.getKey(), is("test"));
+        assertThat(message.getKey(), is(Key.of("test")));
         assertThat(message.getPayload(), is(nullValue()));
     }
 }

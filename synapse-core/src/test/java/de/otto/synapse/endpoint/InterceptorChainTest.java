@@ -1,6 +1,7 @@
 package de.otto.synapse.endpoint;
 
 import com.google.common.collect.ImmutableList;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 
@@ -51,11 +52,11 @@ public class InterceptorChainTest {
         when(second.intercept(any(Message.class))).thenReturn(someMessage("bar"));
         final InterceptorChain chain = new InterceptorChain(ImmutableList.of(first, second));
         //noinspection ConstantConditions
-        assertThat(chain.intercept(someMessage("foo")).getKey(), is("bar"));
+        assertThat(chain.intercept(someMessage("foo")).getKey(), is(Key.of("bar")));
     }
 
     @SuppressWarnings("unchecked")
-    private Message<String> someMessage(final String key) {
-        return Message.message(key, null);
+    private Message<String> someMessage(final String keyValue) {
+        return Message.message(Key.of(keyValue), null);
     }
 }

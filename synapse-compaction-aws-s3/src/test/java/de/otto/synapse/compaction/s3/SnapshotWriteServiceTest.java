@@ -93,7 +93,7 @@ public class SnapshotWriteServiceTest {
 
 
         final MessageConsumer<Map> messageConsumer = MessageConsumer.of(".*", Map.class,
-                (event) -> data.put(event.getKey(), event.getPayload()));
+                (event) -> data.put(event.getKey().compactionKey(), event.getPayload()));
         ChannelPosition actualChannelPosition = new SnapshotParser().parse(
                 snapshot,
                 new MessageDispatcher(singletonList(messageConsumer)));

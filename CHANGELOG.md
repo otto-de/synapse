@@ -1,5 +1,23 @@
 # Release Notes
 
+## 0.14.0
+* Updates to AWS SDK release version 2.2.0
+* Fixes possible out-of-order arrival of messages if the message key is
+  not suitable for selecting the same partition for all messages of a 
+  single entity. For example, product-messages will get out of order,
+  if the message type (price-update, availability-update) and so on is
+  used to create a message key.
+ 
+* Introduces message Key and refactors Message.getKey() etc. to use
+  Key instead of String.
+
+  Using Key, it is now possible to distinguish between a partitionKey used to
+  select the channel partition (shard), and a  compactionKey used to do 
+  the message compaction.
+
+* Extends serialization format (MessageCodec) to add partitionKey and
+  compactionKey into the message.
+   
 ## 0.13.0
 * Adds ChannelResponse and ShardResponse to the core packages and introduces new possibility to stop message-consumption
   using predicates in MessageLogReceiverEndpoints.

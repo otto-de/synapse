@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import static de.otto.synapse.example.consumer.state.BananaProduct.bananaProductBuilder;
-import static java.lang.String.valueOf;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Component
@@ -31,16 +30,17 @@ public class ExampleConsumer {
             payloadType = BananaPayload.class
     )
     public void consumeBananas(final Message<BananaPayload> message) {
-        stateRepository.compute(message.getKey(), (id, bananaProduct) -> {
+        final String entityId = entityIdFrom(message);
+        stateRepository.compute(entityId, (id, bananaProduct) -> {
             final BananaProduct.Builder builder = bananaProduct.isPresent()
                     ? bananaProductBuilder(bananaProduct.get())
                     : bananaProductBuilder();
             return builder
-                    .withId(message.getKey())
+                    .withId(entityId)
                     .withColor(message.getPayload().getColor())
                     .build();
         });
-        LOG.info("Updated StateRepository using BananaPayload: {}", valueOf(stateRepository.get(message.getKey()).orElse(null)));
+        LOG.info("Updated StateRepository using BananaPayload: {}", stateRepository.get(entityId).orElse(null));
     }
 
     @EventSourceConsumer(
@@ -48,15 +48,20 @@ public class ExampleConsumer {
             payloadType = ProductPayload.class
     )
     public void consumeProducts(final Message<ProductPayload> message) {
-        stateRepository.compute(message.getKey(), (s, bananaProduct) -> {
+        final String entityId = entityIdFrom(message);
+        stateRepository.compute(entityId, (s, bananaProduct) -> {
             final BananaProduct.Builder builder = bananaProduct.isPresent()
                     ? bananaProductBuilder(bananaProduct.get())
                     : bananaProductBuilder();
             return builder
-                    .withId(message.getKey())
+                    .withId(entityId)
                     .withPrice(message.getPayload().getPrice())
                     .build();
         });
-        LOG.info("Updated StateRepository using ProductPayload: {}", valueOf(stateRepository.get(message.getKey()).orElse(null)));
+        LOG.info("Updated StateRepository using ProductPayload: {}", stateRepository.get(entityId).orElse(null));
+    }
+
+    private String entityIdFrom(final Message<?> message) {
+        return message.getKey().partitionKey();
     }
 }

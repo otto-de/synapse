@@ -2,6 +2,7 @@ package de.otto.synapse.endpoint.sender;
 
 import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
 import org.hamcrest.Matchers;
@@ -146,7 +147,7 @@ public class MessageSenderEndpointTest {
         senderEndpoint.send(message("foo", ""));
 
         // then
-        assertThat(sentMessage.get().getKey(), is("foo"));
+        assertThat(sentMessage.get().getKey(), is(Key.of("foo")));
         assertThat(sentMessage.get().getPayload(), is("translated"));
     }
 
@@ -171,7 +172,7 @@ public class MessageSenderEndpointTest {
         senderEndpoint.send(message("foo", ""));
 
         // then
-        assertThat(sentMessage.get().getKey(), is("foo"));
+        assertThat(sentMessage.get().getKey(), is(Key.of("foo")));
         assertThat(sentMessage.get().getPayload(), is("translated and intercepted"));
     }
 
@@ -195,9 +196,9 @@ public class MessageSenderEndpointTest {
         senderEndpoint.sendBatch(Stream.of(message("foo", ""), message("bar", "")));
 
         // then
-        assertThat(sentMessages.get(0).getKey(), is("foo"));
+        assertThat(sentMessages.get(0).getKey(), is(Key.of("foo")));
         assertThat(sentMessages.get(0).getPayload(), is("translated and intercepted"));
-        assertThat(sentMessages.get(1).getKey(), is("bar"));
+        assertThat(sentMessages.get(1).getKey(), is(Key.of("bar")));
         assertThat(sentMessages.get(1).getPayload(), is("translated and intercepted"));
     }
 

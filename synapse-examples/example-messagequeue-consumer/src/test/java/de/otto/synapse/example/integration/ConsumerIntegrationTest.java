@@ -41,18 +41,18 @@ public class ConsumerIntegrationTest {
     public void shouldRetrieveBananasFromStream() {
         // given
         BananaPayload bananaPayload = new BananaPayload();
-        bananaPayload.setId("");
+        bananaPayload.setId("foo");
         bananaPayload.setColor("yellow");
 
         // when
-        bananaMessageSender.send(message("", bananaPayload)); // no message keys allowed in sqs
+        bananaMessageSender.send(message("foo", bananaPayload));
 
         // then
         Awaitility.await()
                 .atMost(3, TimeUnit.SECONDS)
-                .until(() -> bananaProductStateRepository.get("").isPresent());
+                .until(() -> bananaProductStateRepository.get("foo").isPresent());
 
-        Optional<BananaProduct> optionalBananaProduct = bananaProductStateRepository.get("");
+        Optional<BananaProduct> optionalBananaProduct = bananaProductStateRepository.get("foo");
         assertThat(optionalBananaProduct.map(BananaProduct::getColor), is(Optional.of("yellow")));
     }
 }

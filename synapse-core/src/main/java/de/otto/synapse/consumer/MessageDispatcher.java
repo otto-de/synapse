@@ -111,7 +111,7 @@ public class MessageDispatcher implements MessageConsumer<String> {
 
     private boolean matchesKeyPattern(final Message<String> message,
                                       final Pattern keyPattern) {
-        return keyPattern.matcher(message.getKey()).matches();
+        return keyPattern.matcher(message.getKey().compactionKey()).matches();
     }
 
 }

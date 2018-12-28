@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.message.Header;
+import de.otto.synapse.message.Key;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Controller;
@@ -49,7 +50,7 @@ public class MessageTraceController {
                                 .stream(channelName, EndpointType.valueOf(endpointType.toUpperCase()))
                                 .map(traceEntry -> ImmutableMap.of(
                                         "sequenceNumber", traceEntry.getSequenceNumber(),
-                                        "key", traceEntry.getMessage().getKey(),
+                                        "key", prettyPrint(traceEntry.getMessage().getKey()),
                                         "header", prettyPrint(traceEntry.getMessage().getHeader()),
                                         "payload", prettyPrint(traceEntry.getMessage().getPayload())
                                 ))
@@ -76,7 +77,7 @@ public class MessageTraceController {
                                         .put("ts", LocalDateTime.ofInstant(traceEntry.getTimestamp(), ZoneId.systemDefault()).toString())
                                         .put("channelName", traceEntry.getChannelName())
                                         .put("endpointType", traceEntry.getEndpointType().name())
-                                        .put("key", traceEntry.getMessage().getKey())
+                                        .put("key", prettyPrint(traceEntry.getMessage().getKey()))
                                         .put("header", prettyPrint(traceEntry.getMessage().getHeader()))
                                         .put("payload", prettyPrint(traceEntry.getMessage().getPayload()))
                                         .build()
@@ -93,6 +94,21 @@ public class MessageTraceController {
                 return currentObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
             } else {
                 return "null";
+            }
+        } catch (final Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
+    private String prettyPrint(final Key key) {
+        try {
+            if (key.compactionKey().equals(key.partitionKey())) {
+                return key.partitionKey();
+            } else {
+                final LinkedHashMap<Object, Object> map = Maps.newLinkedHashMap();
+                map.put("partitionKey", key.partitionKey());
+                map.put("compactionKey", key.compactionKey());
+                return currentObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(map);
             }
         } catch (final Exception e) {
             throw new RuntimeException(e.getMessage(), e);

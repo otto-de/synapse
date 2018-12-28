@@ -47,7 +47,7 @@ public class RedisMessageStoreTest {
     public void shouldConvertMessageToRedisValueAndViceVersa() {
         final Message<String> message = Message.message("some key","{}");
         final String redisValue = toRedisValue(message);
-        assertThat(redisValue, is("{\"key\":\"some key\",\"message\":{\"_synapse_msg_format\":\"v2\",\"_synapse_msg_headers\":{},\"_synapse_msg_payload\":{}}}"));
+        assertThat(redisValue, is("{\"_synapse_msg_format\":\"v2\",\"_synapse_msg_key\":{\"partitionKey\":\"some key\",\"compactionKey\":\"some key\"},\"_synapse_msg_headers\":{},\"_synapse_msg_payload\":{}}"));
         final Message<String> transformed = messageOf(redisValue);
         assertThat(transformed.getKey(), is(message.getKey()));
         assertThat(transformed.getPayload(), is(message.getPayload()));
@@ -57,7 +57,7 @@ public class RedisMessageStoreTest {
     public void shouldConvertMessageWithNullPayloadToRedisValueAndViceVersa() {
         final Message<String> message = Message.message("some key", null);
         final String redisValue = toRedisValue(message);
-        assertThat(redisValue, is("{\"key\":\"some key\",\"message\":{\"_synapse_msg_format\":\"v2\",\"_synapse_msg_headers\":{},\"_synapse_msg_payload\":null}}"));
+        assertThat(redisValue, is("{\"_synapse_msg_format\":\"v2\",\"_synapse_msg_key\":{\"partitionKey\":\"some key\",\"compactionKey\":\"some key\"},\"_synapse_msg_headers\":{},\"_synapse_msg_payload\":null}"));
         final Message<String> transformed = messageOf(redisValue);
         assertThat(transformed.getKey(), is(message.getKey()));
         assertThat(transformed.getPayload(), is(message.getPayload()));

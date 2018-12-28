@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageFormat;
@@ -35,7 +36,7 @@ import static de.otto.synapse.message.Header.requestHeader;
 import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.message.kinesis.KinesisMessage.SYNAPSE_MSG_HEADERS;
 import static de.otto.synapse.message.kinesis.KinesisMessage.SYNAPSE_MSG_PAYLOAD;
-import static de.otto.synapse.translator.MessageCodec.SYNAPSE_MSG_FORMAT;
+import static de.otto.synapse.translator.MessageCodec.*;
 import static de.otto.synapse.translator.ObjectMappers.currentObjectMapper;
 import static java.lang.String.valueOf;
 import static java.util.Collections.singletonMap;
@@ -91,9 +92,34 @@ public class KinesisMessageSenderV2Test {
     }
 
     @Test
+    public void shouldSendMessageUsingPartitionKey() throws Exception {
+        // given
+        final Message<ExampleJsonObject> message = message(Key.of("somePartitionKey", "someCompactionKey"), new ExampleJsonObject("banana"));
+
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(completedFuture(PutRecordsResponse.builder()
+                .failedRecordCount(0)
+                .records(PutRecordsResultEntry.builder().build())
+                .build()));
+
+        // when
+        kinesisMessageSender.send(message).join();
+
+        // then
+        verify(kinesisClient).putRecords(putRecordsRequestCaptor.capture());
+        final PutRecordsRequest caputuredRequest = putRecordsRequestCaptor.getValue();
+
+        assertThat(caputuredRequest.records().get(0).partitionKey(), is("somePartitionKey"));
+
+        final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data().asByteBuffer());
+        final JsonNode json = currentObjectMapper().readTree(inputStream);
+        assertThat(json.get(SYNAPSE_MSG_KEY).get(SYNAPSE_MSG_PARTITIONKEY).textValue(), is("somePartitionKey"));
+        assertThat(json.get(SYNAPSE_MSG_KEY).get(SYNAPSE_MSG_COMPACTIONKEY).textValue(), is("someCompactionKey"));
+    }
+
+    @Test
     public void shouldSendMessageHeaders() throws Exception {
         // given
-        final Message<ExampleJsonObject> message = message("someKey", requestHeader(of("attr-key", "attr-value")), null);
+        final Message<ExampleJsonObject> message = message("someKey", requestHeader(of("attr-of", "attr-value")), null);
 
         when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(completedFuture(PutRecordsResponse.builder()
                 .failedRecordCount(0)
@@ -115,7 +141,7 @@ public class KinesisMessageSenderV2Test {
 
         final JsonNode json = currentObjectMapper().readTree(inputStream);
 
-        assertThat(currentObjectMapper().convertValue(json.get(SYNAPSE_MSG_HEADERS), Map.class), is(ImmutableMap.of("attr-key", "attr-value")));
+        assertThat(currentObjectMapper().convertValue(json.get(SYNAPSE_MSG_HEADERS), Map.class), is(ImmutableMap.of("attr-of", "attr-value")));
     }
 
     @Test
@@ -169,7 +195,7 @@ public class KinesisMessageSenderV2Test {
 
         final String payload = caputuredRequest.records().get(0).data().asString(Charset.forName("UTF-8"));
 
-        assertThat(payload, is("{\"_synapse_msg_format\":\"v2\",\"_synapse_msg_headers\":{},\"_synapse_msg_payload\":\"some non-json payload\"}"));
+        assertThat(payload, is("{\"_synapse_msg_format\":\"v2\",\"_synapse_msg_key\":{\"partitionKey\":\"someKey\",\"compactionKey\":\"someKey\"},\"_synapse_msg_headers\":{},\"_synapse_msg_payload\":\"some non-json payload\"}"));
     }
 
     @Test
@@ -195,7 +221,7 @@ public class KinesisMessageSenderV2Test {
 
         final String payload = caputuredRequest.records().get(0).data().asString(Charset.forName("UTF-8"));
 
-        assertThat(payload, is("{\"_synapse_msg_format\":\"v2\",\"_synapse_msg_headers\":{},\"_synapse_msg_payload\":{\"some\": broken json payload}}"));
+        assertThat(payload, is("{\"_synapse_msg_format\":\"v2\",\"_synapse_msg_key\":{\"partitionKey\":\"someKey\",\"compactionKey\":\"someKey\"},\"_synapse_msg_headers\":{},\"_synapse_msg_payload\":{\"some\": broken json payload}}"));
     }
 
     @Test

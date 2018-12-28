@@ -7,6 +7,7 @@ import de.otto.synapse.annotation.MessageQueueConsumer;
 import de.otto.synapse.channel.selector.MessageQueue;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Header;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,7 +76,8 @@ public class SqsAcceptanceTest {
         sqsSender.send(message("test-key-shouldSendAndReceiveSqsMessage", expectedPayload)).join();
         await()
                 .atMost(10, SECONDS)
-                .until(() -> lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals("test-key-shouldSendAndReceiveSqsMessage") && expectedPayload.equals(lastSqsMessage.get().getPayload()));
+                .until(() -> lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals(Key.of("test-key-shouldSendAndReceiveSqsMessage")));
+        assertThat(expectedPayload, is(lastSqsMessage.get().getPayload()));
     }
 
     @Test
@@ -88,7 +90,7 @@ public class SqsAcceptanceTest {
 
         await()
                 .atMost(10, SECONDS)
-                .until(() -> lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals("test-key-shouldSendAndReceiveDefaultSqsMessageHeaders"));
+                .until(() -> lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals(Key.of("test-key-shouldSendAndReceiveDefaultSqsMessageHeaders")));
 
         final ImmutableMap<String, String> attributes = lastSqsMessage.get().getHeader().getAttributes();
         assertThat(attributes, hasEntry(equalTo(MSG_ID_ATTR), not(isEmptyOrNullString())));
@@ -111,7 +113,7 @@ public class SqsAcceptanceTest {
 
         await()
                 .atMost(10, SECONDS)
-                .until(() -> lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals("test-key-shouldSendAndReceiveCustomSqsMessageHeaders"));
+                .until(() -> lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals(Key.of("test-key-shouldSendAndReceiveCustomSqsMessageHeaders")));
 
         final ImmutableMap<String, String> attributes = lastSqsMessage.get().getHeader().getAttributes();
         assertThat(attributes, hasEntry("string", "some value"));

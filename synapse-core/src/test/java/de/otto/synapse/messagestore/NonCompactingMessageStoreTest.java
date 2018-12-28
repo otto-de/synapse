@@ -1,6 +1,7 @@
 package de.otto.synapse.messagestore;
 
 import de.otto.synapse.channel.StartFrom;
+import de.otto.synapse.message.Key;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -50,13 +51,13 @@ public class NonCompactingMessageStoreTest {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 10000; ++pos) {
-                    messageStore.add(message(valueOf(pos), responseHeader(fromPosition("shard-" + shardId, valueOf(pos)), now()), "some payload"));
+                    messageStore.add(message(Key.of(valueOf(pos)), responseHeader(fromPosition("shard-" + shardId, valueOf(pos)), now()), "some payload"));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).startFrom(), is(StartFrom.POSITION));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }
 
             }, executorService);
-        };
+        }
         allOf(completion).join();
         assertThat(messageStore.getLatestChannelPosition().shards(), containsInAnyOrder("shard-0", "shard-1", "shard-2", "shard-3", "shard-4"));
         assertThat(messageStore.getLatestChannelPosition().shard("shard-0").position(), is("9999"));

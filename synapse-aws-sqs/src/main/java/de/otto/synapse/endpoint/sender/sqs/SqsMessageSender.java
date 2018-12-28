@@ -91,7 +91,7 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
         messageAttributes.put(MSG_KEY_ATTR, MessageAttributeValue
                 .builder()
                 .dataType("String")
-                .stringValue(message.getKey())
+                .stringValue(message.getKey().partitionKey())
                 .build());
         return messageAttributes.build();
     }

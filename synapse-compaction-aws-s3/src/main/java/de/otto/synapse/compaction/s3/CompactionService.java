@@ -1,22 +1,22 @@
 package de.otto.synapse.compaction.s3;
 
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.StopCondition;
 import de.otto.synapse.consumer.StatefulMessageConsumer;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
-import de.otto.synapse.message.Message;
 import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.translator.MessageCodec;
+import de.otto.synapse.translator.MessageFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 
 import static de.otto.synapse.channel.StopCondition.*;
-import static java.time.Instant.now;
+import static de.otto.synapse.translator.MessageCodec.encode;
+import static de.otto.synapse.translator.MessageFormat.defaultMessageFormat;
 
 public class CompactionService {
 
@@ -48,8 +48,7 @@ public class CompactionService {
         this.messageLogReceiverEndpointFactory = messageLogReceiverEndpointFactory;
         this.clock = clock;
     }
-
-    public String compact(final String channelName) {
+    public String compact(final String channelName, final MessageFormat messageFormat) {
         LOG.info("Start compacting channel {}", channelName);
         stateRepository.clear();
 
@@ -57,7 +56,7 @@ public class CompactionService {
         final MessageLogReceiverEndpoint messageLog = messageLogReceiverEndpointFactory.create(channelName);
         final EventSource compactingKinesisEventSource = eventSourceBuilder.buildEventSource(messageLog);
         compactingKinesisEventSource.register(
-                new StatefulMessageConsumer<>(".*", String.class, stateRepository, MessageCodec::encode, Message::getKey)
+                new StatefulMessageConsumer<>(".*", String.class, stateRepository, (msg) -> encode(msg, messageFormat), (message) -> message.getKey().compactionKey())
         );
 
         try {
@@ -77,6 +76,10 @@ public class CompactionService {
         } finally {
             stateRepository.clear();
         }
+    }
+
+    public String compact(final String channelName) {
+        return compact(channelName, defaultMessageFormat());
     }
 
 }

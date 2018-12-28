@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
@@ -19,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.otto.synapse.message.Header.responseHeader;
+import static de.otto.synapse.message.Key.NO_KEY;
 import static de.otto.synapse.message.Message.message;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -128,10 +130,10 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
         deleteMessage(sqsMessage);
     }
 
-    private String messageKeyOf(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
+    private Key messageKeyOf(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
         return sqsMessage.messageAttributes() != null
-                ? sqsMessage.messageAttributes().getOrDefault(MSG_KEY_ATTR, EMPTY_STRING_ATTR).stringValue()
-                : "";
+                ? Key.of(sqsMessage.messageAttributes().getOrDefault(MSG_KEY_ATTR, EMPTY_STRING_ATTR).stringValue())
+                : NO_KEY;
     }
 
     private ImmutableMap<String, String> messageAttributesOf(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {

@@ -29,36 +29,36 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public final class Messages {
 
-    public static Message<ByteBuffer> byteBufferMessage(final @Nonnull String key,
+    public static Message<ByteBuffer> byteBufferMessage(final @Nonnull Key key,
                                                         final @Nullable ByteBuffer payload) {
         return message(key, emptyHeader(), payload);
     }
 
-    public static Message<ByteBuffer> byteBufferMessage(final @Nonnull String key,
+    public static Message<ByteBuffer> byteBufferMessage(final @Nonnull Key key,
                                                         final @Nonnull Header header,
                                                         final @Nullable ByteBuffer payload) {
         return message(key, header, payload);
     }
 
-    public static Message<ByteBuffer> byteBufferMessage(final @Nonnull String key,
+    public static Message<ByteBuffer> byteBufferMessage(final @Nonnull Key key,
                                                         final @Nullable String payload) {
         final ByteBuffer byteBuffer = payload != null ? wrap(payload.getBytes(UTF_8)) : null;
         return message(key, emptyHeader(), byteBuffer);
     }
 
-    public static Message<ByteBuffer> byteBufferMessage(final @Nonnull String key,
+    public static Message<ByteBuffer> byteBufferMessage(final @Nonnull Key key,
                                                         final @Nonnull Header header,
                                                         final @Nullable String payload) {
         final ByteBuffer byteBuffer = payload != null ? wrap(payload.getBytes(UTF_8)) : null;
         return message(key, header, byteBuffer);
     }
 
-    public static Message<String> stringMessage(@Nonnull final String key,
+    public static Message<String> stringMessage(@Nonnull final Key key,
                                                 @Nullable final String payload) {
         return message(key, emptyHeader(), payload);
     }
 
-    public static Message<String> stringMessage(@Nonnull final String key,
+    public static Message<String> stringMessage(@Nonnull final Key key,
                                                 @Nonnull final Header header,
                                                 @Nullable final String payload) {
         return message(key, header, payload);

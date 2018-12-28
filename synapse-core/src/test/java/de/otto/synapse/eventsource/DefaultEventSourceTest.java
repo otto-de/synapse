@@ -2,10 +2,10 @@ package de.otto.synapse.eventsource;
 
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.StopCondition;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.messagestore.MessageStore;
 import org.junit.Test;
@@ -64,7 +64,7 @@ public class DefaultEventSourceTest {
         final Instant arrivalTimestamp = Instant.now();
         // and some message store having a single message
         final MessageStore messageStore = mock(MessageStore.class);
-        when(messageStore.stream()).thenReturn(Stream.of(message("1", responseHeader(null, arrivalTimestamp), null)));
+        when(messageStore.stream()).thenReturn(Stream.of(message(Key.of("1"), responseHeader(null, arrivalTimestamp), null)));
         when(messageStore.getLatestChannelPosition()).thenReturn(fromHorizon());
         // and some MessageLogReceiverEndpoint with an InterceptorChain:
         final InterceptorChain interceptorChain = mock(InterceptorChain.class);
@@ -80,7 +80,7 @@ public class DefaultEventSourceTest {
 
         // then
         verify(interceptorChain).intercept(
-                message("1", responseHeader(null, arrivalTimestamp), null)
+                message(Key.of("1"), responseHeader(null, arrivalTimestamp), null)
         );
     }
 
@@ -90,7 +90,7 @@ public class DefaultEventSourceTest {
         final Instant arrivalTimestamp = Instant.now();
         // and some message store having a single message
         final MessageStore messageStore = mock(MessageStore.class);
-        when(messageStore.stream()).thenReturn(Stream.of(message("1", responseHeader(null, arrivalTimestamp), null)));
+        when(messageStore.stream()).thenReturn(Stream.of(message(Key.of("1"), responseHeader(null, arrivalTimestamp), null)));
         when(messageStore.getLatestChannelPosition()).thenReturn(fromHorizon());
         // and some InterceptorChain that is dropping messages:
         final InterceptorChain interceptorChain = new InterceptorChain(ImmutableList.of((m)->null));
@@ -116,7 +116,7 @@ public class DefaultEventSourceTest {
         final Instant arrivalTimestamp = Instant.now();
         // and some message store having a single message
         final MessageStore messageStore = mock(MessageStore.class);
-        when(messageStore.stream()).thenReturn(Stream.of(message("1", responseHeader(null, arrivalTimestamp), null)));
+        when(messageStore.stream()).thenReturn(Stream.of(message(Key.of("1"), responseHeader(null, arrivalTimestamp), null)));
         when(messageStore.getLatestChannelPosition()).thenReturn(fromHorizon());
         // and some MessageLogReceiverEndpoint with our InterceptorChain:
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
@@ -131,7 +131,7 @@ public class DefaultEventSourceTest {
         eventSource.consume().get();
 
         // then
-        verify(messageDispatcher).accept(message("1", responseHeader(null, arrivalTimestamp), null));
+        verify(messageDispatcher).accept(message(Key.of("1"), responseHeader(null, arrivalTimestamp), null));
     }
 
     @Test

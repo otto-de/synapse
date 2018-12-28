@@ -2,6 +2,7 @@ package de.otto.synapse.messagestore;
 
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.message.Header;
+import de.otto.synapse.message.Key;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -52,12 +53,12 @@ public class WritableMessageStoreTest {
     public void shouldAddMessagesWithoutHeaders() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
-            messageStore.add(message(valueOf(i), "some payload"));
+            messageStore.add(message(Key.of(valueOf(i)), "some payload"));
         }
         assertThat(messageStore.getLatestChannelPosition(), is(fromHorizon()));
         final AtomicInteger expectedKey = new AtomicInteger(0);
         messageStore.stream().forEach(message -> {
-            assertThat(message.getKey(), is(valueOf(expectedKey.get())));
+            assertThat(message.getKey().toString(), is(valueOf(expectedKey.get())));
             expectedKey.incrementAndGet();
         });
         assertThat(messageStore.size(), is(10));
@@ -73,13 +74,13 @@ public class WritableMessageStoreTest {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 10000; ++pos) {
-                    messageStore.add(message(valueOf(pos), responseHeader(fromPosition("shard-" + shardId, valueOf(pos)), now()), "some payload"));
+                    messageStore.add(message(Key.of(valueOf(pos), shardId + pos), responseHeader(fromPosition("shard-" + shardId, valueOf(pos)), now()), "some payload"));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).startFrom(), is(POSITION));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }
 
             }, executorService);
-        };
+        }
         allOf(completion).join();
         final Map<String, Integer> lastPositions = new HashMap<>();
         messageStore.stream().forEach(message -> {

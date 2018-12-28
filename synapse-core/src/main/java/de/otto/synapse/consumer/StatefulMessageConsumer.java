@@ -24,7 +24,7 @@ public class StatefulMessageConsumer<P, S> implements MessageConsumer<P> {
     /**
      * Creates a StatefulMessageConsumer.
      *
-     * @param keyPattern the key-pattern of {@link de.otto.synapse.message.Message#getKey() message keys} accepted by this consumer.
+     * @param keyPattern the of-pattern of {@link de.otto.synapse.message.Message#getKey() message keys} accepted by this consumer.
      * @param payloadType the payload type of the messages accepted by this consumer
      * @param stateRepository the StateRepository that is holding the State
      * @param payloadToStateMapper the mapper function used to map message payload to state entities
@@ -33,13 +33,13 @@ public class StatefulMessageConsumer<P, S> implements MessageConsumer<P> {
                                    final Class<P> payloadType,
                                    final StateRepository<S> stateRepository,
                                    final Function<Message<P>, S> payloadToStateMapper) {
-        this(keyPattern, payloadType, stateRepository, payloadToStateMapper, Message::getKey);
+        this(keyPattern, payloadType, stateRepository, payloadToStateMapper, (message) -> message.getKey().compactionKey());
     }
 
     /**
      * Creates a StatefulMessageConsumer.
      *
-     * @param keyPattern the key-pattern of {@link de.otto.synapse.message.Message#getKey() message keys} accepted by this consumer.
+     * @param keyPattern the of-pattern of {@link de.otto.synapse.message.Message#getKey() message keys} accepted by this consumer.
      * @param payloadType the payload type of the messages accepted by this consumer
      * @param stateRepository the StateRepository that is holding the State
      * @param payloadToStateMapper the mapper function used to map message payload to state entities
@@ -53,6 +53,9 @@ public class StatefulMessageConsumer<P, S> implements MessageConsumer<P> {
         this.keyPattern = Pattern.compile(keyPattern);
         this.payloadType = payloadType;
         this.stateRepository = stateRepository;
+
+        // TODO: State + KeyMapper in das StateRepository verschieben!
+
         this.payloadToStateMapper = payloadToStateMapper;
         this.keyMapper = keyMapper;
     }

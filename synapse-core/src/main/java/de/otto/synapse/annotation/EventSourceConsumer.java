@@ -19,9 +19,9 @@ public @interface EventSourceConsumer {
     String eventSource();
 
     /**
-     * The regex pattern to filter events by their key that the consumer should receive.
+     * The regex pattern to filter events by their of that the consumer should receive.
      *
-     * @return key pattern; defaults to <code>.*</code>
+     * @return of pattern; defaults to <code>.*</code>
      */
     String keyPattern() default ".*";
 

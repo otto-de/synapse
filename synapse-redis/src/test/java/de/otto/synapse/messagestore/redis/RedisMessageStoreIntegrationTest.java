@@ -3,7 +3,7 @@ package de.otto.synapse.messagestore.redis;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.message.Header;
-import de.otto.synapse.messagestore.WritableMessageStore;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.testsupport.redis.EmbededRedis;
 import org.junit.Before;
 import org.junit.Test;
@@ -85,7 +85,7 @@ public class RedisMessageStoreIntegrationTest {
                 }
 
             }, executorService);
-        };
+        }
         allOf(completion).join();
         assertThat(messageStore.getLatestChannelPosition().shards(), containsInAnyOrder("shard-0", "shard-1", "shard-2", "shard-3", "shard-4"));
         assertThat(messageStore.getLatestChannelPosition().shard("shard-0").position(), is("1499"));
@@ -105,7 +105,7 @@ public class RedisMessageStoreIntegrationTest {
         assertThat(messageStore.getLatestChannelPosition(), is(fromHorizon()));
         final AtomicInteger expectedKey = new AtomicInteger(0);
         messageStore.stream().forEach(message -> {
-            assertThat(message.getKey(), is(valueOf(expectedKey.get())));
+            assertThat(message.getKey(), is(Key.of(valueOf(expectedKey.get()))));
             expectedKey.incrementAndGet();
         });
         assertThat(messageStore.size(), is(10));
@@ -126,7 +126,7 @@ public class RedisMessageStoreIntegrationTest {
                 }
 
             }, executorService);
-        };
+        }
         allOf(completion).join();
         final Map<String, Integer> lastPositions = new HashMap<>();
         messageStore.stream().forEach(message -> {

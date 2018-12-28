@@ -1,6 +1,7 @@
 package de.otto.synapse.endpoint.receiver.kinesis;
 
 import de.otto.synapse.channel.ShardResponse;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -75,7 +76,7 @@ public class KinesisShardIteratorTest {
 
         assertThat(shardResponse.getMessages(), hasSize(1));
         final Message<String> message = shardResponse.getMessages().get(0);
-        assertThat(message.getKey(), is("someKey"));
+        assertThat(message.getKey(), is(Key.of("someKey")));
         assertThat(message.getPayload(), is(nullValue()));
         assertThat(message.getHeader().getArrivalTimestamp(), is(arrivalTimestamp));
         assertThat(message.getHeader().getShardPosition().get(), is(fromPosition("someShard", "43")));

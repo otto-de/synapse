@@ -12,6 +12,7 @@ import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.helper.s3.S3Helper;
+import de.otto.synapse.message.Key;
 import net.minidev.json.JSONArray;
 import org.junit.After;
 import org.junit.Before;
@@ -99,7 +100,7 @@ public class InMemCompactionAcceptanceTest {
         //when write additional data with partially existing ids
         sendTestMessages(Range.closed(50, 150), "second");
 
-        //Write an emptyMessageStore object for key 100000 - should be removed during compaction
+        //Write an emptyMessageStore object for of 100000 - should be removed during compaction
         compactionTestSender.send(message("100000", null));
 
 
@@ -118,6 +119,44 @@ public class InMemCompactionAcceptanceTest {
         assertMessageDoesNotExist(json2, "151");
         assertMessageDoesNotExist(json2, "100000");
 
+    }
+
+    @Test
+    public void shouldCompactDataWithCompoundKeys() throws Exception {
+        //given
+        sendTestMessagesWithCompoundKey(Range.closed(1000, 1100), "first");
+
+        String filenameBefore = compactionService.compact(INTEGRATION_TEST_STREAM);
+
+        LinkedHashMap<String, JSONArray> json1 = fetchAndParseSnapshotFileFromS3(filenameBefore);
+        assertSnapshotFileStructureAndSize(json1, 200);
+
+        //when write additional data with partially existing ids
+        sendTestMessagesWithCompoundKey(Range.closed(1050, 1150), "second");
+
+        //Write an emptyMessageStore object for of 100000 - should be removed during compaction
+        compactionTestSender.send(message("110000", null));
+
+
+        String fileName = compactionService.compact(INTEGRATION_TEST_STREAM);
+
+        //then
+        LinkedHashMap<String, JSONArray> json2 = fetchAndParseSnapshotFileFromS3(fileName);
+
+        assertSnapshotFileStructureAndSize(json2, 300);
+
+        assertMessageForKey(json2, "PRICE#1000", "first-1000");
+        assertMessageForKey(json2, "AVAILABILITY#1000", "first-1000");
+        assertMessageForKey(json2, "PRICE#1049", "first-1049");
+        assertMessageForKey(json2, "AVAILABILITY#1049", "first-1049");
+        assertMessageForKey(json2, "PRICE#1050", "second-1050");
+        assertMessageForKey(json2, "AVAILABILITY#1050", "second-1050");
+        assertMessageForKey(json2, "PRICE#1150", "second-1150");
+        assertMessageForKey(json2, "AVAILABILITY#1150", "second-1150");
+
+        assertMessageDoesNotExist(json2, "PRICE#1151");
+        assertMessageDoesNotExist(json2, "AVAILABILITY#1151");
+        assertMessageDoesNotExist(json2, "110000");
     }
 
     @SuppressWarnings("unchecked")
@@ -140,11 +179,12 @@ public class InMemCompactionAcceptanceTest {
         assertThat(json, hasJsonPath("$.startSequenceNumbers[0].shard", not(empty())));
         assertThat(json, hasJsonPath("$.startSequenceNumbers[0].sequenceNumber", not(empty())));
 
-        assertThat(json, hasJsonPath("$.data", hasSize(expectedNumberOfRecords)));
+        assertThat(json, hasJsonPath("$.data", hasSize(greaterThanOrEqualTo(expectedNumberOfRecords))));
     }
 
     private void assertMessageForKey(LinkedHashMap<String, JSONArray> json, final String key, String expectedPayload) {
         JSONArray jsonArray = JsonPath.read(json, "$.data[?(@." + key + ")]." + key);
+        assertThat(jsonArray.size(), is(greaterThan(0)));
         assertThat(jsonArray.get(0).toString(), is(expectedPayload));
     }
 
@@ -156,6 +196,14 @@ public class InMemCompactionAcceptanceTest {
     private void sendTestMessages(final Range<Integer> messageKeyRange, final String payloadPrefix) throws InterruptedException {
         ContiguousSet.create(messageKeyRange, DiscreteDomain.integers())
                 .forEach(key -> compactionTestSender.send(message(valueOf(key), payloadPrefix + "-" + key)).join());
+        sleep(20);
+    }
+
+    private void sendTestMessagesWithCompoundKey(final Range<Integer> messageKeyRange, final String payloadPrefix) throws InterruptedException {
+        ContiguousSet.create(messageKeyRange, DiscreteDomain.integers())
+                .forEach(key -> compactionTestSender.send(message(Key.of(valueOf(key), "PRICE#" + key), payloadPrefix + "-" + key)).join());
+        ContiguousSet.create(messageKeyRange, DiscreteDomain.integers())
+                .forEach(key -> compactionTestSender.send(message(Key.of(valueOf(key),"AVAILABILITY#" + key), payloadPrefix + "-" + key)).join());
         sleep(20);
     }
 

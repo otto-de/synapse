@@ -51,7 +51,7 @@ public class SqsMessageSenderTest {
     @Test
     public void shouldSendEvent() {
         // given
-        final Message<ExampleJsonObject> message = message("some-key", new ExampleJsonObject("banana"));
+        final Message<ExampleJsonObject> message = message("some-of", new ExampleJsonObject("banana"));
 
         when(sqsAsyncClient.sendMessage(any(SendMessageRequest.class))).thenReturn(completedFuture(SendMessageResponse.builder()
                 .sequenceNumber("42")
@@ -72,7 +72,7 @@ public class SqsMessageSenderTest {
     @Test
     public void shouldSendKeyAsMessageHeader() {
         // given
-        final Message<ExampleJsonObject> message = message("some-key", new ExampleJsonObject("banana"));
+        final Message<ExampleJsonObject> message = message("some-of", new ExampleJsonObject("banana"));
 
         when(sqsAsyncClient.sendMessage(any(SendMessageRequest.class))).thenReturn(completedFuture(SendMessageResponse.builder()
                 .sequenceNumber("42")
@@ -86,14 +86,14 @@ public class SqsMessageSenderTest {
         verify(sqsAsyncClient).sendMessage(requestArgumentCaptor.capture());
         final SendMessageRequest capturedRequest = requestArgumentCaptor.getValue();
 
-        assertThat(capturedRequest.messageAttributes(), hasEntry("synapse_msg_key", MessageAttributeValue.builder().dataType("String").stringValue("some-key").build()));
+        assertThat(capturedRequest.messageAttributes(), hasEntry("synapse_msg_key", MessageAttributeValue.builder().dataType("String").stringValue("some-of").build()));
     }
 
     @Test
     public void shouldSendCustomMessageHeader() {
         // given
         final Message<ExampleJsonObject> message = message(
-                "some-key",
+                "some-of",
                 requestHeader(of("first", "one", "second", "two")),
                 new ExampleJsonObject("banana"));
 
