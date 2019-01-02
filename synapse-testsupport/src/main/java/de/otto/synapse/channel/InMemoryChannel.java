@@ -6,6 +6,7 @@ import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.AbstractMessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
+import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
@@ -27,7 +28,6 @@ import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.ShardResponse.shardResponse;
 import static de.otto.synapse.channel.StartFrom.HORIZON;
 import static de.otto.synapse.info.MessageReceiverStatus.*;
-import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.time.Duration.ZERO;
 import static java.time.Duration.between;
@@ -64,7 +64,7 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
                 .build();
         eventQueue.add(Message.message(
                 message.getKey(),
-                responseHeader(
+                Header.of(
                         fromPosition(getChannelName(), String.valueOf(position)),
                         attributes),
                 message.getPayload()));
@@ -143,7 +143,7 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
                     final Message<String> interceptedMessage = intercept(
                             message(
                                     receivedMessage.getKey(),
-                                    responseHeader(null, receivedMessage.getHeader().getAll()),
+                                    Header.of(null, receivedMessage.getHeader().getAll()),
                                     receivedMessage.getPayload()
                             )
                     );

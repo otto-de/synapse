@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
-import static de.otto.synapse.message.Header.responseHeader;
+import static de.otto.synapse.message.Header.of;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
 import static java.util.Arrays.asList;
@@ -57,16 +57,16 @@ public class CompactingMessageStoreWithoutDeletionsTest {
         for (int i=0; i<10; ++i) {
             messageStore.add(message(
                     Key.of(valueOf(i), "foo:" + i),
-                    responseHeader(fromPosition("foo", valueOf(i))),
+                    of(fromPosition("foo", valueOf(i))),
                     "some foo payload"));
             messageStore.add(message(
                     Key.of(valueOf(i), "bar:" + i),
-                    responseHeader(fromPosition("bar", valueOf(i))),
+                    of(fromPosition("bar", valueOf(i))),
                     "some bar payload"));
         }
         for (int i=0; i<10; ++i) {
-            messageStore.add(message(Key.of(valueOf(i), "foo:" + i), responseHeader(fromPosition("foo", valueOf(20 + i))), null));
-            messageStore.add(message(Key.of(valueOf(i), "bar:" + i), responseHeader(fromPosition("bar", valueOf(42 + i))), null));
+            messageStore.add(message(Key.of(valueOf(i), "foo:" + i), of(fromPosition("foo", valueOf(20 + i))), null));
+            messageStore.add(message(Key.of(valueOf(i), "bar:" + i), of(fromPosition("bar", valueOf(42 + i))), null));
         }
         assertThat(messageStore.getLatestChannelPosition(), is(channelPosition(fromPosition("foo", "29"), fromPosition("bar", "51"))));
         assertThat(messageStore.size(), is(20));

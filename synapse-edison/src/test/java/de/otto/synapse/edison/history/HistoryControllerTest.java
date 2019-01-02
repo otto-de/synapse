@@ -13,7 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
-import static de.otto.synapse.message.Header.responseHeader;
+import static de.otto.synapse.message.Header.of;
 import static de.otto.synapse.message.Message.message;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
@@ -68,13 +68,13 @@ public class HistoryControllerTest {
                 "4711",
                 asList(
                         new HistoryEntry(
-                                message("4711", responseHeader(fromPosition("shard-1", "1")), singletonMap("price", 45)),
+                                message("4711", of(fromPosition("shard-1", "1")), singletonMap("price", 45)),
                                 "test-products",
                                 asList(
                                         new Diff("price", 46, 45))
                         ),
                         new HistoryEntry(
-                                message("4711", responseHeader(fromPosition("shard-1", "1")), singletonMap("price", 42)),
+                                message("4711", of(fromPosition("shard-1", "1")), singletonMap("price", 42)),
                                 "test-products",
                                 asList(
                                         new Diff("price", 45, 42))

@@ -5,7 +5,7 @@ import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.Objects;
 
-import static de.otto.synapse.message.Header.emptyHeader;
+import static de.otto.synapse.message.Header.of;
 
 /**
  * A Message is an atomic packet of data that can be transmitted on a channel.
@@ -30,7 +30,7 @@ public class Message<P> implements Serializable {
 
     public static <P> Message<P> message(final @Nonnull Key key,
                                          final @Nullable P payload) {
-        return new Message<>(key, emptyHeader(), payload);
+        return new Message<>(key, of(), payload);
     }
 
     public static <P> Message<P> message(final @Nonnull Key key,
@@ -41,7 +41,7 @@ public class Message<P> implements Serializable {
 
     public static <P> Message<P> message(final @Nonnull String key,
                                          final @Nullable P payload) {
-        return new Message<>(Key.of(key), emptyHeader(), payload);
+        return new Message<>(Key.of(key), of(), payload);
     }
 
     public static <P> Message<P> message(final @Nonnull String key,

@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import java.util.Optional;
 
-import static de.otto.synapse.message.Header.responseHeader;
+import static de.otto.synapse.message.Header.of;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -83,7 +83,7 @@ public class ExampleConsumerTest {
     private <T> Message<T> testMessage(String key, T payload) {
         return Message.message(
                 key,
-                responseHeader(ShardPosition.fromHorizon("")),
+                of(ShardPosition.fromHorizon("")),
                 payload
         );
     }

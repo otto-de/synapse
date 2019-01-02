@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.StartFrom.POSITION;
-import static de.otto.synapse.message.Header.responseHeader;
+import static de.otto.synapse.message.Header.of;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
 import static java.util.concurrent.CompletableFuture.allOf;
@@ -78,7 +78,7 @@ public class RedisMessageStoreIntegrationTest {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 1500; ++pos) {
-                    messageStore.add(message(valueOf(pos), responseHeader(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
+                    messageStore.add(message(valueOf(pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).startFrom(), is(StartFrom.POSITION));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }
@@ -119,7 +119,7 @@ public class RedisMessageStoreIntegrationTest {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 1500; ++pos) {
-                    messageStore.add(message(valueOf(pos), responseHeader(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
+                    messageStore.add(message(valueOf(pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).startFrom(), is(POSITION));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }

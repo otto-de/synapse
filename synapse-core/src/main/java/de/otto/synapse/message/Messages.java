@@ -4,7 +4,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 
-import static de.otto.synapse.message.Header.emptyHeader;
+import static de.otto.synapse.message.Header.of;
 import static de.otto.synapse.message.Message.message;
 import static java.nio.ByteBuffer.wrap;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -31,7 +31,7 @@ public final class Messages {
 
     public static Message<ByteBuffer> byteBufferMessage(final @Nonnull Key key,
                                                         final @Nullable ByteBuffer payload) {
-        return message(key, emptyHeader(), payload);
+        return message(key, of(), payload);
     }
 
     public static Message<ByteBuffer> byteBufferMessage(final @Nonnull Key key,
@@ -43,7 +43,7 @@ public final class Messages {
     public static Message<ByteBuffer> byteBufferMessage(final @Nonnull Key key,
                                                         final @Nullable String payload) {
         final ByteBuffer byteBuffer = payload != null ? wrap(payload.getBytes(UTF_8)) : null;
-        return message(key, emptyHeader(), byteBuffer);
+        return message(key, of(), byteBuffer);
     }
 
     public static Message<ByteBuffer> byteBufferMessage(final @Nonnull Key key,
@@ -55,7 +55,7 @@ public final class Messages {
 
     public static Message<String> stringMessage(@Nonnull final Key key,
                                                 @Nullable final String payload) {
-        return message(key, emptyHeader(), payload);
+        return message(key, of(), payload);
     }
 
     public static Message<String> stringMessage(@Nonnull final Key key,

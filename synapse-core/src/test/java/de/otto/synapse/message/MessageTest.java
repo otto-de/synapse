@@ -5,7 +5,7 @@ import org.junit.Test;
 import java.time.Instant;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
-import static de.otto.synapse.message.Header.responseHeader;
+import static de.otto.synapse.message.Header.of;
 import static de.otto.synapse.message.Message.message;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -16,7 +16,7 @@ public class MessageTest {
     public void shouldBuildMessageWithHeader() {
         final Message<String> message = message(
                 "42",
-                responseHeader(fromPosition("some-channel", "00001")),
+                of(fromPosition("some-channel", "00001")),
                 "ßome dätä"
         );
         assertThat(message.getKey(), is(Key.of("42")));

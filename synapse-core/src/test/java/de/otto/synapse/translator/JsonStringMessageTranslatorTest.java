@@ -1,13 +1,13 @@
 package de.otto.synapse.translator;
 
 import com.google.common.collect.ImmutableMap;
+import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
 
 import java.time.Instant;
 
-import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.util.Collections.singletonMap;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,7 +32,7 @@ public class JsonStringMessageTranslatorTest {
     public void shouldKeepHeadersOfMessage() {
         final MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator();
         final Message<String> message = messageTranslator.translate(
-                message("test", responseHeader(null, ImmutableMap.of("foo", "bar")), null)
+                message("test", Header.of(null, ImmutableMap.of("foo", "bar")), null)
         );
         assertThat(message.getHeader().getAll(), is(singletonMap("foo", "bar")));
     }

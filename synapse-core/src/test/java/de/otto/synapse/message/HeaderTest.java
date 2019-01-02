@@ -6,7 +6,7 @@ import org.junit.Test;
 import java.time.Instant;
 import java.util.Optional;
 
-import static de.otto.synapse.message.Header.requestHeader;
+import static de.otto.synapse.message.Header.of;
 import static java.time.Instant.now;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -17,31 +17,31 @@ public class HeaderTest {
     @Test
     public void shouldReturnInstantAttr() {
         final Instant time = now();
-        final Header header = requestHeader(ImmutableMap.of("ts", time.toString()));
+        final Header header = of(ImmutableMap.of("ts", time.toString()));
         assertThat(header.getAsInstant("ts"), is(time));
     }
 
     @Test
     public void shouldReturnNullInstantAttr() {
-        final Header header = requestHeader(ImmutableMap.of());
+        final Header header = of(ImmutableMap.of());
         assertThat(header.getAsInstant("ts"), is(nullValue()));
     }
 
     @Test
     public void shouldReturnStringAttr() {
-        final Header header = requestHeader(ImmutableMap.of("x", "foobar"));
+        final Header header = of(ImmutableMap.of("x", "foobar"));
         assertThat(header.getAsString("x"), is("foobar"));
     }
 
     @Test
     public void shouldReturnNullStringAttr() {
-        final Header header = requestHeader(ImmutableMap.of());
+        final Header header = of(ImmutableMap.of());
         assertThat(header.getAsString("x"), is(nullValue()));
     }
 
     @Test
     public void shouldReturnEmptyPosition() {
-        final Header header = requestHeader(ImmutableMap.of());
+        final Header header = of(ImmutableMap.of());
         assertThat(header.getShardPosition(), is(Optional.empty()));
     }
 }

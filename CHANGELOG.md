@@ -2,7 +2,10 @@
 
 ## 0.14.0
 * Updates to AWS SDK release version 2.2.0
-* Refactors usage of message headers
+* Refactors creation of Header objects:
+    - Renames emptyHeader() to of()
+    - Renames requestHeader(...) to of(...)
+    - Renames responseHeader(...) to of(...)
 * Fixes bug in Kinesis receiver endpoints, that prevented registered MessageInterceptors to intercept received messages.
 * Fixes usage of Kinesis 'approximateArrivalTimestamp'
 * Fixes possible out-of-order arrival of messages if the message key is

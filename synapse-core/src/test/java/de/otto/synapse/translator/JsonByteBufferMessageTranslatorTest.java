@@ -37,7 +37,7 @@ public class JsonByteBufferMessageTranslatorTest {
     public void shouldKeepHeadersOfMessage() {
         final MessageTranslator<ByteBuffer> messageTranslator = new JsonByteBufferMessageTranslator();
         final Message<ByteBuffer> message = messageTranslator.translate(
-                message(Key.of("test"), Header.responseHeader(null, of(MSG_SENDER_TS.key(), NOW.toString())), null)
+                message(Key.of("test"), Header.of(null, of(MSG_SENDER_TS.key(), NOW.toString())), null)
         );
         assertThat(message.getHeader().getAsInstant(MSG_SENDER_TS), is(NOW));
     }

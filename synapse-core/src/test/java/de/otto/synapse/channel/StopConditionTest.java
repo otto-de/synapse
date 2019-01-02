@@ -15,7 +15,6 @@ import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.ShardResponse.shardResponse;
 import static de.otto.synapse.channel.StopCondition.*;
 import static de.otto.synapse.message.DefaultHeaderAttr.MSG_ARRIVAL_TS;
-import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.time.Duration.ZERO;
 import static java.time.Duration.ofMillis;
@@ -124,6 +123,6 @@ public class StopConditionTest {
     }
 
     private Header arrivalTime(final Instant arrivalTime) {
-        return responseHeader(fromPosition("shard-name", "42"), ImmutableMap.of(MSG_ARRIVAL_TS.key(), arrivalTime.toString()));
+        return Header.of(fromPosition("shard-name", "42"), ImmutableMap.of(MSG_ARRIVAL_TS.key(), arrivalTime.toString()));
     }
 }

@@ -32,20 +32,20 @@ import java.util.Optional;
  */
 public class Header implements Serializable {
 
-    public static Header emptyHeader() {
+    public static Header of() {
         return new Header(null, ImmutableMap.of());
     }
 
-    public static Header requestHeader(final ImmutableMap<String, String> attributes) {
+    public static Header of(final ImmutableMap<String, String> attributes) {
         return new Header(null, attributes);
     }
 
-    public static Header responseHeader(final ShardPosition shardPosition,
-                                        final ImmutableMap<String, String> attributes) {
+    public static Header of(final ShardPosition shardPosition,
+                            final ImmutableMap<String, String> attributes) {
         return new Header(shardPosition, attributes);
     }
 
-    public static Header responseHeader(final ShardPosition shardPosition) {
+    public static Header of(final ShardPosition shardPosition) {
         return new Header(shardPosition, ImmutableMap.of());
     }
 

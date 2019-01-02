@@ -2,6 +2,7 @@ package de.otto.synapse.endpoint.sender.sqs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
@@ -19,7 +20,6 @@ import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.senderChannelsWith;
-import static de.otto.synapse.message.Header.requestHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -94,7 +94,7 @@ public class SqsMessageSenderTest {
         // given
         final Message<ExampleJsonObject> message = message(
                 "some-of",
-                requestHeader(of("first", "one", "second", "two")),
+                Header.of(of("first", "one", "second", "two")),
                 new ExampleJsonObject("banana"));
 
         when(sqsAsyncClient.sendMessage(any(SendMessageRequest.class))).thenReturn(completedFuture(SendMessageResponse.builder()

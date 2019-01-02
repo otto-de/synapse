@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
+import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
@@ -18,7 +19,6 @@ import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Key.NO_KEY;
 import static de.otto.synapse.message.Message.message;
 import static java.util.concurrent.Executors.newFixedThreadPool;
@@ -118,7 +118,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
         LOG.debug("Processing message from channel={}: messageId={} receiptHandle={}, messageAttributes={}", getChannelName(), sqsMessage.messageId(), sqsMessage.receiptHandle(), sqsMessage.messageAttributes());
         final Message<String> message = message(
                 messageKeyOf(sqsMessage),
-                responseHeader(null, messageAttributesOf(sqsMessage)),
+                Header.of(null, messageAttributesOf(sqsMessage)),
                 sqsMessage.body());
 
         final Message<String> interceptedMessage = intercept(message);

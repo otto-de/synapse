@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.util.ByteBufferBackedInputStream;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
@@ -32,7 +33,6 @@ import java.util.stream.Stream;
 import static com.google.common.collect.ImmutableMap.of;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingSenderChannelsWith;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.senderChannelsWith;
-import static de.otto.synapse.message.Header.requestHeader;
 import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.message.kinesis.KinesisMessage.SYNAPSE_MSG_HEADERS;
 import static de.otto.synapse.message.kinesis.KinesisMessage.SYNAPSE_MSG_PAYLOAD;
@@ -119,7 +119,7 @@ public class KinesisMessageSenderV2Test {
     @Test
     public void shouldSendMessageHeaders() throws Exception {
         // given
-        final Message<ExampleJsonObject> message = message("someKey", requestHeader(of("attr-of", "attr-value")), null);
+        final Message<ExampleJsonObject> message = message("someKey", Header.of(of("attr-of", "attr-value")), null);
 
         when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(completedFuture(PutRecordsResponse.builder()
                 .failedRecordCount(0)

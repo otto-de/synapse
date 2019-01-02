@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static de.otto.synapse.configuration.kinesis.KinesisTestConfiguration.KINESIS_INTEGRATION_TEST_CHANNEL;
 import static de.otto.synapse.message.DefaultHeaderAttr.*;
-import static de.otto.synapse.message.Header.requestHeader;
+import static de.otto.synapse.message.Header.of;
 import static de.otto.synapse.message.Message.message;
 import static java.time.Instant.now;
 import static java.time.Instant.ofEpochSecond;
@@ -175,7 +175,7 @@ public class KinesisAcceptanceTest {
 
     @Test
     public void shouldSendAndReceiveKinesisMessageInV2FormatWithCustomHeaders() {
-        final Header header = requestHeader(ImmutableMap.of(
+        final Header header = of(ImmutableMap.of(
                 "string", "some value",
                 "timestamp", ofEpochSecond(42).toString())
         );
