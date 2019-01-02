@@ -1,6 +1,7 @@
 package de.otto.synapse.channel;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.AbstractMessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
@@ -11,7 +12,6 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.Nonnull;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -58,12 +58,15 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
     public synchronized void send(final Message<String> message) {
         final int position = eventQueue.size();
         LOG.info("Sending {} to {} at position{}", message, getChannelName(), position);
+        final ImmutableMap<String, String> attributes = ImmutableMap.<String, String>builder()
+                .putAll(message.getHeader().getAll())
+                .put("synapse_msg_arrival_ts", now().toString())
+                .build();
         eventQueue.add(Message.message(
                 message.getKey(),
                 responseHeader(
                         fromPosition(getChannelName(), String.valueOf(position)),
-                        Instant.now(),
-                        message.getHeader().getAttributes()),
+                        attributes),
                 message.getPayload()));
     }
 
@@ -112,13 +115,13 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
     private Duration durationBehind(final int currentPos) {
         if (currentPos == -1 && eventQueue.size() > 0) {
             return Duration.between(
-                    getLast(eventQueue).getHeader().getArrivalTimestamp(),
-                    eventQueue.get(eventQueue.size()-1).getHeader().getArrivalTimestamp())
+                    getLast(eventQueue).getHeader().getAsInstant("synapse_msg_arrival_ts"),
+                    eventQueue.get(eventQueue.size()-1).getHeader().getAsInstant("synapse_msg_arrival_ts"))
                     .abs();
         } else if (currentPos >= 0 && currentPos <= eventQueue.size()) {
             return Duration.between(
-                    getLast(eventQueue).getHeader().getArrivalTimestamp(),
-                    eventQueue.get(currentPos).getHeader().getArrivalTimestamp())
+                    getLast(eventQueue).getHeader().getAsInstant("synapse_msg_arrival_ts"),
+                    eventQueue.get(currentPos).getHeader().getAsInstant("synapse_msg_arrival_ts"))
                     .abs();
         } else {
             return ZERO;
@@ -130,7 +133,7 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
         publishEvent(STARTING, "Starting InMemoryChannel " + getChannelName(), null);
         final Message<String> lastMessage = eventQueue.isEmpty() ? null : getLast(eventQueue);
         final ChannelDurationBehind durationBehind = lastMessage != null
-                ? channelDurationBehind().with(getChannelName(), between(lastMessage.getHeader().getArrivalTimestamp(), now())).build()
+                ? channelDurationBehind().with(getChannelName(), between(lastMessage.getHeader().getAsInstant("synapse_msg_arrival_ts"), now())).build()
                 : null;
         publishEvent(STARTED, "Started InMemoryChannel " + getChannelName(), durationBehind);
         return CompletableFuture.supplyAsync(() -> {
@@ -140,7 +143,7 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
                     final Message<String> interceptedMessage = intercept(
                             message(
                                     receivedMessage.getKey(),
-                                    responseHeader(null, now()),
+                                    responseHeader(null, receivedMessage.getHeader().getAll()),
                                     receivedMessage.getPayload()
                             )
                     );

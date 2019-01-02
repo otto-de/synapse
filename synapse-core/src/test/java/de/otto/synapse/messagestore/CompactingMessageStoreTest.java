@@ -8,8 +8,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -22,7 +20,6 @@ import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
-import static java.time.Instant.now;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.concurrent.Executors.newFixedThreadPool;
@@ -78,7 +75,7 @@ public class CompactingMessageStoreTest {
                 final String entityId = valueOf(shard);
                 completion[shard] = CompletableFuture.runAsync(() -> {
                     for (int pos = 0; pos < 1000; ++pos) {
-                        messageStore.add(message(Key.of(entityId, entityId + ":" + pos), responseHeader(fromPosition("shard-" + shardNumber, valueOf(pos)), now()), "some payload"));
+                        messageStore.add(message(Key.of(entityId, entityId + ":" + pos), responseHeader(fromPosition("shard-" + shardNumber, valueOf(pos))), "some payload"));
                         assertThat(messageStore.getLatestChannelPosition().shard("shard-" + entityId).startFrom(), is(StartFrom.POSITION));
                         assertThat(messageStore.getLatestChannelPosition().shard("shard-" + entityId).position(), is(valueOf(pos)));
                     }
@@ -102,7 +99,7 @@ public class CompactingMessageStoreTest {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<5; ++i) {
             for (int pos = 0; pos < 10000; ++pos) {
-                messageStore.add(message(Key.of(valueOf(pos)), responseHeader(fromPosition("some-shard", valueOf(pos)), now()), "some payload"));
+                messageStore.add(message(Key.of(valueOf(pos)), responseHeader(fromPosition("some-shard", valueOf(pos))), "some payload"));
                 assertThat(messageStore.getLatestChannelPosition().shard("some-shard").startFrom(), is(StartFrom.POSITION));
                 assertThat(messageStore.getLatestChannelPosition().shard("some-shard").position(), is(valueOf(pos)));
             }
@@ -128,21 +125,19 @@ public class CompactingMessageStoreTest {
     @Test
     public void shouldRemoveMessagesWithNullPayload() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
-        final Instant yesterday = Instant.now().minus(1, ChronoUnit.DAYS);
-        final Instant now = Instant.now().minus(1, ChronoUnit.DAYS);
         for (int i=0; i<10; ++i) {
             messageStore.add(message(
                     Key.of(valueOf(i)),
-                    responseHeader(fromPosition("foo", valueOf(i)), yesterday),
+                    responseHeader(fromPosition("foo", valueOf(i))),
                     "some foo payload"));
             messageStore.add(message(
                     Key.of(valueOf(i)),
-                    responseHeader(fromPosition("bar", valueOf(i)), yesterday),
+                    responseHeader(fromPosition("bar", valueOf(i))),
                     "some bar payload"));
         }
         for (int i=0; i<10; ++i) {
-            messageStore.add(message(Key.of(valueOf(i)), responseHeader(fromPosition("foo", valueOf(20 + i)), now), null));
-            messageStore.add(message(Key.of(valueOf(i)), responseHeader(fromPosition("bar", valueOf(42 + i)), now), null));
+            messageStore.add(message(Key.of(valueOf(i)), responseHeader(fromPosition("foo", valueOf(20 + i))), null));
+            messageStore.add(message(Key.of(valueOf(i)), responseHeader(fromPosition("bar", valueOf(42 + i))), null));
         }
         assertThat(messageStore.getLatestChannelPosition(), is(channelPosition(
                 fromPosition("foo", "29"),

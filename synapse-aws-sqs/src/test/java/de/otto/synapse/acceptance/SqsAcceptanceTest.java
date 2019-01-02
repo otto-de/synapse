@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static de.otto.synapse.configuration.sqs.SqsTestConfiguration.SQS_INTEGRATION_TEST_CHANNEL;
-import static de.otto.synapse.endpoint.DefaultSenderHeadersInterceptor.*;
+import static de.otto.synapse.message.DefaultHeaderAttr.*;
 import static de.otto.synapse.message.Header.requestHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.time.Instant.ofEpochSecond;
@@ -92,10 +92,10 @@ public class SqsAcceptanceTest {
                 .atMost(10, SECONDS)
                 .until(() -> lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals(Key.of("test-key-shouldSendAndReceiveDefaultSqsMessageHeaders")));
 
-        final ImmutableMap<String, String> attributes = lastSqsMessage.get().getHeader().getAttributes();
-        assertThat(attributes, hasEntry(equalTo(MSG_ID_ATTR), not(isEmptyOrNullString())));
-        assertThat(attributes, hasEntry(equalTo(MSG_TIMESTAMP_ATTR), not(isEmptyOrNullString())));
-        assertThat(attributes, hasEntry(MSG_SENDER_ATTR, "Synapse"));
+        final ImmutableMap<String, String> attributes = lastSqsMessage.get().getHeader().getAll();
+        assertThat(attributes, hasEntry(equalTo(MSG_ID.key()), not(isEmptyOrNullString())));
+        assertThat(attributes, hasEntry(equalTo(MSG_SENDER_TS.key()), not(isEmptyOrNullString())));
+        assertThat(attributes, hasEntry(MSG_SENDER.key(), "Synapse"));
     }
 
     @Test
@@ -115,7 +115,7 @@ public class SqsAcceptanceTest {
                 .atMost(10, SECONDS)
                 .until(() -> lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals(Key.of("test-key-shouldSendAndReceiveCustomSqsMessageHeaders")));
 
-        final ImmutableMap<String, String> attributes = lastSqsMessage.get().getHeader().getAttributes();
+        final ImmutableMap<String, String> attributes = lastSqsMessage.get().getHeader().getAll();
         assertThat(attributes, hasEntry("string", "some value"));
         assertThat(attributes, hasEntry("timestamp", "1970-01-01T00:00:42Z"));
     }

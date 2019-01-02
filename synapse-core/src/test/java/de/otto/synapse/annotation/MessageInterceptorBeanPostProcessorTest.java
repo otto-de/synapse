@@ -24,6 +24,7 @@ public class MessageInterceptorBeanPostProcessorTest {
     public void init() {
         context = new AnnotationConfigApplicationContext();
         addEnvironment(context, "synapse.sender.default-headers.enabled=false");
+        addEnvironment(context, "synapse.receiver.default-headers.enabled=false");
     }
 
     @After

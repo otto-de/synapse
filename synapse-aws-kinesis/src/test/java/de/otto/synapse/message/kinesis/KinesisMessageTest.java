@@ -1,6 +1,5 @@
 package de.otto.synapse.message.kinesis;
 
-import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
@@ -11,6 +10,7 @@ import java.time.Instant;
 import java.util.Optional;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.message.DefaultHeaderAttr.MSG_ARRIVAL_TS;
 import static de.otto.synapse.message.kinesis.KinesisMessage.kinesisMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -33,7 +33,7 @@ public class KinesisMessageTest {
                 record);
         assertThat(message.getKey(), is(Key.of("42")));
         assertThat(message.getPayload(), is("ßome dätä"));
-        assertThat(message.getHeader().getArrivalTimestamp(), is(now));
+        assertThat(message.getHeader().getAsInstant(MSG_ARRIVAL_TS), is(now));
         assertThat(message.getHeader().getShardPosition(), is(Optional.of(fromPosition("some-shard", "00001"))));
     }
 
@@ -55,9 +55,9 @@ public class KinesisMessageTest {
                 record);
         assertThat(message.getKey(), is(Key.of("42")));
         assertThat(message.getPayload(), is("{\"some\":\"payload\"}"));
-        assertThat(message.getHeader().getArrivalTimestamp(), is(now));
+        assertThat(message.getHeader().getAsInstant(MSG_ARRIVAL_TS), is(now));
         assertThat(message.getHeader().getShardPosition(), is(Optional.of(fromPosition("some-shard", "00001"))));
-        assertThat(message.getHeader().getAttributes(), is(ImmutableMap.of("attr", "value")));
+        assertThat(message.getHeader().get("attr"), is("value"));
     }
 
     @Test
@@ -79,9 +79,9 @@ public class KinesisMessageTest {
                 record);
         assertThat(message.getKey(), is(Key.of("1", "2")));
         assertThat(message.getPayload(), is("{\"some\":\"payload\"}"));
-        assertThat(message.getHeader().getArrivalTimestamp(), is(now));
+        assertThat(message.getHeader().getAsInstant(MSG_ARRIVAL_TS), is(now));
         assertThat(message.getHeader().getShardPosition(), is(Optional.of(fromPosition("some-shard", "00001"))));
-        assertThat(message.getHeader().getAttributes(), is(ImmutableMap.of("attr", "value")));
+        assertThat(message.getHeader().get("attr"), is( "value"));
     }
 
     @Test
@@ -102,9 +102,9 @@ public class KinesisMessageTest {
                 record);
         assertThat(message.getKey(), is(Key.of("42")));
         assertThat(message.getPayload(), is(nullValue()));
-        assertThat(message.getHeader().getArrivalTimestamp(), is(now));
         assertThat(message.getHeader().getShardPosition(), is(Optional.of(fromPosition("some-shard", "00001"))));
-        assertThat(message.getHeader().getAttributes(), is(ImmutableMap.of("attr", "value")));
+        assertThat(message.getHeader().get("attr"), is("value"));
+        assertThat(message.getHeader().getAsInstant(MSG_ARRIVAL_TS), is(now));
     }
 
     @Test
@@ -125,9 +125,8 @@ public class KinesisMessageTest {
                 record);
         assertThat(message.getKey(), is(Key.of("42")));
         assertThat(message.getPayload(), is(nullValue()));
-        assertThat(message.getHeader().getArrivalTimestamp(), is(now));
         assertThat(message.getHeader().getShardPosition(), is(Optional.of(fromPosition("some-shard", "00001"))));
-        assertThat(message.getHeader().getAttributes(), is(ImmutableMap.of()));
+        assertThat(message.getHeader().getAsInstant(MSG_ARRIVAL_TS), is(now));
     }
 
     @Test
@@ -146,9 +145,8 @@ public class KinesisMessageTest {
                 record);
         assertThat(message.getKey(), is(Key.of("42")));
         assertThat(message.getPayload(), is(nullValue()));
-        assertThat(message.getHeader().getArrivalTimestamp(), is(now));
         assertThat(message.getHeader().getShardPosition(), is(Optional.of(fromPosition("some-shard", "00001"))));
-        assertThat(message.getHeader().getAttributes(), is(ImmutableMap.of()));
+        assertThat(message.getHeader().getAsInstant(MSG_ARRIVAL_TS), is(now));
     }
 
 }

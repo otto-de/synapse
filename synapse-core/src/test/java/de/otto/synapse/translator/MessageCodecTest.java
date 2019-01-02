@@ -40,7 +40,7 @@ public class MessageCodecTest {
 
         assertThat(message.getKey()).isEqualTo(NO_KEY);
         assertThat(message.getPayload()).isEqualTo(body);
-        assertThat(message.getHeader().getAttributes()).isEmpty();
+        assertThat(message.getHeader().getAll()).isEmpty();
     }
 
     @Test
@@ -50,7 +50,7 @@ public class MessageCodecTest {
 
         assertThat(message.getKey()).isEqualTo(NO_KEY);
         assertThat(message.getPayload()).isEqualTo(body);
-        assertThat(message.getHeader().getAttributes()).isEmpty();
+        assertThat(message.getHeader().getAll()).isEmpty();
     }
 
     @Test
@@ -60,7 +60,7 @@ public class MessageCodecTest {
 
         assertThat(message.getKey()).isEqualTo(NO_KEY);
         assertThat(message.getPayload()).isNull();
-        assertThat(message.getHeader().getAttributes()).isEmpty();
+        assertThat(message.getHeader().getAll()).isEmpty();
     }
 
     @Test
@@ -73,7 +73,7 @@ public class MessageCodecTest {
 
         assertThat(message.getKey()).isEqualTo(Key.of());
         assertThat(message.getPayload()).isEqualTo("{\"some\":\"payload\"}");
-        assertThat(message.getHeader().getStringAttribute("attr")).isEqualTo("value");
+        assertThat(message.getHeader().getAsString("attr")).isEqualTo("value");
     }
 
     @Test
@@ -87,7 +87,7 @@ public class MessageCodecTest {
 
         assertThat(message.getKey()).isEqualTo(Key.of("p1", "p2"));
         assertThat(message.getPayload()).isEqualTo("{\"some\":\"payload\"}");
-        assertThat(message.getHeader().getStringAttribute("attr")).isEqualTo("value");
+        assertThat(message.getHeader().getAsString("attr")).isEqualTo("value");
     }
 
     @Test
@@ -99,7 +99,7 @@ public class MessageCodecTest {
         final Message<String> message = decode(body, Header.builder(), Message.builder(String.class));
 
         assertThat(message.getPayload()).isNull();
-        assertThat(message.getHeader().getAttributes()).isEmpty();
+        assertThat(message.getHeader().getAll()).isEmpty();
     }
 
 }

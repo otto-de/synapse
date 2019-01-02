@@ -7,9 +7,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SynapseProperties {
     private final ConsumerProcess consumerProcess = new ConsumerProcess();
     private final Sender sender;
+    private final Receiver receiver;
 
     public SynapseProperties(@Value("${spring.application.name:Synapse}") String defaultName) {
         this.sender = new Sender(defaultName);
+        this.receiver = new Receiver();
     }
 
     public ConsumerProcess getConsumerProcess() {
@@ -18,6 +20,10 @@ public class SynapseProperties {
 
     public Sender getSender() {
         return sender;
+    }
+
+    public Receiver getReceiver() {
+        return receiver;
     }
 
     public static class Sender {
@@ -62,6 +68,28 @@ public class SynapseProperties {
             }
         }
     }
+
+    public static class Receiver {
+
+        private final DefaultHeaders defaultHeaders = new DefaultHeaders();
+
+        public DefaultHeaders getDefaultHeaders() {
+            return defaultHeaders;
+        }
+
+        public class DefaultHeaders {
+            private boolean enabled = true;
+
+            public boolean isEnabled() {
+                return enabled;
+            }
+
+            public void setEnabled(boolean enabled) {
+                this.enabled = enabled;
+            }
+        }
+    }
+
     public static class ConsumerProcess {
         private boolean enabled = true;
 

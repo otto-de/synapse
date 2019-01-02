@@ -31,7 +31,6 @@ import static java.util.Collections.synchronizedSet;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @RunWith(SpringRunner.class)
@@ -90,8 +89,7 @@ public class SqsMessageQueueIntegrationTest {
 
         assertThat(messages.get(0).getKey(), is(Key.of("some-message-0")));
         assertThat(messages.get(0).getHeader().getShardPosition(), is(Optional.empty()));
-        assertThat(messages.get(0).getHeader().getArrivalTimestamp(), is(notNullValue()));
-        assertThat(messages.get(0).getHeader().getAttribute("synapse_msg_key"), is("some-message-0"));
+        assertThat(messages.get(0).getHeader().get("synapse_msg_key"), is("some-message-0"));
     }
 
     @Test

@@ -81,7 +81,7 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
 
     private ImmutableMap<String, MessageAttributeValue> of(@Nonnull Message<String> message) {
         final ImmutableMap.Builder<String, MessageAttributeValue> messageAttributes = ImmutableMap.builder();
-        message.getHeader().getAttributes().entrySet().forEach(entry -> {
+        message.getHeader().getAll().entrySet().forEach(entry -> {
             messageAttributes.put(entry.getKey(), MessageAttributeValue
                     .builder()
                     .dataType("String")

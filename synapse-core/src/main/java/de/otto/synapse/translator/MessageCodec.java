@@ -73,7 +73,7 @@ public class MessageCodec {
         }
         String jsonHeaders;
         try {
-            jsonHeaders = currentObjectMapper().writeValueAsString(message.getHeader().getAttributes());
+            jsonHeaders = currentObjectMapper().writeValueAsString(message.getHeader().getAll());
         } catch (final JsonProcessingException e) {
             LOG.error("Failed to convert message headers={} into JSON message format v2: {}", message.getHeader(), e.getMessage());
             jsonHeaders = "{}";

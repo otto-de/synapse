@@ -57,10 +57,9 @@ public class KinesisShardIteratorTest {
 
     @Test
     public void shouldFetchSingleMessage() {
-        final Instant arrivalTimestamp = now();
         final Record record = Record.builder()
                 .sequenceNumber("43")
-                .approximateArrivalTimestamp(arrivalTimestamp)
+                .approximateArrivalTimestamp(now())
                 .partitionKey("someKey")
                 .build();
         final GetRecordsResponse response = GetRecordsResponse.builder()
@@ -78,7 +77,6 @@ public class KinesisShardIteratorTest {
         final Message<String> message = shardResponse.getMessages().get(0);
         assertThat(message.getKey(), is(Key.of("someKey")));
         assertThat(message.getPayload(), is(nullValue()));
-        assertThat(message.getHeader().getArrivalTimestamp(), is(arrivalTimestamp));
         assertThat(message.getHeader().getShardPosition().get(), is(fromPosition("someShard", "43")));
     }
 

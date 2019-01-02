@@ -1,5 +1,7 @@
 package de.otto.synapse.channel;
 
+import de.otto.synapse.message.DefaultHeaderAttr;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -52,8 +54,8 @@ public final class StopCondition {
      *
      * @return stop condition
      */
-    public static Predicate<ShardResponse> arrivalTimeAfterNow() {
-        return arrivalTimeAfterNow(Clock.systemDefaultZone());
+    public static Predicate<ShardResponse> arrivalTimestampAfterNow() {
+        return arrivalTimestampAfterNow(Clock.systemDefaultZone());
     }
 
     /**
@@ -64,12 +66,12 @@ public final class StopCondition {
      *
      * @return stop condition
      */
-    public static Predicate<ShardResponse> arrivalTimeAfterNow(final Clock clock) {
+    public static Predicate<ShardResponse> arrivalTimestampAfterNow(final Clock clock) {
         final Instant now = clock.instant();
         return (response) -> response
                 .getMessages()
                 .stream()
-                .anyMatch(m -> m.getHeader().getArrivalTimestamp().isAfter(now));
+                .anyMatch(m -> m.getHeader().getAsInstant(DefaultHeaderAttr.MSG_ARRIVAL_TS, Instant.MIN).isAfter(now));
     }
 
     /**

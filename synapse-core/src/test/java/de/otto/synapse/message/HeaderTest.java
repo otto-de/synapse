@@ -18,25 +18,25 @@ public class HeaderTest {
     public void shouldReturnInstantAttr() {
         final Instant time = now();
         final Header header = requestHeader(ImmutableMap.of("ts", time.toString()));
-        assertThat(header.getInstantAttribute("ts"), is(time));
+        assertThat(header.getAsInstant("ts"), is(time));
     }
 
     @Test
     public void shouldReturnNullInstantAttr() {
         final Header header = requestHeader(ImmutableMap.of());
-        assertThat(header.getInstantAttribute("ts"), is(nullValue()));
+        assertThat(header.getAsInstant("ts"), is(nullValue()));
     }
 
     @Test
     public void shouldReturnStringAttr() {
         final Header header = requestHeader(ImmutableMap.of("x", "foobar"));
-        assertThat(header.getStringAttribute("x"), is("foobar"));
+        assertThat(header.getAsString("x"), is("foobar"));
     }
 
     @Test
     public void shouldReturnNullStringAttr() {
         final Header header = requestHeader(ImmutableMap.of());
-        assertThat(header.getStringAttribute("x"), is(nullValue()));
+        assertThat(header.getAsString("x"), is(nullValue()));
     }
 
     @Test

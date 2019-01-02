@@ -120,8 +120,7 @@ public class MessageTraceController {
 
             final LinkedHashMap<Object, Object> map = Maps.newLinkedHashMap();
             map.put("shardPosition", header.getShardPosition().map(ShardPosition::toString).orElse(""));
-            map.put("arrivalTimestamp", header.getArrivalTimestamp().toString());
-            map.put("attributes", header.getAttributes());
+            map.put("attributes", header.getAll());
             return currentObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(map);
         } catch (final Exception e) {
             throw new RuntimeException(e.getMessage(), e);

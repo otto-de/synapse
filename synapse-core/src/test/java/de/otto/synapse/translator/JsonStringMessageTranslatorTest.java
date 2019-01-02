@@ -1,5 +1,6 @@
 package de.otto.synapse.translator;
 
+import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.junit.Test;
@@ -31,9 +32,9 @@ public class JsonStringMessageTranslatorTest {
     public void shouldKeepHeadersOfMessage() {
         final MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator();
         final Message<String> message = messageTranslator.translate(
-                message("test", responseHeader(null, NOW), singletonMap("foo", "bar"))
+                message("test", responseHeader(null, ImmutableMap.of("foo", "bar")), null)
         );
-        assertThat(message.getHeader().getArrivalTimestamp(), is(NOW));
+        assertThat(message.getHeader().getAll(), is(singletonMap("foo", "bar")));
     }
 
     @Test

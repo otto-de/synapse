@@ -7,7 +7,6 @@ import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
 import de.otto.synapse.state.StateRepository;
-import de.otto.synapse.translator.MessageCodec;
 import de.otto.synapse.translator.MessageFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +63,7 @@ public class CompactionService {
                     .consumeUntil(
                             endOfChannel()
                                     .and(emptyResponse())
-                                    .or(arrivalTimeAfterNow(clock))
+                                    .or(arrivalTimestampAfterNow(clock))
                     )
                     .get();
 

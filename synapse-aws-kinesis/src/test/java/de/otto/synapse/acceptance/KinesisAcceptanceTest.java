@@ -27,12 +27,11 @@ import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static de.otto.synapse.configuration.kinesis.KinesisTestConfiguration.KINESIS_INTEGRATION_TEST_CHANNEL;
-import static de.otto.synapse.endpoint.DefaultSenderHeadersInterceptor.*;
+import static de.otto.synapse.message.DefaultHeaderAttr.*;
 import static de.otto.synapse.message.Header.requestHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.time.Instant.now;
 import static java.time.Instant.ofEpochSecond;
-import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -131,8 +130,8 @@ public class KinesisAcceptanceTest {
                 .atMost(10, SECONDS)
                 .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveKinesisMessageInDefaultFormat")));
 
-        final ImmutableMap<String, String> attributes = lastEventSourceMessage.get().getHeader().getAttributes();
-        assertThat(attributes, is(emptyMap()));
+        final ImmutableMap<String, String> attributes = lastEventSourceMessage.get().getHeader().getAll();
+        assertThat(attributes.keySet(), contains(MSG_ARRIVAL_TS.key(), MSG_RECEIVER_TS.key()));
     }
 
     @Test
@@ -144,8 +143,8 @@ public class KinesisAcceptanceTest {
                 .atMost(10, SECONDS)
                 .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveKinesisMessageInV1Format")));
 
-        final ImmutableMap<String, String> attributes = lastEventSourceMessage.get().getHeader().getAttributes();
-        assertThat(attributes, is(emptyMap()));
+        final ImmutableMap<String, String> attributes = lastEventSourceMessage.get().getHeader().getAll();
+        assertThat(attributes.keySet(), contains(MSG_ARRIVAL_TS.key(), MSG_RECEIVER_TS.key()));
     }
 
     @Test
@@ -157,14 +156,21 @@ public class KinesisAcceptanceTest {
                 .until(() ->
                         lastEventSourceMessage.get() != null
                                 && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveKinesisMessageWithDefaultHeaders"))
-                                && lastEventSourceMessage.get().getHeader().getArrivalTimestamp().isAfter(started));
+                                && lastEventSourceMessage.get().getHeader().getAsInstant(MSG_ARRIVAL_TS).isAfter(started));
 
-        final ImmutableMap<String, String> attributes = lastEventSourceMessage.get().getHeader().getAttributes();
-        assertThat(attributes, hasEntry(equalTo(MSG_ID_ATTR), not(isEmptyOrNullString())));
-        assertThat(attributes, hasEntry(equalTo(MSG_TIMESTAMP_ATTR), not(isEmptyOrNullString())));
-        assertThat(attributes, hasEntry(MSG_SENDER_ATTR, "Synapse"));
+        final ImmutableMap<String, String> attributes = lastEventSourceMessage.get().getHeader().getAll();
+        assertThat(attributes, hasEntry(equalTo(MSG_ID.key()), not(isEmptyOrNullString())));
+        assertThat(attributes, hasEntry(equalTo(MSG_SENDER_TS.key()), not(isEmptyOrNullString())));
+        assertThat(attributes, hasEntry(equalTo(MSG_ARRIVAL_TS.key()), not(isEmptyOrNullString())));
+        assertThat(attributes, hasEntry(equalTo(MSG_RECEIVER_TS.key()), not(isEmptyOrNullString())));
+        assertThat(attributes, hasEntry(MSG_SENDER.key(), "Synapse"));
         assertThat(lastEventSourceMessage.get().getPayload(), is("{}"));
         assertThat(lastEventSourceMessage.get().getKey(), is(instanceOf(SimpleKey.class)));
+        final Instant sent = lastEventSourceMessage.get().getHeader().getAsInstant(MSG_SENDER_TS);
+        final Instant arrived = lastEventSourceMessage.get().getHeader().getAsInstant(MSG_ARRIVAL_TS);
+        final Instant received = lastEventSourceMessage.get().getHeader().getAsInstant(MSG_RECEIVER_TS);
+        assertThat(sent.isAfter(arrived), is(false));
+        assertThat(arrived.isAfter(received), is(false));
     }
 
     @Test
@@ -177,7 +183,7 @@ public class KinesisAcceptanceTest {
         await()
                 .atMost(10, SECONDS)
                 .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveKinesisMessageWithCustomHeaders")));
-        final ImmutableMap<String, String> attributes = lastEventSourceMessage.get().getHeader().getAttributes();
+        final ImmutableMap<String, String> attributes = lastEventSourceMessage.get().getHeader().getAll();
         assertThat(attributes, hasEntry("string", "some value"));
         assertThat(attributes, hasEntry("timestamp", "1970-01-01T00:00:42Z"));
     }

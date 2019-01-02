@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint.receiver.kinesis;
 
+import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ShardResponse;
 import org.junit.Test;
 import software.amazon.awssdk.core.SdkBytes;
@@ -11,6 +12,7 @@ import java.time.Instant;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.endpoint.receiver.kinesis.KinesisShardResponse.kinesisShardResponse;
+import static de.otto.synapse.message.DefaultHeaderAttr.MSG_ARRIVAL_TS;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -71,8 +73,8 @@ public class KinesisShardResponseTest {
         assertThat(response.getDurationBehind(), is(Duration.ofMillis(1L)));
         assertThat(response.getShardPosition(), is(fromPosition("shard", "42")));
         assertThat(response.getMessages(), contains(
-                message("first", responseHeader(fromPosition("shard", "1"), firstArrival), "content"),
-                message("second", responseHeader(fromPosition("shard", "2"), secondArrival), "content")
+                message("first", responseHeader(fromPosition("shard", "1"), ImmutableMap.of(MSG_ARRIVAL_TS.key(), firstArrival.toString())), "content"),
+                message("second", responseHeader(fromPosition("shard", "2"), ImmutableMap.of(MSG_ARRIVAL_TS.key(), secondArrival.toString())), "content")
         ));
     }
 }

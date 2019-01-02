@@ -7,8 +7,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -56,21 +54,19 @@ public class CompactingMessageStoreWithoutDeletionsTest {
     @Test
     public void shouldNotRemoveMessagesWithNullPayload() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
-        final Instant yesterday = Instant.now().minus(1, ChronoUnit.DAYS);
-        final Instant now = Instant.now().minus(1, ChronoUnit.DAYS);
         for (int i=0; i<10; ++i) {
             messageStore.add(message(
                     Key.of(valueOf(i), "foo:" + i),
-                    responseHeader(fromPosition("foo", valueOf(i)), yesterday),
+                    responseHeader(fromPosition("foo", valueOf(i))),
                     "some foo payload"));
             messageStore.add(message(
                     Key.of(valueOf(i), "bar:" + i),
-                    responseHeader(fromPosition("bar", valueOf(i)), yesterday),
+                    responseHeader(fromPosition("bar", valueOf(i))),
                     "some bar payload"));
         }
         for (int i=0; i<10; ++i) {
-            messageStore.add(message(Key.of(valueOf(i), "foo:" + i), responseHeader(fromPosition("foo", valueOf(20 + i)), now), null));
-            messageStore.add(message(Key.of(valueOf(i), "bar:" + i), responseHeader(fromPosition("bar", valueOf(42 + i)), now), null));
+            messageStore.add(message(Key.of(valueOf(i), "foo:" + i), responseHeader(fromPosition("foo", valueOf(20 + i))), null));
+            messageStore.add(message(Key.of(valueOf(i), "bar:" + i), responseHeader(fromPosition("bar", valueOf(42 + i))), null));
         }
         assertThat(messageStore.getLatestChannelPosition(), is(channelPosition(fromPosition("foo", "29"), fromPosition("bar", "51"))));
         assertThat(messageStore.size(), is(20));

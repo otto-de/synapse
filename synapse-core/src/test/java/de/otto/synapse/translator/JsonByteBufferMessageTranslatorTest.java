@@ -9,6 +9,8 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.time.Instant;
 
+import static com.google.common.collect.ImmutableMap.of;
+import static de.otto.synapse.message.DefaultHeaderAttr.MSG_SENDER_TS;
 import static de.otto.synapse.message.Message.message;
 import static java.util.Collections.singletonMap;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -35,9 +37,9 @@ public class JsonByteBufferMessageTranslatorTest {
     public void shouldKeepHeadersOfMessage() {
         final MessageTranslator<ByteBuffer> messageTranslator = new JsonByteBufferMessageTranslator();
         final Message<ByteBuffer> message = messageTranslator.translate(
-                message(Key.of("test"), Header.responseHeader(null, NOW), singletonMap("foo", "bar"))
+                message(Key.of("test"), Header.responseHeader(null, of(MSG_SENDER_TS.key(), NOW.toString())), null)
         );
-        assertThat(message.getHeader().getArrivalTimestamp(), is(NOW));
+        assertThat(message.getHeader().getAsInstant(MSG_SENDER_TS), is(NOW));
     }
 
     @Test

@@ -15,7 +15,6 @@ import software.amazon.awssdk.services.sqs.model.*;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -119,7 +118,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
         LOG.debug("Processing message from channel={}: messageId={} receiptHandle={}, messageAttributes={}", getChannelName(), sqsMessage.messageId(), sqsMessage.receiptHandle(), sqsMessage.messageAttributes());
         final Message<String> message = message(
                 messageKeyOf(sqsMessage),
-                responseHeader(null, Instant.now(), messageAttributesOf(sqsMessage)),
+                responseHeader(null, messageAttributesOf(sqsMessage)),
                 sqsMessage.body());
 
         final Message<String> interceptedMessage = intercept(message);

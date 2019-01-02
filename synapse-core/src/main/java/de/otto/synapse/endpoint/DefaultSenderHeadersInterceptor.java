@@ -1,7 +1,8 @@
 package de.otto.synapse.endpoint;
 
-import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.configuration.SynapseProperties;
+import de.otto.synapse.message.DefaultHeaderAttr;
+import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
 
 import javax.annotation.Nonnull;
@@ -11,8 +12,8 @@ import java.util.EnumSet;
 import java.util.Set;
 import java.util.UUID;
 
-import static com.google.common.collect.ImmutableMap.builder;
-import static de.otto.synapse.message.Header.requestHeader;
+import static de.otto.synapse.message.DefaultHeaderAttr.*;
+import static de.otto.synapse.message.Header.copyOf;
 import static de.otto.synapse.message.Message.message;
 
 /**
@@ -21,11 +22,12 @@ import static de.otto.synapse.message.Message.message;
  *
  * <p>
  *     The {@code DefaultSenderHeadersInterceptor} is active by default for all
- *     {@link de.otto.synapse.endpoint.sender.MessageSenderEndpoint sender endpoints}. It can be customized
+ *     {@link de.otto.synapse.endpoint.sender.MessageSenderEndpoint sender endpoints}. It can be disabled by
+ *  *     setting 'synapse.sender.default-headers.enabled=false'.
  * </p>
  * <p>
  *     The property {@code spring.application.name} is used to determine the value of the
- *     {@link DefaultSenderHeadersInterceptor#MSG_SENDER_ATTR} header attribute. This attribute can be used to identify the
+ *     {@link DefaultHeaderAttr#MSG_SENDER} header attribute. This attribute can be used to identify the
  *     origin of a message.
  * </p>
  */
@@ -36,24 +38,22 @@ public class DefaultSenderHeadersInterceptor {
      */
     public enum Capability {
         /**
-         *  Add a {@link #MSG_SENDER_ATTR} to the message header. The name of the sender is configured using property
-         *  'synapse.sender.name' or 'spring.application.name'
+         *  Add a {@link DefaultHeaderAttr#MSG_SENDER} to the message header.
+         *
+         *  The name of the sender is configured using property 'synapse.sender.name' or 'spring.application.name'
          */
         SENDER_NAME,
         /**
-         * Add a {@link #MSG_ID_ATTR} to the message header. The value of the header is a UUID.
+         * Add a {@link DefaultHeaderAttr#MSG_ID} to the message header.
+         *
+         * The value of the header is a UUID.
          */
         MESSAGE_ID,
         /**
-         * Add a {@link #MSG_TIMESTAMP_ATTR} to the message header.
+         * Add a {@link DefaultHeaderAttr#MSG_SENDER_TS} to the message header.
          */
         TIMESTAMP
     }
-
-    /** The sender of the message */
-    public static final String MSG_SENDER_ATTR = "synapse_msg_sender";
-    public static final String MSG_ID_ATTR = "synapse_msg_id";
-    public static final String MSG_TIMESTAMP_ATTR = "synapse_msg_timestamp";
 
     private final Set<Capability> capabilities;
     private final String senderName;
@@ -67,40 +67,42 @@ public class DefaultSenderHeadersInterceptor {
      * @param synapseProperties the properties used to configure the interceptor
      */
     public DefaultSenderHeadersInterceptor(final SynapseProperties synapseProperties) {
-        this.senderName = synapseProperties.getSender().getName();
-        this.capabilities = EnumSet.allOf(Capability.class);
-        this.clock = Clock.systemDefaultZone();
+        this(synapseProperties, EnumSet.allOf(Capability.class), Clock.systemDefaultZone());
     }
 
     /**
      * Creates an instance of DefaultSenderHeadersInterceptor with enhanced configuration options.
      *
-     * @param senderProperties the properties used to configure the interceptor
+     * @param synapseProperties the properties used to configure the interceptor
      * @param capabilities the enabled capabilities
      * @param clock the clock used to generate timestamp attributes
      */
-    public DefaultSenderHeadersInterceptor(final SynapseProperties.Sender senderProperties,
+    public DefaultSenderHeadersInterceptor(final SynapseProperties synapseProperties,
                                            final Set<Capability> capabilities,
                                            final Clock clock) {
-        this.senderName = senderProperties.getName();
-        this.capabilities = capabilities;
+        this.senderName = synapseProperties.getSender().getName();
+        this.capabilities = synapseProperties.getSender().getDefaultHeaders().isEnabled()
+                ? capabilities
+                : EnumSet.noneOf(Capability.class);
+
         this.clock = clock;
     }
 
     @Nullable
     @de.otto.synapse.annotation.MessageInterceptor(endpointType = EndpointType.SENDER)
     public Message<String> addDefaultHeaders(@Nonnull Message<String> message) {
-        final ImmutableMap.Builder<String, String> attributes = builder();
+
+        final Header.Builder headers = copyOf(message.getHeader());
+
         if (capabilities.contains(Capability.SENDER_NAME)) {
-            attributes.put(MSG_SENDER_ATTR, senderName);
+            headers.withAttribute(MSG_SENDER, senderName);
         }
         if (capabilities.contains(Capability.MESSAGE_ID)) {
-            attributes.put(MSG_ID_ATTR, UUID.randomUUID().toString());
+            headers.withAttribute(MSG_ID, UUID.randomUUID().toString());
         }
         if (capabilities.contains(Capability.TIMESTAMP)) {
-            attributes.put(MSG_TIMESTAMP_ATTR, clock.instant().toString());
+            headers.withAttribute(MSG_SENDER_TS, clock.instant());
         }
-        attributes.putAll(message.getHeader().getAttributes());
-        return message(message.getKey(), requestHeader(attributes.build()), message.getPayload());
+        return message(message.getKey(), headers.build(), message.getPayload());
     }
 }

@@ -30,7 +30,6 @@ import static de.otto.synapse.channel.StartFrom.POSITION;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
-import static java.time.Instant.now;
 import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -79,7 +78,7 @@ public class RedisMessageStoreIntegrationTest {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 1500; ++pos) {
-                    messageStore.add(message(valueOf(pos), responseHeader(fromPosition("shard-" + shardId, valueOf(pos)), now()), "some payload"));
+                    messageStore.add(message(valueOf(pos), responseHeader(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).startFrom(), is(StartFrom.POSITION));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }
@@ -120,7 +119,7 @@ public class RedisMessageStoreIntegrationTest {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 1500; ++pos) {
-                    messageStore.add(message(valueOf(pos), responseHeader(fromPosition("shard-" + shardId, valueOf(pos)), now()), "some payload"));
+                    messageStore.add(message(valueOf(pos), responseHeader(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).startFrom(), is(POSITION));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }

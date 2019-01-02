@@ -194,19 +194,14 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
         public boolean hasNext() {
             try {
                 if (nextMessage == null) {
-                    final Instant arrivalTimestamp = Instant.EPOCH;
                     while (!jsonParser.isClosed() && jsonParser.nextToken() != JsonToken.END_ARRAY) {
                         JsonToken currentToken = jsonParser.currentToken();
                         if (currentToken == JsonToken.FIELD_NAME) {
                             final String key = jsonParser.getValueAsString();
-
-                            final Message.Builder<String> messageBuilder = Message.builder(String.class)
-                                    .withKey(key);
-
-                            final Header.Builder headerBuilder = Header.builder()
-                                    .withApproximateArrivalTimestamp(arrivalTimestamp);
-
-                            nextMessage = decode(jsonParser.nextTextValue(), headerBuilder, messageBuilder);
+                            nextMessage = decode(
+                                    jsonParser.nextTextValue(),
+                                    Header.builder(),
+                                    Message.builder(String.class).withKey(key));
                             break;
                         }
                     }

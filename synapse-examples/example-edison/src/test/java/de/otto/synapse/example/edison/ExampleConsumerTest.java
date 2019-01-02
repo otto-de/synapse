@@ -10,7 +10,6 @@ import de.otto.synapse.state.StateRepository;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.time.Instant;
 import java.util.Optional;
 
 import static de.otto.synapse.message.Header.responseHeader;
@@ -84,7 +83,7 @@ public class ExampleConsumerTest {
     private <T> Message<T> testMessage(String key, T payload) {
         return Message.message(
                 key,
-                responseHeader(ShardPosition.fromHorizon(""), Instant.now()),
+                responseHeader(ShardPosition.fromHorizon("")),
                 payload
         );
     }

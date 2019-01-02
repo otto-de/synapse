@@ -2,6 +2,7 @@ package de.otto.synapse.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.otto.synapse.annotation.MessageInterceptorBeanPostProcessor;
+import de.otto.synapse.endpoint.DefaultReceiverHeadersInterceptor;
 import de.otto.synapse.endpoint.DefaultSenderHeadersInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import org.slf4j.Logger;
@@ -63,6 +64,24 @@ public class SynapseAutoConfiguration {
             matchIfMissing = true)
     public DefaultSenderHeadersInterceptor defaultSenderHeadersInterceptor(final SynapseProperties synapseProperties) {
         return new DefaultSenderHeadersInterceptor(synapseProperties);
+    }
+
+    /**
+     * Configures a {@link de.otto.synapse.endpoint.MessageInterceptor} that is used to add some default
+     * message headers when messages are received by a {@link de.otto.synapse.endpoint.receiver.MessageReceiverEndpoint}.
+     *
+     * @param synapseProperties properties used to configure the interceptor
+     * @return DefaultReceiverHeadersInterceptor
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(
+            prefix = "synapse.receiver.default-headers",
+            name = "enabled",
+            havingValue = "true",
+            matchIfMissing = true)
+    public DefaultReceiverHeadersInterceptor defaultReceiverHeadersInterceptor(final SynapseProperties synapseProperties) {
+        return new DefaultReceiverHeadersInterceptor(synapseProperties);
     }
 
     /**

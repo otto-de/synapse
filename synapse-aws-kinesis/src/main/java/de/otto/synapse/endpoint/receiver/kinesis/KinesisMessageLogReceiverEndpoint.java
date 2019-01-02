@@ -61,7 +61,7 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
                 try {
                     final Message<String> interceptedMessage = interceptorChain.intercept(message);
                     if (interceptedMessage != null) {
-                        messageDispatcher.accept(message);
+                        messageDispatcher.accept(interceptedMessage);
                     }
                 } catch (final Exception e) {
                     LOG.error("Error processing message: " + e.getMessage(), e);

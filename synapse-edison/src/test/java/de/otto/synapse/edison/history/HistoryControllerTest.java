@@ -15,7 +15,6 @@ import org.springframework.web.context.WebApplicationContext;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
-import static java.time.Instant.ofEpochMilli;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonMap;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -59,7 +58,9 @@ public class HistoryControllerTest {
                 .perform(get("/internal/history/foo/4711"))
                 .andDo(log())
                 .andExpect(status().isOk())
-                .andExpect(content().string(is("{\"history\":{\"entityId\":\"4711\",\"entries\":[{\"messageKey\":\"4711\",\"messagePayload\":{\"price\":45},\"arrivalTimestamp\":\"1970-01-01T00:00:00.005Z\",\"channelName\":\"test-products\",\"diffs\":[{\"key\":\"price\",\"previousValue\":46,\"newValue\":45,\"equal\":false}]},{\"messageKey\":\"4711\",\"messagePayload\":{\"price\":42},\"arrivalTimestamp\":\"1970-01-01T00:00:00.010Z\",\"channelName\":\"test-products\",\"diffs\":[{\"key\":\"price\",\"previousValue\":45,\"newValue\":42,\"equal\":false}]}]}}")));
+                .andExpect(content().string(is("{\"history\":{\"entityId\":\"4711\",\"entries\":[" +
+                        "{\"messageKey\":\"4711\",\"messagePayload\":{\"price\":45},\"senderTimestamp\":null,\"receiverTimestamp\":null,\"channelName\":\"test-products\",\"diffs\":[{\"key\":\"price\",\"previousValue\":46,\"newValue\":45,\"equal\":false}]}," +
+                        "{\"messageKey\":\"4711\",\"messagePayload\":{\"price\":42},\"senderTimestamp\":null,\"receiverTimestamp\":null,\"channelName\":\"test-products\",\"diffs\":[{\"key\":\"price\",\"previousValue\":45,\"newValue\":42,\"equal\":false}]}]}}")));
     }
 
     public History someHistory() {
@@ -67,13 +68,13 @@ public class HistoryControllerTest {
                 "4711",
                 asList(
                         new HistoryEntry(
-                                message("4711", responseHeader(fromPosition("shard-1", "1"), ofEpochMilli(5)), singletonMap("price", 45)),
+                                message("4711", responseHeader(fromPosition("shard-1", "1")), singletonMap("price", 45)),
                                 "test-products",
                                 asList(
                                         new Diff("price", 46, 45))
                         ),
                         new HistoryEntry(
-                                message("4711", responseHeader(fromPosition("shard-1", "1"), ofEpochMilli(10)), singletonMap("price", 42)),
+                                message("4711", responseHeader(fromPosition("shard-1", "1")), singletonMap("price", 42)),
                                 "test-products",
                                 asList(
                                         new Diff("price", 45, 42))

@@ -10,7 +10,6 @@ import de.otto.synapse.message.Message;
 import de.otto.synapse.messagestore.MessageStore;
 import org.junit.Test;
 
-import java.time.Instant;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -61,10 +60,9 @@ public class DefaultEventSourceTest {
     @Test
     public void shouldInterceptMessagesFromMessageStore() throws ExecutionException, InterruptedException {
         // given
-        final Instant arrivalTimestamp = Instant.now();
         // and some message store having a single message
         final MessageStore messageStore = mock(MessageStore.class);
-        when(messageStore.stream()).thenReturn(Stream.of(message(Key.of("1"), responseHeader(null, arrivalTimestamp), null)));
+        when(messageStore.stream()).thenReturn(Stream.of(message(Key.of("1"), responseHeader(null), null)));
         when(messageStore.getLatestChannelPosition()).thenReturn(fromHorizon());
         // and some MessageLogReceiverEndpoint with an InterceptorChain:
         final InterceptorChain interceptorChain = mock(InterceptorChain.class);
@@ -80,17 +78,16 @@ public class DefaultEventSourceTest {
 
         // then
         verify(interceptorChain).intercept(
-                message(Key.of("1"), responseHeader(null, arrivalTimestamp), null)
+                message(Key.of("1"), responseHeader(null), null)
         );
     }
 
     @Test
     public void shouldDropNullMessagesInterceptedFromMessageStore() throws ExecutionException, InterruptedException {
         // given
-        final Instant arrivalTimestamp = Instant.now();
         // and some message store having a single message
         final MessageStore messageStore = mock(MessageStore.class);
-        when(messageStore.stream()).thenReturn(Stream.of(message(Key.of("1"), responseHeader(null, arrivalTimestamp), null)));
+        when(messageStore.stream()).thenReturn(Stream.of(message(Key.of("1"), responseHeader(null), null)));
         when(messageStore.getLatestChannelPosition()).thenReturn(fromHorizon());
         // and some InterceptorChain that is dropping messages:
         final InterceptorChain interceptorChain = new InterceptorChain(ImmutableList.of((m)->null));
@@ -113,10 +110,9 @@ public class DefaultEventSourceTest {
     @Test
     public void shouldDispatchMessagesFromMessageStore() throws ExecutionException, InterruptedException {
         // given
-        final Instant arrivalTimestamp = Instant.now();
         // and some message store having a single message
         final MessageStore messageStore = mock(MessageStore.class);
-        when(messageStore.stream()).thenReturn(Stream.of(message(Key.of("1"), responseHeader(null, arrivalTimestamp), null)));
+        when(messageStore.stream()).thenReturn(Stream.of(message(Key.of("1"), responseHeader(null), null)));
         when(messageStore.getLatestChannelPosition()).thenReturn(fromHorizon());
         // and some MessageLogReceiverEndpoint with our InterceptorChain:
         final MessageLogReceiverEndpoint messageLog = mock(MessageLogReceiverEndpoint.class);
@@ -131,7 +127,7 @@ public class DefaultEventSourceTest {
         eventSource.consume().get();
 
         // then
-        verify(messageDispatcher).accept(message(Key.of("1"), responseHeader(null, arrivalTimestamp), null));
+        verify(messageDispatcher).accept(message(Key.of("1"), responseHeader(null), null));
     }
 
     @Test

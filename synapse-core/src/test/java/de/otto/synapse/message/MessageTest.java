@@ -14,15 +14,13 @@ public class MessageTest {
 
     @Test
     public void shouldBuildMessageWithHeader() {
-        final Instant now = Instant.now();
         final Message<String> message = message(
                 "42",
-                responseHeader(fromPosition("some-channel", "00001"), now),
+                responseHeader(fromPosition("some-channel", "00001")),
                 "ßome dätä"
         );
         assertThat(message.getKey(), is(Key.of("42")));
         assertThat(message.getPayload(), is("ßome dätä"));
-        assertThat(message.getHeader().getArrivalTimestamp(), is(now));
         assertThat(message.getHeader().getShardPosition().get().shardName(), is("some-channel"));
         assertThat(message.getHeader().getShardPosition().get().position(), is("00001"));
     }
@@ -36,7 +34,6 @@ public class MessageTest {
         );
         assertThat(message.getKey(), is(Key.of("42")));
         assertThat(message.getPayload(), is("ßome dätä"));
-        assertThat(message.getHeader().getArrivalTimestamp().isBefore(now), is(false));
         assertThat(message.getHeader().getShardPosition().isPresent(), is(false));
     }
 }

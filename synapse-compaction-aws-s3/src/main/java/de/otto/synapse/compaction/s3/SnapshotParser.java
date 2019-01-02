@@ -9,10 +9,8 @@ import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.translator.MessageCodec;
 
 import java.io.*;
-import java.time.Instant;
 import java.util.zip.ZipInputStream;
 
 import static com.google.common.collect.ImmutableMap.builder;
@@ -20,8 +18,6 @@ import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
-import static de.otto.synapse.message.Header.responseHeader;
-import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.translator.MessageCodec.decode;
 
 public class SnapshotParser {
@@ -72,15 +68,13 @@ public class SnapshotParser {
                                          final ChannelPosition channelPosition,
                                          final MessageConsumer<String> messageConsumer) throws IOException {
         final ShardPosition shardPosition = channelPosition.shard(channelPosition.shards().iterator().next());
-        final Instant arrivalTimestamp = Instant.EPOCH;
         while (parser.nextToken() != JsonToken.END_ARRAY) {
             JsonToken currentToken = parser.currentToken();
             if (currentToken == JsonToken.FIELD_NAME) {
                 final String key = parser.getValueAsString();
                 final Header.Builder headerBuilder = Header
                         .builder()
-                        .withShardPosition(shardPosition)
-                        .withApproximateArrivalTimestamp(arrivalTimestamp);
+                        .withShardPosition(shardPosition);
                 final Message.Builder messageBuilder = Message
                         .builder(String.class)
                         .withKey(key);

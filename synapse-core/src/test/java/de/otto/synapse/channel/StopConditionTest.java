@@ -1,5 +1,6 @@
 package de.otto.synapse.channel;
 
+import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.TestClock;
@@ -13,6 +14,7 @@ import java.util.function.Predicate;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.ShardResponse.shardResponse;
 import static de.otto.synapse.channel.StopCondition.*;
+import static de.otto.synapse.message.DefaultHeaderAttr.MSG_ARRIVAL_TS;
 import static de.otto.synapse.message.Header.responseHeader;
 import static de.otto.synapse.message.Message.message;
 import static java.time.Duration.ZERO;
@@ -54,15 +56,15 @@ public class StopConditionTest {
 
     @Test
     public void shouldNotStopOnEmptyMessages() {
-        final Predicate<ShardResponse> predicate = arrivalTimeAfterNow();
+        final Predicate<ShardResponse> predicate = arrivalTimestampAfterNow();
         final ShardResponse emptyResponse = someEmptyShardResponse(ZERO);
         assertThat(predicate.test(emptyResponse), is(false));
     }
 
     @Test
     public void shouldNotStopOnMessageArrivedInPast() {
-        final Predicate<ShardResponse> predicate = arrivalTimeAfterNow();
-        final  Instant past = now().minus(1, ChronoUnit.HOURS);
+        final Predicate<ShardResponse> predicate = arrivalTimestampAfterNow();
+        final Instant past = now().minus(1, ChronoUnit.HOURS);
         final ShardResponse pastResponse = someShardResponseWithMessages(
                 ofMillis(42),
                 message(
@@ -74,8 +76,8 @@ public class StopConditionTest {
 
     @Test
     public void shouldStopOnMessageArrivedAfterNow() {
-        final Predicate<ShardResponse> predicate = arrivalTimeAfterNow();
-        final  Instant future = now().plus(1, ChronoUnit.HOURS);
+        final Predicate<ShardResponse> predicate = arrivalTimestampAfterNow();
+        final Instant future = now().plus(1, ChronoUnit.HOURS);
         final ShardResponse futureResponse = someShardResponseWithMessages(
                 ofMillis(42),
                 message("foo", arrivalTime(future), "bar"));
@@ -122,6 +124,6 @@ public class StopConditionTest {
     }
 
     private Header arrivalTime(final Instant arrivalTime) {
-        return responseHeader(fromPosition("shard-name", "42"), arrivalTime);
+        return responseHeader(fromPosition("shard-name", "42"), ImmutableMap.of(MSG_ARRIVAL_TS.key(), arrivalTime.toString()));
     }
 }

@@ -9,7 +9,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.responseHeader;
-import static java.time.Instant.now;
 import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -26,7 +25,7 @@ public class StatefulMessageConsumerTest {
         //when
         consumer.accept(Message.message(
                 "someKey",
-                responseHeader(fromPosition("some-shard", "someSeqNumber"), now()),
+                responseHeader(fromPosition("some-shard", "someSeqNumber")),
                 "12345"
         ));
 
@@ -42,7 +41,7 @@ public class StatefulMessageConsumerTest {
         //when
         consumer.accept(Message.message(
                 "someKey",
-                responseHeader(fromPosition("some-shard", "someSeqNumber"), now()),
+                responseHeader(fromPosition("some-shard", "someSeqNumber")),
                 "12345"
         ));
 
@@ -58,7 +57,7 @@ public class StatefulMessageConsumerTest {
         //when
         consumer.accept(Message.message(
                 "someKey",
-                responseHeader(fromPosition("some-shard", "someSeqNumber"), now()),
+                responseHeader(fromPosition("some-shard", "someSeqNumber")),
                 "12345"
         ));
 
@@ -74,7 +73,7 @@ public class StatefulMessageConsumerTest {
         //when
         consumer.accept(Message.message(
                 "someKey",
-                responseHeader(fromPosition("some-shard", "someSeqNumber"), now()),
+                responseHeader(fromPosition("some-shard", "someSeqNumber")),
                 null
         ));
 
