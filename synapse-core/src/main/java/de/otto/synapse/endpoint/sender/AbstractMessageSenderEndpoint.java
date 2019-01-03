@@ -2,6 +2,7 @@ package de.otto.synapse.endpoint.sender;
 
 import de.otto.synapse.endpoint.AbstractMessageEndpoint;
 import de.otto.synapse.endpoint.EndpointType;
+import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.translator.MessageTranslator;
@@ -34,6 +35,8 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
      * Constructor used to create a new MessageEndpoint.
      *
      * @param channelName the name of the underlying channel / stream / queue / message log.
+     * @param interceptorRegistry registry used to determine {@link MessageInterceptor message interceptors} for this
+     *                            endpoint.
      * @param messageTranslator the MessageTranslator used to translate message payloads as expected by the
      * {@link de.otto.synapse.consumer.MessageConsumer consumers}.
      */

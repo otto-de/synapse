@@ -25,7 +25,7 @@ public enum DefaultHeaderAttr implements HeaderAttr {
      */
     MSG_SENDER("synapse_msg_sender"),
     /**
-     * The header attribute containing the Kinesis {@link Record#approximateArrivalTimestamp() 'approximateArrivalTimestamp'}
+     * The header attribute containing the Kinesis {@code Record#approximateArrivalTimestamp()}
      * to which the message has arrived in Kinesis. Other channel implementations may use this attribute for similar
      * timestamps, as long as the semantics of the property is the met.
      *

@@ -46,6 +46,8 @@ public abstract class AbstractMessageEndpoint implements MessageEndpoint {
      * Constructor used to create a new AbstractMessageEndpoint.
      *
      * @param channelName the name of the underlying channel / stream / queue / message log.
+     * @param interceptorRegistry registry used to determine {@link MessageInterceptor message interceptors} for this
+     *                            endpoint.
      */
     public AbstractMessageEndpoint(final @Nonnull String channelName,
                                    final @Nonnull MessageInterceptorRegistry interceptorRegistry) {

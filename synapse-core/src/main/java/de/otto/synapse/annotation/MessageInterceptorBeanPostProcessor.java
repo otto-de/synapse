@@ -12,6 +12,8 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.MethodIntrospector;
 import org.springframework.core.Ordered;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.annotation.Order;
 
 import java.lang.reflect.Method;
 import java.util.HashSet;
@@ -83,18 +85,30 @@ public class MessageInterceptorBeanPostProcessor implements BeanPostProcessor, O
             final MessageInterceptorRegistry registry = applicationContext.getBean(MessageInterceptorRegistry.class);
             for (final MessageInterceptor interceptorAnnocation : entry.getValue()) {
                 registry.register(
-                        registrationFor(interceptorAnnocation, messageInterceptorFor(bean, method))
+                        registrationFor(interceptorAnnocation, messageInterceptorFor(bean, method), getOrder(method))
                 );
             }
         }
         LOG.info("{} @MessageInterceptor methods processed on bean {} : {}'", annotatedMethods.size(), beanName, annotatedMethods);
     }
 
-    private MessageInterceptorRegistration registrationFor(MessageInterceptor interceptorAnnotation, de.otto.synapse.endpoint.MessageInterceptor interceptor) {
+    private int getOrder(final Method method) {
+        final int order;
+        Order ann = AnnotationUtils.findAnnotation(method, Order.class);
+        if (ann != null) {
+            order = ann.value();
+        } else {
+            order = LOWEST_PRECEDENCE;
+        }
+        return order;
+    }
+
+    private MessageInterceptorRegistration registrationFor(MessageInterceptor interceptorAnnotation, de.otto.synapse.endpoint.MessageInterceptor interceptor, final int order) {
         return new MessageInterceptorRegistration(
                 compile(interceptorAnnotation.channelNamePattern()),
                 interceptor,
-                copyOf(interceptorAnnotation.endpointType()));
+                copyOf(interceptorAnnotation.endpointType()),
+                order);
     }
 
     /*

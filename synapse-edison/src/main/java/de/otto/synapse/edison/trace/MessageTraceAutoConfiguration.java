@@ -19,6 +19,7 @@ import static de.otto.edison.navigation.NavBarItem.navBarItem;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingChannelsWith;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
 
 @Configuration
 @ConditionalOnProperty(
@@ -52,7 +53,8 @@ public class MessageTraceAutoConfiguration {
                     message -> {
                         messageTrace.add(new TraceEntry(channelName, endpointType, message));
                         return message;
-                    }
+                    },
+                    HIGHEST_PRECEDENCE
             ));
             switch (endpointType) {
                 case SENDER:

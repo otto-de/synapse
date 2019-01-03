@@ -38,7 +38,8 @@ public interface MessageQueueReceiverEndpoint extends MessageReceiverEndpoint {
      *     consumers, or consumers with {@link Message#getPayload() message payloads} other than {@code String} are
      *     required.
      * </p>
-     *
+     * @return completable future that can be used to {@link CompletableFuture#join() wait} until the endpoint has
+     *         stopped message consumption.
      */
     CompletableFuture<Void> consume();
 

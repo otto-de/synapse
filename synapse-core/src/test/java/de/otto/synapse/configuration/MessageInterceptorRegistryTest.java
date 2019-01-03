@@ -2,7 +2,12 @@ package de.otto.synapse.configuration;
 
 import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.message.Message;
 import org.junit.Test;
+import org.springframework.core.annotation.Order;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import static de.otto.synapse.endpoint.EndpointType.RECEIVER;
 import static de.otto.synapse.endpoint.EndpointType.SENDER;
@@ -11,6 +16,7 @@ import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingRe
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.mock;
+import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
 
 public class MessageInterceptorRegistryTest {
 
@@ -108,6 +114,21 @@ public class MessageInterceptorRegistryTest {
     }
 
     @Test
+    public void shouldRegisterMultipleOrderedInterceptorsForSameChannel() {
+        // given
+        MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        MessageInterceptor firstInterceptor = mock(MessageInterceptor.class);
+        MessageInterceptor secondInterceptor = mock(MessageInterceptor.class);
+        // when
+        registry.register(matchingChannelsWith("foo", firstInterceptor, 2));
+        registry.register(matchingChannelsWith("foo", secondInterceptor, 1));
+        // then
+        assertThat(registry.getRegistrations("foo", RECEIVER), contains(
+                matchingChannelsWith("foo", firstInterceptor),
+                matchingChannelsWith("foo", secondInterceptor)));
+    }
+
+    @Test
     public void shouldReturnInterceptorChainForMultipleInterceptorsForSameChannel() {
         // given
         MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
@@ -116,6 +137,32 @@ public class MessageInterceptorRegistryTest {
         // when
         registry.register(matchingChannelsWith("foo", firstInterceptor));
         registry.register(matchingChannelsWith("foo", secondInterceptor));
+        // then
+        assertThat(registry.getInterceptorChain("foo", RECEIVER).getInterceptors(), contains(firstInterceptor, secondInterceptor));
+    }
+
+    @Test
+    public void shouldReturnInterceptorChainForMultipleOrderedInterceptorsForSameChannel() {
+        // given
+        MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        MessageInterceptor firstInterceptor = mock(MessageInterceptor.class);
+        MessageInterceptor secondInterceptor = mock(MessageInterceptor.class);
+        // when
+        registry.register(matchingChannelsWith("foo", secondInterceptor, 1));
+        registry.register(matchingChannelsWith("foo", firstInterceptor, 2));
+        // then
+        assertThat(registry.getInterceptorChain("foo", RECEIVER).getInterceptors(), contains(firstInterceptor, secondInterceptor));
+    }
+
+    @Test
+    public void shouldReturnOrderedInterceptorChainForMultipleInterceptorsForSameChannel() {
+        // given
+        MessageInterceptorRegistry registry = new MessageInterceptorRegistry();
+        MessageInterceptor firstInterceptor = mock(MessageInterceptor.class);
+        MessageInterceptor secondInterceptor = mock(MessageInterceptor.class);
+        // when
+        registry.register(matchingChannelsWith("foo", secondInterceptor, -42));
+        registry.register(matchingChannelsWith("foo", firstInterceptor, 42));
         // then
         assertThat(registry.getInterceptorChain("foo", RECEIVER).getInterceptors(), contains(firstInterceptor, secondInterceptor));
     }

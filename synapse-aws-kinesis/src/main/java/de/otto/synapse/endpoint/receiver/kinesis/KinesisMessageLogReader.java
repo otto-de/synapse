@@ -119,6 +119,11 @@ public class KinesisMessageLogReader {
     }
 
     /**
+     *
+     * @param startFrom starting position
+     * @param stopCondition stop condition used to stop message consumption
+     * @param consumer the consumer used to process the {@link ShardResponse shard responses}
+     * @return completable future
      * @deprecated to be removed soon
      */
     public CompletableFuture<ChannelPosition> consumeUntil(final ChannelPosition startFrom,

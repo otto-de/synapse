@@ -4,11 +4,16 @@ import com.google.common.collect.ImmutableList;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
+import org.springframework.core.OrderComparator;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 
+import java.util.Comparator;
+
+import static com.google.common.collect.ImmutableList.sortedCopyOf;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**

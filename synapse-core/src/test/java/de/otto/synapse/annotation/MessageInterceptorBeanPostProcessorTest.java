@@ -1,7 +1,9 @@
 package de.otto.synapse.annotation;
 
+import com.google.common.collect.ImmutableList;
 import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import de.otto.synapse.endpoint.EndpointType;
+import de.otto.synapse.endpoint.MessageInterceptorRegistration;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
 import org.junit.After;
@@ -9,11 +11,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.springframework.boot.test.util.EnvironmentTestUtils.addEnvironment;
+import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
 import static org.springframework.core.Ordered.LOWEST_PRECEDENCE;
 
 public class MessageInterceptorBeanPostProcessorTest {
@@ -43,6 +48,20 @@ public class MessageInterceptorBeanPostProcessorTest {
         final MessageInterceptorBeanPostProcessor postProcessor = context.getBean(MessageInterceptorBeanPostProcessor.class);
 
         assertThat(postProcessor.getOrder(), is(LOWEST_PRECEDENCE));
+    }
+
+    @Test
+    public void shouldRegisterOrderedMessageInterceptors() {
+        context.register(OrderedMessageInterceptorWithVoidResponse.class);
+        context.register(MatchAllMessageInterceptorWithVoidResponse.class);
+        context.register(SynapseAutoConfiguration.class);
+        context.refresh();
+
+        final MessageInterceptorRegistry registry = context.getBean(MessageInterceptorRegistry.class);
+        assertThat(registry.getRegistrations("foo", EndpointType.SENDER), hasSize(2));
+        assertThat(registry.getRegistrations("foo", EndpointType.SENDER).stream().map(Ordered::getOrder).collect(toList()), contains(LOWEST_PRECEDENCE, 42));
+        assertThat(registry.getRegistrations("bar", EndpointType.RECEIVER), hasSize(2));
+        assertThat(registry.getRegistrations("bar", EndpointType.RECEIVER).stream().map(Ordered::getOrder).collect(toList()), contains(LOWEST_PRECEDENCE, 42));
     }
 
     @Test
@@ -116,6 +135,13 @@ public class MessageInterceptorBeanPostProcessorTest {
         context.refresh();
     }
 
+
+    static class OrderedMessageInterceptorWithVoidResponse {
+        @MessageInterceptor
+        @Order(42)
+        public void test(final Message<String> message) {
+        }
+    }
 
     static class MatchAllMessageInterceptorWithVoidResponse {
         @MessageInterceptor

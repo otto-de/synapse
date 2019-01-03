@@ -1,23 +1,28 @@
 package de.otto.synapse.endpoint;
 
 import com.google.common.collect.ImmutableList;
+import org.springframework.core.OrderComparator;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Collections.synchronizedList;
+import static java.util.Comparator.comparing;
 
 public class MessageInterceptorRegistry {
 
+    private final static Comparator<Object> REGISTRATION_ORDER_COMPARATOR = new OrderComparator().reversed();
     private final List<MessageInterceptorRegistration> registry = synchronizedList(new ArrayList<>());
     private final ConcurrentMap<String, InterceptorChain> interceptorChainCache = new ConcurrentHashMap<>();
 
     public void register(final @Nonnull MessageInterceptorRegistration registration) {
         registry.add(registration);
+        registry.sort(REGISTRATION_ORDER_COMPARATOR);
         interceptorChainCache.clear();
     }
 
