@@ -8,8 +8,8 @@ import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpointFactory;
 import de.otto.synapse.endpoint.sender.InMemoryMessageSenderFactory;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import org.slf4j.Logger;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -17,7 +17,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * Configuration used to implement tests. Use this, if you want to bypass SQS and other hard-to-test
  * infrastructures and replace them by in-memory implementations.
  * <p>
- * {@code InMemoryMessageQueueTestConfiguration} can be activated by {@link org.springframework.boot.autoconfigure.ImportAutoConfiguration importing} it
+ * {@code InMemoryMessageQueueTestConfiguration} can be activated by {@link Import importing} it
  * into some other {@code Configuration} class:
  * </p>
  * <pre><code>
@@ -28,7 +28,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * }
  * </code></pre>
  */
-@ImportAutoConfiguration(InMemoryChannelTestConfiguration.class)
+@Import(InMemoryChannelTestConfiguration.class)
 public class InMemoryMessageQueueTestConfiguration {
 
     private static final Logger LOG = getLogger(InMemoryMessageQueueTestConfiguration.class);

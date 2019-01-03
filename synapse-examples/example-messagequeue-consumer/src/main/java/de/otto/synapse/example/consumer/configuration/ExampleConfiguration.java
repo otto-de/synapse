@@ -10,17 +10,17 @@ import de.otto.synapse.example.consumer.state.BananaProduct;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import org.slf4j.Logger;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.receiverChannelsWith;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.senderChannelsWith;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Configuration
-@ImportAutoConfiguration(InMemoryMessageQueueTestConfiguration.class)
+@Import(InMemoryMessageQueueTestConfiguration.class)
 @EnableConfigurationProperties({MyServiceProperties.class})
 @EnableMessageQueueReceiverEndpoint(name = "bananaQueue",  channelName = "${exampleservice.banana-channel}")
 @EnableMessageQueueReceiverEndpoint(name = "productQueue", channelName = "${exampleservice.product-channel}")

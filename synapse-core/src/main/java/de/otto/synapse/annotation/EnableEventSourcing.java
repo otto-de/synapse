@@ -1,11 +1,7 @@
 package de.otto.synapse.annotation;
 
 import de.otto.synapse.configuration.EventSourcingAutoConfiguration;
-import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.EventSource;
-import de.otto.synapse.eventsource.EventSourceBuilder;
-import org.springframework.beans.factory.BeanCreationException;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;

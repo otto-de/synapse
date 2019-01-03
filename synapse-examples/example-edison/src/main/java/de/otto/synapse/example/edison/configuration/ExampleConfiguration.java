@@ -14,15 +14,15 @@ import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 
 @Configuration
 @EnableConfigurationProperties({MyServiceProperties.class})
-@ImportAutoConfiguration({InMemoryMessageLogTestConfiguration.class,InMemoryMessageQueueTestConfiguration.class})
+@Import({InMemoryMessageLogTestConfiguration.class,InMemoryMessageQueueTestConfiguration.class})
 @EnableEventSource(name = "bananaSource",  channelName = "${exampleservice.banana-channel}")
 @EnableEventSource(name = "productSource", channelName = "${exampleservice.product-channel}")
 @EnableMessageQueueReceiverEndpoint(name = "bananaQueue", channelName = "banana-queue")

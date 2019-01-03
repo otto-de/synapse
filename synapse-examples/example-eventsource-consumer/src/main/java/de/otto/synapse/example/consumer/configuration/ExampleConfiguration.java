@@ -9,16 +9,16 @@ import de.otto.synapse.example.consumer.state.BananaProduct;
 import de.otto.synapse.state.ChronicleMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import org.slf4j.Logger;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
 
 @Configuration
-@ImportAutoConfiguration(InMemoryMessageLogTestConfiguration.class)
+@Import(InMemoryMessageLogTestConfiguration.class)
 @EnableConfigurationProperties({MyServiceProperties.class})
 @EnableEventSource(name = "bananaSource", channelName = "${exampleservice.banana-channel}")
 @EnableEventSource(name = "productSource", channelName = "${exampleservice.product-channel}")

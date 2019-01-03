@@ -11,9 +11,7 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Import({
-        SynapseAutoConfiguration.class,
-        MessageSenderEndpointBeanRegistrar.class})
+@Import({MessageSenderEndpointBeanRegistrar.class, SynapseAutoConfiguration.class})
 @Repeatable(EnableMessageSenderEndpoints.class)
 public @interface EnableMessageSenderEndpoint {
 
