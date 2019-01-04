@@ -1,5 +1,6 @@
 package de.otto.synapse.consumer;
 
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.state.StateRepository;
 
@@ -24,6 +25,10 @@ public class StatefulMessageConsumer<P, S> implements MessageConsumer<P> {
     /**
      * Creates a StatefulMessageConsumer.
      *
+     * <p>
+     *     The message's {@link Key#partitionKey()} is used as the key for repository entries.
+     * </p>
+     *
      * @param keyPattern the of-pattern of {@link de.otto.synapse.message.Message#getKey() message keys} accepted by this consumer.
      * @param payloadType the payload type of the messages accepted by this consumer
      * @param stateRepository the StateRepository that is holding the State
@@ -33,7 +38,7 @@ public class StatefulMessageConsumer<P, S> implements MessageConsumer<P> {
                                    final Class<P> payloadType,
                                    final StateRepository<S> stateRepository,
                                    final Function<Message<P>, S> payloadToStateMapper) {
-        this(keyPattern, payloadType, stateRepository, payloadToStateMapper, (message) -> message.getKey().compactionKey());
+        this(keyPattern, payloadType, stateRepository, payloadToStateMapper, (message) -> message.getKey().partitionKey());
     }
 
     /**
