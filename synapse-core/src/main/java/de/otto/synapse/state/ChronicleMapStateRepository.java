@@ -11,7 +11,7 @@ import java.util.Optional;
 
 import static de.otto.synapse.translator.ObjectMappers.currentObjectMapper;
 
-public class ChronicleMapStateRepository<V> extends StateRepository<V> {
+public class ChronicleMapStateRepository<V> extends ConcurrentMapStateRepository<V> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ChronicleMapStateRepository.class);
 
@@ -24,25 +24,23 @@ public class ChronicleMapStateRepository<V> extends StateRepository<V> {
     }
 
     @Override
-    public V put(String key, V value) {
-        V result = null;
+    public Optional<V> put(String key, V value) {
         try {
-            result = super.put(key, value);
+            return super.put(key, value);
         } catch (ChronicleHashClosedException e) {
             LOG.warn("could not put on closed state repository", e);
+            return Optional.empty();
         }
-        return result;
     }
 
     @Override
     public Optional<V> get(String key) {
-        Optional<V> result = Optional.empty();
         try {
-            result = super.get(key);
+            return super.get(key);
         } catch (ChronicleHashClosedException e) {
             LOG.warn("could not get on closed state repository", e);
+            return Optional.empty();
         }
-        return result;
     }
 
     @Override

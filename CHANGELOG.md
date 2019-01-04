@@ -22,6 +22,10 @@
 * Extends serialization format (MessageCodec) to add partitionKey and
   compactionKey into the message.
 * Adds ordering of MessageInterceptors
+* StateRepository is now an interface.
+* Adds DelegatingStateRepository
+* Adds EdisonStateRepository
+* Refactors StateRepository to return Optionals consistently
    
 ## 0.13.0
 * Adds ChannelResponse and ShardResponse to the core packages and introduces new possibility to stop message-consumption
