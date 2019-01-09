@@ -11,9 +11,9 @@ buildscript {
 
 ext {
     awsSdkVersion = "2.2.0"
-    springVersion = "4.3.20.RELEASE"
-    springBootVersion = "1.5.17.RELEASE"
-    edisonVersion = "1.2.30"
+    springVersion = "5.0.8.RELEASE"
+    springBootVersion = "2.0.4.RELEASE"
+    edisonVersion = "2.0.0-m6-SNAPSHOT"
 }
 
 apply plugin: 'java'

@@ -1,5 +1,7 @@
 package de.otto.synapse.compaction.s3;
 
+import de.otto.synapse.annotation.EnableEventSourcing;
+import de.otto.synapse.configuration.EventSourcingAutoConfiguration;
 import de.otto.synapse.helper.s3.S3Helper;
 import org.junit.After;
 import org.junit.Before;
@@ -27,6 +29,7 @@ import static org.junit.Assert.assertThat;
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
 @SpringBootTest(classes = SnapshotReadServiceIntegrationTest.class)
+@EnableEventSourcing
 public class SnapshotReadServiceIntegrationTest {
 
     private static final String S3_UTILS_TEST_BUCKET = "de-otto-promo-compaction-test-snapshots";

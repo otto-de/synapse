@@ -5,8 +5,7 @@ import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.MessageEndpoint;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.actuate.autoconfigure.ManagementServerProperties;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -39,7 +38,7 @@ public class MessageTraceAutoConfiguration {
                                      final ManagementServerProperties managementServerProperties,
                                      final Optional<List<? extends MessageEndpoint>> endpoints) {
 
-        final String contextPath = managementServerProperties.getContextPath();
+        final String contextPath = managementServerProperties.getServlet().getContextPath();
         rightNavBar.register(
                 navBarItem(10, "Message Trace", format("%s/messagetrace", contextPath))
         );

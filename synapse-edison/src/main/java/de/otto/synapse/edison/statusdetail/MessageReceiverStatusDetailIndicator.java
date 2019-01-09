@@ -23,11 +23,6 @@ public class MessageReceiverStatusDetailIndicator implements StatusDetailIndicat
     }
 
     @Override
-    public StatusDetail statusDetail() {
-        return null;
-    }
-
-    @Override
     public List<StatusDetail> statusDetails() {
         return provider.getInfos().stream()
                 .map(channelInfo -> createStatusDetail(statusOf(channelInfo.getStatus()), channelInfo.getChannelName(), channelInfo.getMessage()))

@@ -48,10 +48,6 @@ public class SnapshotStatusDetailIndicator implements StatusDetailIndicator {
             statusDetails.put(channelName, StatusDetail.statusDetail(channelName, Status.OK, notification.getMessage()));
         }
     }
-    @Override
-    public StatusDetail statusDetail() {
-        return null;
-    }
 
     @Override
     public List<StatusDetail> statusDetails() {

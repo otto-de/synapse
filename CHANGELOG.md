@@ -2,6 +2,7 @@
 
 ## 0.14.0
 * Updates to AWS SDK release version 2.2.0
+* Updates to Spring Boot 2.0.4 + Edison Microservice 2.0 + Spring 5.0.8
 * Refactors creation of Header objects:
     - Renames emptyHeader() to of()
     - Renames requestHeader(...) to of(...)

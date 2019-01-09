@@ -8,7 +8,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.17.RELEASE")
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.0.4.RELEASE")
     }
 }
 
@@ -22,10 +22,10 @@ dependencies {
     compile project(':synapse-core:')
     compile "software.amazon.awssdk:sqs:${awsSdkVersion}"
 
-    compile("org.springframework.boot:spring-boot-starter-web") {
-        exclude module: "spring-boot-starter-tomcat"
+    compile("org.springframework.boot:spring-boot-starter-web:${springBootVersion}") {
+        exclude module: "spring-boot-starter-tomcat:${springBootVersion}"
     }
-    compile("org.springframework.boot:spring-boot-starter-jetty")
+    compile("org.springframework.boot:spring-boot-starter-jetty:${springBootVersion}")
 
     compile "ch.qos.logback:logback-core:1.2.3"
     compile "ch.qos.logback:logback-classic:1.2.3"
@@ -35,8 +35,8 @@ dependencies {
     testCompile 'junit:junit:4.12'
 
 
-    testImplementation "org.springframework.boot:spring-boot-test"
-    testImplementation "org.springframework:spring-test:4.3.12.RELEASE"
+    testImplementation "org.springframework.boot:spring-boot-test:${springBootVersion}"
+    testImplementation "org.springframework:spring-test:${springVersion}"
     testImplementation "org.awaitility:awaitility:3.1.1"
 }
 
