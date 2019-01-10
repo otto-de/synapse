@@ -1,11 +1,11 @@
 package de.otto.synapse.edison.trace;
 
+import de.otto.edison.configuration.EdisonApplicationProperties;
 import de.otto.edison.navigation.NavBar;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.MessageEndpoint;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.actuate.autoconfigure.web.server.ManagementServerProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -35,12 +35,12 @@ public class MessageTraceAutoConfiguration {
     @ConditionalOnMissingBean
     public MessageTrace messageTrace(final MessageInterceptorRegistry interceptorRegistry,
                                      final NavBar rightNavBar,
-                                     final ManagementServerProperties managementServerProperties,
+                                     final EdisonApplicationProperties applicationProperties,
                                      final Optional<List<? extends MessageEndpoint>> endpoints) {
 
-        final String contextPath = managementServerProperties.getServlet().getContextPath();
+        final String href = format("%s/messagetrace", applicationProperties.getManagement().getBasePath());
         rightNavBar.register(
-                navBarItem(10, "Message Trace", format("%s/messagetrace", contextPath))
+                navBarItem(10, "Message Trace", href)
         );
 
         final MessageTrace messageTrace = new MessageTrace(capacity);
@@ -57,10 +57,10 @@ public class MessageTraceAutoConfiguration {
             ));
             switch (endpointType) {
                 case SENDER:
-                    rightNavBar.register(navBarItem(11, "Sender: " + channelName, format("%s/messagetrace/sender/%s", contextPath, channelName)));
+                    rightNavBar.register(navBarItem(11, "Sender: " + channelName, href + "/sender/" + channelName));
                     break;
                 case RECEIVER:
-                    rightNavBar.register(navBarItem(12, "Receiver: " + channelName, format("%s/messagetrace/receiver/%s", contextPath, channelName)));
+                    rightNavBar.register(navBarItem(12, "Receiver: " + channelName, href + "/receiver/" + channelName));
                     break;
             }
         });

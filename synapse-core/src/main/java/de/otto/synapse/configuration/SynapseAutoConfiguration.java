@@ -13,6 +13,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 import java.util.Map;
 
@@ -56,6 +58,7 @@ public class SynapseAutoConfiguration {
      * @return DefaultSenderHeadersInterceptor
      */
     @Bean
+    @Order(Ordered.LOWEST_PRECEDENCE)
     @ConditionalOnMissingBean
     @ConditionalOnProperty(
             prefix = "synapse.sender.default-headers",
@@ -74,6 +77,7 @@ public class SynapseAutoConfiguration {
      * @return DefaultReceiverHeadersInterceptor
      */
     @Bean
+    @Order(Ordered.LOWEST_PRECEDENCE)
     @ConditionalOnMissingBean
     @ConditionalOnProperty(
             prefix = "synapse.receiver.default-headers",

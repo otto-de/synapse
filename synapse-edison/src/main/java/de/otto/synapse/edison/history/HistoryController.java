@@ -27,7 +27,7 @@ public class HistoryController {
     }
 
     @GetMapping(
-            value = "${management.context-path}/history/{type}/{entityId}",
+            value = "${edison.application.management.base-path:internal}/history/{type}/{entityId}",
             produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, ?>> getHistoryAsJson (final @PathVariable String type,
                                                             final @PathVariable String entityId) {

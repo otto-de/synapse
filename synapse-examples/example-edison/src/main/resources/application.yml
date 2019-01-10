@@ -2,12 +2,20 @@ spring:
   application:
     name: Edison Example
 
-management:
-  context-path: /internal
+edison:
+  application:
+    title:  Synapse + Edison Example
+    description: Synapse µservice with support for edison-microservice
+    group: synapse-examples
+    environment: local
 
 synapse:
   consumer-process:
     enabled: true
+  edison:
+    status:
+      latency:
+        enabled: true
 
 exampleservice:
   product-channel: example-products

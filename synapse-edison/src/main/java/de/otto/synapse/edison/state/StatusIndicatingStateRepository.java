@@ -1,4 +1,4 @@
-package de.otto.synapse.edison.statusdetail;
+package de.otto.synapse.edison.state;
 
 import de.otto.edison.status.domain.Status;
 import de.otto.edison.status.domain.StatusDetail;
@@ -12,19 +12,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-public class EdisonStateRepository<T> extends DelegatingStateRepository<T> implements StatusDetailIndicator {
+public class StatusIndicatingStateRepository<T> extends DelegatingStateRepository<T> implements StatusDetailIndicator {
 
     private final String repositoryName;
     private final AtomicBoolean running = new AtomicBoolean(false);
 
-    public EdisonStateRepository(final StateRepository<T> stateRepository,
-                                 final String repositoryName) {
+    public StatusIndicatingStateRepository(final StateRepository<T> stateRepository,
+                                           final String repositoryName) {
         super(stateRepository);
         this.repositoryName = repositoryName;
-    }
-
-    public StatusDetail statusDetail() {
-        return null;
     }
 
     @Override

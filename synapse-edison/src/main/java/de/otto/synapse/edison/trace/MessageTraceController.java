@@ -36,7 +36,7 @@ public class MessageTraceController {
     }
 
     @GetMapping(
-            path = "${management.context-path}/messagetrace/{endpointType}/{channelName}",
+            path = "${edison.application.management.base-path:internal}/messagetrace/{endpointType}/{channelName}",
             produces = "text/html"
     )
     public ModelAndView getMessageTrace(final @PathVariable String endpointType,
@@ -60,7 +60,7 @@ public class MessageTraceController {
     }
 
     @GetMapping(
-            path = "${management.context-path}/messagetrace",
+            path = "${edison.application.management.base-path:internal}/messagetrace",
             produces = "text/html"
     )
     public ModelAndView getMessageTrace() {
