@@ -9,12 +9,9 @@ import org.slf4j.Logger;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import javax.annotation.Nonnull;
-import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadFactory;
-import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -51,7 +48,7 @@ public class DefaultEventSource extends AbstractEventSource {
 
 
     private CompletableFuture<ChannelPosition> consumeMessageStore() {
-        final ThreadFactory threadFactory = new CustomizableThreadFactory("kinesis-eventsource-");
+        final ThreadFactory threadFactory = new CustomizableThreadFactory("synapse-eventsource-");
         return CompletableFuture.supplyAsync(() -> {
             messageStore.stream().forEach(message -> {
                 final Message<String> interceptedMessage = getMessageLogReceiverEndpoint().getInterceptorChain().intercept(message);

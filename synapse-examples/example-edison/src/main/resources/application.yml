@@ -1,6 +1,6 @@
 spring:
   application:
-    name: Edison Example
+    name: synapse-edison-example
 
 edison:
   application:
@@ -8,14 +8,6 @@ edison:
     description: Synapse µservice with support for edison-microservice
     group: synapse-examples
     environment: local
-
-synapse:
-  consumer-process:
-    enabled: true
-  edison:
-    status:
-      latency:
-        enabled: true
 
 exampleservice:
   product-channel: example-products
@@ -25,5 +17,5 @@ logging:
   config: classpath:logback-console.xml
 
 server:
-  context-path: /
+  context-path: /example
   port: 5555

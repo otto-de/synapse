@@ -1,14 +1,9 @@
-package de.otto.synapse.edison.statusdetail;
+package de.otto.synapse.info;
 
 import de.otto.synapse.channel.ChannelDurationBehind;
 import de.otto.synapse.eventsource.EventSource;
-import de.otto.synapse.info.MessageReceiverEndpointInfo;
-import de.otto.synapse.info.MessageReceiverEndpointInfos;
-import de.otto.synapse.info.MessageReceiverNotification;
-import de.otto.synapse.info.MessageReceiverStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -21,7 +16,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import static de.otto.synapse.channel.ChannelDurationBehind.unknown;
 import static java.lang.String.format;
 
-@Component
 public class MessageReceiverEndpointInfoProvider {
 
 

@@ -3,6 +3,7 @@ package de.otto.synapse.edison.statusdetail;
 import de.otto.edison.testsupport.util.TestClock;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.info.MessageReceiverEndpointInfo;
+import de.otto.synapse.info.MessageReceiverEndpointInfoProvider;
 import de.otto.synapse.info.MessageReceiverNotification;
 import de.otto.synapse.info.MessageReceiverStatus;
 import org.junit.Test;

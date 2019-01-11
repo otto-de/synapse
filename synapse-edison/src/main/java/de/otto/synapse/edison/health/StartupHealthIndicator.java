@@ -57,7 +57,7 @@ public class StartupHealthIndicator implements HealthIndicator {
         }
     }
 
-        @Override
+    @Override
     public Health health() {
         final Builder healthBuilder;
         if (healthyChannels.containsAll(allChannels)) {
