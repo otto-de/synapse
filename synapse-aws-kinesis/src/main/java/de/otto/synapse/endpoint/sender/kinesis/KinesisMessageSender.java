@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint.sender.kinesis;
 
+import com.google.common.collect.Lists;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.message.Message;
@@ -11,6 +12,7 @@ import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequestEntry;
+import software.amazon.awssdk.services.kinesis.model.PutRecordsResponse;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -18,9 +20,9 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
-import static com.google.common.collect.Lists.partition;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.CompletableFuture.allOf;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.stream.Collectors.toCollection;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -54,17 +56,24 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
     protected CompletableFuture<Void> doSend(@Nonnull Message<String> message) {
         // TODO: Introduce a response object and return it instead of Void
         // Just because we need a CompletableFuture<Void>, no CompletableFuture<SendMessageBatchResponse>:
-        return allOf(kinesisAsyncClient.putRecords(createPutRecordRequest(message)));
+        return allOf(kinesisAsyncClient.putRecords(createPutRecordRequest(message))
+                .exceptionally(t -> {
+                    LOG.error("Unable to send batch request to kinesis.", t);
+                    return PutRecordsResponse.builder().build();
+                }));
     }
 
     @Override
     protected CompletableFuture<Void> doSendBatch(@Nonnull Stream<Message<String>> messageStream) {
         final List<PutRecordsRequestEntry> entries = createPutRecordRequestEntries(messageStream);
-        return allOf(
-                partition(entries, PUT_RECORDS_BATCH_SIZE)
-                        .stream()
-                        .map(batch -> kinesisAsyncClient.putRecords(createPutRecordsRequest(batch)))
-                        .toArray(CompletableFuture[]::new));
+        Lists.partition(entries, PUT_RECORDS_BATCH_SIZE)
+                .forEach(batch -> kinesisAsyncClient.putRecords(createPutRecordsRequest(batch))
+                        .exceptionally(t -> {
+                            LOG.error("Unable to send batch request to kinesis.", t);
+                            return PutRecordsResponse.builder().build();
+                        })
+                        .join());
+        return completedFuture(null);
     }
 
     private PutRecordsRequest createPutRecordsRequest(final List<PutRecordsRequestEntry> batch) {
