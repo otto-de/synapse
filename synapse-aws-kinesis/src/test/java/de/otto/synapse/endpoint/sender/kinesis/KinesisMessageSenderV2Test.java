@@ -370,6 +370,78 @@ public class KinesisMessageSenderV2Test {
         assertThat(json.get(SYNAPSE_MSG_PAYLOAD).textValue(), is(nullValue()));
     }
 
+    @Test
+    public void shouldRetryFullBatchIfSentRecordsFailureCountIsGreaterThanZero() {
+        // given
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class)))
+                .thenReturn(completedFuture(PutRecordsResponse.builder()
+                        .failedRecordCount(1)
+                        .records(PutRecordsResultEntry.builder().build())
+                        .build()))
+                .thenReturn(completedFuture(PutRecordsResponse.builder()
+                        .failedRecordCount(0)
+                        .records(PutRecordsResultEntry.builder().build())
+                        .build()));
+
+        // when
+        kinesisMessageSender.sendBatch(someEvents(10)).join();
+
+        // then
+        verify(kinesisClient, times(2)).putRecords(putRecordsRequestCaptor.capture());
+        putRecordsRequestCaptor.getAllValues()
+                .forEach(capturedRequest -> assertThat(capturedRequest.records(), hasSize(10)));
+
+    }
+
+    @Test
+    public void shouldRetrySingleMessageIfSentRecordsFailureCountIsGreaterThanZero() {
+        // given
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class)))
+                .thenReturn(completedFuture(PutRecordsResponse.builder()
+                        .failedRecordCount(1)
+                        .records(PutRecordsResultEntry.builder().build())
+                        .build()))
+                .thenReturn(completedFuture(PutRecordsResponse.builder()
+                        .failedRecordCount(0)
+                        .records(PutRecordsResultEntry.builder().build())
+                        .build()));
+
+        // when
+        kinesisMessageSender.send(message("someKey", null)).join();
+
+        // then
+        verify(kinesisClient, times(2)).putRecords(putRecordsRequestCaptor.capture());
+        putRecordsRequestCaptor.getAllValues()
+                .forEach(capturedRequest -> assertThat(capturedRequest.records(), hasSize(1)));
+
+    }
+
+    @Test(expected = RetryLimitExceededException.class)
+    public void shouldThrowRetryLimitExceededExceptionOnTooManyRetriesForBatch() {
+        // given
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class)))
+                .thenReturn(completedFuture(PutRecordsResponse.builder()
+                        .failedRecordCount(1)
+                        .records(PutRecordsResultEntry.builder().build())
+                        .build()));
+
+        // when
+        kinesisMessageSender.sendBatch(someEvents(10)).join();
+    }
+
+    @Test(expected = RetryLimitExceededException.class)
+    public void shouldThrowRetryLimitExceededExceptionOnTooManyRetriesForSingleMessage() {
+        // given
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class)))
+                .thenReturn(completedFuture(PutRecordsResponse.builder()
+                        .failedRecordCount(1)
+                        .records(PutRecordsResultEntry.builder().build())
+                        .build()));
+
+        // when
+        kinesisMessageSender.send(message("someKey", null)).join();
+    }
+
     private Stream<Message<String>> someEvents(int n) {
         return IntStream.range(0, n)
                 .mapToObj(i -> message(valueOf(i), Integer.toString(i)));

@@ -12,17 +12,18 @@ import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequestEntry;
-import software.amazon.awssdk.services.kinesis.model.PutRecordsResponse;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.concurrent.CompletableFuture.allOf;
-import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.stream.Collectors.toCollection;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -31,6 +32,8 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
     private static final Logger LOG = getLogger(KinesisMessageSender.class);
 
     private static final int PUT_RECORDS_BATCH_SIZE = 500;
+    private static final int MAX_RETRIES = 5;
+    private static final long RETRY_DELAY_MS = 1000L;
 
     private final KinesisAsyncClient kinesisAsyncClient;
     private final MessageFormat messageFormat;
@@ -56,24 +59,46 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
     protected CompletableFuture<Void> doSend(@Nonnull Message<String> message) {
         // TODO: Introduce a response object and return it instead of Void
         // Just because we need a CompletableFuture<Void>, no CompletableFuture<SendMessageBatchResponse>:
-        return allOf(kinesisAsyncClient.putRecords(createPutRecordRequest(message))
-                .exceptionally(t -> {
-                    LOG.error("Unable to send batch request to kinesis.", t);
-                    return PutRecordsResponse.builder().build();
-                }));
+        return doSendBatch(Stream.of(message));
     }
 
     @Override
     protected CompletableFuture<Void> doSendBatch(@Nonnull Stream<Message<String>> messageStream) {
         final List<PutRecordsRequestEntry> entries = createPutRecordRequestEntries(messageStream);
         Lists.partition(entries, PUT_RECORDS_BATCH_SIZE)
-                .forEach(batch -> kinesisAsyncClient.putRecords(createPutRecordsRequest(batch))
-                        .exceptionally(t -> {
-                            LOG.error("Unable to send batch request to kinesis.", t);
-                            return PutRecordsResponse.builder().build();
-                        })
-                        .join());
-        return completedFuture(null);
+                .forEach(this::blockingSendBatchWithRetries);
+        return CompletableFuture.completedFuture(null);
+    }
+
+    private void blockingSendBatchWithRetries(List<PutRecordsRequestEntry> batch) {
+        try {
+            int currentRetry = 0;
+            while (!blockingSendBatch(batch)) {
+                currentRetry++;
+                LOG.info("retry to send batch of size {} to kinesis for nth time: {}", batch.size(), currentRetry);
+                if (currentRetry >= MAX_RETRIES) {
+                    throw new RetryLimitExceededException("Exceeded maximum number of retries.", MAX_RETRIES);
+                }
+                Thread.sleep(RETRY_DELAY_MS);
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean blockingSendBatch(List<PutRecordsRequestEntry> batch) throws ExecutionException, InterruptedException {
+        AtomicBoolean isSuccessful = new AtomicBoolean(true);
+        try {
+            kinesisAsyncClient.putRecords(createPutRecordsRequest(batch))
+                    .thenApply(response -> {
+                        isSuccessful.set(response.failedRecordCount() == 0);
+                        return response;
+                    }).get(2, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            LOG.warn("timeout while sending batch to kinesis", e);
+            isSuccessful.set(false);
+        }
+        return isSuccessful.get();
     }
 
     private PutRecordsRequest createPutRecordsRequest(final List<PutRecordsRequestEntry> batch) {
@@ -87,13 +112,6 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
         return messageStream
                 .map(this::requestEntryFor)
                 .collect(toCollection(ArrayList::new));
-    }
-
-    private PutRecordsRequest createPutRecordRequest(final @Nonnull Message<String> message) {
-        return PutRecordsRequest.builder()
-                .streamName(getChannelName())
-                .records(requestEntryFor(message))
-                .build();
     }
 
     private PutRecordsRequestEntry requestEntryFor(final Message<String> message) {
