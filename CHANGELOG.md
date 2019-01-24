@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.14.2
+* Fixes broken links in message traces
+
+##
+* Adds blocking send + retries to Kinesis message senders in order to avoid rate-limit exceeded situations
+
 ## 0.14.0
 * Updates to AWS SDK release version 2.2.0
 * Updates to Spring Boot 2.0.4 + Edison Microservice 2.0 + Spring 5.0.8
