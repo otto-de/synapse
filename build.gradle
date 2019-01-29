@@ -47,7 +47,7 @@ subprojects {
 
     compileJava.dependsOn(processResources)
 
-    version = '0.14.2'
+    version = '0.14.3'
     group = 'de.otto.synapse'
 
     repositories {
