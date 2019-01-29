@@ -6,6 +6,7 @@ dependencies {
 
     implementation "com.google.guava:guava:23.0"
     implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
+    implementation "software.amazon.awssdk:netty-nio-client:${awsSdkVersion}"
 
     testImplementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
     testImplementation project(':synapse-aws-kinesis')

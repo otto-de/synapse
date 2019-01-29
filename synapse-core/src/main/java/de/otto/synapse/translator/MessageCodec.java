@@ -1,8 +1,12 @@
 package de.otto.synapse.translator;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
@@ -33,7 +37,8 @@ public class MessageCodec {
 
 
     private static final Logger LOG = getLogger(MessageCodec.class);
-    private static final TypeReference<Map<String, String>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, String>>() {};
+    private static final TypeReference<Map<String, String>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, String>>() {
+    };
 
     public static String encode(final Message<String> message) {
         return encode(message, defaultMessageFormat());
@@ -52,36 +57,42 @@ public class MessageCodec {
     }
 
     private static String encodeV2(Message<String> message) {
-        final String jsonPayload;
-        if (message.getPayload() == null) {
-            jsonPayload = null;
-        } else if (message.getPayload().isEmpty()) {
-            // TODO: Das kann nur passieren, wenn man an der üblichen Serialisierung vorbei geht.
-            jsonPayload = "\"\"";
-        } else {
-            final String trimedPayload = message.getPayload().trim();
-            if ((trimedPayload.startsWith("{") && trimedPayload.endsWith("}")) || (trimedPayload.startsWith("[") && trimedPayload.endsWith("]"))) {
-                jsonPayload = trimedPayload;
-            } else {
-                // TODO: Das kann nur passieren, wenn man an der üblichen Serialisierung vorbei geht.
-                try {
-                    jsonPayload = currentObjectMapper().writeValueAsString(message.getPayload());
-                } catch (JsonProcessingException e) {
-                    throw new IllegalArgumentException("Unable to generate message payload from " + message.getPayload() + ": " + e.getMessage(), e);
-                }
-            }
-        }
-        String jsonHeaders;
+        ObjectMapper mapper = currentObjectMapper();
         try {
-            jsonHeaders = currentObjectMapper().writeValueAsString(message.getHeader().getAll());
-        } catch (final JsonProcessingException e) {
-            LOG.error("Failed to convert message headers={} into JSON message format v2: {}", message.getHeader(), e.getMessage());
-            jsonHeaders = "{}";
+            ObjectNode root = mapper.createObjectNode();
+            root.put(SYNAPSE_MSG_FORMAT, "v2");
+            root.set(SYNAPSE_MSG_KEY, encodeKeysV2(message, mapper));
+            root.set(SYNAPSE_MSG_HEADERS, encodeHeadersV2(message, mapper));
+            root.set(SYNAPSE_MSG_PAYLOAD, encodePayloadV2(message, mapper));
+            return root.toString();
+        } catch (IOException e) {
+            throw new IllegalStateException(String.format("Cannot encode message %s", message), e);
         }
-        return "{\"" + SYNAPSE_MSG_FORMAT + "\":\"v2\","
-                + "\"" + SYNAPSE_MSG_KEY + "\":{\"" + SYNAPSE_MSG_PARTITIONKEY + "\":\"" + message.getKey().partitionKey() + "\",\"" + SYNAPSE_MSG_COMPACTIONKEY + "\":\"" + message.getKey().compactionKey() + "\"},"
-                + "\"" + SYNAPSE_MSG_HEADERS + "\":" + jsonHeaders + ","
-                + "\""+ SYNAPSE_MSG_PAYLOAD + "\":" + jsonPayload + "}";
+    }
+
+    private static ObjectNode encodeKeysV2(Message<String> message, ObjectMapper mapper) {
+        ObjectNode keyNode = mapper.createObjectNode();
+        keyNode.put(SYNAPSE_MSG_PARTITIONKEY, message.getKey().partitionKey());
+        keyNode.put(SYNAPSE_MSG_COMPACTIONKEY, message.getKey().compactionKey());
+        return keyNode;
+    }
+
+    private static JsonNode encodeHeadersV2(Message<String> message, ObjectMapper mapper) {
+        return mapper.convertValue(message.getHeader().getAll(), JsonNode.class);
+    }
+
+    private static JsonNode encodePayloadV2(Message<String> message, ObjectMapper mapper) throws IOException {
+        JsonNode jsonPayload;
+        try {
+            if (message.getPayload() == null) {
+                jsonPayload = NullNode.getInstance();
+            } else {
+                jsonPayload = mapper.readTree(message.getPayload());
+            }
+        } catch (JsonParseException e) {
+            jsonPayload = new TextNode(message.getPayload());
+        }
+        return jsonPayload;
     }
 
     public static Message<String> decode(final String body) {

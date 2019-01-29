@@ -34,6 +34,14 @@ public class MessageCodecTest {
     }
 
     @Test
+    public void shouldEncodeInV2FormatWithEscapedCharacters() {
+        final Message<String> someMessage = Message.message(Key.of("f\\_oo", "bar"), Header.builder().withAttributes(of("attr", "valu\\e")).build(), "{}");
+        final String encoded = encode(someMessage, MessageFormat.V2);
+        Message<String> decoded = decode(encoded);
+        assertThat(decoded).isEqualTo(someMessage);
+    }
+
+    @Test
     public void shouldDecodeV1FormatIntoMessage() {
         final String body = "{\"foo\":\"bar\"}";
         final Message<String> message = decode(body, Header.builder(), Message.builder(String.class));

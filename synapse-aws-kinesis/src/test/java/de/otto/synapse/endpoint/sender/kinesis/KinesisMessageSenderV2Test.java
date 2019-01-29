@@ -221,7 +221,7 @@ public class KinesisMessageSenderV2Test {
 
         final String payload = caputuredRequest.records().get(0).data().asString(Charset.forName("UTF-8"));
 
-        assertThat(payload, is("{\"_synapse_msg_format\":\"v2\",\"_synapse_msg_key\":{\"partitionKey\":\"someKey\",\"compactionKey\":\"someKey\"},\"_synapse_msg_headers\":{},\"_synapse_msg_payload\":{\"some\": broken json payload}}"));
+        assertThat(payload, is("{\"_synapse_msg_format\":\"v2\",\"_synapse_msg_key\":{\"partitionKey\":\"someKey\",\"compactionKey\":\"someKey\"},\"_synapse_msg_headers\":{},\"_synapse_msg_payload\":\"{\\\"some\\\": broken json payload}\"}"));
     }
 
     @Test
