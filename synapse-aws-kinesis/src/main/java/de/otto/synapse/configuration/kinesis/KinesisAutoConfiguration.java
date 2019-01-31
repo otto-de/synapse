@@ -18,12 +18,18 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.core.internal.retry.SdkDefaultRetrySetting;
 import software.amazon.awssdk.core.retry.RetryPolicy;
+import software.amazon.awssdk.core.retry.RetryPolicyContext;
+import software.amazon.awssdk.core.retry.backoff.FullJitterBackoffStrategy;
+import software.amazon.awssdk.core.retry.conditions.OrRetryCondition;
+import software.amazon.awssdk.core.retry.conditions.RetryCondition;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
+import java.time.Duration;
+
 import static org.slf4j.LoggerFactory.getLogger;
-import static software.amazon.awssdk.core.retry.RetryPolicy.defaultRetryPolicy;
 
 @Configuration
 @Import({SynapseAwsAuthConfiguration.class, SynapseAutoConfiguration.class})
@@ -42,16 +48,28 @@ public class KinesisAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = "kinesisRetryPolicy", value = RetryPolicy.class)
     public RetryPolicy kinesisRetryPolicy() {
-        return defaultRetryPolicy();
+        RetryCondition retryConditionWithLogging = OrRetryCondition.create(
+                new LoggingRetryCondition(5, 10),
+                RetryCondition.defaultRetryCondition());
+
+        return RetryPolicy.defaultRetryPolicy().toBuilder()
+                .retryCondition(retryConditionWithLogging)
+                .numRetries(Integer.MAX_VALUE)
+                .backoffStrategy(FullJitterBackoffStrategy.builder()
+                        .baseDelay(Duration.ofSeconds(1))
+                        .maxBackoffTime(SdkDefaultRetrySetting.MAX_BACKOFF)
+                        .build())
+                .build();
     }
 
     @Bean
     @ConditionalOnMissingBean(KinesisAsyncClient.class)
-    public KinesisAsyncClient kinesisAsyncClient(final AwsCredentialsProvider credentialsProvider) {
+    public KinesisAsyncClient kinesisAsyncClient(final AwsCredentialsProvider credentialsProvider,
+                                                 final RetryPolicy kinesisRetryPolicy) {
         return KinesisAsyncClient.builder()
                 .credentialsProvider(credentialsProvider)
                 .region(Region.of(awsProperties.getRegion()))
-                .overrideConfiguration(ClientOverrideConfiguration.builder().retryPolicy(kinesisRetryPolicy()).build())
+                .overrideConfiguration(ClientOverrideConfiguration.builder().retryPolicy(kinesisRetryPolicy).build())
                 .build();
     }
 
@@ -72,4 +90,50 @@ public class KinesisAutoConfiguration {
         return new KinesisMessageLogReceiverEndpointFactory(interceptorRegistry, kinesisClient, eventPublisher);
     }
 
+
+
+    static class LoggingRetryCondition implements RetryCondition {
+
+        private final int warnCount;
+        private final int errorCount;
+
+        public LoggingRetryCondition(int warnCount, int errorCount) {
+            this.warnCount = warnCount;
+            this.errorCount = errorCount;
+        }
+
+        @Override
+        public boolean shouldRetry(RetryPolicyContext context) {
+            logRetryAttempt(context);
+            return false;
+        }
+
+        private void logRetryAttempt(RetryPolicyContext c) {
+            String message;
+            if (c.exception() != null) {
+                message = String.format("kinesis request failed with exception on try %s: %s", c.retriesAttempted(), findExceptionMessage(c.exception()));
+            } else {
+                message = String.format("kinesis request failed without exception on try %s:", c.retriesAttempted());
+            }
+
+            if (c.retriesAttempted() >= errorCount) {
+                LOG.error(message);
+            } else if (c.retriesAttempted() >= warnCount) {
+                LOG.warn(message);
+            } else {
+                LOG.info(message);
+            }
+        }
+
+        private String findExceptionMessage(Throwable t) {
+            if (t == null) {
+                return null;
+            }
+            if (t.getMessage() != null) {
+                return t.getMessage();
+            }
+            return findExceptionMessage(t.getCause());
+        }
+
+    }
 }

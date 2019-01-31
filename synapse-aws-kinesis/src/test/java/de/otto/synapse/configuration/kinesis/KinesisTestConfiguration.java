@@ -18,6 +18,8 @@ import org.springframework.context.annotation.Primary;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.core.retry.RetryPolicy;
 import software.amazon.awssdk.http.Protocol;
 import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
@@ -65,7 +67,8 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
     @Bean
     @Primary
     public KinesisAsyncClient kinesisAsyncClient(final @Value("${test.environment:local}") String testEnvironment,
-                                                 final AwsCredentialsProvider credentialsProvider) {
+                                                 final AwsCredentialsProvider credentialsProvider,
+                                                 final RetryPolicy kinesisRetryPolicy) {
         // kinesalite does not support cbor at the moment (v1.11.6)
         System.setProperty("aws.cborEnabled", "false");
         LOG.info("kinesis client for local tests");
@@ -80,6 +83,7 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
                     .endpointOverride(URI.create("http://localhost:4568"))
                     .region(Region.EU_CENTRAL_1)
                     .credentialsProvider(credentialsProvider)
+                    .overrideConfiguration(ClientOverrideConfiguration.builder().retryPolicy(kinesisRetryPolicy).build())
                     .build();
         } else {
             kinesisClient = KinesisAsyncClient.builder()

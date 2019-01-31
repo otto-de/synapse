@@ -1,27 +1,20 @@
 package de.otto.synapse.endpoint.receiver.kinesis;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.channel.ShardResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.retry.RetryCallback;
-import org.springframework.retry.RetryContext;
-import org.springframework.retry.backoff.ExponentialBackOffPolicy;
-import org.springframework.retry.listener.RetryListenerSupport;
-import org.springframework.retry.policy.SimpleRetryPolicy;
-import org.springframework.retry.support.RetryTemplate;
-import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
-import software.amazon.awssdk.services.kinesis.model.*;
+import software.amazon.awssdk.services.kinesis.model.GetRecordsRequest;
+import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
+import software.amazon.awssdk.services.kinesis.model.GetShardIteratorRequest;
+import software.amazon.awssdk.services.kinesis.model.ProvisionedThroughputExceededException;
 
 import javax.annotation.Nonnull;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
-import static de.otto.synapse.logging.LogHelper.warn;
+import static java.lang.String.format;
 import static software.amazon.awssdk.services.kinesis.model.ShardIteratorType.*;
 
 /**
@@ -38,21 +31,15 @@ public class KinesisShardIterator {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShardIterator.class);
 
-    public final static String POISON_SHARD_ITER = "__synapse__poison__iter";
-
+    public static final String POISON_SHARD_ITER = "__synapse__poison__iter";
     public static final Integer FETCH_RECORDS_LIMIT = 10000;
-    private static final int RETRY_MAX_ATTEMPTS = 16;
-    private static final int RETRY_BACK_OFF_POLICY_INITIAL_INTERVAL = 1000;
-    private static final int RETRY_BACK_OFF_POLICY_MAX_INTERVAL = 64000;
-    private static final double RETRY_BACK_OFF_POLICY_MULTIPLIER = 2.0;
 
     private final KinesisAsyncClient kinesisClient;
     private final String channelName;
+    private final int fetchRecordLimit;
+    private final AtomicBoolean stopSignal = new AtomicBoolean(false);
     private String id;
     private ShardPosition shardPosition;
-    private final int fetchRecordLimit;
-    private final RetryTemplate retryTemplate;
-    private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
     public KinesisShardIterator(final @Nonnull KinesisAsyncClient kinesisClient,
                                 final @Nonnull String channelName,
@@ -66,7 +53,6 @@ public class KinesisShardIterator {
                                 final int fetchRecordLimit) {
         this.kinesisClient = kinesisClient;
         this.fetchRecordLimit = fetchRecordLimit;
-        this.retryTemplate = createRetryTemplate();
         this.channelName = channelName;
         this.shardPosition = shardPosition;
         this.id = kinesisClient
@@ -109,16 +95,11 @@ public class KinesisShardIterator {
     }
 
     public ShardResponse next() {
-        try {
-            final GetRecordsResponse recordsResponse = retryTemplate.execute((RetryCallback<GetRecordsResponse, Throwable>) context -> {
-                if (stopSignal.get()) {
-                    context.setExhaustedOnly();
-                }
-                return tryNext();
-            });
+        if (!stopSignal.get()) {
+            GetRecordsResponse recordsResponse = tryNext();
             return KinesisShardResponse.kinesisShardResponse(shardPosition, recordsResponse);
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
+        } else {
+            throw new IllegalStateException(format("Cannot iterate on shard '%s' after stop signal was received", shardPosition.shardName()));
         }
     }
 
@@ -164,37 +145,6 @@ public class KinesisShardIterator {
             );
         }
         return response;
-    }
-
-    private RetryTemplate createRetryTemplate() {
-        SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy(
-                RETRY_MAX_ATTEMPTS,
-                ImmutableMap.of(KinesisException.class, true,
-                        SdkClientException.class, true,
-                        CompletionException.class, true));
-
-        ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
-        backOffPolicy.setInitialInterval(RETRY_BACK_OFF_POLICY_INITIAL_INTERVAL);
-        backOffPolicy.setMaxInterval(RETRY_BACK_OFF_POLICY_MAX_INTERVAL);
-        backOffPolicy.setMultiplier(RETRY_BACK_OFF_POLICY_MULTIPLIER);
-
-        RetryTemplate template = new RetryTemplate();
-        template.registerListener(new LogRetryListener());
-        template.setRetryPolicy(retryPolicy);
-        template.setBackOffPolicy(backOffPolicy);
-
-        return template;
-    }
-
-    class LogRetryListener extends RetryListenerSupport {
-        @Override
-        public <T, E extends Throwable> void onError(RetryContext context, RetryCallback<T, E> callback, Throwable t) {
-
-            warn(
-                    LOG,
-                    ImmutableMap.of("retryCount", context.getRetryCount(), "errorMessage", Strings.nullToEmpty(t.getMessage())),
-                    "fail to iterate on shard", null);
-        }
     }
 
 }

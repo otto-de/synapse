@@ -78,7 +78,7 @@ public class KinesisShardReader {
                 return kinesisShardIterator.getShardPosition();
 
             } catch (final RuntimeException e) {
-                LOG.error("Failed to consume from Kinesis shard {}: {}", channelName, shardName, e.getMessage());
+                LOG.error("Failed to consume from Kinesis shard {}: {}, {}", channelName, shardName, e.getMessage());
                 // Stop all shards and shutdown if this shard is failing:
                 stop();
                 throw e;

@@ -229,6 +229,7 @@ public class KinesisShardIteratorTest {
                 .build();
         verify(kinesisClient).getRecords(expectedRequest);
     }
+
     @Test
     public void shouldIterateToNextId() {
         // given
@@ -248,40 +249,10 @@ public class KinesisShardIteratorTest {
         assertThat(shardIterator.getId(), is("nextIteratorId"));
     }
 
-
-    @Test
-    public void shouldRetryReadingIteratorOnKinesisException() {
-        // given
-        GetRecordsResponse response = GetRecordsResponse.builder()
-                .records(emptyList())
-                .nextShardIterator("nextIteratorId")
-                .millisBehindLatest(42L)
-                .build();
-        final KinesisAsyncClient kinesisClient = someKinesisClient();
-        when(kinesisClient.getRecords(any(GetRecordsRequest.class)))
-                .thenThrow(KinesisException.builder().message("forced test exception").build())
-                .thenThrow(KinesisException.builder().message("forced test exception").build())
-                .thenThrow(new CompletionException(ProvisionedThroughputExceededException.builder().message("forced test exception").build()))
-                .thenThrow(KinesisException.builder().message("forced test exception").build())
-                .thenReturn(completedFuture(response));
-        final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromHorizon("someShard"));
-
-        // when
-        shardIterator.next();
-
-        // then
-        verify(kinesisClient, times(5)).getRecords(any(GetRecordsRequest.class));
-        assertThat(shardIterator.getId(), is("nextIteratorId"));
-    }
-
     @Test(expected = RuntimeException.class)
     public void shouldThrowExceptionWhenStoppingInRetry() {
         // given
         final KinesisAsyncClient kinesisClient = someKinesisClient();
-        when(kinesisClient.getRecords(any(GetRecordsRequest.class)))
-                .thenReturn(supplyAsync(() -> {
-                    throw KinesisException.builder().message("forced test exception").build();
-                }));
         final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromHorizon("someShard"));
 
         // when
