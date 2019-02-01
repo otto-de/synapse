@@ -51,7 +51,7 @@ public class CompactionService {
         LOG.info("Start compacting channel {}", channelName);
         stateRepository.clear();
 
-        LOG.info("Start loading entries into inMemoryCache from snapshot");
+        LOG.info("Start loading entries from snapshot");
         final MessageLogReceiverEndpoint messageLog = messageLogReceiverEndpointFactory.create(channelName);
         final EventSource compactingKinesisEventSource = eventSourceBuilder.buildEventSource(messageLog);
         compactingKinesisEventSource.register(
