@@ -119,6 +119,7 @@ public class MessageCodec {
                             .withPayload(payloadFrom(json))
                             .build();
                 } catch (final RuntimeException e) {
+                    LOG.error("Exception caught while parsing record {}: {}", body, e.getMessage());
                     return messageBuilder.withHeader(headerBuilder.build()).withPayload(body).build();
                 }
             default:
