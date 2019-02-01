@@ -18,8 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
@@ -32,7 +30,7 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
     private static final Logger LOG = getLogger(KinesisMessageSender.class);
 
     private static final int PUT_RECORDS_BATCH_SIZE = 500;
-    private static final int MAX_RETRIES = 5;
+    private static final int MAX_RETRIES = 15;
     private static final long RETRY_DELAY_MS = 1000L;
 
     private final KinesisAsyncClient kinesisAsyncClient;
@@ -75,7 +73,7 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
             int currentRetry = 0;
             while (!blockingSendBatch(batch)) {
                 currentRetry++;
-                LOG.info("retry to send batch of size {} to kinesis for nth time: {}", batch.size(), currentRetry);
+                LOG.warn("retry to send batch of size '{}' to kinesis for nth time: {}", batch.size(), currentRetry);
                 if (currentRetry >= MAX_RETRIES) {
                     throw new RetryLimitExceededException("Exceeded maximum number of retries.", MAX_RETRIES);
                 }
@@ -88,16 +86,11 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
 
     private boolean blockingSendBatch(List<PutRecordsRequestEntry> batch) throws ExecutionException, InterruptedException {
         AtomicBoolean isSuccessful = new AtomicBoolean(true);
-        try {
-            kinesisAsyncClient.putRecords(createPutRecordsRequest(batch))
-                    .thenApply(response -> {
-                        isSuccessful.set(response.failedRecordCount() == 0);
-                        return response;
-                    }).get(2, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            LOG.warn("timeout while sending batch to kinesis", e);
-            isSuccessful.set(false);
-        }
+        kinesisAsyncClient.putRecords(createPutRecordsRequest(batch))
+                .thenApply(response -> {
+                    isSuccessful.set(response.failedRecordCount() == 0);
+                    return response;
+                }).get();
         return isSuccessful.get();
     }
 

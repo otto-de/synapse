@@ -30,6 +30,8 @@ import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import java.time.Duration;
 
 import static org.slf4j.LoggerFactory.getLogger;
+import static software.amazon.awssdk.core.interceptor.SdkExecutionAttribute.OPERATION_NAME;
+import static software.amazon.awssdk.core.interceptor.SdkExecutionAttribute.SERVICE_NAME;
 
 @Configuration
 @Import({SynapseAwsAuthConfiguration.class, SynapseAutoConfiguration.class})
@@ -109,11 +111,14 @@ public class KinesisAutoConfiguration {
         }
 
         private void logRetryAttempt(RetryPolicyContext c) {
+            final String operationName = c.executionAttributes().getAttribute(OPERATION_NAME);
+            final String serviceName = c.executionAttributes().getAttribute(SERVICE_NAME);
+
             String message;
             if (c.exception() != null) {
-                message = String.format("kinesis request failed with exception on try %s: %s", c.retriesAttempted(), findExceptionMessage(c.exception()));
+                message = String.format("'%s' request to '%s' failed with exception on try %s: %s", operationName, serviceName, c.retriesAttempted(), findExceptionMessage(c.exception()));
             } else {
-                message = String.format("kinesis request failed without exception on try %s:", c.retriesAttempted());
+                message = String.format("'%s' request to '%s' failed without exception on try %s:", operationName, serviceName, c.retriesAttempted());
             }
 
             if (c.retriesAttempted() >= errorCount) {
