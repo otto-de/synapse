@@ -22,7 +22,6 @@ import software.amazon.awssdk.core.internal.retry.SdkDefaultRetrySetting;
 import software.amazon.awssdk.core.retry.RetryPolicy;
 import software.amazon.awssdk.core.retry.RetryPolicyContext;
 import software.amazon.awssdk.core.retry.backoff.FullJitterBackoffStrategy;
-import software.amazon.awssdk.core.retry.conditions.OrRetryCondition;
 import software.amazon.awssdk.core.retry.conditions.RetryCondition;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
@@ -50,12 +49,8 @@ public class KinesisAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = "kinesisRetryPolicy", value = RetryPolicy.class)
     public RetryPolicy kinesisRetryPolicy() {
-        RetryCondition retryConditionWithLogging = OrRetryCondition.create(
-                new LoggingRetryCondition(5, 10),
-                RetryCondition.defaultRetryCondition());
-
         return RetryPolicy.defaultRetryPolicy().toBuilder()
-                .retryCondition(retryConditionWithLogging)
+                .retryCondition(new DefaultLoggingRetryCondition(5, 10))
                 .numRetries(Integer.MAX_VALUE)
                 .backoffStrategy(FullJitterBackoffStrategy.builder()
                         .baseDelay(Duration.ofSeconds(1))
@@ -94,12 +89,12 @@ public class KinesisAutoConfiguration {
 
 
 
-    static class LoggingRetryCondition implements RetryCondition {
+    public static class DefaultLoggingRetryCondition implements RetryCondition {
 
         private final int warnCount;
         private final int errorCount;
 
-        public LoggingRetryCondition(int warnCount, int errorCount) {
+        public DefaultLoggingRetryCondition(int warnCount, int errorCount) {
             this.warnCount = warnCount;
             this.errorCount = errorCount;
         }
@@ -107,7 +102,7 @@ public class KinesisAutoConfiguration {
         @Override
         public boolean shouldRetry(RetryPolicyContext context) {
             logRetryAttempt(context);
-            return false;
+            return RetryCondition.defaultRetryCondition().shouldRetry(context);
         }
 
         private void logRetryAttempt(RetryPolicyContext c) {
@@ -139,6 +134,5 @@ public class KinesisAutoConfiguration {
             }
             return findExceptionMessage(t.getCause());
         }
-
     }
 }
