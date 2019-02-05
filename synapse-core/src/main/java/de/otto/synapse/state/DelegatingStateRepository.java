@@ -3,6 +3,7 @@ package de.otto.synapse.state;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 public class DelegatingStateRepository<V> implements StateRepository<V> {
@@ -16,6 +17,11 @@ public class DelegatingStateRepository<V> implements StateRepository<V> {
     @Override
     public Optional<V> compute(String key, BiFunction<? super String, ? super Optional<V>, ? extends V> remappingFunction) {
         return delegate.compute(key, remappingFunction);
+    }
+
+    @Override
+    public void consumeAll(BiConsumer<? super String, ? super V> consumer) {
+        delegate.consumeAll(consumer);
     }
 
     @Override

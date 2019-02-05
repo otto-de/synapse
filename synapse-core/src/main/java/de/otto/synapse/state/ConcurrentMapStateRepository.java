@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 import static java.util.Optional.ofNullable;
@@ -23,6 +24,11 @@ public class ConcurrentMapStateRepository<V> implements StateRepository<V> {
     @Override
     public Optional<V> compute(final String key, final BiFunction<? super String, ? super Optional<V>, ? extends V> remappingFunction) {
         return ofNullable(concurrentMap.compute(key, (k, v) -> remappingFunction.apply(k, ofNullable(v))));
+    }
+
+    @Override
+    public void consumeAll(BiConsumer<? super String, ? super V> consumer) {
+        concurrentMap.forEach(consumer);
     }
 
     @Override

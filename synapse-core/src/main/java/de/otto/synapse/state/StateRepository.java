@@ -3,6 +3,7 @@ package de.otto.synapse.state;
 import com.google.common.collect.ImmutableSet;
 
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 public interface StateRepository<V> extends AutoCloseable {
@@ -50,6 +51,8 @@ public interface StateRepository<V> extends AutoCloseable {
      *         prevents it from being stored in this repository
      */
     Optional<V> compute(String key, BiFunction<? super String, ? super Optional<V>, ? extends V> remappingFunction);
+
+    void consumeAll(BiConsumer<? super String, ? super V> consumer);
 
     /**
      * Associates the specified value with the specified key in this repository.
