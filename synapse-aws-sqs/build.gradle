@@ -36,11 +36,7 @@ task sourcesJar(type: Jar) {
     classifier = 'sources'
 }
 
-apply plugin: 'signing'
 
-signing {
-    sign configurations.archives
-}
 
 artifacts {
     archives jar
