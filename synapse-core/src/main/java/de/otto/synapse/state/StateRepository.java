@@ -21,7 +21,7 @@ public interface StateRepository<V> extends AutoCloseable {
      * remains absent if initially absent).  If the function itself throws an
      * (unchecked) exception, the exception is rethrown, and the current mapping
      * is left unchanged.
-     *
+     * <p>
      * The default implementation is equivalent to performing the following
      * steps for this {@code repository}, then returning the current value or
      * {@code null} if absent:
@@ -42,16 +42,21 @@ public interface StateRepository<V> extends AutoCloseable {
      * }
      * }</pre>
      *
-     * @param key key with which the specified value is to be associated
+     * @param key               key with which the specified value is to be associated
      * @param remappingFunction the function to compute a value
      * @return the Optional containing the new value associated with the specified key, or Optional.empty() if none
      * @throws NullPointerException if the specified key is null, or the
-     *         remappingFunction is null
-     * @throws ClassCastException if the class of the specified value
-     *         prevents it from being stored in this repository
+     *                              remappingFunction is null
+     * @throws ClassCastException   if the class of the specified value
+     *                              prevents it from being stored in this repository
      */
     Optional<V> compute(String key, BiFunction<? super String, ? super Optional<V>, ? extends V> remappingFunction);
 
+    /**
+     * Computes each entry within the repository.
+     *
+     * @param consumer the consumer that will be applied on each repository entry
+     */
     void consumeAll(BiConsumer<? super String, ? super V> consumer);
 
     /**
@@ -62,15 +67,15 @@ public interface StateRepository<V> extends AutoCloseable {
      * if {@link #get(String) m.get(k)} would return
      * a non-empty value.)
      *
-     * @param key key with which the specified value is to be associated
+     * @param key   key with which the specified value is to be associated
      * @param value value to be associated with the specified key
      * @return the previous value associated with <tt>key</tt>, or
-     *         <tt>Optional.empty()</tt> if there was no mapping for <tt>key</tt>.
-     * @throws ClassCastException if the class of the specified value
-     *         prevents it from being stored in this repository
-     * @throws NullPointerException if the specified key or value is null
+     * <tt>Optional.empty()</tt> if there was no mapping for <tt>key</tt>.
+     * @throws ClassCastException       if the class of the specified value
+     *                                  prevents it from being stored in this repository
+     * @throws NullPointerException     if the specified key or value is null
      * @throws IllegalArgumentException if some property of the specified key
-     *         or value prevents it from being stored in this repository
+     *                                  or value prevents it from being stored in this repository
      */
     Optional<V> put(String key, V value);
 
@@ -89,7 +94,7 @@ public interface StateRepository<V> extends AutoCloseable {
      *
      * @param key key whose mapping is to be removed from the repository
      * @return the optional previous value associated with <tt>key</tt>, or
-     *         <tt>Optional.empty()</tt> if there was no mapping for <tt>key</tt>.
+     * <tt>Optional.empty()</tt> if there was no mapping for <tt>key</tt>.
      * @throws NullPointerException if the specified key is null
      */
     Optional<V> remove(String key);
@@ -99,7 +104,7 @@ public interface StateRepository<V> extends AutoCloseable {
      * The repository will be empty after this call returns.
      *
      * @throws UnsupportedOperationException if the <tt>clear</tt> operation
-     *         is not supported by this repository
+     *                                       is not supported by this repository
      */
     void clear();
 
@@ -114,17 +119,18 @@ public interface StateRepository<V> extends AutoCloseable {
      *
      * @param key the key whose associated value is to be returned
      * @return the Optional containing the value to which the specified key is mapped, or
-     *         {@code Optional.empty()} if this repository contains no mapping for the key
+     * {@code Optional.empty()} if this repository contains no mapping for the key
      * @throws NullPointerException if the specified key is null
      */
     Optional<V> get(String key);
 
     /**
-     /**
      * Returns an immutable set of the keys in this repository.
      *
      * @return a set view of the keys contained in this repository
+     * @deprecated to retrieve the keys (and values), use consumeAll() instead
      */
+    @Deprecated
     ImmutableSet<String> keySet();
 
     /**
