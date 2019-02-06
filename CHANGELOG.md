@@ -1,9 +1,13 @@
 # Release Notes
 
+## 0.14.4
+* Introduces consumeAll() in StateRepository 
+* Sets keySet() in StateRepository to be deprecated as implementations did a full copy the map causing errors on bigger maps, use consumeAll instead
+
 ## 0.14.2
 * Fixes broken links in message traces
 
-##
+## 0.14.1
 * Adds blocking send + retries to Kinesis message senders in order to avoid rate-limit exceeded situations
 
 ## 0.14.0
