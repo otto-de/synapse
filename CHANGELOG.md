@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.14.5
+* Updates to edison-microservice 2.0.0-rc3
+* Fixes resource leak in CompactionService that was causing creation of additional threads with every compaction.
+
 ## 0.14.4
 * Introduces consumeAll() in StateRepository 
 * Sets keySet() in StateRepository to be deprecated as implementations did a full copy the map causing errors on bigger maps, use consumeAll instead

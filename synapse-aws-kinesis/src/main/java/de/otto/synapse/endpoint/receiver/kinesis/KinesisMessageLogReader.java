@@ -1,7 +1,6 @@
 package de.otto.synapse.endpoint.receiver.kinesis;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.channel.ShardPosition;
@@ -15,6 +14,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -36,17 +36,20 @@ public class KinesisMessageLogReader {
 
     private final String channelName;
     private final KinesisAsyncClient kinesisClient;
+    private final ExecutorService executorService;
     private final Clock clock;
-    private List<KinesisShardReader> kinesisShardReaders;
-    private ExecutorService executorService;
+    private final AtomicReference<List<KinesisShardReader>> kinesisShardReaders = new AtomicReference<>();
 
     public static final int SKIP_NEXT_PARTS = 8;
 
+
     public KinesisMessageLogReader(final String channelName,
                                    final KinesisAsyncClient kinesisClient,
+                                   final ExecutorService executorService,
                                    final Clock clock) {
         this.channelName = channelName;
         this.kinesisClient = kinesisClient;
+        this.executorService = executorService;
         this.clock = clock;
     }
 
@@ -55,20 +58,20 @@ public class KinesisMessageLogReader {
     }
 
     public List<String> getOpenShards() {
-        if (isNull(executorService)) {
-            initExecutorService();
+        if (kinesisShardReaders.get() == null) {
+            initShards();
         }
-        return kinesisShardReaders.stream()
+        return kinesisShardReaders.get().stream()
                 .map(KinesisShardReader::getShardName)
                 .collect(toList());
     }
 
     public KinesisMessageLogIterator getMessageLogIterator(final ChannelPosition channelPosition) {
-        if (isNull(executorService)) {
-            initExecutorService();
+        if (kinesisShardReaders.get() == null) {
+            initShards();
         }
         try {
-            final List<CompletableFuture<KinesisShardIterator>> futureShardPositions = kinesisShardReaders
+            final List<CompletableFuture<KinesisShardIterator>> futureShardPositions = kinesisShardReaders.get()
                     .stream()
                     .map(shardReader -> supplyAsync(
                             () -> new KinesisShardIterator(kinesisClient, channelName, channelPosition.shard(shardReader.getShardName())),
@@ -79,18 +82,20 @@ public class KinesisMessageLogReader {
                     .map(CompletableFuture::join)
                     .collect(toList()));
         } catch (final RuntimeException e) {
-            shutdownExecutor();
+            stop();
+            this.kinesisShardReaders.set(null);
             throw e;
         }
     }
 
     public CompletableFuture<ChannelResponse> read(final KinesisMessageLogIterator iterator) {
-        if (isNull(executorService)) {
-            initExecutorService();
+        if (kinesisShardReaders.get() == null) {
+            initShards();
         }
         try {
 
             final List<CompletableFuture<ShardResponse>> futureShardPositions = kinesisShardReaders
+                    .get()
                     .stream()
                     .map(shardReader -> supplyAsync(
                             () -> {
@@ -104,7 +109,8 @@ public class KinesisMessageLogReader {
                     .map(CompletableFuture::join)
                     .collect(toImmutableList())), executorService);
         } catch (final RuntimeException e) {
-            shutdownExecutor();
+            stop();
+            this.kinesisShardReaders.set(null);
             throw e;
         }
     }
@@ -129,11 +135,12 @@ public class KinesisMessageLogReader {
     public CompletableFuture<ChannelPosition> consumeUntil(final ChannelPosition startFrom,
                                                            final Predicate<ShardResponse> stopCondition,
                                                            final Consumer<ShardResponse> consumer) {
-        if (isNull(executorService)) {
-            initExecutorService();
+        if (kinesisShardReaders.get() == null) {
+            initShards();
         }
         try {
             final List<CompletableFuture<ShardPosition>> futureShardPositions = kinesisShardReaders
+                    .get()
                     .stream()
                     .map(shard -> shard.consumeUntil(startFrom.shard(shard.getShardName()), stopCondition, consumer))
                     .collect(toList());
@@ -144,29 +151,23 @@ public class KinesisMessageLogReader {
                     .map(CompletableFuture::join)
                     .collect(toList()))
             ).exceptionally((throwable -> {
-                shutdownExecutor();
+                stop();
+                this.kinesisShardReaders.set(null);
                 throw new RuntimeException(throwable.getMessage(), throwable);
             }));
         } catch (final RuntimeException e) {
-            shutdownExecutor();
+            stop();
+            this.kinesisShardReaders.set(null);
             throw e;
         }
     }
 
-    private void initExecutorService() {
+    private void initShards() {
         final Set<String> openShards = retrieveAllOpenShards();
-        if (openShards.isEmpty()) {
-            this.executorService = newSingleThreadExecutor();
-        } else {
-            this.executorService = newFixedThreadPool(
-                    openShards.size() + 1,
-                    new ThreadFactoryBuilder().setNameFormat("kinesis-message-log-%d").build()
-            );
-        }
-        this.kinesisShardReaders = openShards
+        this.kinesisShardReaders.set(openShards
                 .stream()
                 .map(shardName -> new KinesisShardReader(channelName, shardName, kinesisClient, executorService, clock))
-                .collect(toList());
+                .collect(toList()));
     }
 
     private Set<String> retrieveAllOpenShards() {
@@ -180,32 +181,18 @@ public class KinesisMessageLogReader {
     }
 
 
-    private void shutdownExecutor() {
-        if (executorService != null) {
-            executorService.shutdownNow();
-            try {
-                boolean allThreadsSafelyTerminated = executorService.awaitTermination(30, SECONDS);
-                if (!allThreadsSafelyTerminated) {
-                    LOG.error("Kinesis Thread for stream {} is still running", getChannelName());
-                }
-
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
-            }
-            executorService = null;
-        }
-    }
-
     public void stop() {
         LOG.info("Channel {} received stop signal.", getChannelName());
-        this.kinesisShardReaders.forEach(KinesisShardReader::stop);
+        if (kinesisShardReaders.get() != null) {
+            this.kinesisShardReaders.get().forEach(KinesisShardReader::stop);
+        }
     }
 
     @VisibleForTesting
     List<KinesisShardReader> getCurrentKinesisShards() {
-        if (isNull(executorService)) {
-            initExecutorService();
+        if (kinesisShardReaders.get() == null) {
+            initShards();
         }
-        return kinesisShardReaders;
+        return kinesisShardReaders.get();
     }
 }

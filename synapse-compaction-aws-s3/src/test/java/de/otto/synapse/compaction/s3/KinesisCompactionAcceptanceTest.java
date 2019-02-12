@@ -17,6 +17,7 @@ import de.otto.synapse.message.Key;
 import de.otto.synapse.translator.MessageCodec;
 import de.otto.synapse.translator.MessageFormat;
 import net.minidev.json.JSONArray;
+import org.hamcrest.MatcherAssert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,14 +41,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
+import static de.otto.synapse.channel.StopCondition.endOfChannel;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
 import static java.lang.Thread.sleep;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.Matchers.*;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
@@ -127,6 +133,32 @@ public class KinesisCompactionAcceptanceTest {
         assertMessageDoesNotExist(json2, "151");
         assertMessageDoesNotExist(json2, "100000");
 
+    }
+
+    @Test
+    public void shouldNotHaveResourceLeak() throws Exception {
+        //given
+        sendTestMessages(Range.closed(1, 2), "first");
+
+        compactionService.compact(INTEGRATION_TEST_STREAM);
+
+        final List<String> threadNamesBefore = Thread.getAllStackTraces()
+                .keySet()
+                .stream()
+                .map(Thread::getName)
+                .filter((name)->name.startsWith("kinesis-message-log-"))
+                .collect(toList());
+
+        compactionService.compact(INTEGRATION_TEST_STREAM);
+
+        //then
+        final List<String> threadNamesAfter = Thread.getAllStackTraces()
+                .keySet()
+                .stream()
+                .map(Thread::getName)
+                .filter((name)->name.startsWith("kinesis-message-log-"))
+                .collect(toList());
+        assertThat(threadNamesBefore, is(threadNamesAfter));
     }
 
     @Test

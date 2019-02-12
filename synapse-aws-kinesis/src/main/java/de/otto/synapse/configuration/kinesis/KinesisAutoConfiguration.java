@@ -1,5 +1,6 @@
 package de.otto.synapse.configuration.kinesis;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import de.otto.synapse.configuration.aws.AwsProperties;
 import de.otto.synapse.configuration.aws.SynapseAwsAuthConfiguration;
@@ -27,7 +28,10 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
 import java.time.Duration;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.slf4j.LoggerFactory.getLogger;
 import static software.amazon.awssdk.core.interceptor.SdkExecutionAttribute.OPERATION_NAME;
 import static software.amazon.awssdk.core.interceptor.SdkExecutionAttribute.SERVICE_NAME;
@@ -44,6 +48,15 @@ public class KinesisAutoConfiguration {
     @Autowired
     public KinesisAutoConfiguration(final AwsProperties awsProperties) {
         this.awsProperties = awsProperties;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(name = "kinesisMessageLogExecutorService")
+    public ExecutorService kinesisMessageLogExecutorService() {
+        return Executors.newCachedThreadPool(
+                new ThreadFactoryBuilder().setNameFormat("kinesis-message-log-%d").build()
+        );
+
     }
 
     @Bean
@@ -82,9 +95,10 @@ public class KinesisAutoConfiguration {
     @ConditionalOnMissingBean(name = "messageLogReceiverEndpointFactory")
     public MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
                                                                                final KinesisAsyncClient kinesisClient,
+                                                                               final ExecutorService executorService,
                                                                                final ApplicationEventPublisher eventPublisher) {
         LOG.info("Auto-configuring Kinesis MessageLogReceiverEndpointFactory");
-        return new KinesisMessageLogReceiverEndpointFactory(interceptorRegistry, kinesisClient, eventPublisher);
+        return new KinesisMessageLogReceiverEndpointFactory(interceptorRegistry, kinesisClient, executorService, eventPublisher);
     }
 
 

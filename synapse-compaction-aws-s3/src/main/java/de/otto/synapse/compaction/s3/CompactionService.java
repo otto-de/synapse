@@ -47,6 +47,7 @@ public class CompactionService {
         this.messageLogReceiverEndpointFactory = messageLogReceiverEndpointFactory;
         this.clock = clock;
     }
+
     public String compact(final String channelName, final MessageFormat messageFormat) {
         LOG.info("Start compacting channel {}", channelName);
         stateRepository.clear();

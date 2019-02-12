@@ -33,10 +33,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.StopCondition.endOfChannel;
@@ -48,6 +46,7 @@ import static java.lang.Thread.sleep;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.synchronizedSet;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -76,6 +75,9 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
     @Autowired
     private MessageSenderEndpoint kinesisSender;
 
+    @Autowired
+    private ExecutorService kinesisMessageLogExecutorService;
+
     private List<Message<String>> messages = synchronizedList(new ArrayList<>());
     private Set<String> threads = synchronizedSet(new HashSet<>());
     private KinesisMessageLogReceiverEndpoint kinesisMessageLog;
@@ -85,7 +87,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
         /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
            when initializing it via @EnableEventSource
          */
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(KINESIS_INTEGRATION_TEST_CHANNEL, messageInterceptorRegistry, kinesisAsyncClient, null);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(KINESIS_INTEGRATION_TEST_CHANNEL, messageInterceptorRegistry, kinesisAsyncClient, kinesisMessageLogExecutorService, null);
         kinesisMessageLog.register(MessageConsumer.of(".*", String.class, (message) -> {
             messages.add(message);
             threads.add(Thread.currentThread().getName());
@@ -127,6 +129,34 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
                 .get();
 
         assertThat(threads, hasSize(2));
+    }
+
+    @Test
+    public void shouldDisposeThreadsAfterConsumption() throws ExecutionException, InterruptedException {
+        // when
+        final ChannelPosition startFrom = findCurrentPosition();
+        sendTestMessages(Range.closed(1, 10), "some payload");
+
+        // then
+        kinesisMessageLog
+                .consumeUntil(startFrom, endOfChannel())
+                .get();
+        final List<String> threadNamesBefore = Thread.getAllStackTraces()
+                .keySet()
+                .stream()
+                .map(Thread::getName)
+                .filter((name)->name.startsWith("kinesis-message-log-"))
+                .collect(toList());
+        kinesisMessageLog
+                .consumeUntil(startFrom, endOfChannel())
+                .get();
+        final List<String> threadNamesAfter = Thread.getAllStackTraces()
+                .keySet()
+                .stream()
+                .map(Thread::getName)
+                .filter((name)->name.startsWith("kinesis-message-log-"))
+                .collect(toList());
+        assertThat(threadNamesBefore, is(threadNamesAfter));
     }
 
     @Test

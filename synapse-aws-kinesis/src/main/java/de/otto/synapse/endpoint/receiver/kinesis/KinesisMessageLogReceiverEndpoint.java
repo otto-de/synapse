@@ -19,6 +19,7 @@ import javax.annotation.Nonnull;
 import java.time.Clock;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -92,18 +93,20 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
     public KinesisMessageLogReceiverEndpoint(final String channelName,
                                              final MessageInterceptorRegistry interceptorRegistry,
                                              final KinesisAsyncClient kinesisClient,
+                                             final ExecutorService executorService,
                                              final ApplicationEventPublisher eventPublisher) {
-        this(channelName, interceptorRegistry, kinesisClient, eventPublisher, Clock.systemDefaultZone());
+        this(channelName, interceptorRegistry, kinesisClient, executorService, eventPublisher, Clock.systemDefaultZone());
     }
 
     public KinesisMessageLogReceiverEndpoint(final String channelName,
                                              final MessageInterceptorRegistry interceptorRegistry,
                                              final KinesisAsyncClient kinesisClient,
+                                             final ExecutorService executorService,
                                              final ApplicationEventPublisher eventPublisher,
                                              final Clock clock) {
         super(channelName, interceptorRegistry, eventPublisher);
         this.eventPublisher = eventPublisher;
-        this.kinesisMessageLogReader = new KinesisMessageLogReader(channelName, kinesisClient, clock);
+        this.kinesisMessageLogReader = new KinesisMessageLogReader(channelName, kinesisClient, executorService, clock);
         this.interceptorRegistry = interceptorRegistry;
     }
 

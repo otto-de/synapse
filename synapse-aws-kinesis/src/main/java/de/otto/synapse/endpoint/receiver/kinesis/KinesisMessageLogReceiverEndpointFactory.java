@@ -9,6 +9,7 @@ import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
 import javax.annotation.Nonnull;
 import java.time.Clock;
+import java.util.concurrent.ExecutorService;
 
 public class KinesisMessageLogReceiverEndpointFactory implements MessageLogReceiverEndpointFactory {
 
@@ -16,27 +17,31 @@ public class KinesisMessageLogReceiverEndpointFactory implements MessageLogRecei
     private final KinesisAsyncClient kinesisClient;
     private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
+    private final ExecutorService executorService;
 
     @Autowired
     public KinesisMessageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
                                                     final KinesisAsyncClient kinesisClient,
+                                                    final ExecutorService kinesisMessageLogExecutorService,
                                                     final ApplicationEventPublisher eventPublisher) {
-        this(interceptorRegistry, kinesisClient, eventPublisher, Clock.systemDefaultZone());
+        this(interceptorRegistry, kinesisClient, kinesisMessageLogExecutorService, eventPublisher, Clock.systemDefaultZone());
     }
 
     public KinesisMessageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
                                                     final KinesisAsyncClient kinesisClient,
+                                                    final ExecutorService executorService,
                                                     final ApplicationEventPublisher eventPublisher,
                                                     final Clock clock) {
         this.interceptorRegistry = interceptorRegistry;
         this.kinesisClient = kinesisClient;
+        this.executorService = executorService;
         this.eventPublisher = eventPublisher;
         this.clock = clock;
     }
 
     @Override
     public MessageLogReceiverEndpoint create(@Nonnull String channelName) {
-        return new KinesisMessageLogReceiverEndpoint(channelName, interceptorRegistry, kinesisClient, eventPublisher, clock);
+        return new KinesisMessageLogReceiverEndpoint(channelName, interceptorRegistry, kinesisClient, executorService, eventPublisher, clock);
     }
 
 }
