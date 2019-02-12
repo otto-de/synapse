@@ -3,6 +3,9 @@
 ## 0.14.5
 * Updates to edison-microservice 2.0.0-rc3
 * Fixes resource leak in CompactionService that was causing creation of additional threads with every compaction.
+* Because of some changing default behaviour in Spring regarding overriding beans, your might discover 
+  BeanDefinitionOverrideExceptions when running tests or your application. Consider setting property
+  `spring.main.allow-bean-definition-overriding=true`. 
 
 ## 0.14.4
 * Introduces consumeAll() in StateRepository 

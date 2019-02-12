@@ -3,7 +3,6 @@ package de.otto.synapse.edison.health;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.info.MessageReceiverNotification;
 import de.otto.synapse.info.MessageReceiverStatus;
-import io.netty.util.internal.ConcurrentSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
@@ -15,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toSet;
@@ -43,7 +43,7 @@ public class StartupHealthIndicator implements HealthIndicator {
                 .stream()
                 .map(EventSource::getChannelName)
                 .collect(toSet());
-        healthyChannels = new ConcurrentSet<>();
+        healthyChannels = ConcurrentHashMap.newKeySet();
     }
 
     @EventListener

@@ -6,10 +6,10 @@ import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.boot.test.util.EnvironmentTestUtils.addEnvironment;
 
 public class MessageQueueReceiverEndpointBeanRegistrarTest {
 
@@ -86,9 +86,9 @@ public class MessageQueueReceiverEndpointBeanRegistrarTest {
     public void shouldRegisterMultipleQueues() {
         context.register(RepeatableQueueReceiverConfig.class);
         context.register(InMemoryMessageQueueTestConfiguration.class);
-        addEnvironment(this.context,
+        TestPropertyValues.of(
                 "test.channel-name=second-channel"
-        );
+        ).applyTo(context);
         context.refresh();
 
         assertThat(context.containsBean("firstQueue")).isTrue();

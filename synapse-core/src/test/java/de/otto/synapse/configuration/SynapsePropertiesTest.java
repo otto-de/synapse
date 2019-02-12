@@ -2,10 +2,10 @@ package de.otto.synapse.configuration;
 
 import org.junit.After;
 import org.junit.Test;
+import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.boot.test.util.EnvironmentTestUtils.addEnvironment;
 
 public class SynapsePropertiesTest {
 
@@ -22,9 +22,9 @@ public class SynapsePropertiesTest {
     public void shoulResolveSenderNamePlaceHolder() {
 
         context.register(SynapseAutoConfiguration.class);
-        addEnvironment(this.context,
+        TestPropertyValues.of(
                 "spring.application.name=my service"
-        );
+        ).applyTo(context);
         context.refresh();
 
         assertThat(context.getBean(SynapseProperties.class).getSender().getName()).isEqualTo("my service");

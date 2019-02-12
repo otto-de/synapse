@@ -9,10 +9,10 @@ import de.otto.synapse.eventsource.EventSource;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.boot.test.util.EnvironmentTestUtils.addEnvironment;
 
 public class EventSourceBeanRegistrarTest {
 
@@ -85,9 +85,9 @@ public class EventSourceBeanRegistrarTest {
     public void shouldRegisterMultipleEventSources() {
         context.register(RepeatableMultiEventSourceTestConfig.class);
         context.register(InMemoryMessageLogTestConfiguration.class);
-        addEnvironment(this.context,
+        TestPropertyValues.of(
                 "test.stream-name=second-stream"
-        );
+        ).applyTo(context);
         context.refresh();
 
         assertThat(context.containsBean("firstEventSource")).isTrue();

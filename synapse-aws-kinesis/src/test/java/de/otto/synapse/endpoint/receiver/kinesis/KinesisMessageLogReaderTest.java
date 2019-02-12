@@ -49,7 +49,6 @@ public class KinesisMessageLogReaderTest {
 
     private static final Logger LOG = getLogger(KinesisMessageLogReaderTest.class);
 
-    private static final Pattern MATCH_ALL = Pattern.compile(".*");
     private static final TestClock clock = TestClock.now();
 
     @Mock
@@ -191,7 +190,7 @@ public class KinesisMessageLogReaderTest {
         logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
 
         // when
-        ChannelPosition position = logReader.consumeUntil(fromHorizon(), shutdown(), responseConsumer).get();
+        logReader.consumeUntil(fromHorizon(), shutdown(), responseConsumer).get();
 
         // then
         verify(responseConsumer, times(4)).accept(responseArgumentCaptor.capture());

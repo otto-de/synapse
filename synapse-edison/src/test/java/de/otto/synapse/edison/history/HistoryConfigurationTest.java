@@ -3,11 +3,11 @@ package de.otto.synapse.edison.history;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.springframework.boot.test.util.EnvironmentTestUtils.addEnvironment;
 
 public class HistoryConfigurationTest {
 
@@ -36,9 +36,9 @@ public class HistoryConfigurationTest {
 
     @Test
     public void shouldNotExposeHistoryIfDisabled() {
-        addEnvironment(this.context,
-                "synapse.edison.history.enabled=false"
-        );
+        TestPropertyValues.of(
+                "synapse.edison.history.enabled=false")
+                .applyTo(context);
         context.register(HistoryConfiguration.class);
         context.refresh();
 
@@ -48,9 +48,9 @@ public class HistoryConfigurationTest {
 
     @Test
     public void shouldExposeHistoryIfEnabled() {
-        addEnvironment(this.context,
-                "synapse.edison.history.enabled=true"
-        );
+        TestPropertyValues.of(
+                "synapse.edison.history.enabled=true")
+                .applyTo(context);
         context.register(HistoryConfiguration.class);
         context.refresh();
 

@@ -22,11 +22,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelResponse.channelResponse;
-import static java.util.Objects.isNull;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
-import static java.util.concurrent.Executors.newFixedThreadPool;
-import static java.util.concurrent.Executors.newSingleThreadExecutor;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -130,7 +126,6 @@ public class KinesisMessageLogReader {
      * @param stopCondition stop condition used to stop message consumption
      * @param consumer the consumer used to process the {@link ShardResponse shard responses}
      * @return completable future
-     * @deprecated to be removed soon
      */
     public CompletableFuture<ChannelPosition> consumeUntil(final ChannelPosition startFrom,
                                                            final Predicate<ShardResponse> stopCondition,

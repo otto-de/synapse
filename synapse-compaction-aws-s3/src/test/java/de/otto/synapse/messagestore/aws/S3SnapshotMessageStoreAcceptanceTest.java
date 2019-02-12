@@ -52,6 +52,7 @@ import static org.junit.Assert.assertThat;
         InMemoryMessageLogTestConfiguration.class
 })
 @TestPropertySource(properties = {
+        "spring.main.allow-bean-definition-overriding=true",
         "synapse.snapshot.bucket-name=de-otto-promo-compaction-test-snapshots",
         "synapse.compaction.enabled=true"}
 )

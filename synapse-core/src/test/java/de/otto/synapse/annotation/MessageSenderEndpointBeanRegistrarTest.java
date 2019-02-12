@@ -9,10 +9,10 @@ import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.boot.test.util.EnvironmentTestUtils.addEnvironment;
 
 public class MessageSenderEndpointBeanRegistrarTest {
 
@@ -113,9 +113,9 @@ public class MessageSenderEndpointBeanRegistrarTest {
     public void shouldRegisterMultipleQueueSenders() {
         context.register(RepeatableQueueSenderConfig.class);
         context.register(InMemoryMessageQueueTestConfiguration.class);
-        addEnvironment(this.context,
+        TestPropertyValues.of(
                 "test.channel-name=second-channel"
-        );
+        ).applyTo(context);
         context.refresh();
 
         assertThat(context.containsBean("firstQueue")).isTrue();
@@ -172,9 +172,9 @@ public class MessageSenderEndpointBeanRegistrarTest {
     public void shouldRegisterMultipleLogSenders() {
         context.register(RepeatableLogSenderConfig.class);
         context.register(InMemoryMessageLogTestConfiguration.class);
-        addEnvironment(this.context,
+        TestPropertyValues.of(
                 "test.channel-name=second-channel"
-        );
+        ).applyTo(context);
         context.refresh();
 
         assertThat(context.containsBean("firstLog")).isTrue();

@@ -61,6 +61,7 @@ import static org.junit.Assert.assertThat;
 @ComponentScan(basePackages = {"de.otto.synapse"})
 @SpringBootTest(classes = {KinesisTestConfiguration.class, KinesisCompactionAcceptanceTest.class})
 @TestPropertySource(properties = {
+        "spring.main.allow-bean-definition-overriding=true",
         "synapse.snapshot.bucket-name=de-otto-kinesis-compaction-test-snapshots",
         "synapse.compaction.enabled=true"}
 )

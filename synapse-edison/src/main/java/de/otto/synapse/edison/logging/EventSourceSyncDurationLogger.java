@@ -4,10 +4,8 @@ import de.otto.synapse.channel.ChannelDurationBehind;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.info.MessageReceiverNotification;
 import de.otto.synapse.info.MessageReceiverStatus;
-import io.netty.util.internal.ConcurrentSet;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -47,7 +45,7 @@ public class EventSourceSyncDurationLogger {
                 .stream()
                 .map(EventSource::getChannelName)
                 .collect(toSet());
-        healthyChannels = new ConcurrentSet<>();
+        healthyChannels = ConcurrentHashMap.newKeySet();
     }
 
     @EventListener

@@ -1,15 +1,14 @@
 package de.otto.synapse.annotation;
 
-import com.google.common.collect.ImmutableList;
 import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import de.otto.synapse.endpoint.EndpointType;
-import de.otto.synapse.endpoint.MessageInterceptorRegistration;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -17,8 +16,6 @@ import org.springframework.core.annotation.Order;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.springframework.boot.test.util.EnvironmentTestUtils.addEnvironment;
-import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
 import static org.springframework.core.Ordered.LOWEST_PRECEDENCE;
 
 public class MessageInterceptorBeanPostProcessorTest {
@@ -28,8 +25,10 @@ public class MessageInterceptorBeanPostProcessorTest {
     @Before
     public void init() {
         context = new AnnotationConfigApplicationContext();
-        addEnvironment(context, "synapse.sender.default-headers.enabled=false");
-        addEnvironment(context, "synapse.receiver.default-headers.enabled=false");
+        TestPropertyValues.of(
+                "synapse.sender.default-headers.enabled=false",
+                "synapse.receiver.default-headers.enabled=false")
+        .applyTo(context);
     }
 
     @After
