@@ -159,6 +159,7 @@ public class KinesisCompactionAcceptanceTest {
                 .map(Thread::getName)
                 .filter((name)->name.startsWith("kinesis-message-log-"))
                 .collect(toList());
+        assertThat(threadNamesAfter, hasSize(2));
         assertThat(threadNamesBefore, is(threadNamesAfter));
     }
 

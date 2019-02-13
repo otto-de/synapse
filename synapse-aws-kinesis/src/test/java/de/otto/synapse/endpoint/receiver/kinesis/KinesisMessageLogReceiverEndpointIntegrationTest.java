@@ -14,7 +14,9 @@ import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.awaitility.Awaitility;
+import org.hamcrest.Matchers;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -156,6 +158,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
                 .map(Thread::getName)
                 .filter((name)->name.startsWith("kinesis-message-log-"))
                 .collect(toList());
+        assertThat(threadNamesAfter, Matchers.hasSize(2));
         assertThat(threadNamesBefore, is(threadNamesAfter));
     }
 
