@@ -95,10 +95,10 @@ public class KinesisAutoConfiguration {
     @ConditionalOnMissingBean(name = "messageLogReceiverEndpointFactory")
     public MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
                                                                                final KinesisAsyncClient kinesisClient,
-                                                                               final ExecutorService executorService,
+                                                                               final ExecutorService kinesisMessageLogExecutorService,
                                                                                final ApplicationEventPublisher eventPublisher) {
         LOG.info("Auto-configuring Kinesis MessageLogReceiverEndpointFactory");
-        return new KinesisMessageLogReceiverEndpointFactory(interceptorRegistry, kinesisClient, executorService, eventPublisher);
+        return new KinesisMessageLogReceiverEndpointFactory(interceptorRegistry, kinesisClient, kinesisMessageLogExecutorService, eventPublisher);
     }
 
 

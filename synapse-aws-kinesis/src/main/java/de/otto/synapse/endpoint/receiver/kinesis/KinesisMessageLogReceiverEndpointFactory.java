@@ -29,12 +29,12 @@ public class KinesisMessageLogReceiverEndpointFactory implements MessageLogRecei
 
     public KinesisMessageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
                                                     final KinesisAsyncClient kinesisClient,
-                                                    final ExecutorService executorService,
+                                                    final ExecutorService kinesisMessageLogExecutorService,
                                                     final ApplicationEventPublisher eventPublisher,
                                                     final Clock clock) {
         this.interceptorRegistry = interceptorRegistry;
         this.kinesisClient = kinesisClient;
-        this.executorService = executorService;
+        this.executorService = kinesisMessageLogExecutorService;
         this.eventPublisher = eventPublisher;
         this.clock = clock;
     }
