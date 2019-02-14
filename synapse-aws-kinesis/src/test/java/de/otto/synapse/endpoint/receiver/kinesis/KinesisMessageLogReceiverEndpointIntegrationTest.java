@@ -10,6 +10,7 @@ import de.otto.synapse.channel.selector.Kinesis;
 import de.otto.synapse.configuration.kinesis.TestMessageInterceptor;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
@@ -66,30 +67,24 @@ import static org.hamcrest.core.IsNot.not;
 public class KinesisMessageLogReceiverEndpointIntegrationTest {
 
     @Autowired
-    private KinesisAsyncClient kinesisAsyncClient;
-
-    @Autowired
-    private MessageInterceptorRegistry messageInterceptorRegistry;
-
-    @Autowired
     private TestMessageInterceptor testMessageInterceptor;
 
     @Autowired
     private MessageSenderEndpoint kinesisSender;
 
     @Autowired
-    private ExecutorService kinesisMessageLogExecutorService;
+    private KinesisMessageLogReceiverEndpointFactory endpointFactory;
 
     private List<Message<String>> messages = synchronizedList(new ArrayList<>());
     private Set<String> threads = synchronizedSet(new HashSet<>());
-    private KinesisMessageLogReceiverEndpoint kinesisMessageLog;
+    private MessageLogReceiverEndpoint kinesisMessageLog;
 
     @Before
     public void before() {
         /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
            when initializing it via @EnableEventSource
          */
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint(KINESIS_INTEGRATION_TEST_CHANNEL, messageInterceptorRegistry, kinesisAsyncClient, kinesisMessageLogExecutorService, null);
+        kinesisMessageLog = endpointFactory.create(KINESIS_INTEGRATION_TEST_CHANNEL);
         kinesisMessageLog.register(MessageConsumer.of(".*", String.class, (message) -> {
             messages.add(message);
             threads.add(Thread.currentThread().getName());
