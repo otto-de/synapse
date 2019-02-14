@@ -158,7 +158,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
                 .map(Thread::getName)
                 .filter((name)->name.startsWith("kinesis-message-log-"))
                 .collect(toList());
-        assertThat(threadNamesAfter, Matchers.hasSize(2));
+        assertThat(threadNamesAfter, is(not(empty())));
         assertThat(threadNamesBefore, is(threadNamesAfter));
     }
 

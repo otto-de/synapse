@@ -53,7 +53,9 @@ import static java.lang.Thread.sleep;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.Matchers.*;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
@@ -159,7 +161,7 @@ public class KinesisCompactionAcceptanceTest {
                 .map(Thread::getName)
                 .filter((name)->name.startsWith("kinesis-message-log-"))
                 .collect(toList());
-        assertThat(threadNamesAfter, hasSize(2));
+        assertThat(threadNamesAfter, is(not(empty())));
         assertThat(threadNamesBefore, is(threadNamesAfter));
     }
 
