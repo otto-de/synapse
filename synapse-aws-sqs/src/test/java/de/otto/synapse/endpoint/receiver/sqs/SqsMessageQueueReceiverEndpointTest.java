@@ -21,12 +21,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.receiverChannelsWith;
 import static de.otto.synapse.endpoint.sender.sqs.SqsMessageSender.MSG_KEY_ATTR;
 import static java.util.Collections.singletonMap;
 import static java.util.Collections.synchronizedList;
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -61,7 +63,7 @@ public class SqsMessageQueueReceiverEndpointTest {
                 .thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl(QUEUE_URL).build()));
         when(sqsAsyncClient.deleteMessage(any(DeleteMessageRequest.class))).thenReturn(completedFuture(DeleteMessageResponse.builder().build()));
         interceptorRegistry = new MessageInterceptorRegistry();
-        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", interceptorRegistry, sqsAsyncClient, null);
+        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", interceptorRegistry, sqsAsyncClient, newSingleThreadExecutor(), null);
         sqsQueueReceiver.register(MessageConsumer.of(".*", String.class, (message) -> messages.add(message)));
 
     }
@@ -83,7 +85,7 @@ public class SqsMessageQueueReceiverEndpointTest {
                 .thenThrow(RuntimeException.class);
 
 
-        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", new MessageInterceptorRegistry(), sqsAsyncClient, null);
+        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", new MessageInterceptorRegistry(), sqsAsyncClient, newSingleThreadExecutor(), null);
     }
 
     @Test
@@ -122,7 +124,7 @@ public class SqsMessageQueueReceiverEndpointTest {
                 sqsMessage("matching-of", PAYLOAD_2),
                 sqsMessage("non-matching-of", PAYLOAD_3));
 
-        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", new MessageInterceptorRegistry(), sqsAsyncClient, null);
+        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", new MessageInterceptorRegistry(), sqsAsyncClient, newSingleThreadExecutor(), null);
         sqsQueueReceiver.register(MessageConsumer.of("matching-of", String.class, (message) -> messages.add(message)));
 
         // when: consumption is started

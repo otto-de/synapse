@@ -28,6 +28,7 @@ import java.util.*;
 import static de.otto.synapse.configuration.sqs.SqsTestConfiguration.SQS_INTEGRATION_TEST_CHANNEL;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.synchronizedSet;
+import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -61,7 +62,7 @@ public class SqsMessageQueueIntegrationTest {
     public void before() {
         messages.clear();
         new SqsClientHelper(sqsAsyncClient).purgeQueue(SQS_INTEGRATION_TEST_CHANNEL);
-        sqsMessageQueue = new SqsMessageQueueReceiverEndpoint(SQS_INTEGRATION_TEST_CHANNEL, messageInterceptorRegistry, sqsAsyncClient, null);
+        sqsMessageQueue = new SqsMessageQueueReceiverEndpoint(SQS_INTEGRATION_TEST_CHANNEL, messageInterceptorRegistry, sqsAsyncClient, newSingleThreadExecutor(), null);
         sqsMessageQueue.register(MessageConsumer.of(".*", String.class, (message) -> {
             LOG.info("Consumed message {}", message.getKey());
             messages.add(message);

@@ -17,10 +17,12 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.otto.synapse.message.Key.NO_KEY;
 import static de.otto.synapse.message.Message.message;
+import static java.time.Duration.ofMillis;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -52,6 +54,8 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
 
     @Nonnull
     private final SqsAsyncClient sqsAsyncClient;
+    @Nonnull
+    private final ExecutorService executorService;
     private final String queueUrl;
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
     private final CompletableFuture<Void> stopped = new CompletableFuture<>();
@@ -59,14 +63,18 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
     public SqsMessageQueueReceiverEndpoint(final @Nonnull String channelName,
                                            final @Nonnull MessageInterceptorRegistry interceptorRegistry,
                                            final @Nonnull SqsAsyncClient sqsAsyncClient,
+                                           final @Nonnull ExecutorService executorService,
                                            final @Nullable ApplicationEventPublisher eventPublisher) {
         super(channelName, interceptorRegistry, eventPublisher);
         this.sqsAsyncClient = sqsAsyncClient;
+        this.executorService = executorService;
         try {
             this.queueUrl = sqsAsyncClient.getQueueUrl(GetQueueUrlRequest
                     .builder()
                     .queueName(channelName)
-                    .overrideConfiguration(AwsRequestOverrideConfiguration.builder().apiCallAttemptTimeout(Duration.ofMillis(2000)).build())
+                    .overrideConfiguration(AwsRequestOverrideConfiguration.builder()
+                            .apiCallAttemptTimeout(ofMillis(2000))
+                            .build())
                     .build())
                     .get()
                     .queueUrl();
@@ -86,7 +94,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
             } finally {
                 stopped.complete(null);
             }
-        }, newFixedThreadPool(2));
+        }, executorService);
     }
 
     private void receiveAndProcess() {
