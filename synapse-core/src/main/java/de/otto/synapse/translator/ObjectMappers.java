@@ -35,16 +35,22 @@ public final class ObjectMappers {
     }
 
     /**
+     * Returns the {@code ObjectMapper} currently used by Synapse.
      *
-     * @return the objectmapper actually used by Synapse. By default, this is the same as {@link #defaultObjectMapper()}
+     * <p>By default, this is the same as {@link #defaultObjectMapper()}. You can override this mapper using
+     * {@link #overrideObjectMapper(ObjectMapper)}.</p>
+     *
+     * @return the {@code ObjectMapper} currently used by Synapse.
      */
     public static ObjectMapper currentObjectMapper() {
         return SYNAPSE_OBJECT_MAPPER.get();
     }
 
     /**
-     * Overrides the object mapper actually used by Synapse. Handle with care as there is a chance to break message
-     * passing across Synapse services if configured in an unexpected way.
+     * Overrides the object mapper actually used by Synapse.
+     *
+     * <p>Handle with care as there is a chance to break message
+     * passing across Synapse services if configured in an unexpected way.</p>
      *
      * @param objectMapper the ObjectMapper used to serialize and deserialize messages
      */
