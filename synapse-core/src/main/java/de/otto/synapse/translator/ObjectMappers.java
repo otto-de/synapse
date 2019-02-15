@@ -4,22 +4,26 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
+import javax.annotation.concurrent.ThreadSafe;
+import java.util.concurrent.atomic.AtomicReference;
+
 import static java.util.Objects.requireNonNull;
 
 /**
  * Manages the ObjectMapper used by Synapse applications for serialization and deserialization purposes.
  */
+@ThreadSafe
 public final class ObjectMappers {
 
     private static final ObjectMapper DEFAULT_OBJECT_MAPPER;
-    private static ObjectMapper SYNAPSE_OBJECT_MAPPER;
+    private static AtomicReference<ObjectMapper> SYNAPSE_OBJECT_MAPPER;
 
     static {
         DEFAULT_OBJECT_MAPPER = new ObjectMapper();
         DEFAULT_OBJECT_MAPPER.findAndRegisterModules();
         DEFAULT_OBJECT_MAPPER.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         DEFAULT_OBJECT_MAPPER.disable(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE);
-        SYNAPSE_OBJECT_MAPPER = DEFAULT_OBJECT_MAPPER;
+        SYNAPSE_OBJECT_MAPPER = new AtomicReference<>(DEFAULT_OBJECT_MAPPER);
     }
 
     /**
@@ -35,7 +39,7 @@ public final class ObjectMappers {
      * @return the objectmapper actually used by Synapse. By default, this is the same as {@link #defaultObjectMapper()}
      */
     public static ObjectMapper currentObjectMapper() {
-        return SYNAPSE_OBJECT_MAPPER;
+        return SYNAPSE_OBJECT_MAPPER.get();
     }
 
     /**
@@ -45,7 +49,7 @@ public final class ObjectMappers {
      * @param objectMapper the ObjectMapper used to serialize and deserialize messages
      */
     public static synchronized void overrideObjectMapper(final ObjectMapper objectMapper) {
-        SYNAPSE_OBJECT_MAPPER = requireNonNull(objectMapper);
+        SYNAPSE_OBJECT_MAPPER.set(requireNonNull(objectMapper));
     }
 
     private ObjectMappers() {
