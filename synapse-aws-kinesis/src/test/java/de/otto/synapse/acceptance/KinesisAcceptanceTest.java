@@ -44,7 +44,10 @@ import static org.slf4j.LoggerFactory.getLogger;
 @ComponentScan(
         basePackages = {"de.otto.synapse"})
 @SpringBootTest(
-        properties = "synapse.snapshot.bucketName=de-otto-integrationtest-snapshots",
+        properties = {
+                "synapse.snapshot.bucketName=de-otto-integrationtest-snapshots",
+                "spring.main.allow-bean-definition-overriding=true"
+        },
         classes = KinesisAcceptanceTest.class)
 @EnableEventSource(
         name = "kinesisEventSource",

@@ -44,7 +44,7 @@ public class MessageCodecTest {
     @Test
     public void shouldDecodeV1FormatIntoMessage() {
         final String body = "{\"foo\":\"bar\"}";
-        final Message<String> message = decode(body, Header.builder(), Message.builder(String.class));
+        final Message<String> message = decode(Key.of(), Header.of(), body);
 
         assertThat(message.getKey()).isEqualTo(NO_KEY);
         assertThat(message.getPayload()).isEqualTo(body);
@@ -54,7 +54,7 @@ public class MessageCodecTest {
     @Test
     public void shouldDecodeNonJsonV1FormatIntoMessage() {
         final String body = "some non-json body";
-        final Message<String> message = decode(body, Header.builder(), Message.builder(String.class));
+        final Message<String> message = decode(Key.of(), Header.of(), body);
 
         assertThat(message.getKey()).isEqualTo(NO_KEY);
         assertThat(message.getPayload()).isEqualTo(body);
@@ -63,8 +63,7 @@ public class MessageCodecTest {
 
     @Test
     public void shouldDecodeV1FormatWithNullPayloadIntoMessage() {
-        final String body = null;
-        final Message<String> message = decode(body, Header.builder(), Message.builder(String.class));
+        final Message<String> message = decode(Key.of(), Header.of(), null);
 
         assertThat(message.getKey()).isEqualTo(NO_KEY);
         assertThat(message.getPayload()).isNull();
@@ -77,7 +76,7 @@ public class MessageCodecTest {
                 + "\"_synapse_msg_headers\":{\"attr\":\"value\"},"
                 + "\"_synapse_msg_payload\":{\"some\":\"payload\"}}";
 
-        final Message<String> message = decode(body, Header.builder(), Message.builder(String.class));
+        final Message<String> message = decode(Key.of(), Header.of(), body);
 
         assertThat(message.getKey()).isEqualTo(Key.of());
         assertThat(message.getPayload()).isEqualTo("{\"some\":\"payload\"}");
@@ -91,7 +90,7 @@ public class MessageCodecTest {
                 + "\"_synapse_msg_headers\":{\"attr\":\"value\"},"
                 + "\"_synapse_msg_payload\":{\"some\":\"payload\"}}";
 
-        final Message<String> message = decode(body, Header.builder(), Message.builder(String.class));
+        final Message<String> message = decode(Key.of(), Header.of(), body);
 
         assertThat(message.getKey()).isEqualTo(Key.of("p1", "p2"));
         assertThat(message.getPayload()).isEqualTo("{\"some\":\"payload\"}");
@@ -104,7 +103,7 @@ public class MessageCodecTest {
                 + "\"_synapse_msg_headers\":{},"
                 + "\"_synapse_msg_payload\":null}";
 
-        final Message<String> message = decode(body, Header.builder(), Message.builder(String.class));
+        final Message<String> message = decode(Key.of(), Header.of(), body);
 
         assertThat(message.getPayload()).isNull();
         assertThat(message.getHeader().getAll()).isEmpty();

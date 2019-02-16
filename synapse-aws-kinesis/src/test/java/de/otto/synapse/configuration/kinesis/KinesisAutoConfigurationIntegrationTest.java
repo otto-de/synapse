@@ -20,7 +20,12 @@ import static org.junit.Assert.assertThat;
 @ActiveProfiles("test")
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
-@SpringBootTest(classes = KinesisAutoConfigurationIntegrationTest.class)
+@SpringBootTest(
+        properties = {
+                "spring.main.allow-bean-definition-overriding=true"
+        },
+        classes = KinesisAutoConfigurationIntegrationTest.class
+)
 public class KinesisAutoConfigurationIntegrationTest {
 
     @Autowired

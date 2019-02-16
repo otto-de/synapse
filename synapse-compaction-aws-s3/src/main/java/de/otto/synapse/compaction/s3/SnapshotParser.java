@@ -8,6 +8,7 @@ import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Header;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 
 import java.io.*;
@@ -71,14 +72,10 @@ public class SnapshotParser {
         while (parser.nextToken() != JsonToken.END_ARRAY) {
             JsonToken currentToken = parser.currentToken();
             if (currentToken == JsonToken.FIELD_NAME) {
-                final String key = parser.getValueAsString();
-                final Header.Builder headerBuilder = Header
-                        .builder()
-                        .withShardPosition(shardPosition);
-                final Message.Builder messageBuilder = Message
-                        .builder(String.class)
-                        .withKey(key);
-                final Message<String> message = decode(parser.nextTextValue(), headerBuilder, messageBuilder);
+                final Message<String> message = decode(
+                        Key.of(parser.getValueAsString()),
+                        Header.of(shardPosition),
+                        parser.nextTextValue());
                 messageConsumer.accept(message);
             }
         }

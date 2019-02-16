@@ -1,6 +1,7 @@
 package de.otto.synapse.message.kinesis;
 
 import de.otto.synapse.message.Header;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.model.Record;
@@ -33,16 +34,12 @@ public class KinesisMessage {
     public static Message<String> kinesisMessage(final @Nonnull String shard,
                                                  final @Nonnull Record record) {
 
-        final Message.Builder<String> messageBuilder = Message.builder(String.class)
-                .withKey(record.partitionKey());
-
-        final Header.Builder headerBuilder = Header.builder()
-                .withAttribute(MSG_ARRIVAL_TS, record.approximateArrivalTimestamp())
-                .withShardPosition(fromPosition(shard, record.sequenceNumber()));
-
-        final String body = SDK_BYTES_STRING.apply(record.data());
-
-        return decode(body, headerBuilder, messageBuilder);
+        return decode(
+                Key.of(record.partitionKey()),
+                Header.builder()
+                        .withAttribute(MSG_ARRIVAL_TS, record.approximateArrivalTimestamp())
+                        .withShardPosition(fromPosition(shard, record.sequenceNumber())).build(),
+                SDK_BYTES_STRING.apply(record.data()));
     }
 
 

@@ -1,7 +1,6 @@
 package de.otto.synapse.compaction.s3;
 
 import de.otto.synapse.annotation.EnableEventSourcing;
-import de.otto.synapse.configuration.EventSourcingAutoConfiguration;
 import de.otto.synapse.helper.s3.S3Helper;
 import org.junit.After;
 import org.junit.Before;
@@ -28,7 +27,11 @@ import static org.junit.Assert.assertThat;
 @ActiveProfiles("test")
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
-@SpringBootTest(classes = SnapshotReadServiceIntegrationTest.class)
+@SpringBootTest(
+        properties = {
+                "spring.main.allow-bean-definition-overriding=true"
+        },
+        classes = SnapshotReadServiceIntegrationTest.class)
 @EnableEventSourcing
 public class SnapshotReadServiceIntegrationTest {
 

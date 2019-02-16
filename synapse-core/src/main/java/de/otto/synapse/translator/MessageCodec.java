@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import static de.otto.synapse.message.Header.copyOf;
+import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.translator.MessageFormat.defaultMessageFormat;
 import static de.otto.synapse.translator.ObjectMappers.currentObjectMapper;
 import static java.util.Collections.emptyMap;
@@ -96,31 +98,27 @@ public class MessageCodec {
     }
 
     public static Message<String> decode(final String body) {
-        return decode(body, Header.builder(), Message.builder(String.class));
+        return decode(Key.of(), Header.of(), body);
     }
 
-    public static Message<String> decode(final String body,
-                                         final Header.Builder headerBuilder,
-                                         final Message.Builder<String> messageBuilder) {
+    public static Message<String> decode(final Key key,
+                                         final Header prototypeHeader,
+                                         final String body) {
         switch (versionOf(body)) {
             case V1:
-                return messageBuilder
-                        .withHeader(headerBuilder.build())
-                        .withPayload(body)
-                        .build();
+                return message(key, prototypeHeader, body);
             case V2:
                 try {
                     final JsonNode json = parseRecordBody(body);
-                    keyFrom(json).ifPresent(messageBuilder::withKey);
-                    return messageBuilder
-                            .withHeader(headerBuilder
+                    return message(
+                            keyFrom(json).orElse(key),
+                            copyOf(prototypeHeader)
                                     .withAttributes(attributesFrom(json))
-                                    .build())
-                            .withPayload(payloadFrom(json))
-                            .build();
+                                    .build(),
+                            payloadFrom(json));
                 } catch (final RuntimeException e) {
                     LOG.error("Exception caught while parsing record {}: {}", body, e.getMessage());
-                    return messageBuilder.withHeader(headerBuilder.build()).withPayload(body).build();
+                    return message(key, prototypeHeader, body);
                 }
             default:
                 throw new IllegalStateException("Unsupported message format: " + body);

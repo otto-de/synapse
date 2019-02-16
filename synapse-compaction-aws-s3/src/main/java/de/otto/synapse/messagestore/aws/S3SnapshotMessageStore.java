@@ -12,6 +12,7 @@ import de.otto.synapse.compaction.s3.SnapshotReadService;
 import de.otto.synapse.info.SnapshotReaderNotification;
 import de.otto.synapse.info.SnapshotReaderStatus;
 import de.otto.synapse.message.Header;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.messagestore.SnapshotMessageStore;
 import org.slf4j.Logger;
@@ -197,11 +198,10 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
                     while (!jsonParser.isClosed() && jsonParser.nextToken() != JsonToken.END_ARRAY) {
                         JsonToken currentToken = jsonParser.currentToken();
                         if (currentToken == JsonToken.FIELD_NAME) {
-                            final String key = jsonParser.getValueAsString();
                             nextMessage = decode(
-                                    jsonParser.nextTextValue(),
-                                    Header.builder(),
-                                    Message.builder(String.class).withKey(key));
+                                    Key.of(jsonParser.getValueAsString()),
+                                    Header.of(),
+                                    jsonParser.nextTextValue());
                             break;
                         }
                     }

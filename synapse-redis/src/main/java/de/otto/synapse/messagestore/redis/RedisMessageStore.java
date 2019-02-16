@@ -2,7 +2,6 @@ package de.otto.synapse.messagestore.redis;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
-import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.messagestore.WritableMessageStore;
 import de.otto.synapse.translator.MessageCodec;
@@ -108,7 +107,7 @@ public class RedisMessageStore implements WritableMessageStore {
     }
 
     static Message<String> messageOf(final String redisValue) {
-        return MessageCodec.decode(redisValue, Header.builder(), Message.builder(String.class));
+        return MessageCodec.decode(redisValue);
     }
 
     static String toRedisValue(final Message<String> message) {

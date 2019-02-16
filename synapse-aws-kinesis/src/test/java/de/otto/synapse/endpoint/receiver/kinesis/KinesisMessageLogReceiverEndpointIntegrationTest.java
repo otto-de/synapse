@@ -9,15 +9,12 @@ import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.selector.Kinesis;
 import de.otto.synapse.configuration.kinesis.TestMessageInterceptor;
 import de.otto.synapse.consumer.MessageConsumer;
-import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import org.awaitility.Awaitility;
-import org.hamcrest.Matchers;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,7 +25,6 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -36,8 +32,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.StopCondition.endOfChannel;
@@ -49,7 +47,6 @@ import static java.lang.Thread.sleep;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.synchronizedSet;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -61,7 +58,12 @@ import static org.hamcrest.core.IsNot.not;
 @ActiveProfiles("test")
 @EnableAutoConfiguration
 @ComponentScan(basePackages = {"de.otto.synapse"})
-@SpringBootTest(classes = KinesisMessageLogReceiverEndpointIntegrationTest.class)
+@SpringBootTest(
+        properties = {
+                "spring.main.allow-bean-definition-overriding=true"
+        },
+        classes = KinesisMessageLogReceiverEndpointIntegrationTest.class
+)
 @EnableMessageSenderEndpoint(name = "kinesisSender", channelName = KINESIS_INTEGRATION_TEST_CHANNEL, selector = Kinesis.class)
 @DirtiesContext
 public class KinesisMessageLogReceiverEndpointIntegrationTest {
