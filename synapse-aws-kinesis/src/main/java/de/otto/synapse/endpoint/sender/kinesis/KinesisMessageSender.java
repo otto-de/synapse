@@ -4,11 +4,9 @@ import com.google.common.collect.Lists;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.message.TextMessage;
-import de.otto.synapse.translator.MessageCodec;
 import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.MessageTranslator;
 import org.slf4j.Logger;
-import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequestEntry;
@@ -21,7 +19,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toCollection;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -34,7 +31,7 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
     private static final long RETRY_DELAY_MS = 1000L;
 
     private final KinesisAsyncClient kinesisAsyncClient;
-    private final MessageFormat messageFormat;
+    private final KinesisEncoder encoder;
 
     public KinesisMessageSender(final String channelName,
                                 final MessageInterceptorRegistry interceptorRegistry,
@@ -50,7 +47,7 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
                                 final MessageFormat messageFormat) {
         super(channelName, interceptorRegistry, messageTranslator);
         this.kinesisAsyncClient = kinesisClient;
-        this.messageFormat = messageFormat;
+        this.encoder = new KinesisEncoder(messageFormat);
     }
 
     @Override
@@ -62,6 +59,8 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
 
     @Override
     protected CompletableFuture<Void> doSendBatch(@Nonnull Stream<TextMessage> messageStream) {
+        // TODO: Introduce a response object and return it instead of Void
+        // Just because we need a CompletableFuture<Void>, no CompletableFuture<SendMessageBatchResponse>:
         final List<PutRecordsRequestEntry> entries = createPutRecordRequestEntries(messageStream);
         if (!entries.isEmpty()) {
             Lists.partition(entries, PUT_RECORDS_BATCH_SIZE)
@@ -105,21 +104,8 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
 
     private ArrayList<PutRecordsRequestEntry> createPutRecordRequestEntries(final @Nonnull Stream<TextMessage> messageStream) {
         return messageStream
-                .map(this::requestEntryFor)
+                .map(encoder::apply)
                 .collect(toCollection(ArrayList::new));
     }
-
-    private PutRecordsRequestEntry requestEntryFor(final TextMessage message) {
-        final String encodedMessage = MessageCodec.encode(message, messageFormat);
-        final SdkBytes sdkBytes = encodedMessage != null
-                ? SdkBytes.fromString(encodedMessage, UTF_8)
-                : SdkBytes.fromByteArray(new byte[]{});
-
-        return PutRecordsRequestEntry.builder()
-                .partitionKey(message.getKey().partitionKey())
-                .data(sdkBytes)
-                .build();
-    }
-
 
 }

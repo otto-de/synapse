@@ -37,7 +37,6 @@ import static de.otto.synapse.endpoint.MessageInterceptorRegistration.senderChan
 import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.message.kinesis.KinesisMessage.SYNAPSE_MSG_HEADERS;
 import static de.otto.synapse.message.kinesis.KinesisMessage.SYNAPSE_MSG_PAYLOAD;
-import static de.otto.synapse.translator.MessageCodec.*;
 import static de.otto.synapse.translator.ObjectMappers.currentObjectMapper;
 import static java.lang.String.valueOf;
 import static java.util.Collections.singletonMap;
@@ -89,7 +88,7 @@ public class KinesisMessageSenderV2Test {
         final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data().asByteBuffer());
 
         final JsonNode json = currentObjectMapper().readTree(inputStream);
-        assertThat(json.get(SYNAPSE_MSG_FORMAT).asText(), is("v2"));
+        assertThat(json.get(MessageFormat.SYNAPSE_MSG_FORMAT).asText(), is("v2"));
     }
 
     @Test
@@ -113,8 +112,8 @@ public class KinesisMessageSenderV2Test {
 
         final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data().asByteBuffer());
         final JsonNode json = currentObjectMapper().readTree(inputStream);
-        assertThat(json.get(SYNAPSE_MSG_KEY).get(SYNAPSE_MSG_PARTITIONKEY).textValue(), is("somePartitionKey"));
-        assertThat(json.get(SYNAPSE_MSG_KEY).get(SYNAPSE_MSG_COMPACTIONKEY).textValue(), is("someCompactionKey"));
+        assertThat(json.get(MessageFormat.SYNAPSE_MSG_KEY).get(MessageFormat.SYNAPSE_MSG_PARTITIONKEY).textValue(), is("somePartitionKey"));
+        assertThat(json.get(MessageFormat.SYNAPSE_MSG_KEY).get(MessageFormat.SYNAPSE_MSG_COMPACTIONKEY).textValue(), is("someCompactionKey"));
     }
 
     @Test

@@ -19,8 +19,8 @@ public class StatefulMessageConsumer<P, S> implements MessageConsumer<P> {
     private final Pattern keyPattern;
     private final StateRepository<S> stateRepository;
     private final Class<P> payloadType;
-    private final Function<Message<P>, String> keyMapper;
-    private final Function<Message<P>, S> payloadToStateMapper;
+    private final Function<? super Message<P>, String> keyMapper;
+    private final Function<? super Message<P>, S> payloadToStateMapper;
 
     /**
      * Creates a StatefulMessageConsumer.
@@ -53,8 +53,8 @@ public class StatefulMessageConsumer<P, S> implements MessageConsumer<P> {
     public StatefulMessageConsumer(final String keyPattern,
                                    final Class<P> payloadType,
                                    final StateRepository<S> stateRepository,
-                                   final Function<Message<P>, S> payloadToStateMapper,
-                                   final Function<Message<P>,String> keyMapper) {
+                                   final Function<? super Message<P>, S> payloadToStateMapper,
+                                   final Function<? super Message<P>,String> keyMapper) {
         this.keyPattern = Pattern.compile(keyPattern);
         this.payloadType = payloadType;
         this.stateRepository = stateRepository;

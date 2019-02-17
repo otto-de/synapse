@@ -4,40 +4,45 @@ import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.message.TextMessage;
+import org.junit.Assert;
 import org.junit.Test;
 
 import static com.google.common.collect.ImmutableBiMap.of;
 import static de.otto.synapse.message.Key.NO_KEY;
 import static de.otto.synapse.translator.MessageCodec.decode;
-import static de.otto.synapse.translator.MessageCodec.encode;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.is;
 
-public class MessageCodecTest {
+public class TextEncoderTest {
 
     @Test
     public void shouldEncodeInDefaultFormat() {
-        final String encoded = encode(TextMessage.of("foo", Header.builder().withAttributes(of("attr", "value")).build(), "{}"));
+        final TextEncoder encoder = new TextEncoder();
+        final String encoded = encoder.apply(TextMessage.of("foo", Header.builder().withAttributes(of("attr", "value")).build(), "{}"));
         assertThat(encoded).isEqualTo("{}");
     }
 
     @Test
     public void shouldEncodeInV1Format() {
+        final TextEncoder encoder = new TextEncoder(MessageFormat.V1);
         final TextMessage someMessage = TextMessage.of("foo", Header.builder().withAttributes(of("attr", "value")).build(), "{}");
-        final String encoded = encode(someMessage, MessageFormat.V1);
+        final String encoded = encoder.apply(someMessage);
         assertThat(encoded).isEqualTo("{}");
     }
 
     @Test
     public void shouldEncodeInV2Format() {
+        final TextEncoder encoder = new TextEncoder(MessageFormat.V2);
         final TextMessage someMessage = TextMessage.of(Key.of("foo", "bar"), Header.builder().withAttributes(of("attr", "value")).build(), "{}");
-        final String encoded = encode(someMessage, MessageFormat.V2);
+        final String encoded = encoder.apply(someMessage);
         assertThat(encoded).isEqualTo("{\"_synapse_msg_format\":\"v2\",\"_synapse_msg_key\":{\"partitionKey\":\"foo\",\"compactionKey\":\"bar\"},\"_synapse_msg_headers\":{\"attr\":\"value\"},\"_synapse_msg_payload\":{}}");
     }
 
     @Test
     public void shouldEncodeInV2FormatWithEscapedCharacters() {
+        final TextEncoder encoder = new TextEncoder(MessageFormat.V2);
         final TextMessage someMessage = TextMessage.of(Key.of("f\\_oo", "bar"), Header.builder().withAttributes(of("attr", "valu\\e")).build(), "{}");
-        final String encoded = encode(someMessage, MessageFormat.V2);
+        final String encoded = encoder.apply(someMessage);
         Message<String> decoded = decode(encoded);
         assertThat(decoded).isEqualTo(someMessage);
     }
@@ -110,4 +115,23 @@ public class MessageCodecTest {
         assertThat(message.getHeader().getAll()).isEmpty();
     }
 
+    @Test
+    public void shouldConvertMessageToStringValueAndViceVersa() {
+        final TextMessage message = TextMessage.of("some key","{}");
+        final String value = new TextEncoder(MessageFormat.V2).apply(message);
+        Assert.assertThat(value, is("{\"_synapse_msg_format\":\"v2\",\"_synapse_msg_key\":{\"partitionKey\":\"some key\",\"compactionKey\":\"some key\"},\"_synapse_msg_headers\":{},\"_synapse_msg_payload\":{}}"));
+        final Message<String> transformed = MessageCodec.decode(value);
+        Assert.assertThat(transformed.getKey(), is(message.getKey()));
+        Assert.assertThat(transformed.getPayload(), is(message.getPayload()));
+    }
+
+    @Test
+    public void shouldConvertMessageWithNullPayloadToStringValueAndViceVersa() {
+        final TextMessage message = TextMessage.of("some key", null);
+        final String value = new TextEncoder(MessageFormat.V2).apply(message);
+        Assert.assertThat(value, is("{\"_synapse_msg_format\":\"v2\",\"_synapse_msg_key\":{\"partitionKey\":\"some key\",\"compactionKey\":\"some key\"},\"_synapse_msg_headers\":{},\"_synapse_msg_payload\":null}"));
+        final Message<String> transformed = MessageCodec.decode(value);
+        Assert.assertThat(transformed.getKey(), is(message.getKey()));
+        Assert.assertThat(transformed.getPayload(), is(message.getPayload()));
+    }
 }

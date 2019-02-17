@@ -58,7 +58,7 @@ public class RedisMessageStoreIntegrationTest {
     static class TestConfiguration {
         @Bean
         public RedisMessageStore redisMessageStore(final RedisTemplate<String, String> redisTemplate) {
-            return new RedisMessageStore("foo-channel", redisTemplate, 100, 1000);
+            return new RedisMessageStore("foo-channel", 100, 1000, redisTemplate);
         }
     }
 

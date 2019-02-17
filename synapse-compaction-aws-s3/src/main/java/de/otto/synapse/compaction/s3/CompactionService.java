@@ -6,15 +6,17 @@ import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
+import de.otto.synapse.message.Message;
 import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.translator.MessageFormat;
+import de.otto.synapse.translator.TextEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
+import java.util.function.Function;
 
 import static de.otto.synapse.channel.StopCondition.*;
-import static de.otto.synapse.translator.MessageCodec.encode;
 import static de.otto.synapse.translator.MessageFormat.defaultMessageFormat;
 
 public class CompactionService {
@@ -49,14 +51,22 @@ public class CompactionService {
     }
 
     public String compact(final String channelName, final MessageFormat messageFormat) {
-        LOG.info("Start compacting channel {}", channelName);
+        LOG.info("Start compacting channel {} with MessageFormat {}", channelName, messageFormat);
         stateRepository.clear();
+
+        final Function<Message<String>, String> stateEncoder = new TextEncoder(messageFormat);
+        final Function<Message<String>, String> keyMapper = (message) -> message.getKey().compactionKey();
 
         LOG.info("Start loading entries from snapshot");
         final MessageLogReceiverEndpoint messageLog = messageLogReceiverEndpointFactory.create(channelName);
         final EventSource compactingKinesisEventSource = eventSourceBuilder.buildEventSource(messageLog);
         compactingKinesisEventSource.register(
-                new StatefulMessageConsumer<>(".*", String.class, stateRepository, (msg) -> encode(msg, messageFormat), (message) -> message.getKey().compactionKey())
+                new StatefulMessageConsumer<>(
+                        ".*",
+                        String.class,
+                        stateRepository,
+                        stateEncoder,
+                        keyMapper)
         );
 
         try {

@@ -4,8 +4,10 @@ import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.messagestore.WritableMessageStore;
+import de.otto.synapse.translator.Encoder;
 import de.otto.synapse.translator.MessageCodec;
 import de.otto.synapse.translator.MessageFormat;
+import de.otto.synapse.translator.TextEncoder;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -24,6 +26,13 @@ import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static java.util.Arrays.asList;
 import static java.util.Spliterators.spliteratorUnknownSize;
 
+/**
+ * Redis-based implementation of a WritableMessageStore.
+ *
+ * <p>
+ *     The store can be configured like a ring-buffer to only store the latest N messages.
+ * </p>
+ */
 public class RedisMessageStore implements WritableMessageStore {
 
     private static final int CHARACTERISTICS = Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE;
@@ -32,15 +41,38 @@ public class RedisMessageStore implements WritableMessageStore {
     private final RedisTemplate<String, String> redisTemplate;
     private final int batchSize;
     private final int maxSize;
+    private final Encoder<String> encoder;
 
+    /**
+     * @param channelName the name of the channel whose messages are stored in the {@code RedisMessageStore}
+     * @param batchSize the size of the batches used to fetch messages from Redis
+     * @param ringBufferSize the maximum number of messages stored in the ring-buffer
+     * @param stringRedisTemplate the RedisTemplate used to access Redis
+     */
     public RedisMessageStore(final String channelName,
-                             final RedisTemplate<String, String> stringRedisTemplate,
                              final int batchSize,
-                             final int maxSize) {
+                             final int ringBufferSize,
+                             final RedisTemplate<String, String> stringRedisTemplate) {
+        this(channelName, batchSize, ringBufferSize, stringRedisTemplate, new TextEncoder(MessageFormat.V2));
+    }
+
+    /**
+     * @param channelName the name of the channel whose messages are stored in the {@code RedisMessageStore}
+     * @param batchSize the size of the batches used to fetch messages from Redis
+     * @param ringBufferSize the maximum number of messages stored in the ring-buffer
+     * @param stringRedisTemplate the RedisTemplate used to access Redis
+     * @param messageEncoder the encoder used to encode messages into the string-representation stored in Redis
+     */
+    public RedisMessageStore(final String channelName,
+                             final int batchSize,
+                             final int ringBufferSize,
+                             final RedisTemplate<String, String> stringRedisTemplate,
+                             final Encoder<String> messageEncoder) {
         this.channelName = channelName;
         this.redisTemplate = stringRedisTemplate;
         this.batchSize = batchSize;
-        this.maxSize = maxSize;
+        this.maxSize = ringBufferSize;
+        this.encoder = messageEncoder;
     }
 
     public String getChannelName() {
@@ -60,7 +92,7 @@ public class RedisMessageStore implements WritableMessageStore {
                 });
                 operations
                         .boundListOps(channelName + "-messages")
-                        .rightPush(toRedisValue(message));
+                        .rightPush(encoder.apply(message));
                 operations
                         .boundListOps(channelName + "-messages")
                         .trim(-maxSize, -1);
@@ -108,10 +140,6 @@ public class RedisMessageStore implements WritableMessageStore {
 
     static TextMessage messageOf(final String redisValue) {
         return MessageCodec.decode(redisValue);
-    }
-
-    static String toRedisValue(final TextMessage message) {
-        return MessageCodec.encode(message, MessageFormat.V2);
     }
 
     public void clear() {
