@@ -3,7 +3,7 @@ package de.otto.synapse.channel;
 
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.message.Key;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -14,7 +14,6 @@ import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.ShardResponse.shardResponse;
-import static de.otto.synapse.message.Message.message;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -31,8 +30,8 @@ public class ChannelResponseTest {
 
     @Test
     public void shouldReturnMessages() {
-        final Message<String> first = message(Key.of("a"), null);
-        final Message<String> second = message(Key.of("b"), null);
+        final TextMessage first = TextMessage.of(Key.of("a"), null);
+        final TextMessage second = TextMessage.of(Key.of("b"), null);
         final ChannelResponse response = ChannelResponse.channelResponse(
                 "foo",
                 shardResponse(fromHorizon("foo"), Duration.ZERO, of(first, second))

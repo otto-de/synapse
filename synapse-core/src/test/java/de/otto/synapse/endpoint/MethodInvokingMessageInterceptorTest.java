@@ -3,13 +3,13 @@ package de.otto.synapse.endpoint;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.junit.Test;
 
 import java.lang.reflect.Method;
 import java.util.stream.Stream;
 
 import static de.otto.synapse.endpoint.MethodInvokingMessageInterceptorTest.TestInterceptors.method;
-import static de.otto.synapse.message.Message.message;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -21,6 +21,10 @@ public class MethodInvokingMessageInterceptorTest {
         }
 
         public Message<String> interceptor(final Message<String> message) {
+            return message;
+        }
+
+        public TextMessage textMessageInterceptor(final TextMessage message) {
             return message;
         }
 
@@ -60,24 +64,32 @@ public class MethodInvokingMessageInterceptorTest {
     @Test
     public void shouldInterceptMessages() {
         MethodInvokingMessageInterceptor interceptor = new MethodInvokingMessageInterceptor(new TestInterceptors(), method("interceptor"));
-        Message<String> expected = message("foo", Header.of(ImmutableMap.of("h", "val")), "some payload");
-        Message<String> intercepted = interceptor.intercept(expected);
+        TextMessage expected = TextMessage.of("foo", Header.of(ImmutableMap.of("h", "val")), "some payload");
+        TextMessage intercepted = interceptor.intercept(expected);
+        assertEquals(intercepted, expected);
+    }
+
+    @Test
+    public void shouldInterceptTextMessages() {
+        MethodInvokingMessageInterceptor interceptor = new MethodInvokingMessageInterceptor(new TestInterceptors(), method("textMessageInterceptor"));
+        TextMessage expected = TextMessage.of("foo", Header.of(ImmutableMap.of("h", "val")), "some payload");
+        TextMessage intercepted = interceptor.intercept(expected);
         assertEquals(intercepted, expected);
     }
 
     @Test
     public void shouldInterceptMessagesWithMissingReturnTypeParam() {
         MethodInvokingMessageInterceptor interceptor = new MethodInvokingMessageInterceptor(new TestInterceptors(), method("interceptorWithoutReturnTypeParam"));
-        Message<String> expected = message("foo", Header.of(ImmutableMap.of("h", "val")), "some payload");
-        Message<String> intercepted = interceptor.intercept(expected);
+        TextMessage expected = TextMessage.of("foo", Header.of(ImmutableMap.of("h", "val")), "some payload");
+        TextMessage intercepted = interceptor.intercept(expected);
         assertEquals(intercepted, expected);
     }
 
     @Test
     public void shouldInterceptMessagesWithMissingParamType() {
         MethodInvokingMessageInterceptor interceptor = new MethodInvokingMessageInterceptor(new TestInterceptors(), method("interceptorWithoutParamType"));
-        Message<String> expected = message("foo", Header.of(ImmutableMap.of("h", "val")), "some payload");
-        Message<String> intercepted = interceptor.intercept(expected);
+        TextMessage expected = TextMessage.of("foo", Header.of(ImmutableMap.of("h", "val")), "some payload");
+        TextMessage intercepted = interceptor.intercept(expected);
         assertEquals(intercepted, expected);
     }
 
@@ -104,16 +116,16 @@ public class MethodInvokingMessageInterceptorTest {
     @Test
     public void shouldFilterMessages() {
         MethodInvokingMessageInterceptor interceptor = new MethodInvokingMessageInterceptor(new TestInterceptors(), method("filter"));
-        Message<String> message = message("foo", Header.of(ImmutableMap.of("h", "val")), "some payload");
-        Message<String> intercepted = interceptor.intercept(message);
+        TextMessage message = TextMessage.of("foo", Header.of(ImmutableMap.of("h", "val")), "some payload");
+        TextMessage intercepted = interceptor.intercept(message);
         assertNull(intercepted);
     }
 
     @Test
     public void shouldInterceptMessagesWithVoidInterceptor() {
         MethodInvokingMessageInterceptor interceptor = new MethodInvokingMessageInterceptor(new TestInterceptors(), method("voidInterceptor"));
-        Message<String> expected = message("foo", Header.of(ImmutableMap.of("h", "val")), "some payload");
-        Message<String> intercepted = interceptor.intercept(expected);
+        TextMessage expected = TextMessage.of("foo", Header.of(ImmutableMap.of("h", "val")), "some payload");
+        TextMessage intercepted = interceptor.intercept(expected);
         assertEquals(intercepted, expected);
     }
 

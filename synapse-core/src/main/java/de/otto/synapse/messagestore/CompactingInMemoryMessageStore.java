@@ -2,6 +2,7 @@ package de.otto.synapse.messagestore;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.concurrent.ConcurrentNavigableMap;
@@ -24,7 +25,7 @@ import static de.otto.synapse.channel.ChannelPosition.merge;
 public class CompactingInMemoryMessageStore implements WritableMessageStore {
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
-    private final ConcurrentNavigableMap<String, Message<String>> messages = new ConcurrentSkipListMap<>();
+    private final ConcurrentNavigableMap<String, TextMessage> messages = new ConcurrentSkipListMap<>();
     private final AtomicReference<ChannelPosition> latestChannelPosition = new AtomicReference<>(fromHorizon());
     private final boolean removeNullPayloadMessages;
 
@@ -37,13 +38,7 @@ public class CompactingInMemoryMessageStore implements WritableMessageStore {
     }
 
     @Override
-    public void add(final Message<String> message) {
-        /*final String messageKey = message
-                .getHeader()
-                .getShardPosition()
-                .map(pos -> pos.shardName() + "-" + message.getKey().compactionKey())
-                .orElse(message.getKey().compactionKey());
-                */
+    public void add(final TextMessage message) {
         lock.writeLock().lock();
         try {
             if (message.getPayload() == null && removeNullPayloadMessages) {
@@ -63,12 +58,22 @@ public class CompactingInMemoryMessageStore implements WritableMessageStore {
 
     @Override
     public ChannelPosition getLatestChannelPosition() {
-        return latestChannelPosition.get();
+        lock.readLock().lock();
+        try {
+            return latestChannelPosition.get();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
-    public Stream<Message<String>> stream() {
-        return messages.values().stream();
+    public Stream<TextMessage> stream() {
+        lock.readLock().lock();
+        try {
+            return messages.values().stream();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override

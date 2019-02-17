@@ -9,7 +9,7 @@ import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.AbstractMessageLogReceiverEndpoint;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -60,7 +60,7 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
             final InterceptorChain interceptorChain = interceptorRegistry.getInterceptorChain(channelName, RECEIVER);
             response.getMessages().forEach(message -> {
                 try {
-                    final Message<String> interceptedMessage = interceptorChain.intercept(message);
+                    final TextMessage interceptedMessage = interceptorChain.intercept(message);
                     if (interceptedMessage != null) {
                         messageDispatcher.accept(interceptedMessage);
                     }

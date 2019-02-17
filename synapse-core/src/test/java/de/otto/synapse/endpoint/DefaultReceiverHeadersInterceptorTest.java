@@ -2,6 +2,7 @@ package de.otto.synapse.endpoint;
 
 import de.otto.synapse.configuration.SynapseProperties;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.testsupport.TestClock;
 import org.junit.Test;
 
@@ -23,7 +24,7 @@ public class DefaultReceiverHeadersInterceptorTest {
         );
 
         // when
-        final Message<String> message = testee.addDefaultHeaders(Message.message("foo", "bar"));
+        final Message<String> message = testee.addDefaultHeaders(TextMessage.of("foo", "bar"));
 
         // then
         assertThat(message.getHeader().getAll().keySet(), containsInAnyOrder(
@@ -43,7 +44,7 @@ public class DefaultReceiverHeadersInterceptorTest {
         );
 
         // when
-        final Message<String> message = testee.addDefaultHeaders(Message.message("foo", "bar"));
+        final Message<String> message = testee.addDefaultHeaders(TextMessage.of("foo", "bar"));
 
         // then
         assertThat(message.getHeader().getAll().keySet(), is(empty()));

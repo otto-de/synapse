@@ -5,6 +5,7 @@ import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.translator.MessageTranslator;
 
 import javax.annotation.Nonnull;
@@ -29,7 +30,7 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
  */
 public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpoint implements MessageSenderEndpoint {
 
-    private final MessageTranslator<String> messageTranslator;
+    private final MessageTranslator<TextMessage> messageTranslator;
 
     /**
      * Constructor used to create a new MessageEndpoint.
@@ -42,7 +43,7 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
      */
     public AbstractMessageSenderEndpoint(final @Nonnull String channelName,
                                          final @Nonnull MessageInterceptorRegistry interceptorRegistry,
-                                         final @Nonnull MessageTranslator<String> messageTranslator) {
+                                         final @Nonnull MessageTranslator<TextMessage> messageTranslator) {
         super(channelName, interceptorRegistry);
         this.messageTranslator = messageTranslator;
     }
@@ -55,8 +56,8 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
      */
     @Override
     public final <T> CompletableFuture<Void> send(@Nonnull final Message<T> message) {
-        final Message<String> translatedMessage = messageTranslator.translate(message);
-        final Message<String> interceptedMessage = intercept(translatedMessage);
+        final TextMessage translatedMessage = messageTranslator.apply(message);
+        final TextMessage interceptedMessage = intercept(translatedMessage);
         if (interceptedMessage != null) {
             return doSend(interceptedMessage);
         } else {
@@ -74,7 +75,7 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
     @Override
     public final <T> CompletableFuture<Void> sendBatch(@Nonnull final Stream<Message<T>> batch) {
         return doSendBatch(batch
-                .map(messageTranslator::translate)
+                .map(messageTranslator::apply)
                 .map(this::intercept)
                 .filter(Objects::nonNull));
     }
@@ -85,10 +86,10 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
         return SENDER;
     }
 
-    protected CompletableFuture<Void> doSendBatch(final @Nonnull Stream<Message<String>> batch) {
+    protected CompletableFuture<Void> doSendBatch(final @Nonnull Stream<TextMessage> batch) {
         return allOf(batch.map(this::doSend).toArray(CompletableFuture[]::new));
     }
 
-    protected abstract CompletableFuture<Void> doSend(final @Nonnull Message<String> message);
+    protected abstract CompletableFuture<Void> doSend(final @Nonnull TextMessage message);
 
 }

@@ -5,6 +5,7 @@ import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Before;
@@ -21,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.receiverChannelsWith;
 import static de.otto.synapse.endpoint.sender.sqs.SqsMessageSender.MSG_KEY_ATTR;
@@ -179,7 +179,7 @@ public class SqsMessageQueueReceiverEndpointTest {
         addSqsMessagesToQueue(sqsMessage("some of", PAYLOAD_1));
 
         interceptorRegistry.register(
-                receiverChannelsWith(message -> Message.message(message.getKey(), message.getHeader(), INTERCEPTED_PAYLOAD))
+                receiverChannelsWith(message -> TextMessage.of(message.getKey(), message.getHeader(), INTERCEPTED_PAYLOAD))
         );
 
         // when: consumption is started

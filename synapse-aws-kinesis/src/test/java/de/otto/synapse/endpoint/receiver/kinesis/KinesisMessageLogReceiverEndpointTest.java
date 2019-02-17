@@ -7,6 +7,7 @@ import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.info.MessageReceiverNotification;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.testsupport.TestClock;
 import org.junit.Before;
 import org.junit.Test;
@@ -223,7 +224,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         // no lambda used in order to make Mockito happy...
         final MessageInterceptor interceptor = spy(new MessageInterceptor() {
             @Override
-            public Message<String> intercept(Message<String> message) {
+            public TextMessage intercept(TextMessage message) {
                 return message;
             }
         });
@@ -235,7 +236,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         final ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon()).get();
 
         // then
-        verify(interceptor, atLeast(3)).intercept(any(Message.class));
+        verify(interceptor, atLeast(3)).intercept(any(TextMessage.class));
 
         verify(messageConsumer, atLeast(3)).accept(messageArgumentCaptor.capture());
         List<Message<String>> messages = messageArgumentCaptor.getAllValues();
@@ -259,7 +260,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         // no lambda used in order to make Mockito happy...
         final MessageInterceptor interceptor = spy(new MessageInterceptor() {
             @Override
-            public Message<String> intercept(Message<String> message) {
+            public TextMessage intercept(TextMessage message) {
                 return null;
             }
         });
@@ -271,7 +272,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         final ChannelPosition finalChannelPosition = kinesisMessageLog.consume(fromHorizon()).get();
 
         // then
-        verify(interceptor, atLeast(3)).intercept(any(Message.class));
+        verify(interceptor, atLeast(3)).intercept(any(TextMessage.class));
 
         verifyZeroInteractions(messageConsumer);
         List<Message<String>> messages = messageArgumentCaptor.getAllValues();
@@ -356,6 +357,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         final CompletableFuture<ChannelPosition> futureChannelPosition = kinesisMessageLog.consume(fromHorizon());
         kinesisMessageLog.stop();
         futureChannelPosition.get(1, TimeUnit.SECONDS);
+
         // then
         assertThat(kinesisMessageLog.getCurrentKinesisShards().size(), is(1));
         kinesisMessageLog.getCurrentKinesisShards().forEach(kinesisShardReader -> assertThat(kinesisShardReader.isStopping(), is(true)));

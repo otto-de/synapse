@@ -3,6 +3,7 @@ package de.otto.synapse.translator;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.junit.Test;
 
 import static com.google.common.collect.ImmutableBiMap.of;
@@ -15,27 +16,27 @@ public class MessageCodecTest {
 
     @Test
     public void shouldEncodeInDefaultFormat() {
-        final String encoded = encode(Message.message("foo", Header.builder().withAttributes(of("attr", "value")).build(), "{}"));
+        final String encoded = encode(TextMessage.of("foo", Header.builder().withAttributes(of("attr", "value")).build(), "{}"));
         assertThat(encoded).isEqualTo("{}");
     }
 
     @Test
     public void shouldEncodeInV1Format() {
-        final Message<String> someMessage = Message.message("foo", Header.builder().withAttributes(of("attr", "value")).build(), "{}");
+        final TextMessage someMessage = TextMessage.of("foo", Header.builder().withAttributes(of("attr", "value")).build(), "{}");
         final String encoded = encode(someMessage, MessageFormat.V1);
         assertThat(encoded).isEqualTo("{}");
     }
 
     @Test
     public void shouldEncodeInV2Format() {
-        final Message<String> someMessage = Message.message(Key.of("foo", "bar"), Header.builder().withAttributes(of("attr", "value")).build(), "{}");
+        final TextMessage someMessage = TextMessage.of(Key.of("foo", "bar"), Header.builder().withAttributes(of("attr", "value")).build(), "{}");
         final String encoded = encode(someMessage, MessageFormat.V2);
         assertThat(encoded).isEqualTo("{\"_synapse_msg_format\":\"v2\",\"_synapse_msg_key\":{\"partitionKey\":\"foo\",\"compactionKey\":\"bar\"},\"_synapse_msg_headers\":{\"attr\":\"value\"},\"_synapse_msg_payload\":{}}");
     }
 
     @Test
     public void shouldEncodeInV2FormatWithEscapedCharacters() {
-        final Message<String> someMessage = Message.message(Key.of("f\\_oo", "bar"), Header.builder().withAttributes(of("attr", "valu\\e")).build(), "{}");
+        final TextMessage someMessage = TextMessage.of(Key.of("f\\_oo", "bar"), Header.builder().withAttributes(of("attr", "valu\\e")).build(), "{}");
         final String encoded = encode(someMessage, MessageFormat.V2);
         Message<String> decoded = decode(encoded);
         assertThat(decoded).isEqualTo(someMessage);

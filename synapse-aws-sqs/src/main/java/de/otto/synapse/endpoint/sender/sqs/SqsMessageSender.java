@@ -3,7 +3,7 @@ package de.otto.synapse.endpoint.sender.sqs;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.translator.MessageTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
     public SqsMessageSender(final String channelName,
                             final String queueUrl,
                             final MessageInterceptorRegistry interceptorRegistry,
-                            final MessageTranslator<String> messageTranslator,
+                            final MessageTranslator<TextMessage> messageTranslator,
                             final SqsAsyncClient sqsAsyncClient) {
         super(channelName, interceptorRegistry, messageTranslator);
         this.queueUrl = queueUrl;
@@ -39,7 +39,7 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
     }
 
     @Override
-    protected CompletableFuture<Void> doSend(final @Nonnull Message<String> message) {
+    protected CompletableFuture<Void> doSend(final @Nonnull TextMessage message) {
         final CompletableFuture<SendMessageResponse> futureResponse = sqsAsyncClient
                 .sendMessage(toSendMessageRequest(message))
                 .whenComplete(logResponse(message));
@@ -48,16 +48,21 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
     }
 
     @Override
-    protected CompletableFuture<Void> doSendBatch(final @Nonnull Stream<Message<String>> messageStream) {
-        final CompletableFuture<SendMessageBatchResponse> futureResponse = sqsAsyncClient
-                .sendMessageBatch(toSendMessageBatchRequest(messageStream))
-                .whenComplete(logBatchResponse());
-        // TODO: Introduce a response object and return it instead of Void
-        // Just because we need a CompletableFuture<Void>, no CompletableFuture<SendMessageBatchResponse>:
-        return CompletableFuture.allOf(futureResponse);
+    protected CompletableFuture<Void> doSendBatch(final @Nonnull Stream<TextMessage> messageStream) {
+        final SendMessageBatchRequest sendMessageBatchRequest = toSendMessageBatchRequest(messageStream);
+        if (!sendMessageBatchRequest.entries().isEmpty()) {
+            final CompletableFuture<SendMessageBatchResponse> futureResponse = sqsAsyncClient
+                    .sendMessageBatch(sendMessageBatchRequest)
+                    .whenComplete(logBatchResponse());
+            // TODO: Introduce a response object and return it instead of Void
+            // Just because we need a CompletableFuture<Void>, no CompletableFuture<SendMessageBatchResponse>:
+            return CompletableFuture.allOf(futureResponse);
+        } else {
+            return CompletableFuture.completedFuture(null);
+        }
     }
 
-    private SendMessageBatchRequest toSendMessageBatchRequest(final @Nonnull Stream<Message<String>> messageStream) {
+    private SendMessageBatchRequest toSendMessageBatchRequest(final @Nonnull Stream<TextMessage> messageStream) {
         final AtomicInteger id = new AtomicInteger(0);
         return SendMessageBatchRequest.builder()
                 .queueUrl(queueUrl)
@@ -71,7 +76,7 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
                 .build();
     }
 
-    private SendMessageRequest toSendMessageRequest(final @Nonnull Message<String> message) {
+    private SendMessageRequest toSendMessageRequest(final @Nonnull TextMessage message) {
         return SendMessageRequest.builder()
                 .queueUrl(queueUrl)
                 .messageAttributes(of(message))
@@ -79,7 +84,7 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
                 .build();
     }
 
-    private ImmutableMap<String, MessageAttributeValue> of(@Nonnull Message<String> message) {
+    private ImmutableMap<String, MessageAttributeValue> of(@Nonnull TextMessage message) {
         final ImmutableMap.Builder<String, MessageAttributeValue> messageAttributes = ImmutableMap.builder();
         message.getHeader().getAll().entrySet().forEach(entry -> {
             messageAttributes.put(entry.getKey(), MessageAttributeValue
@@ -96,7 +101,7 @@ public class SqsMessageSender extends AbstractMessageSenderEndpoint {
         return messageAttributes.build();
     }
 
-    private BiConsumer<SendMessageResponse, Throwable> logResponse(final @Nonnull Message<String> message) {
+    private BiConsumer<SendMessageResponse, Throwable> logResponse(final @Nonnull TextMessage message) {
         return (result, exception) -> {
             if (exception != null) {
                 LOG.error(String.format("Failed to send message %s", message), exception);

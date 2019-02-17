@@ -1,7 +1,7 @@
 package de.otto.synapse.edison.trace;
 
 import de.otto.synapse.endpoint.EndpointType;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -14,11 +14,11 @@ public class TraceEntry implements Serializable {
     private final Instant timestamp;
     private final String channelName;
     private final EndpointType endpointType;
-    private final Message<String> message;
+    private final TextMessage message;
 
     public TraceEntry(final String channelName,
                       final EndpointType endpointType,
-                      final Message<String> message) {
+                      final TextMessage message) {
         this.timestamp = Instant.now();
         this.channelName = channelName;
         this.endpointType = endpointType;
@@ -41,7 +41,7 @@ public class TraceEntry implements Serializable {
         return endpointType;
     }
 
-    public Message<String> getMessage() {
+    public TextMessage getMessage() {
         return message;
     }
 

@@ -4,9 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.junit.Test;
-
-import java.time.Instant;
 
 import static de.otto.synapse.message.Message.message;
 import static java.util.Collections.singletonMap;
@@ -14,14 +13,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
-public class JsonStringMessageTranslatorTest {
-
-    private static final Instant NOW = Instant.now();
+public class TextMessageTranslatorTest {
 
     @Test
     public void shouldTranslateMessage() {
-        final MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator();
-        final Message<String> message = messageTranslator.translate(
+        final MessageTranslator<TextMessage> messageTranslator = new TextMessageTranslator();
+        final Message<String> message = messageTranslator.apply(
                 message("test", singletonMap("foo", "bar"))
         );
         assertThat(message.getKey(), is(Key.of("test")));
@@ -30,8 +27,8 @@ public class JsonStringMessageTranslatorTest {
 
     @Test
     public void shouldKeepHeadersOfMessage() {
-        final MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator();
-        final Message<String> message = messageTranslator.translate(
+        final MessageTranslator<TextMessage> messageTranslator = new TextMessageTranslator();
+        final Message<String> message = messageTranslator.apply(
                 message("test", Header.of(null, ImmutableMap.of("foo", "bar")), null)
         );
         assertThat(message.getHeader().getAll(), is(singletonMap("foo", "bar")));
@@ -39,8 +36,8 @@ public class JsonStringMessageTranslatorTest {
 
     @Test
     public void shouldTranslateDeleteMessage() {
-        final MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator();
-        final Message<String> message = messageTranslator.translate(
+        final MessageTranslator<TextMessage> messageTranslator = new TextMessageTranslator();
+        final Message<String> message = messageTranslator.apply(
                 message("test", null)
         );
         assertThat(message.getKey(), is(Key.of("test")));

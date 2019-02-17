@@ -1,6 +1,6 @@
 package de.otto.synapse.endpoint;
 
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -42,5 +42,5 @@ public interface MessageInterceptor {
      * @return intercepted version of the message, or null if the message should be dropped.
      */
     @Nullable
-    Message<String> intercept(final @Nonnull Message<String> message);
+    TextMessage intercept(final @Nonnull TextMessage message);
 }

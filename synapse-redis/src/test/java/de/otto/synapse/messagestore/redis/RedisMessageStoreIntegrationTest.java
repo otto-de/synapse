@@ -4,6 +4,7 @@ import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
+import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.testsupport.redis.EmbededRedis;
 import org.junit.Before;
 import org.junit.Test;
@@ -78,7 +79,7 @@ public class RedisMessageStoreIntegrationTest {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 1500; ++pos) {
-                    messageStore.add(message(valueOf(pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
+                    messageStore.add(TextMessage.of(valueOf(pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).startFrom(), is(StartFrom.POSITION));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }
@@ -99,7 +100,7 @@ public class RedisMessageStoreIntegrationTest {
     @Test
     public void shouldAddMessagesWithoutHeaders() {
         for (int i=0; i<10; ++i) {
-            messageStore.add(message(valueOf(i), "some payload"));
+            messageStore.add(TextMessage.of(valueOf(i), "some payload"));
         }
         assertThat(messageStore.getLatestChannelPosition(), is(fromHorizon()));
         final AtomicInteger expectedKey = new AtomicInteger(0);
@@ -119,7 +120,7 @@ public class RedisMessageStoreIntegrationTest {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 1500; ++pos) {
-                    messageStore.add(message(valueOf(pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
+                    messageStore.add(TextMessage.of(valueOf(pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).startFrom(), is(POSITION));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }

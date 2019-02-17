@@ -1,7 +1,7 @@
 package de.otto.synapse.channel;
 
 import com.google.common.collect.ImmutableList;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import java.util.List;
 import java.util.Set;
@@ -50,7 +50,7 @@ public class ChannelResponse {
         return durationBehind.build();
     }
 
-    public List<Message<String>> getMessages() {
+    public List<TextMessage> getMessages() {
         return shardResponses
                 .stream()
                 .flatMap(response -> response.getMessages().stream())

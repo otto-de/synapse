@@ -4,8 +4,7 @@ import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.InterceptorChain;
-import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
@@ -67,7 +66,7 @@ public class DelegateMessageQueueReceiverEndpoint implements MessageQueueReceive
 
     @Nullable
     @Override
-    public Message<String> intercept(final @Nonnull Message<String> message) {
+    public TextMessage intercept(final @Nonnull TextMessage message) {
         return delegate.intercept(message);
     }
 }

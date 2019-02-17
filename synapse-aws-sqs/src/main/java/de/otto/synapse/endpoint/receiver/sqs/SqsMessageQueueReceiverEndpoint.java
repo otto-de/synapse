@@ -6,7 +6,7 @@ import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.awscore.AwsRequestOverrideConfiguration;
@@ -15,7 +15,6 @@ import software.amazon.awssdk.services.sqs.model.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -124,12 +123,12 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
 
     private void processMessage(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
         LOG.debug("Processing message from channel={}: messageId={} receiptHandle={}, messageAttributes={}", getChannelName(), sqsMessage.messageId(), sqsMessage.receiptHandle(), sqsMessage.messageAttributes());
-        final Message<String> message = message(
+        final TextMessage message = TextMessage.of(
                 messageKeyOf(sqsMessage),
                 Header.of(null, messageAttributesOf(sqsMessage)),
                 sqsMessage.body());
 
-        final Message<String> interceptedMessage = intercept(message);
+        final TextMessage interceptedMessage = intercept(message);
         if (interceptedMessage != null) {
             LOG.debug("Dispatching message {} ", interceptedMessage);
             getMessageDispatcher().accept(interceptedMessage);

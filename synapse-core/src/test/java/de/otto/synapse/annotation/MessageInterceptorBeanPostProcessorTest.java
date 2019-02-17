@@ -4,6 +4,7 @@ import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -86,6 +87,17 @@ public class MessageInterceptorBeanPostProcessorTest {
     }
 
     @Test
+    public void shouldRegisterTextMessageInterceptorWithTextMessageResponse() {
+        context.register(TextMessageInterceptorWithTextMessageResponse.class);
+        context.register(SynapseAutoConfiguration.class);
+        context.refresh();
+
+        final MessageInterceptorRegistry registry = context.getBean(MessageInterceptorRegistry.class);
+        assertThat(registry.getRegistrations("foo", EndpointType.SENDER), hasSize(1));
+        assertThat(registry.getRegistrations("bar", EndpointType.RECEIVER), hasSize(1));
+    }
+
+    @Test
     public void shouldRegisterMatchKeyAndChannelMessageInterceptor() {
         context.register(MatchKeyAndChannelMessageInterceptor.class);
         context.register(SynapseAutoConfiguration.class);
@@ -145,6 +157,13 @@ public class MessageInterceptorBeanPostProcessorTest {
     static class MatchAllMessageInterceptorWithVoidResponse {
         @MessageInterceptor
         public void test(final Message<String> message) {
+        }
+    }
+
+    static class TextMessageInterceptorWithTextMessageResponse {
+        @MessageInterceptor
+        public TextMessage test(final TextMessage message) {
+            return null;
         }
     }
 

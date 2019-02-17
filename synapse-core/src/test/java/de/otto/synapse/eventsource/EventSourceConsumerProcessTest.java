@@ -4,7 +4,7 @@ import de.otto.synapse.channel.InMemoryChannel;
 import de.otto.synapse.consumer.TestMessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Key;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
@@ -66,7 +66,7 @@ public class EventSourceConsumerProcessTest {
         eventSource.register(eventConsumerA);
         eventSource.register(eventConsumerB);
 
-        channel.send(Message.message(Key.of("test"), "some payload"));
+        channel.send(TextMessage.of(Key.of("test"), "some payload"));
         final EventSourceConsumerProcess process = new EventSourceConsumerProcess(singletonList(eventSource));
         process.start();
         process.stop();

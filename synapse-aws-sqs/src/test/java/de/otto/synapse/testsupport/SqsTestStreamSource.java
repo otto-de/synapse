@@ -5,7 +5,7 @@ import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.SqsClientHelper;
 import de.otto.synapse.endpoint.sender.sqs.SqsMessageSender;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.translator.JsonStringMessageTranslator;
+import de.otto.synapse.translator.TextMessageTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
@@ -43,7 +43,7 @@ public class SqsTestStreamSource {
                 channelName,
                 queueUrl.toString(),
                 interceptorRegistry,
-                new JsonStringMessageTranslator(), sqsAsyncClient);
+                new TextMessageTranslator(), sqsAsyncClient);
     }
 
     public void writeToStream() {

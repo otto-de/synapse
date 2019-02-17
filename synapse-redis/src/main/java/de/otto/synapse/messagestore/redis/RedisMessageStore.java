@@ -2,7 +2,7 @@ package de.otto.synapse.messagestore.redis;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.messagestore.WritableMessageStore;
 import de.otto.synapse.translator.MessageCodec;
 import de.otto.synapse.translator.MessageFormat;
@@ -48,7 +48,7 @@ public class RedisMessageStore implements WritableMessageStore {
     }
 
     @Override
-    public void add(final Message<String> message) {
+    public void add(final TextMessage message) {
         final List<Object> txResults = redisTemplate.execute(new SessionCallback<List<Object>>() {
             public List<Object> execute(final RedisOperations operations) throws DataAccessException {
                 operations.multi();
@@ -85,8 +85,8 @@ public class RedisMessageStore implements WritableMessageStore {
     }
 
     @Override
-    public Stream<Message<String>> stream() {
-        final Iterator<Message<String>> messageIterator = new BatchedRedisListIterator<>(
+    public Stream<TextMessage> stream() {
+        final Iterator<TextMessage> messageIterator = new BatchedRedisListIterator<>(
                 redisTemplate,
                 RedisMessageStore::messageOf,
                 channelName + "-messages",
@@ -106,11 +106,11 @@ public class RedisMessageStore implements WritableMessageStore {
     public void close() {
     }
 
-    static Message<String> messageOf(final String redisValue) {
+    static TextMessage messageOf(final String redisValue) {
         return MessageCodec.decode(redisValue);
     }
 
-    static String toRedisValue(final Message<String> message) {
+    static String toRedisValue(final TextMessage message) {
         return MessageCodec.encode(message, MessageFormat.V2);
     }
 

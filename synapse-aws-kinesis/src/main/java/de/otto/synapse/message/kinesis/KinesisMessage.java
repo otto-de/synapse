@@ -1,8 +1,6 @@
 package de.otto.synapse.message.kinesis;
 
-import de.otto.synapse.message.Header;
-import de.otto.synapse.message.Key;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.*;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
@@ -31,8 +29,8 @@ public class KinesisMessage {
         }
     };
 
-    public static Message<String> kinesisMessage(final @Nonnull String shard,
-                                                 final @Nonnull Record record) {
+    public static TextMessage kinesisMessage(final @Nonnull String shard,
+                                             final @Nonnull Record record) {
 
         return decode(
                 Key.of(record.partitionKey()),

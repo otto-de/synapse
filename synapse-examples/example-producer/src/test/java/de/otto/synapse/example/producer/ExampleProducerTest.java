@@ -5,6 +5,7 @@ import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.translator.MessageTranslator;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,10 +24,10 @@ public class ExampleProducerTest {
     private Message<String> sentMessage = null;
     @Before
     public void setUp() {
-        final MessageTranslator<String> translator = MessageTranslator.of((payload -> "received"));
+        final MessageTranslator<TextMessage> translator = (message -> TextMessage.of(message.getKey(), message.getHeader(), "received"));
 
         final MessageSenderEndpoint sender = new AbstractMessageSenderEndpoint("test", new MessageInterceptorRegistry(), translator) {
-            protected CompletableFuture<Void> doSend(@Nonnull Message<String> message) {
+            protected CompletableFuture<Void> doSend(@Nonnull TextMessage message) {
                 sentMessage = message;
                 return completedFuture(null);
             }

@@ -3,6 +3,7 @@ package de.otto.synapse.messagestore;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import java.util.stream.Stream;
 
@@ -53,7 +54,7 @@ public interface MessageStore extends AutoCloseable {
      *
      * @return Stream of messages
      */
-    Stream<Message<String>> stream();
+    Stream<TextMessage> stream();
 
     /**
      * Returns the number of messages contained in the MessageStore.

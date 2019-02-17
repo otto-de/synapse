@@ -5,11 +5,14 @@ import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.copyOf;
@@ -24,7 +27,8 @@ import static de.otto.synapse.channel.ChannelPosition.*;
 @ThreadSafe
 public class InMemoryRingBufferMessageStore implements WritableMessageStore {
 
-    private final Queue<Message<String>> messages;
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final Queue<TextMessage> messages;
     private final AtomicReference<ChannelPosition> latestChannelPosition = new AtomicReference<>(fromHorizon());
 
     /**
@@ -50,14 +54,19 @@ public class InMemoryRingBufferMessageStore implements WritableMessageStore {
      * @param message the message to add
      */
     @Override
-    public synchronized void add(final Message<String> message) {
-        messages.add(message);
-        latestChannelPosition.updateAndGet(previous -> {
-            final Optional<ShardPosition> optionalMessagePosition = message.getHeader().getShardPosition();
-            return optionalMessagePosition
-                    .map(messagePosition -> merge(previous, channelPosition(messagePosition)))
-                    .orElse(previous);
-        });
+    public synchronized void add(final TextMessage message) {
+        lock.writeLock().lock();
+        try {
+            messages.add(message);
+            latestChannelPosition.updateAndGet(previous -> {
+                final Optional<ShardPosition> optionalMessagePosition = message.getHeader().getShardPosition();
+                return optionalMessagePosition
+                        .map(messagePosition -> merge(previous, channelPosition(messagePosition)))
+                        .orElse(previous);
+            });
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     /**
@@ -74,7 +83,12 @@ public class InMemoryRingBufferMessageStore implements WritableMessageStore {
      */
     @Override
     public synchronized ChannelPosition getLatestChannelPosition() {
-        return latestChannelPosition.get();
+        lock.readLock().lock();
+        try {
+            return latestChannelPosition.get();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
@@ -86,8 +100,13 @@ public class InMemoryRingBufferMessageStore implements WritableMessageStore {
      * @return Stream of messages
      */
     @Override
-    public synchronized Stream<Message<String>> stream() {
-        return copyOf(messages).stream();
+    public synchronized Stream<TextMessage> stream() {
+        lock.readLock().lock();
+        try {
+            return copyOf(messages).stream();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override

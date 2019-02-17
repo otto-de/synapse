@@ -4,6 +4,7 @@ import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
@@ -52,7 +53,7 @@ public class DelegateMessageSenderEndpoint implements MessageSenderEndpoint{
 
     @Nullable
     @Override
-    public Message<String> intercept(final @Nonnull Message<String> message) {
+    public TextMessage intercept(final @Nonnull TextMessage message) {
         return delegate.intercept(message);
     }
 

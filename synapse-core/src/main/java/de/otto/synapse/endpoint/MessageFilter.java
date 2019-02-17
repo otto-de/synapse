@@ -1,6 +1,6 @@
 package de.otto.synapse.endpoint;
 
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -20,9 +20,9 @@ import java.util.function.Predicate;
  */
 public class MessageFilter implements MessageInterceptor {
 
-    private final Predicate<Message<String>> predicate;
+    private final Predicate<TextMessage> predicate;
 
-    private MessageFilter(final Predicate<Message<String>> predicate) {
+    private MessageFilter(final Predicate<TextMessage> predicate) {
         this.predicate = predicate;
     }
 
@@ -35,7 +35,7 @@ public class MessageFilter implements MessageInterceptor {
      * @param predicate the predicate used to select messages
      * @return MessageFilter
      */
-    public static MessageFilter messageFilter(final Predicate<Message<String>> predicate) {
+    public static MessageFilter messageFilter(final Predicate<TextMessage> predicate) {
         return new MessageFilter(predicate);
     }
 
@@ -49,7 +49,7 @@ public class MessageFilter implements MessageInterceptor {
      * @return intercepted version of the message, or null if the message should be dropped.
      */
     @Nullable
-    public final Message<String> intercept(final @Nonnull Message<String> message) {
+    public final TextMessage intercept(final @Nonnull TextMessage message) {
         return predicate.test(message) ? message : null;
     }
 }

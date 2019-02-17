@@ -80,16 +80,16 @@ public class Message<P> implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Message)) return false;
         Message<?> message = (Message<?>) o;
-        return Objects.equals(key, message.key) &&
-                Objects.equals(payload, message.payload) &&
-                Objects.equals(header, message.header);
+        return key.equals(message.key) &&
+                header.equals(message.header) &&
+                Objects.equals(payload, message.payload);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, payload, header);
+        return Objects.hash(key, header, payload);
     }
 
     @Override

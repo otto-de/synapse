@@ -1,7 +1,7 @@
 package de.otto.synapse.messagestore;
 
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import java.time.Instant;
 import java.util.stream.Stream;
@@ -26,7 +26,7 @@ public class DelegatingSnapshotMessageStore implements SnapshotMessageStore {
     }
 
     @Override
-    public Stream<Message<String>> stream() {
+    public Stream<TextMessage> stream() {
         return delegate.stream();
     }
 

@@ -5,8 +5,9 @@ import de.otto.synapse.channel.selector.Sqs;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
-import de.otto.synapse.translator.JsonStringMessageTranslator;
+import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.translator.MessageTranslator;
+import de.otto.synapse.translator.TextMessageTranslator;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
 
@@ -15,13 +16,13 @@ import javax.annotation.Nonnull;
 public class SqsMessageSenderEndpointFactory implements MessageSenderEndpointFactory {
 
     private final MessageInterceptorRegistry registry;
-    private final MessageTranslator<String> messageTranslator;
+    private final MessageTranslator<TextMessage> messageTranslator;
     private final SqsAsyncClient sqsAsyncClient;
 
     public SqsMessageSenderEndpointFactory(final MessageInterceptorRegistry registry,
                                            final SqsAsyncClient sqsAsyncClient) {
         this.registry = registry;
-        this.messageTranslator = new JsonStringMessageTranslator();
+        this.messageTranslator = new TextMessageTranslator();
         this.sqsAsyncClient = sqsAsyncClient;
     }
 

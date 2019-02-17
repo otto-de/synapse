@@ -3,14 +3,13 @@ package de.otto.synapse.eventsource;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardResponse;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.messagestore.MessageStore;
 import org.slf4j.Logger;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import javax.annotation.Nonnull;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadFactory;
 import java.util.function.Predicate;
 
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -48,16 +47,19 @@ public class DefaultEventSource extends AbstractEventSource {
 
 
     private CompletableFuture<ChannelPosition> consumeMessageStore() {
-        final ThreadFactory threadFactory = new CustomizableThreadFactory("synapse-eventsource-");
         return CompletableFuture.supplyAsync(() -> {
             messageStore.stream().forEach(message -> {
-                final Message<String> interceptedMessage = getMessageLogReceiverEndpoint().getInterceptorChain().intercept(message);
+                final TextMessage interceptedMessage = getMessageLogReceiverEndpoint()
+                        .getInterceptorChain()
+                        .intercept(message);
                 if (interceptedMessage != null) {
                     getMessageLogReceiverEndpoint().getMessageDispatcher().accept(interceptedMessage);
                 }
             });
             return messageStore.getLatestChannelPosition();
-        }, newSingleThreadExecutor(threadFactory));
+        }, newSingleThreadExecutor(
+                new CustomizableThreadFactory("synapse-eventsource-")
+        ));
     }
 
 }

@@ -2,7 +2,7 @@ package de.otto.synapse.channel;
 
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.message.Header;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.testsupport.TestClock;
 import org.junit.Test;
 
@@ -15,7 +15,6 @@ import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.ShardResponse.shardResponse;
 import static de.otto.synapse.channel.StopCondition.*;
 import static de.otto.synapse.message.DefaultHeaderAttr.MSG_ARRIVAL_TS;
-import static de.otto.synapse.message.Message.message;
 import static java.time.Duration.ZERO;
 import static java.time.Duration.ofMillis;
 import static java.time.Instant.now;
@@ -66,7 +65,7 @@ public class StopConditionTest {
         final Instant past = now().minus(1, ChronoUnit.HOURS);
         final ShardResponse pastResponse = someShardResponseWithMessages(
                 ofMillis(42),
-                message(
+                TextMessage.of(
                         "foo",
                         arrivalTime(past),
                         "bar"));
@@ -79,7 +78,7 @@ public class StopConditionTest {
         final Instant future = now().plus(1, ChronoUnit.HOURS);
         final ShardResponse futureResponse = someShardResponseWithMessages(
                 ofMillis(42),
-                message("foo", arrivalTime(future), "bar"));
+                TextMessage.of("foo", arrivalTime(future), "bar"));
         assertThat(predicate.test(futureResponse), is(true));
     }
 
@@ -111,11 +110,11 @@ public class StopConditionTest {
     private ShardResponse someShardResponseWithSingleMessage(final Duration durationBehind) {
         return someShardResponseWithMessages(
                 durationBehind,
-                message("foo", "bar"));
+                TextMessage.of("foo", "bar"));
     }
 
     private ShardResponse someShardResponseWithMessages(final Duration durationBehind,
-                                                        final Message<String>... messages) {
+                                                        final TextMessage... messages) {
         return shardResponse(
                 fromPosition("some-shard", "42"),
                 durationBehind,

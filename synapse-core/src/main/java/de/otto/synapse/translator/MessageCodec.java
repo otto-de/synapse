@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -18,7 +19,6 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import static de.otto.synapse.message.Header.copyOf;
-import static de.otto.synapse.message.Message.message;
 import static de.otto.synapse.translator.MessageFormat.defaultMessageFormat;
 import static de.otto.synapse.translator.ObjectMappers.currentObjectMapper;
 import static java.util.Collections.emptyMap;
@@ -97,20 +97,20 @@ public class MessageCodec {
         return jsonPayload;
     }
 
-    public static Message<String> decode(final String body) {
+    public static TextMessage decode(final String body) {
         return decode(Key.of(), Header.of(), body);
     }
 
-    public static Message<String> decode(final Key key,
-                                         final Header prototypeHeader,
-                                         final String body) {
+    public static TextMessage decode(final Key key,
+                                     final Header prototypeHeader,
+                                     final String body) {
         switch (versionOf(body)) {
             case V1:
-                return message(key, prototypeHeader, body);
+                return TextMessage.of(key, prototypeHeader, body);
             case V2:
                 try {
                     final JsonNode json = parseRecordBody(body);
-                    return message(
+                    return TextMessage.of(
                             keyFrom(json).orElse(key),
                             copyOf(prototypeHeader)
                                     .withAttributes(attributesFrom(json))
@@ -118,7 +118,7 @@ public class MessageCodec {
                             payloadFrom(json));
                 } catch (final RuntimeException e) {
                     LOG.error("Exception caught while parsing record {}: {}", body, e.getMessage());
-                    return message(key, prototypeHeader, body);
+                    return TextMessage.of(key, prototypeHeader, body);
                 }
             default:
                 throw new IllegalStateException("Unsupported message format: " + body);

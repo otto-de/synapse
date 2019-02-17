@@ -13,6 +13,7 @@ import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;
@@ -170,7 +171,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
                 .consumeUntil(startFrom, endOfChannel())
                 .get();
 
-        final List<Message<String>> interceptedMessages = testMessageInterceptor.getInterceptedMessages();
+        final List<TextMessage> interceptedMessages = testMessageInterceptor.getInterceptedMessages();
         assertThat(interceptedMessages, not(empty()));
     }
 

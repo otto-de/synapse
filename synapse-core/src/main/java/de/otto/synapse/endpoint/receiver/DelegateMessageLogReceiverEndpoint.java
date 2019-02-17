@@ -6,12 +6,10 @@ import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.InterceptorChain;
-import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
@@ -67,7 +65,7 @@ public class DelegateMessageLogReceiverEndpoint implements MessageLogReceiverEnd
 
     @Nullable
     @Override
-    public Message<String> intercept(final @Nonnull Message<String> message) {
+    public TextMessage intercept(final @Nonnull TextMessage message) {
         return delegate.intercept(message);
     }
 }

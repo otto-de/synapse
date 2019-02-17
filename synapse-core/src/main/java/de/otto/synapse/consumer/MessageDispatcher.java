@@ -1,11 +1,13 @@
 package de.otto.synapse.consumer;
 
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import static de.otto.synapse.message.Message.message;
@@ -30,7 +32,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  * @see  <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageDispatcher.html">EIP: Message Dispatcher</a>
  * @see <a href="https://en.wikipedia.org/wiki/Composite_pattern">Composite Pattern</a>
  */
-public class MessageDispatcher implements MessageConsumer<String> {
+public class MessageDispatcher implements Consumer<TextMessage> {
 
     private static final Logger LOG = getLogger(MessageDispatcher.class);
     private static final Pattern ACCEPT_ALL = compile(".*");
@@ -59,7 +61,6 @@ public class MessageDispatcher implements MessageConsumer<String> {
      * @return payload type
      */
     @Nonnull
-    @Override
     public Class<String> payloadType() {
         return String.class;
     }
@@ -70,7 +71,6 @@ public class MessageDispatcher implements MessageConsumer<String> {
      * @return Pattern
      */
     @Nonnull
-    @Override
     public Pattern keyPattern() {
         return ACCEPT_ALL;
     }
@@ -85,7 +85,7 @@ public class MessageDispatcher implements MessageConsumer<String> {
      */
     @Override
     @SuppressWarnings({"unchecked", "raw"})
-    public void accept(final Message<String> message) {
+    public void accept(final TextMessage message) {
         LOG.debug("Accepting message={}", message);
         messageConsumers
                 .stream()
@@ -109,7 +109,7 @@ public class MessageDispatcher implements MessageConsumer<String> {
                 });
     }
 
-    private boolean matchesKeyPattern(final Message<String> message,
+    private boolean matchesKeyPattern(final TextMessage message,
                                       final Pattern keyPattern) {
         return keyPattern.matcher(message.getKey().compactionKey()).matches();
     }

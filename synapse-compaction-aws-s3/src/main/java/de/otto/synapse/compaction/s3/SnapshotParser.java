@@ -6,10 +6,10 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
-import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import java.io.*;
 import java.util.zip.ZipInputStream;
@@ -26,7 +26,7 @@ public class SnapshotParser {
     private final JsonFactory jsonFactory = new JsonFactory();
 
     public ChannelPosition parse(final File latestSnapshot,
-                                 final MessageConsumer<String> messageConsumer) {
+                                 final MessageDispatcher messageDispatcher) {
 
         try (
                 FileInputStream fileInputStream = new FileInputStream(latestSnapshot);
@@ -51,7 +51,7 @@ public class SnapshotParser {
                                     /* TODO: Hier wird der StreamName als ShardName verwendet. Damit wird der Message _keine_ sinnvolle Position im Header mitgegeben! */
 
                                     channelPosition, /*shardPositions.shard(channelName).position(),*/
-                                    messageConsumer);
+                                    messageDispatcher);
                             break;
                         default:
                             break;
@@ -67,16 +67,16 @@ public class SnapshotParser {
     @SuppressWarnings("unchecked")
     private <T> void processSnapshotData(final JsonParser parser,
                                          final ChannelPosition channelPosition,
-                                         final MessageConsumer<String> messageConsumer) throws IOException {
+                                         final MessageDispatcher messageDispatcher) throws IOException {
         final ShardPosition shardPosition = channelPosition.shard(channelPosition.shards().iterator().next());
         while (parser.nextToken() != JsonToken.END_ARRAY) {
             JsonToken currentToken = parser.currentToken();
             if (currentToken == JsonToken.FIELD_NAME) {
-                final Message<String> message = decode(
+                final TextMessage message = decode(
                         Key.of(parser.getValueAsString()),
                         Header.of(shardPosition),
                         parser.nextTextValue());
-                messageConsumer.accept(message);
+                messageDispatcher.accept(message);
             }
         }
     }

@@ -2,13 +2,15 @@ package de.otto.synapse.messagestore;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import net.openhft.chronicle.map.ChronicleMapBuilder;
 
 import javax.annotation.concurrent.ThreadSafe;
-import java.io.Serializable;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
 
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
@@ -32,8 +34,9 @@ public class CompactingConcurrentMapMessageStore implements WritableMessageStore
     private static final double DEFAULT_VALUE_SIZE_BYTES = 512;
     private static final long DEFAULT_ENTRY_COUNT = 1_000_00;
 
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final ConcurrentSkipListSet<String> compactedAndOrderedKeys = new ConcurrentSkipListSet<>();
-    private final ConcurrentMap<String, Serializable> messages;
+    private final ConcurrentMap<String, TextMessage> messages;
     private final AtomicReference<ChannelPosition> latestChannelPosition = new AtomicReference<>(fromHorizon());
     private final boolean removeNullPayloadMessages;
 
@@ -42,7 +45,8 @@ public class CompactingConcurrentMapMessageStore implements WritableMessageStore
     }
 
     public CompactingConcurrentMapMessageStore(final boolean removeNullPayloadMessages) {
-        this(removeNullPayloadMessages, ChronicleMapBuilder.of(String.class, Serializable.class)
+        // TODO why ChronicleMap as a default??
+        this(removeNullPayloadMessages, ChronicleMapBuilder.of(String.class, TextMessage.class)
                 .averageKeySize(DEFAULT_KEY_SIZE_BYTES)
                 .averageValueSize(DEFAULT_VALUE_SIZE_BYTES)
                 .entries(DEFAULT_ENTRY_COUNT)
@@ -50,44 +54,52 @@ public class CompactingConcurrentMapMessageStore implements WritableMessageStore
     }
 
     public CompactingConcurrentMapMessageStore(final boolean removeNullPayloadMessages,
-                                               final ConcurrentMap<String, Serializable> messageMap) {
+                                               final ConcurrentMap<String, TextMessage> messageMap) {
         this.messages = messageMap;
         this.removeNullPayloadMessages = removeNullPayloadMessages;
     }
 
     @Override
-    public void add(final Message<String> message) {
+    public void add(final TextMessage message) {
         final String messageKey = message.getKey().compactionKey();
-        if (message.getPayload() == null && removeNullPayloadMessages) {
-            messages.remove(messageKey);
-            compactedAndOrderedKeys.remove(messageKey);
-        } else {
-            messages.put(messageKey, message);
-            compactedAndOrderedKeys.add(messageKey);
-        }
-        latestChannelPosition.updateAndGet(previous -> {
-            return message
+        lock.writeLock().lock();
+        try {
+            if (message.getPayload() == null && removeNullPayloadMessages) {
+                messages.remove(messageKey);
+                compactedAndOrderedKeys.remove(messageKey);
+            } else {
+                messages.put(messageKey, message);
+                compactedAndOrderedKeys.add(messageKey);
+            }
+            latestChannelPosition.updateAndGet(previous -> message
                     .getHeader()
                     .getShardPosition()
                     .map(messageChannelPosition -> merge(previous, messageChannelPosition))
-                    .orElse(previous);
-        });
+                    .orElse(previous)
+            );
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     @Override
     public ChannelPosition getLatestChannelPosition() {
-        return latestChannelPosition.get();
+        lock.readLock().lock();
+        try {
+            return latestChannelPosition.get();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public Stream<Message<String>> stream() {
-        return compactedAndOrderedKeys.stream().map(messages::get).map(this::toStringMessage);
-    }
-
-    @SuppressWarnings("unchecked")
-    private Message<String> toStringMessage(final Serializable message) {
-        return (Message<String>) message;
+    public Stream<TextMessage> stream() {
+        lock.readLock().lock();
+        try {
+            return compactedAndOrderedKeys.stream().map(messages::get);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override

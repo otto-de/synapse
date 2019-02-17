@@ -1,6 +1,7 @@
 package de.otto.synapse.messagestore;
 
 import de.otto.synapse.message.Key;
+import de.otto.synapse.message.TextMessage;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -14,7 +15,6 @@ import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.of;
-import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -42,10 +42,10 @@ public class CompactingMessageStoreWithoutDeletionsTest {
     public void shouldNotRemoveMessagesWithoutChannelPositionWithNullPayload() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
-            messageStore.add(message(Key.of(valueOf(i)), "some payload"));
+            messageStore.add(TextMessage.of(Key.of(valueOf(i)), "some payload"));
         }
         for (int i=0; i<10; ++i) {
-            messageStore.add(message(Key.of(valueOf(i)), null));
+            messageStore.add(TextMessage.of(Key.of(valueOf(i)), null));
         }
         assertThat(messageStore.size(), is(10));
         assertThat(messageStore.getLatestChannelPosition(), is(fromHorizon()));
@@ -55,18 +55,18 @@ public class CompactingMessageStoreWithoutDeletionsTest {
     public void shouldNotRemoveMessagesWithNullPayload() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
-            messageStore.add(message(
+            messageStore.add(TextMessage.of(
                     Key.of(valueOf(i), "foo:" + i),
                     of(fromPosition("foo", valueOf(i))),
                     "some foo payload"));
-            messageStore.add(message(
+            messageStore.add(TextMessage.of(
                     Key.of(valueOf(i), "bar:" + i),
                     of(fromPosition("bar", valueOf(i))),
                     "some bar payload"));
         }
         for (int i=0; i<10; ++i) {
-            messageStore.add(message(Key.of(valueOf(i), "foo:" + i), of(fromPosition("foo", valueOf(20 + i))), null));
-            messageStore.add(message(Key.of(valueOf(i), "bar:" + i), of(fromPosition("bar", valueOf(42 + i))), null));
+            messageStore.add(TextMessage.of(Key.of(valueOf(i), "foo:" + i), of(fromPosition("foo", valueOf(20 + i))), null));
+            messageStore.add(TextMessage.of(Key.of(valueOf(i), "bar:" + i), of(fromPosition("bar", valueOf(42 + i))), null));
         }
         assertThat(messageStore.getLatestChannelPosition(), is(channelPosition(fromPosition("foo", "29"), fromPosition("bar", "51"))));
         assertThat(messageStore.size(), is(20));

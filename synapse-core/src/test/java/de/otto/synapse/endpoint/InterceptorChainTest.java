@@ -2,7 +2,7 @@ package de.otto.synapse.endpoint;
 
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.message.Key;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -17,8 +17,8 @@ public class InterceptorChainTest {
     @SuppressWarnings("unchecked")
     public void shouldBuildEmptyChain() {
         final InterceptorChain chain = new InterceptorChain();
-        final Message message = mock(Message.class);
-        final Message intercepted = chain.intercept(message);
+        final TextMessage message = mock(TextMessage.class);
+        final TextMessage intercepted = chain.intercept(message);
         verifyZeroInteractions(message);
         assertThat(message, is(intercepted));
     }
@@ -27,7 +27,7 @@ public class InterceptorChainTest {
     @SuppressWarnings("unchecked")
     public void shouldReturnNull() {
         final MessageInterceptor interceptor = mock(MessageInterceptor.class);
-        when(interceptor.intercept(any(Message.class))).thenReturn(null);
+        when(interceptor.intercept(any(TextMessage.class))).thenReturn(null);
         final InterceptorChain chain = new InterceptorChain(ImmutableList.of(interceptor));
         assertThat(chain.intercept(someMessage("foo")), is(nullValue()));
     }
@@ -36,7 +36,7 @@ public class InterceptorChainTest {
     @SuppressWarnings("unchecked")
     public void shouldStopInterceptingOnNull() {
         final MessageInterceptor first = mock(MessageInterceptor.class);
-        when(first.intercept(any(Message.class))).thenReturn(null);
+        when(first.intercept(any(TextMessage.class))).thenReturn(null);
         final MessageInterceptor second = mock(MessageInterceptor.class);
         final InterceptorChain chain = new InterceptorChain(ImmutableList.of(first, second));
         assertThat(chain.intercept(someMessage("foo")), is(nullValue()));
@@ -47,16 +47,16 @@ public class InterceptorChainTest {
     @SuppressWarnings("unchecked")
     public void shouldReturnResultFromLastInterceptor() {
         final MessageInterceptor first = mock(MessageInterceptor.class);
-        when(first.intercept(any(Message.class))).thenReturn(someMessage("foo"));
+        when(first.intercept(any(TextMessage.class))).thenReturn(someMessage("foo"));
         final MessageInterceptor second = mock(MessageInterceptor.class);
-        when(second.intercept(any(Message.class))).thenReturn(someMessage("bar"));
+        when(second.intercept(any(TextMessage.class))).thenReturn(someMessage("bar"));
         final InterceptorChain chain = new InterceptorChain(ImmutableList.of(first, second));
         //noinspection ConstantConditions
         assertThat(chain.intercept(someMessage("foo")).getKey(), is(Key.of("bar")));
     }
 
     @SuppressWarnings("unchecked")
-    private Message<String> someMessage(final String keyValue) {
-        return Message.message(Key.of(keyValue), null);
+    private TextMessage someMessage(final String keyValue) {
+        return TextMessage.of(Key.of(keyValue), null);
     }
 }

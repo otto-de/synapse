@@ -1,6 +1,6 @@
 package de.otto.synapse.endpoint;
 
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
@@ -71,7 +71,7 @@ public class MessageEndpointTest {
             }
         };
         registry.register(senderChannelsWith(interceptor));
-        final Message<String> message = mock(Message.class);
+        final TextMessage message = mock(TextMessage.class);
         endpoint.intercept(message);
         verify(interceptor).intercept(message);
     }
@@ -86,7 +86,7 @@ public class MessageEndpointTest {
                 return SENDER;
             }
         };
-        final Message<String> message = mock(Message.class);
+        final TextMessage message = mock(TextMessage.class);
         assertThat(messageEndpoint.intercept(message), is(message));
     }
 }

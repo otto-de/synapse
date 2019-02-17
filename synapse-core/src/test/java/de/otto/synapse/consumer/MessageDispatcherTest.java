@@ -1,6 +1,7 @@
 package de.otto.synapse.consumer;
 
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.junit.Test;
 
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
@@ -27,7 +28,7 @@ public class MessageDispatcherTest {
         messageDispatcher.add(eventConsumerC);
 
         // when
-        Message<String> someMessage = message(
+        TextMessage someMessage = TextMessage.of(
                 "someKey",
                 of(fromHorizon("test")),
                 "{}"
@@ -52,8 +53,8 @@ public class MessageDispatcherTest {
         MessageDispatcher messageDispatcher = new MessageDispatcher(asList(eventConsumerApple, eventConsumerBanana, eventConsumerCherry));
 
         // when
-        Message<String> someAppleMessage = message("apple.123", of(fromHorizon("test")),"{}");
-        Message<String> someBananaMessage = message("banana.456", of(fromHorizon("test")), "{}");
+        TextMessage someAppleMessage = TextMessage.of("apple.123", of(fromHorizon("test")),"{}");
+        TextMessage someBananaMessage = TextMessage.of("banana.456", of(fromHorizon("test")), "{}");
         messageDispatcher.accept(someAppleMessage);
         messageDispatcher.accept(someBananaMessage);
 

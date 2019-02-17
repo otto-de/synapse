@@ -7,7 +7,7 @@ import de.otto.synapse.endpoint.receiver.AbstractMessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import de.otto.synapse.message.Header;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -28,7 +28,6 @@ import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.ShardResponse.shardResponse;
 import static de.otto.synapse.channel.StartFrom.HORIZON;
 import static de.otto.synapse.info.MessageReceiverStatus.*;
-import static de.otto.synapse.message.Message.message;
 import static java.time.Duration.ZERO;
 import static java.time.Duration.between;
 import static java.time.Instant.now;
@@ -39,7 +38,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implements MessageLogReceiverEndpoint, MessageQueueReceiverEndpoint {
 
     private static final Logger LOG = getLogger(InMemoryChannel.class);
-    private final List<Message<String>> eventQueue;
+    private final List<TextMessage> eventQueue;
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
     public InMemoryChannel(final String channelName,
@@ -55,14 +54,14 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
         this.eventQueue = synchronizedList(new ArrayList<>());
     }
 
-    public synchronized void send(final Message<String> message) {
+    public synchronized void send(final TextMessage message) {
         final int position = eventQueue.size();
         LOG.info("Sending {} to {} at position{}", message, getChannelName(), position);
         final ImmutableMap<String, String> attributes = ImmutableMap.<String, String>builder()
                 .putAll(message.getHeader().getAll())
                 .put("synapse_msg_arrival_ts", now().toString())
                 .build();
-        eventQueue.add(Message.message(
+        eventQueue.add(TextMessage.of(
                 message.getKey(),
                 Header.of(
                         fromPosition(getChannelName(), String.valueOf(position)),
@@ -80,13 +79,13 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
             ShardPosition shardPosition = startFrom.shard(getChannelName());
             AtomicInteger pos = new AtomicInteger(positionOf(shardPosition));
             do {
-                final ImmutableList<Message<String>> messages;
+                final ImmutableList<TextMessage> messages;
                 if (hasMessageAfter(pos.get())) {
                     final int index = pos.incrementAndGet();
-                    final Message<String> receivedMessage = eventQueue.get(index);
+                    final TextMessage receivedMessage = eventQueue.get(index);
                     messages = ImmutableList.of(receivedMessage);
                     LOG.info("Received message from channel={} at position={}: message={}", getChannelName(), index, receivedMessage);
-                    final Message<String> interceptedMessage = intercept(receivedMessage);
+                    final TextMessage interceptedMessage = intercept(receivedMessage);
                     if (interceptedMessage != null) {
                         getMessageDispatcher().accept(interceptedMessage);
                     }
@@ -131,7 +130,7 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
     @Override
     public CompletableFuture<Void> consume() {
         publishEvent(STARTING, "Starting InMemoryChannel " + getChannelName(), null);
-        final Message<String> lastMessage = eventQueue.isEmpty() ? null : getLast(eventQueue);
+        final TextMessage lastMessage = eventQueue.isEmpty() ? null : getLast(eventQueue);
         final ChannelDurationBehind durationBehind = lastMessage != null
                 ? channelDurationBehind().with(getChannelName(), between(lastMessage.getHeader().getAsInstant("synapse_msg_arrival_ts"), now())).build()
                 : null;
@@ -139,9 +138,9 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
         return CompletableFuture.supplyAsync(() -> {
             do {
                 if (!eventQueue.isEmpty()) {
-                    final Message<String> receivedMessage = eventQueue.remove(0);
-                    final Message<String> interceptedMessage = intercept(
-                            message(
+                    final TextMessage receivedMessage = eventQueue.remove(0);
+                    final TextMessage interceptedMessage = intercept(
+                            TextMessage.of(
                                     receivedMessage.getKey(),
                                     Header.of(null, receivedMessage.getHeader().getAll()),
                                     receivedMessage.getPayload()

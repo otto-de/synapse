@@ -2,6 +2,7 @@ package de.otto.synapse.messagestore;
 
 import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.message.Key;
+import de.otto.synapse.message.TextMessage;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -15,7 +16,6 @@ import java.util.function.Supplier;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.Header.of;
-import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.CompletableFuture.allOf;
@@ -43,7 +43,7 @@ public class RingBufferMessageStoreTest {
     public void shouldKeepNoMoreThanCapacityIndicates() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<101; ++i) {
-            messageStore.add(message(valueOf(i), "some payload"));
+            messageStore.add(TextMessage.of(valueOf(i), "some payload"));
         }
         assertThat(messageStore.size(), is(100));
     }
@@ -52,7 +52,7 @@ public class RingBufferMessageStoreTest {
     public void shouldRemoveOldestIfCapacityIsReached() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<102; ++i) {
-            messageStore.add(message(valueOf(i), "some payload"));
+            messageStore.add(TextMessage.of(valueOf(i), "some payload"));
         }
         final AtomicInteger expectedKey = new AtomicInteger(2);
         messageStore.stream().forEach(message -> {
@@ -74,7 +74,7 @@ public class RingBufferMessageStoreTest {
                 final String shardId = valueOf(shard);
                 completion[shard] = CompletableFuture.runAsync(() -> {
                     for (int pos = 0; pos < 1000; ++pos) {
-                        messageStore.add(message(valueOf(pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
+                        messageStore.add(TextMessage.of(valueOf(pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
                         assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).startFrom(), is(StartFrom.POSITION));
                         assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).position(), is(valueOf(pos)));
                     }
@@ -99,7 +99,7 @@ public class RingBufferMessageStoreTest {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<5; ++i) {
             for (int pos = 0; pos < 10000; ++pos) {
-                messageStore.add(message(valueOf(pos), of(fromPosition("some-shard", valueOf(pos))), "some payload"));
+                messageStore.add(TextMessage.of(valueOf(pos), of(fromPosition("some-shard", valueOf(pos))), "some payload"));
                 assertThat(messageStore.getLatestChannelPosition().shard("some-shard").startFrom(), is(StartFrom.POSITION));
                 assertThat(messageStore.getLatestChannelPosition().shard("some-shard").position(), is(valueOf(pos)));
             }

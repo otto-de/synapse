@@ -3,6 +3,7 @@ package de.otto.synapse.messagestore;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
+import de.otto.synapse.message.TextMessage;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -20,7 +21,6 @@ import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.StartFrom.POSITION;
 import static de.otto.synapse.message.Header.of;
-import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.CompletableFuture.allOf;
@@ -52,7 +52,7 @@ public class WritableMessageStoreTest {
     public void shouldAddMessagesWithoutHeaders() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
-            messageStore.add(message(Key.of(valueOf(i)), "some payload"));
+            messageStore.add(TextMessage.of(Key.of(valueOf(i)), "some payload"));
         }
         assertThat(messageStore.getLatestChannelPosition(), is(fromHorizon()));
         final AtomicInteger expectedKey = new AtomicInteger(0);
@@ -73,7 +73,7 @@ public class WritableMessageStoreTest {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 10000; ++pos) {
-                    messageStore.add(message(Key.of(valueOf(pos), shardId + pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
+                    messageStore.add(TextMessage.of(Key.of(valueOf(pos), shardId + pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).startFrom(), is(POSITION));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }

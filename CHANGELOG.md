@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.15.0
+* Introduces TextMessage that is used instead of Message<String>.
+* Fixes possible threading issue in ObjectMappers.
+
 ## 0.14.5
 * Updates to edison-microservice 2.0.0-rc3
 * Fixes resource leak in CompactionService that was causing creation of additional threads with every compaction.

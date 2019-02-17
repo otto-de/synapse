@@ -13,7 +13,7 @@ import de.otto.synapse.info.SnapshotReaderNotification;
 import de.otto.synapse.info.SnapshotReaderStatus;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.messagestore.SnapshotMessageStore;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
@@ -119,7 +119,7 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
     }
 
     @Override
-    public Stream<Message<String>> stream() {
+    public Stream<TextMessage> stream() {
         return messageIterator != null
                 ? Streams.stream(messageIterator)
                 : Stream.empty();
@@ -182,9 +182,9 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
         }
     }
 
-    private static class MessageIterator implements Iterator<Message<String>> {
+    private static class MessageIterator implements Iterator<TextMessage> {
 
-        private Message<String> nextMessage = null;
+        private TextMessage nextMessage = null;
         private JsonParser jsonParser;
 
         private MessageIterator(final JsonParser jsonParser) {
@@ -213,9 +213,9 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
         }
 
         @Override
-        public Message<String> next() {
+        public TextMessage next() {
             if (hasNext()) {
-                final Message<String> nextMessage = this.nextMessage;
+                final TextMessage nextMessage = this.nextMessage;
                 this.nextMessage = null;
                 return nextMessage;
             } else {

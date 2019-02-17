@@ -1,7 +1,7 @@
 package de.otto.synapse.messagestore;
 
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import java.util.stream.Stream;
 
@@ -29,7 +29,7 @@ public class MessageStores {
         }
 
         @Override
-        public Stream<Message<String>> stream() {
+        public Stream<TextMessage> stream() {
             return Stream.empty();
         }
     };

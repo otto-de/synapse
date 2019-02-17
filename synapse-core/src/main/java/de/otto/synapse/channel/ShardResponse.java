@@ -1,18 +1,17 @@
 package de.otto.synapse.channel;
 
 import com.google.common.collect.ImmutableList;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Objects;
 
 public final class ShardResponse {
     private final Duration durationBehind;
     private final ShardPosition shardPosition;
-    private final List<Message<String>> messages;
+    private final ImmutableList<TextMessage> messages;
 
-    private ShardResponse(final ImmutableList<Message<String>> messages,
+    private ShardResponse(final ImmutableList<TextMessage> messages,
                           final ShardPosition shardPosition,
                           final Duration durationBehind) {
 
@@ -21,12 +20,18 @@ public final class ShardResponse {
         this.durationBehind = durationBehind;
     }
 
-    public static ShardResponse shardResponse(final ShardPosition shardPosition, final Duration durationBehind, final ImmutableList<Message<String>> messages) {
+    public static ShardResponse shardResponse(final ShardPosition shardPosition,
+                                              final Duration durationBehind,
+                                              final ImmutableList<TextMessage> messages) {
         return new ShardResponse(messages, shardPosition, durationBehind);
     }
 
-    public static ShardResponse shardResponse(final ShardPosition shardPosition, final Duration durationBehind, final Message<String>... messages) {
-        return new ShardResponse(messages != null ? ImmutableList.copyOf(messages) : ImmutableList.of(), shardPosition, durationBehind);
+    public static ShardResponse shardResponse(final ShardPosition shardPosition,
+                                              final Duration durationBehind,
+                                              final TextMessage... messages) {
+        return new ShardResponse(messages != null
+                ? ImmutableList.copyOf(messages)
+                : ImmutableList.of(), shardPosition, durationBehind);
     }
 
     public String getShardName() {
@@ -41,7 +46,7 @@ public final class ShardResponse {
         return durationBehind;
     }
 
-    public List<Message<String>> getMessages() {
+    public ImmutableList<TextMessage> getMessages() {
         return messages;
     }
 

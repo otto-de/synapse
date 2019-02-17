@@ -1,7 +1,7 @@
 package de.otto.synapse.configuration.kinesis;
 
 import de.otto.synapse.endpoint.MessageInterceptor;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -12,16 +12,16 @@ import static java.util.Collections.synchronizedList;
 
 public class TestMessageInterceptor implements MessageInterceptor {
 
-    private List<Message<String>> interceptedMessages = synchronizedList(new ArrayList<>());
+    private List<TextMessage> interceptedMessages = synchronizedList(new ArrayList<>());
 
     @Nullable
     @Override
-    public Message<String> intercept(@Nonnull Message<String> message) {
+    public TextMessage intercept(@Nonnull TextMessage message) {
         interceptedMessages.add(message);
         return message;
     }
 
-    public List<Message<String>> getInterceptedMessages() {
+    public List<TextMessage> getInterceptedMessages() {
         return interceptedMessages;
     }
 

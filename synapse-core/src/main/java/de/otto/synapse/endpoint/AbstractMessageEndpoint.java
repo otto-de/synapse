@@ -3,7 +3,7 @@ package de.otto.synapse.endpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -100,7 +100,7 @@ public abstract class AbstractMessageEndpoint implements MessageEndpoint {
      */
     @Override
     @Nullable
-    public final Message<String> intercept(final @Nonnull Message<String> message) {
+    public final TextMessage intercept(final @Nonnull TextMessage message) {
         return getInterceptorChain().intercept(message);
     }
 

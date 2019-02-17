@@ -3,6 +3,7 @@ package de.otto.synapse.endpoint.receiver;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -25,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 public interface MessageQueueReceiverEndpoint extends MessageReceiverEndpoint {
 
     /**
-     * Takes zero or more messages from the channel, calls {@link #intercept(Message)} for every message, and notifies
+     * Takes zero or more messages from the channel, calls {@link #intercept(TextMessage)} for every message, and notifies
      * the registered consumers with the intercepted message, or drops the message, if {@code intercept} returns null.
      *
      * <p>

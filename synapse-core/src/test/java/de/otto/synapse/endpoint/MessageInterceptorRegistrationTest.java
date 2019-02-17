@@ -1,11 +1,11 @@
 package de.otto.synapse.endpoint;
 
 import de.otto.synapse.message.Key;
+import de.otto.synapse.message.TextMessage;
 import org.junit.Test;
 
 import static de.otto.synapse.endpoint.MessageFilter.messageFilter;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.*;
-import static de.otto.synapse.message.Message.message;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -16,8 +16,8 @@ public class MessageInterceptorRegistrationTest {
         final MessageFilter messageFilter = messageFilter((m) -> m.getKey().equals(Key.of("foo")));
 
         final MessageInterceptorRegistration registration = senderChannelsWith(messageFilter);
-        assertThat(registration.getInterceptor().intercept(message(Key.of("foo"), null)), is(notNullValue()));
-        assertThat(registration.getInterceptor().intercept(message(Key.of("bar"), null)), is(nullValue()));
+        assertThat(registration.getInterceptor().intercept(TextMessage.of(Key.of("foo"), null)), is(notNullValue()));
+        assertThat(registration.getInterceptor().intercept(TextMessage.of(Key.of("bar"), null)), is(nullValue()));
     }
 
     @Test

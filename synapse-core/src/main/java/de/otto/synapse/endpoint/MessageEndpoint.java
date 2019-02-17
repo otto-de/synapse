@@ -3,7 +3,7 @@ package de.otto.synapse.endpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -82,5 +82,5 @@ public interface MessageEndpoint {
      * @return the (possibly modified) message, or null if the message should be dropped.
      */
     @Nullable
-    Message<String> intercept(@Nonnull Message<String> message);
+    TextMessage intercept(@Nonnull TextMessage message);
 }

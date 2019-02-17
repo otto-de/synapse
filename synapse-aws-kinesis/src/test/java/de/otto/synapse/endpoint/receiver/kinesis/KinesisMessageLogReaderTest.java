@@ -3,7 +3,7 @@ package de.otto.synapse.endpoint.receiver.kinesis;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.channel.ShardResponse;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.testsupport.TestClock;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.regex.Pattern;
 
 import static com.google.common.collect.ImmutableList.of;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
@@ -198,7 +197,7 @@ public class KinesisMessageLogReaderTest {
 
         assertThat(responses, hasSize(4));
         // first response:
-        List<Message<String>> messages = responses.get(0).getMessages();
+        List<TextMessage> messages = responses.get(0).getMessages();
         assertThat(messages, is(empty()));
         // second response:
         messages = responses.get(1).getMessages();
@@ -233,7 +232,7 @@ public class KinesisMessageLogReaderTest {
 
         assertThat(responses, hasSize(3));
         // first response:
-        List<Message<String>> messages = responses.get(0).getMessages();
+        List<TextMessage> messages = responses.get(0).getMessages();
         assertThat(messages, is(empty()));
         // second response:
         messages = responses.get(1).getMessages();

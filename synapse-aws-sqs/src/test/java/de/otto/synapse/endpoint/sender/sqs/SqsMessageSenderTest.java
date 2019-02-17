@@ -4,8 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.translator.JsonStringMessageTranslator;
+import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.translator.MessageTranslator;
+import de.otto.synapse.translator.TextMessageTranslator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,7 +40,7 @@ public class SqsMessageSenderTest {
     private ArgumentCaptor<SendMessageRequest> requestArgumentCaptor;
     @Captor
     private ArgumentCaptor<SendMessageBatchRequest> batchRequestArgumentCaptor;
-    private MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator();
+    private MessageTranslator<TextMessage> messageTranslator = new TextMessageTranslator();
     private MessageInterceptorRegistry interceptorRegistry;
 
     @Before
@@ -123,7 +124,7 @@ public class SqsMessageSenderTest {
                 .messageId("some-id")
                 .build()));
         // and especially
-        interceptorRegistry.register(senderChannelsWith((m) -> message(m.getKey(), m.getHeader(), "{\"value\":\"apple\"}")));
+        interceptorRegistry.register(senderChannelsWith((m) -> TextMessage.of(m.getKey(), m.getHeader(), "{\"value\":\"apple\"}")));
 
         // when
         sqsMessageSender.send(message).join();
@@ -194,7 +195,7 @@ public class SqsMessageSenderTest {
 
         // and especially
         interceptorRegistry.register(
-                senderChannelsWith((m) -> message(m.getKey(), m.getHeader(), "{\"value\" : \"Lovely day for a Guinness\"}"))
+                senderChannelsWith((m) -> TextMessage.of(m.getKey(), m.getHeader(), "{\"value\" : \"Lovely day for a Guinness\"}"))
         );
 
         // when
@@ -210,6 +211,27 @@ public class SqsMessageSenderTest {
         assertThat(capturedRequest.entries(), hasSize(2));
         assertThat(capturedRequest.entries().get(0).messageBody(), is("{\"value\" : \"Lovely day for a Guinness\"}"));
         assertThat(capturedRequest.entries().get(1).messageBody(), is("{\"value\" : \"Lovely day for a Guinness\"}"));
+    }
+
+    @Test
+    public void shouldNotSendEmptyBatch() {
+        // given
+        ExampleJsonObject bananaObject = new ExampleJsonObject("banana");
+        ExampleJsonObject appleObject = new ExampleJsonObject("apple");
+
+        // and especially drop all messages
+        interceptorRegistry.register(
+                senderChannelsWith((m) -> null)
+        );
+
+        // when
+        sqsMessageSender.sendBatch(Stream.of(
+                message("b", bananaObject),
+                message("a", appleObject)
+        ));
+
+        // then
+        verifyZeroInteractions(sqsAsyncClient);
     }
 
     @Test

@@ -2,18 +2,13 @@ package de.otto.synapse.endpoint;
 
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 import org.slf4j.Logger;
-import org.springframework.core.OrderComparator;
-import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 
-import java.util.Comparator;
-
-import static com.google.common.collect.ImmutableList.sortedCopyOf;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -81,8 +76,8 @@ public final class InterceptorChain implements MessageInterceptor {
      * @return the (possibly modified) message, or null if the message should be dropped.
      */
     @Nullable
-    public Message<String> intercept(final @Nonnull Message<String> message) {
-        Message<String> interceptedMessage = message;
+    public TextMessage intercept(final @Nonnull TextMessage message) {
+        TextMessage interceptedMessage = message;
         for (final MessageInterceptor interceptor : interceptors) {
             if (interceptedMessage == null) {
                 break;

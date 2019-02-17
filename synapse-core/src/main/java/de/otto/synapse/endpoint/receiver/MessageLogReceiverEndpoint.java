@@ -5,6 +5,7 @@ import de.otto.synapse.channel.ShardResponse;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import javax.annotation.Nonnull;
 import java.util.concurrent.CompletableFuture;
@@ -32,24 +33,18 @@ public interface MessageLogReceiverEndpoint extends MessageReceiverEndpoint {
      * Beginning at the {@code startFrom} position, messages are consumed from the message log, until the
      * {@code stopCondition} is true.
      *
-     * <p>
-     *     Takes zero or more messages from the channel, calls {@link #intercept(Message)} for every message, and notifies
-     *     the registered consumers with the intercepted message, or drops the message, if {@code intercept} returns null.
-     * </p>
-     * <p>
-     *     Consumption starts with the first message <em>after</em> {@code startFrom} and finishes when either the
-     *     {@code stopCondition} is met, or the application is shutting down.
-     * </p>
-     * <p>
-     *     The returned {@code ChannelPosition} is the position of the last message that was processed by the
-     *     {@code MessageLogReceiverEndpoint} - whether it was dropped or consumed.
-     * </p>
-     * <p>
-     *     The {@link #register(MessageConsumer) registered} {@link MessageConsumer consumers} are used as a
-     *     callback for consumed messages. A {@link MessageDispatcher} can be used as a consumer, if multiple
-     *     consumers, or consumers with {@link Message#getPayload() message payloads} other than {@code String} are
-     *     required.
-     * </p>
+     * <p>Takes zero or more messages from the channel, calls {@link #intercept(TextMessage)} for every message,
+     *     and notifies the registered consumers with the intercepted message, or drops the message, if
+     *     {@code intercept} returns null.</p>
+     *
+     * <p>Consumption starts with the first message <em>after</em> {@code startFrom} and finishes when either the
+     *     {@code stopCondition} is met, or the application is shutting down.</p>
+     *
+     * <p>The returned {@code ChannelPosition} is the position of the last message that was processed by the
+     *     {@code MessageLogReceiverEndpoint} - whether it was dropped or consumed.</p>
+     *
+     * <p>The {@link #register(MessageConsumer) registered} {@link MessageConsumer consumers} are used as a
+     *     callback for consumed messages.</p>
      *
      * @param startFrom the start position used to proceed message consumption
      * @return ChannelPosition
@@ -68,9 +63,9 @@ public interface MessageLogReceiverEndpoint extends MessageReceiverEndpoint {
      *     would continue on other shards.
      * </p>
      * <p>
-     *     Takes zero or more messages from the channel, calls {@link #intercept(Message)} for every message, and
-     *     notifies the registered consumers with the intercepted message, or drops the message, if {@code intercept}
-     *     returns null.
+     *     Takes zero or more messages from the channel, calls {@link #intercept(TextMessage)} for every message,
+     *     and notifies the registered consumers with the intercepted message, or drops the message, if
+     *     {@code intercept} returns null.
      *</p>
      *
      * <p>

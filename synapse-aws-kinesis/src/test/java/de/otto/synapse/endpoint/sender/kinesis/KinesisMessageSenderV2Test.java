@@ -8,9 +8,10 @@ import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.translator.JsonStringMessageTranslator;
+import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.MessageTranslator;
+import de.otto.synapse.translator.TextMessageTranslator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,7 +56,7 @@ public class KinesisMessageSenderV2Test {
     private KinesisAsyncClient kinesisClient;
     @Captor
     private ArgumentCaptor<PutRecordsRequest> putRecordsRequestCaptor;
-    private MessageTranslator<String> messageTranslator = new JsonStringMessageTranslator();
+    private MessageTranslator<TextMessage> messageTranslator = new TextMessageTranslator();
     private MessageInterceptorRegistry interceptorRegistry;
 
     @Before
@@ -237,7 +238,7 @@ public class KinesisMessageSenderV2Test {
         // and especially
         interceptorRegistry.register(matchingSenderChannelsWith(
                 "test",
-                (m) -> message(m.getKey(), m.getHeader(), "{\"value\":\"apple\"}"))
+                (m) -> TextMessage.of(m.getKey(), m.getHeader(), "{\"value\":\"apple\"}"))
         );
 
         // when
@@ -303,7 +304,7 @@ public class KinesisMessageSenderV2Test {
                 .records(PutRecordsResultEntry.builder().build())
                 .build()));
 
-        interceptorRegistry.register(senderChannelsWith(m -> message(m.getKey(), "{\"m\":\"Lovely day for a Guinness\"}")));
+        interceptorRegistry.register(senderChannelsWith(m -> TextMessage.of(m.getKey(), "{\"m\":\"Lovely day for a Guinness\"}")));
 
         // when
         kinesisMessageSender.sendBatch(Stream.of(

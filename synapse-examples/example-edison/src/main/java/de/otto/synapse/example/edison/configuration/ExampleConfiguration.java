@@ -9,10 +9,11 @@ import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.InMemoryMessageSender;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.example.edison.state.BananaProduct;
+import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.state.ConcurrentHashMapStateRepository;
 import de.otto.synapse.state.StateRepository;
-import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageTranslator;
+import de.otto.synapse.translator.TextMessageTranslator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -50,7 +51,7 @@ public class ExampleConfiguration {
 
     private MessageSenderEndpoint buildMessageSender(final String channelName,
                                                      final InMemoryChannels inMemoryChannels) {
-        final MessageTranslator<String> translator = new JsonStringMessageTranslator();
+        final MessageTranslator<TextMessage> translator = new TextMessageTranslator();
         return new InMemoryMessageSender(interceptorRegistry, translator, inMemoryChannels.getChannel(channelName));
     }
 }

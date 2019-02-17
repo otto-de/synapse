@@ -2,7 +2,7 @@ package de.otto.synapse.endpoint;
 
 import de.otto.synapse.configuration.SynapseProperties;
 import de.otto.synapse.message.Header;
-import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -50,13 +50,13 @@ public class DefaultReceiverHeadersInterceptor {
 
     @Nullable
     @de.otto.synapse.annotation.MessageInterceptor(endpointType = EndpointType.RECEIVER)
-    public Message<String> addDefaultHeaders(@Nonnull Message<String> message) {
+    public TextMessage addDefaultHeaders(@Nonnull TextMessage message) {
 
         final Header.Builder headers = copyOf(message.getHeader());
 
         if (enabled) {
             headers.withAttribute(MSG_RECEIVER_TS, clock.instant());
         }
-        return message(message.getKey(), headers.build(), message.getPayload());
+        return TextMessage.of(message.getKey(), headers.build(), message.getPayload());
     }
 }

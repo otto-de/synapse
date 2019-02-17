@@ -2,6 +2,7 @@ package de.otto.synapse.endpoint;
 
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.message.TextMessage;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -29,11 +30,11 @@ public class MethodInvokingMessageInterceptor implements MessageInterceptor {
         Objects.requireNonNull(instance, "Unable to build MethodInvokingMessageInterceptor: instance parameter is null");
         Objects.requireNonNull(method, "Unable to build MethodInvokingMessageInterceptor: method parameter is null");
 
-        if (method.getReturnType() != void.class && method.getReturnType() != Message.class) {
-            throw new IllegalArgumentException("Unable to build MethodInvokingMessageInterceptor: return type of the annotated method must be void or Message<String>");
+        if (method.getReturnType() != void.class && !Message.class.isAssignableFrom(method.getReturnType())) {
+            throw new IllegalArgumentException("Unable to build MethodInvokingMessageInterceptor: return type of the annotated method must be void or Message<String> or TextMessage");
         }
         if (method.getParameterCount() != 1) {
-            throw new IllegalArgumentException("Unable to build MethodInvokingMessageInterceptor: illegal number of arguments, expected exactly one parameter with type Message<String>");
+            throw new IllegalArgumentException("Unable to build MethodInvokingMessageInterceptor: illegal number of arguments, expected exactly one parameter with type Message<String> or TextMessage");
         }
 
         assertIsMessageWithStringTypeParam(method.getGenericReturnType());
@@ -47,25 +48,25 @@ public class MethodInvokingMessageInterceptor implements MessageInterceptor {
         this.returnsMessage = method.getReturnType() != Void.class && method.getReturnType() != void.class;
     }
 
-    private void assertIsMessageWithStringTypeParam(final Type genericParameterType) {
-        if (genericParameterType instanceof ParameterizedType) {
-            ParameterizedType parameterizedType = (ParameterizedType) genericParameterType;
+    private void assertIsMessageWithStringTypeParam(final Type type) {
+        if (type instanceof ParameterizedType) {
+            ParameterizedType parameterizedType = (ParameterizedType) type;
             boolean isMessageType = !parameterizedType.getRawType().equals(Message.class);
             boolean hasStringArgument = !Arrays.equals(parameterizedType.getActualTypeArguments(), new Type[]{String.class});
             if (isMessageType || hasStringArgument) {
-                throw new IllegalArgumentException("Unable to build MethodInvokingMessageInterceptor: parameter " + Message.class);
+                throw new IllegalArgumentException("Unable to build MethodInvokingMessageInterceptor: parameter " + type);
             }
         }
     }
 
     private void assertIsMessage(Class<?> paramType) {
-        if (!paramType.equals(Message.class)) {
+        if (!Message.class.isAssignableFrom(paramType)) {
             throw new IllegalArgumentException("Unable to build MethodInvokingMessageInterceptor: expected parameter type is Message, not " + paramType.getName());
         }
     }
 
     private void assertIsMessageOrVoid(Class<?> paramType) {
-        if (!paramType.equals(Message.class) && !paramType.equals(void.class) && !paramType.equals(Void.class)) {
+        if (!Message.class.isAssignableFrom(paramType) && !paramType.equals(void.class) && !paramType.equals(Void.class)) {
             throw new IllegalArgumentException("Unable to build MethodInvokingMessageInterceptor: expected parameter type is Message, not " + paramType.getName());
         }
     }
@@ -73,10 +74,15 @@ public class MethodInvokingMessageInterceptor implements MessageInterceptor {
     @Nullable
     @Override
     @SuppressWarnings("unchecked")
-    public Message<String> intercept(@Nonnull Message<String> message) {
+    public TextMessage intercept(@Nonnull TextMessage message) {
         try {
             if (returnsMessage) {
-                return (Message<String>) method.invoke(instance, message);
+                final Message<String> interceptedMessage = (Message<String>) method.invoke(instance, message);
+                if (interceptedMessage == null || interceptedMessage == message || interceptedMessage instanceof TextMessage) {
+                    return (TextMessage) interceptedMessage;
+                } else {
+                    return TextMessage.of(interceptedMessage);
+                }
             } else {
                 method.invoke(instance, message);
                 return message;

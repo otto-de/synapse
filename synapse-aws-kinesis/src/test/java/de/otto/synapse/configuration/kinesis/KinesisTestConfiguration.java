@@ -8,8 +8,8 @@ import de.otto.synapse.eventsource.DefaultEventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
 import de.otto.synapse.messagestore.InMemoryMessageStore;
 import de.otto.synapse.messagestore.MessageStore;
-import de.otto.synapse.translator.JsonStringMessageTranslator;
 import de.otto.synapse.translator.MessageFormat;
+import de.otto.synapse.translator.TextMessageTranslator;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -97,13 +97,13 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
     @Bean
     public MessageSenderEndpoint kinesisV1Sender(final MessageInterceptorRegistry registry,
                                           final KinesisAsyncClient kinesisClient) {
-        return new KinesisMessageSender(KINESIS_INTEGRATION_TEST_CHANNEL, registry, new JsonStringMessageTranslator(), kinesisClient, MessageFormat.V1);
+        return new KinesisMessageSender(KINESIS_INTEGRATION_TEST_CHANNEL, registry, new TextMessageTranslator(), kinesisClient, MessageFormat.V1);
     }
 
     @Bean
     public MessageSenderEndpoint kinesisV2Sender(final MessageInterceptorRegistry registry,
                                           final KinesisAsyncClient kinesisClient) {
-        return new KinesisMessageSender(KINESIS_INTEGRATION_TEST_CHANNEL, registry, new JsonStringMessageTranslator(), kinesisClient, MessageFormat.V2);
+        return new KinesisMessageSender(KINESIS_INTEGRATION_TEST_CHANNEL, registry, new TextMessageTranslator(), kinesisClient, MessageFormat.V2);
     }
 
 }
