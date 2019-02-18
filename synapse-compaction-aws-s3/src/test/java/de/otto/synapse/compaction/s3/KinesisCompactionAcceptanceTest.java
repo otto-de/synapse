@@ -11,13 +11,14 @@ import de.otto.synapse.annotation.EnableMessageSenderEndpoint;
 import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.configuration.aws.KinesisTestConfiguration;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
-import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.helper.s3.S3Helper;
+import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
-import de.otto.synapse.translator.MessageCodec;
+import de.otto.synapse.message.TextMessage;
+import de.otto.synapse.translator.Decoder;
 import de.otto.synapse.translator.MessageFormat;
+import de.otto.synapse.translator.AbstractTextDecoder;
 import net.minidev.json.JSONArray;
-import org.hamcrest.MatcherAssert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,17 +42,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
-import static de.otto.synapse.channel.StopCondition.endOfChannel;
 import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
 import static java.lang.Thread.sleep;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
@@ -265,10 +263,12 @@ public class KinesisCompactionAcceptanceTest {
     }
 
     private void assertMessageForKey(LinkedHashMap<String, JSONArray> json, final Key expectedKey, String expectedPayload) {
+        final Decoder<SnapshotMessage> decoder = new SnapshotMessageDecoder();
         JSONArray jsonArray = JsonPath.read(json, "$.data[?(@." + expectedKey.compactionKey() + ")]." + expectedKey.compactionKey());
         String messageJson = jsonArray.get(0).toString();
-        assertThat(MessageCodec.decode(messageJson).getKey(), is(expectedKey));
-        assertThat(MessageCodec.decode(messageJson).getPayload(), is(expectedPayload));
+        TextMessage decoded = decoder.apply(new SnapshotMessage(Key.of(), Header.of(), messageJson));
+        assertThat(decoded.getKey(), is(expectedKey));
+        assertThat(decoded.getPayload(), is(expectedPayload));
     }
 
     private void assertMessageDoesNotExist(LinkedHashMap<String, JSONArray> json, final String key) {

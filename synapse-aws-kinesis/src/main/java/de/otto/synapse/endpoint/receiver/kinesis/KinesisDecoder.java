@@ -1,23 +1,20 @@
-package de.otto.synapse.message.kinesis;
+package de.otto.synapse.endpoint.receiver.kinesis;
 
-import de.otto.synapse.message.*;
+import de.otto.synapse.message.Header;
+import de.otto.synapse.message.Key;
+import de.otto.synapse.message.TextMessage;
+import de.otto.synapse.translator.AbstractTextDecoder;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.model.Record;
 
-import javax.annotation.Nonnull;
 import java.util.function.Function;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.DefaultHeaderAttr.MSG_ARRIVAL_TS;
-import static de.otto.synapse.translator.MessageCodec.decode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static software.amazon.awssdk.core.SdkBytes.fromByteArray;
 
-public class KinesisMessage {
-
-
-    public static final String SYNAPSE_MSG_HEADERS = "_synapse_msg_headers";
-    public static final String SYNAPSE_MSG_PAYLOAD = "_synapse_msg_payload";
+public class KinesisDecoder extends AbstractTextDecoder<RecordWithShard> {
 
     private static final SdkBytes EMPTY_SDK_BYTES_BUFFER = fromByteArray(new byte[]{});
 
@@ -29,14 +26,15 @@ public class KinesisMessage {
         }
     };
 
-    public static TextMessage kinesisMessage(final @Nonnull String shard,
-                                             final @Nonnull Record record) {
-
+    @Override
+    public TextMessage apply(RecordWithShard recordWithShard) {
+        final Record record = recordWithShard.getRecord();
+        final String shardName = recordWithShard.getShardName();
         return decode(
                 Key.of(record.partitionKey()),
                 Header.builder()
                         .withAttribute(MSG_ARRIVAL_TS, record.approximateArrivalTimestamp())
-                        .withShardPosition(fromPosition(shard, record.sequenceNumber())).build(),
+                        .withShardPosition(fromPosition(shardName, record.sequenceNumber())).build(),
                 SDK_BYTES_STRING.apply(record.data()));
     }
 

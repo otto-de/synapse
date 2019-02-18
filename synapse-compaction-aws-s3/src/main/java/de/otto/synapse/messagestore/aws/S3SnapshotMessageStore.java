@@ -8,6 +8,8 @@ import com.google.common.collect.Streams;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.compaction.s3.SnapshotFileHelper;
+import de.otto.synapse.compaction.s3.SnapshotMessage;
+import de.otto.synapse.compaction.s3.SnapshotMessageDecoder;
 import de.otto.synapse.compaction.s3.SnapshotReadService;
 import de.otto.synapse.info.SnapshotReaderNotification;
 import de.otto.synapse.info.SnapshotReaderStatus;
@@ -15,6 +17,7 @@ import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.messagestore.SnapshotMessageStore;
+import de.otto.synapse.translator.Decoder;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -34,7 +37,6 @@ import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.info.SnapshotReaderStatus.*;
-import static de.otto.synapse.translator.MessageCodec.decode;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @NotThreadSafe
@@ -186,6 +188,7 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
 
         private TextMessage nextMessage = null;
         private JsonParser jsonParser;
+        private final Decoder<SnapshotMessage> decoder = new SnapshotMessageDecoder();
 
         private MessageIterator(final JsonParser jsonParser) {
             this.jsonParser = jsonParser;
@@ -198,10 +201,10 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
                     while (!jsonParser.isClosed() && jsonParser.nextToken() != JsonToken.END_ARRAY) {
                         JsonToken currentToken = jsonParser.currentToken();
                         if (currentToken == JsonToken.FIELD_NAME) {
-                            nextMessage = decode(
+                            nextMessage = decoder.apply(new SnapshotMessage(
                                     Key.of(jsonParser.getValueAsString()),
                                     Header.of(),
-                                    jsonParser.nextTextValue());
+                                    jsonParser.nextTextValue()));
                             break;
                         }
                     }

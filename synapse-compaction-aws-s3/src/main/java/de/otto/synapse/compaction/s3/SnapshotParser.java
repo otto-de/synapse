@@ -10,6 +10,8 @@ import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.TextMessage;
+import de.otto.synapse.translator.AbstractTextDecoder;
+import de.otto.synapse.translator.Decoder;
 
 import java.io.*;
 import java.util.zip.ZipInputStream;
@@ -19,7 +21,6 @@ import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
-import static de.otto.synapse.translator.MessageCodec.decode;
 
 public class SnapshotParser {
 
@@ -68,14 +69,15 @@ public class SnapshotParser {
     private <T> void processSnapshotData(final JsonParser parser,
                                          final ChannelPosition channelPosition,
                                          final MessageDispatcher messageDispatcher) throws IOException {
+        final Decoder<SnapshotMessage> decoder = new SnapshotMessageDecoder();
         final ShardPosition shardPosition = channelPosition.shard(channelPosition.shards().iterator().next());
         while (parser.nextToken() != JsonToken.END_ARRAY) {
             JsonToken currentToken = parser.currentToken();
             if (currentToken == JsonToken.FIELD_NAME) {
-                final TextMessage message = decode(
+                final TextMessage message = decoder.apply(new SnapshotMessage(
                         Key.of(parser.getValueAsString()),
                         Header.of(shardPosition),
-                        parser.nextTextValue());
+                        parser.nextTextValue()));
                 messageDispatcher.accept(message);
             }
         }

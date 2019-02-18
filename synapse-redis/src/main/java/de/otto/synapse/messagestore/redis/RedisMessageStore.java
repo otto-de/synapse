@@ -4,10 +4,7 @@ import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.messagestore.WritableMessageStore;
-import de.otto.synapse.translator.Encoder;
-import de.otto.synapse.translator.MessageCodec;
-import de.otto.synapse.translator.MessageFormat;
-import de.otto.synapse.translator.TextEncoder;
+import de.otto.synapse.translator.*;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -42,6 +39,7 @@ public class RedisMessageStore implements WritableMessageStore {
     private final int batchSize;
     private final int maxSize;
     private final Encoder<String> encoder;
+    private final Decoder<String> decoder;
 
     /**
      * @param channelName the name of the channel whose messages are stored in the {@code RedisMessageStore}
@@ -53,7 +51,7 @@ public class RedisMessageStore implements WritableMessageStore {
                              final int batchSize,
                              final int ringBufferSize,
                              final RedisTemplate<String, String> stringRedisTemplate) {
-        this(channelName, batchSize, ringBufferSize, stringRedisTemplate, new TextEncoder(MessageFormat.V2));
+        this(channelName, batchSize, ringBufferSize, stringRedisTemplate, new TextEncoder(MessageFormat.V2), new TextDecoder());
     }
 
     /**
@@ -67,12 +65,14 @@ public class RedisMessageStore implements WritableMessageStore {
                              final int batchSize,
                              final int ringBufferSize,
                              final RedisTemplate<String, String> stringRedisTemplate,
-                             final Encoder<String> messageEncoder) {
+                             final Encoder<String> messageEncoder,
+                             final Decoder<String> messageDecoder) {
         this.channelName = channelName;
         this.redisTemplate = stringRedisTemplate;
         this.batchSize = batchSize;
         this.maxSize = ringBufferSize;
         this.encoder = messageEncoder;
+        this.decoder = messageDecoder;
     }
 
     public String getChannelName() {
@@ -120,7 +120,7 @@ public class RedisMessageStore implements WritableMessageStore {
     public Stream<TextMessage> stream() {
         final Iterator<TextMessage> messageIterator = new BatchedRedisListIterator<>(
                 redisTemplate,
-                RedisMessageStore::messageOf,
+                decoder,
                 channelName + "-messages",
                 batchSize);
         return StreamSupport.stream(
@@ -136,10 +136,6 @@ public class RedisMessageStore implements WritableMessageStore {
 
     @Override
     public void close() {
-    }
-
-    static TextMessage messageOf(final String redisValue) {
-        return MessageCodec.decode(redisValue);
     }
 
     public void clear() {

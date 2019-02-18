@@ -13,12 +13,13 @@ public enum MessageFormat {
     V2;
 
     public static final String SYNAPSE_MSG_FORMAT = "_synapse_msg_format";
-    public static final Pattern V2_PATTERN = Pattern.compile("\\{\\s*\"" + SYNAPSE_MSG_FORMAT + "\"\\s*:\\s*\"v2\".+");
     public static final String SYNAPSE_MSG_KEY = "_synapse_msg_key";
     public static final String SYNAPSE_MSG_COMPACTIONKEY = "compactionKey";
     public static final String SYNAPSE_MSG_PARTITIONKEY = "partitionKey";
     public static final String SYNAPSE_MSG_HEADERS = "_synapse_msg_headers";
     public static final String SYNAPSE_MSG_PAYLOAD = "_synapse_msg_payload";
+
+    private static final Pattern V2_PATTERN = Pattern.compile("\\{\\s*\"" + SYNAPSE_MSG_FORMAT + "\"\\s*:\\s*\"v2\".+");
 
     /**
      * Returns the default message format used by Synapse to encode messages.
@@ -29,9 +30,15 @@ public enum MessageFormat {
         return V1;
     }
 
-    public static MessageFormat versionOf(final String body) {
-        if (body != null) {
-            return V2_PATTERN.matcher(body).matches()
+    /**
+     * Determines the {@code MessageFormat} from the string representation of some message.
+     *
+     * @param message the string representation of some message
+     * @return MessageFormat of the message
+     */
+    public static MessageFormat versionOf(final String message) {
+        if (message != null) {
+            return V2_PATTERN.matcher(message).matches()
                     ? V2
                     : V1;
         } else {

@@ -6,19 +6,19 @@ import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static de.otto.synapse.channel.ShardResponse.shardResponse;
-import static de.otto.synapse.message.kinesis.KinesisMessage.kinesisMessage;
 import static java.time.Duration.ofMillis;
 
 public class KinesisShardResponse {
 
     public static ShardResponse kinesisShardResponse(final ShardPosition shardPosition,
                                                      final GetRecordsResponse recordsResponse) {
+        final KinesisDecoder kinesisDecoder = new KinesisDecoder();
         return shardResponse(
                 shardPosition,
                 ofMillis(recordsResponse.millisBehindLatest()),
                 recordsResponse.records()
                         .stream()
-                        .map(record -> kinesisMessage(shardPosition.shardName(), record))
+                        .map(record -> kinesisDecoder.apply(new RecordWithShard(shardPosition.shardName(), record)))
                         .collect(toImmutableList())
         );
     }

@@ -16,40 +16,30 @@ import static de.otto.synapse.translator.ObjectMappers.currentObjectMapper;
 import static java.util.Collections.emptyMap;
 import static org.slf4j.LoggerFactory.getLogger;
 
-/**
- * Helper class used to transform text messages into String representations.
- */
-public class MessageCodec {
+public abstract class AbstractTextDecoder<T> implements Decoder<T> {
 
-    // TODO: MessageCodec als Bean, damit man den Codec bei Bedarf austauschen / anpassen kann. Eine weitere Bean MessageCodecs könnte sich um das Format kümmern.
+    private static final Logger LOG = getLogger(AbstractTextDecoder.class);
 
+    private static final TypeReference<Map<String, String>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, String>>() {};
 
-    private static final Logger LOG = getLogger(MessageCodec.class);
-    private static final TypeReference<Map<String, String>> MAP_TYPE_REFERENCE = new TypeReference<Map<String, String>>() {
-    };
-
-    public static TextMessage decode(final String body) {
-        return decode(Key.of(), Header.of(), body);
-    }
-
-    public static TextMessage decode(final Key key,
-                                     final Header prototypeHeader,
-                                     final String body) {
+    protected TextMessage decode(final Key prototypeKey,
+                                 final Header prototypeHeader,
+                                 final String body) {
         switch (MessageFormat.versionOf(body)) {
             case V1:
-                return TextMessage.of(key, prototypeHeader, body);
+                return TextMessage.of(prototypeKey, prototypeHeader, body);
             case V2:
                 try {
                     final JsonNode json = parseRecordBody(body);
                     return TextMessage.of(
-                            keyFrom(json).orElse(key),
+                            keyFrom(json).orElse(prototypeKey),
                             copyOf(prototypeHeader)
                                     .withAttributes(attributesFrom(json))
                                     .build(),
                             payloadFrom(json));
                 } catch (final RuntimeException e) {
                     LOG.error("Exception caught while parsing record {}: {}", body, e.getMessage());
-                    return TextMessage.of(key, prototypeHeader, body);
+                    return TextMessage.of(prototypeKey, prototypeHeader, body);
                 }
             default:
                 throw new IllegalStateException("Unsupported message format: " + body);

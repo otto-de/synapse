@@ -6,8 +6,8 @@ import javax.annotation.Nonnull;
 import java.util.function.Function;
 
 /**
- * Translates any {@link Message Message&lt;?&gt;} into a {@link Message&lt;P&gt;} by translating the message's
- * payload into the specified target-type payload.
+ * Translates any {@link Message Message&lt;?&gt;} into a {@code Message} with payload-type P by translating
+ * the message's payload into the specified target-type payload.
  *
  * <p>
  *     The Message Translator is the messaging equivalent of the Adapter pattern described in
