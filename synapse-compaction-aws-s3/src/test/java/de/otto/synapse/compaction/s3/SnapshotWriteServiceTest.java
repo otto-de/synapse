@@ -8,8 +8,8 @@ import de.otto.synapse.state.StateRepository;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
@@ -30,7 +30,6 @@ import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.compaction.s3.SnapshotServiceTestUtils.snapshotProperties;
 import static java.util.Collections.singletonList;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.Assert.assertFalse;
@@ -61,19 +60,16 @@ public class SnapshotWriteServiceTest {
     public void shouldUploadSnapshotFile() throws Exception {
         StateRepository<String> stateRepository = new ConcurrentHashMapStateRepository<>();
         stateRepository.put("testKey", "{\"content\":\"testValue1\"}");
-        when(s3Client.putObject(any(PutObjectRequest.class), any(Path.class))).thenReturn(PutObjectResponse.builder().build());
+        when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class))).thenReturn(PutObjectResponse.builder().build());
         //when
         String fileName = testee.writeSnapshot(STREAM_NAME, fromHorizon(), stateRepository);
+        File file = new File(System.getProperty("java.io.tmpdir") + "/" + fileName);
 
         //then
-        ArgumentCaptor<Path> fileArgumentCaptor = ArgumentCaptor.forClass(Path.class);
-        Mockito.verify(s3Client).putObject(any(PutObjectRequest.class), fileArgumentCaptor.capture());
+        Mockito.verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
 
-        Path actualFile = fileArgumentCaptor.getValue();
-        assertThat(actualFile.toString(), containsString(fileName));
         assertThat(fileName, startsWith("compaction-" + STREAM_NAME + "-snapshot-"));
-
-        assertFalse(Files.exists(actualFile));
+        assertFalse(file.exists());
     }
 
     @Test

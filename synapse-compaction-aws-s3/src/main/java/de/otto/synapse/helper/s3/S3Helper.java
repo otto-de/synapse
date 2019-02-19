@@ -1,10 +1,12 @@
 package de.otto.synapse.helper.s3;
 
 import org.slf4j.Logger;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,12 +44,16 @@ public class S3Helper {
 
     public void upload(final String bucketName,
                        final File file) {
-        final PutObjectResponse putObjectResponse = s3Client.putObject(PutObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(file.getName())
-                        .build(),
-                file.toPath());
-        LOG.debug("upload {} to bucket {}: ", file.getName(), bucketName, putObjectResponse.toString());
+        try (FileInputStream fis = new FileInputStream(file)) {
+            final PutObjectResponse putObjectResponse = s3Client.putObject(PutObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(file.getName())
+                            .build(),
+                    RequestBody.fromInputStream(fis, file.length()));
+            LOG.debug("upload {} to bucket {}: {}", file.getName(), bucketName, putObjectResponse.toString());
+        } catch (IOException e) {
+            LOG.error("Error while uploading {} to bucket {}", file.getName(), bucketName, e);
+        }
     }
 
     public boolean download(final String bucketName,
