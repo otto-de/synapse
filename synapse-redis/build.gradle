@@ -5,7 +5,8 @@ dependencies {
     // This dependency is exported to consumers, that is to say found on their compile classpath.
     api project(':synapse-core')
 
-    implementation "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
+    api "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
+    api "org.redisson:redisson-spring-boot-starter:3.10.2"
 
     implementation "org.springframework:spring-context:${springVersion}"
     implementation "org.springframework:spring-aop:${springVersion}"

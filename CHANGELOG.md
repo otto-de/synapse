@@ -1,5 +1,10 @@
 # Release Notes
 
+## 0.16.0
+* Fixes design flaw of `MessageStore`: the stores can now contain messages from different channels.
+* Removes WritableMessageStore interface and adds optional method `MessageStore.add()`
+* Implements a simple Leader Election using Redisson RLock
+
 ## 0.15.2
 * Fixes Deployment of kinesis services by reducing the polling after kinesis has been fully consumed 
 
