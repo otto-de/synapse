@@ -5,6 +5,8 @@ import de.otto.synapse.message.Message;
 import de.otto.synapse.state.StateRepository;
 
 import javax.annotation.Nonnull;
+import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -20,7 +22,7 @@ public class StatefulMessageConsumer<P, S> implements MessageConsumer<P> {
     private final StateRepository<S> stateRepository;
     private final Class<P> payloadType;
     private final Function<? super Message<P>, String> keyMapper;
-    private final Function<? super Message<P>, S> payloadToStateMapper;
+    private final BiFunction<Optional<S>, ? super Message<P>, S> payloadToStateMapper;
 
     /**
      * Creates a StatefulMessageConsumer.
@@ -44,6 +46,25 @@ public class StatefulMessageConsumer<P, S> implements MessageConsumer<P> {
     /**
      * Creates a StatefulMessageConsumer.
      *
+     * <p>
+     *     The message's {@link Key#partitionKey()} is used as the key for repository entries.
+     * </p>
+     *
+     * @param keyPattern the of-pattern of {@link de.otto.synapse.message.Message#getKey() message keys} accepted by this consumer.
+     * @param payloadType the payload type of the messages accepted by this consumer
+     * @param stateRepository the StateRepository that is holding the State
+     * @param payloadToStateMapper the mapper function used to map message payload to state entities
+     */
+    public StatefulMessageConsumer(final String keyPattern,
+                                   final Class<P> payloadType,
+                                   final StateRepository<S> stateRepository,
+                                   final BiFunction<Optional<S>, Message<P>, S> payloadToStateMapper) {
+        this(keyPattern, payloadType, stateRepository, payloadToStateMapper, (message) -> message.getKey().partitionKey());
+    }
+
+    /**
+     * Creates a StatefulMessageConsumer.
+     *
      * @param keyPattern the of-pattern of {@link de.otto.synapse.message.Message#getKey() message keys} accepted by this consumer.
      * @param payloadType the payload type of the messages accepted by this consumer
      * @param stateRepository the StateRepository that is holding the State
@@ -54,6 +75,30 @@ public class StatefulMessageConsumer<P, S> implements MessageConsumer<P> {
                                    final Class<P> payloadType,
                                    final StateRepository<S> stateRepository,
                                    final Function<? super Message<P>, S> payloadToStateMapper,
+                                   final Function<? super Message<P>,String> keyMapper) {
+        this.keyPattern = Pattern.compile(keyPattern);
+        this.payloadType = payloadType;
+        this.stateRepository = stateRepository;
+
+        // TODO: State + KeyMapper in das StateRepository verschieben!
+
+        this.payloadToStateMapper = (_previousValue, message) -> payloadToStateMapper.apply(message);
+        this.keyMapper = keyMapper;
+    }
+
+    /**
+     * Creates a StatefulMessageConsumer.
+     *
+     * @param keyPattern the of-pattern of {@link de.otto.synapse.message.Message#getKey() message keys} accepted by this consumer.
+     * @param payloadType the payload type of the messages accepted by this consumer
+     * @param stateRepository the StateRepository that is holding the State
+     * @param payloadToStateMapper the mapper function used to map previous state entity and message payload to state entities
+     * @param keyMapper the mapper function used to map message keys to StateRepository keys.
+     */
+    public StatefulMessageConsumer(final String keyPattern,
+                                   final Class<P> payloadType,
+                                   final StateRepository<S> stateRepository,
+                                   final BiFunction<Optional<S>, ? super Message<P>, S> payloadToStateMapper,
                                    final Function<? super Message<P>,String> keyMapper) {
         this.keyPattern = Pattern.compile(keyPattern);
         this.payloadType = payloadType;
@@ -92,7 +137,9 @@ public class StatefulMessageConsumer<P, S> implements MessageConsumer<P> {
         if (message.getPayload() == null) {
             stateRepository.remove(keyMapper.apply(message));
         } else {
-            stateRepository.put(keyMapper.apply(message), payloadToStateMapper.apply(message));
+            stateRepository.compute(
+                    keyMapper.apply(message),
+                    (_key, previousValue) -> payloadToStateMapper.apply(previousValue, message));
         }
     }
 
