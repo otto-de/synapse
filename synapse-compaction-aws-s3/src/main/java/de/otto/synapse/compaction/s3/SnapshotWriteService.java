@@ -17,11 +17,14 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -120,21 +123,20 @@ public class SnapshotWriteService {
         return snapshotFile;
     }
 
-    public void deleteOlderSnapshots(final String channelName) {
+    private void deleteOlderSnapshots(final String channelName) {
         String snapshotFileNamePrefix = getSnapshotFileNamePrefix(channelName);
         String snapshotFileSuffix = ".json.zip";
-        List<File> oldestFiles;
-        try {
-            oldestFiles = Files.find(Paths.get(getTempDir()), 1,
-                    (path, basicFileAttributes) -> (path.getFileName().toString().startsWith(snapshotFileNamePrefix) && path.getFileName().toString().endsWith(snapshotFileSuffix)))
+        BiPredicate<Path, BasicFileAttributes> matchSnapshotFilePattern = (path, basicFileAttributes) -> (path.getFileName().toString().startsWith(snapshotFileNamePrefix) && path.getFileName().toString().endsWith(snapshotFileSuffix));
+        try (Stream<Path> pathStream = Files.find(Paths.get(getTempDir()), 1, matchSnapshotFilePattern)) {
+            List<File> oldestFiles = pathStream
                     .sorted((path1, path2) -> (int) (path2.toFile().lastModified() - path1.toFile().lastModified()))
                     .map(Path::toFile)
                     .collect(Collectors.toList());
+            if (oldestFiles.size() > NUM_SNAPSHOTS_TO_KEEP) {
+                oldestFiles.subList(NUM_SNAPSHOTS_TO_KEEP, oldestFiles.size()).forEach(this::deleteSnapshotFile);
+            }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
-        }
-        if (oldestFiles.size() > NUM_SNAPSHOTS_TO_KEEP) {
-            oldestFiles.subList(NUM_SNAPSHOTS_TO_KEEP, oldestFiles.size()).forEach(this::deleteSnapshotFile);
         }
     }
 
