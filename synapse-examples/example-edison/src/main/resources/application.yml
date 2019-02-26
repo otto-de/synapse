@@ -1,7 +1,6 @@
 spring:
   application:
     name: synapse-edison-example
-
 edison:
   application:
     title:  Synapse + Edison Example

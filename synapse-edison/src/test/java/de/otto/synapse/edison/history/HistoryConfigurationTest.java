@@ -27,7 +27,8 @@ public class HistoryConfigurationTest {
 
     @Test
     public void shouldNotExposeHistoryByDefault() {
-        context.register(HistoryConfiguration.class);
+        context.register(HistoryController.class);
+        context.register(HistoryService.class);
         context.refresh();
 
         assertThat(context.containsBean("historyController"), is(false));
@@ -39,7 +40,8 @@ public class HistoryConfigurationTest {
         TestPropertyValues.of(
                 "synapse.edison.history.enabled=false")
                 .applyTo(context);
-        context.register(HistoryConfiguration.class);
+        context.register(HistoryController.class);
+        context.register(HistoryService.class);
         context.refresh();
 
         assertThat(context.containsBean("historyController"), is(false));
@@ -51,7 +53,8 @@ public class HistoryConfigurationTest {
         TestPropertyValues.of(
                 "synapse.edison.history.enabled=true")
                 .applyTo(context);
-        context.register(HistoryConfiguration.class);
+        context.register(HistoryController.class);
+        context.register(HistoryService.class);
         context.refresh();
 
         assertThat(context.containsBean("historyController"), is(true));

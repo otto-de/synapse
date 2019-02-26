@@ -1,8 +1,15 @@
 package de.otto.synapse.edison.history;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+
 import static de.otto.synapse.message.Message.message;
 import static java.util.Arrays.asList;
 
+@ConditionalOnProperty(
+        prefix = "synapse.edison.history",
+        name = "enabled",
+        havingValue = "true")
 public class HistoryService {
 
     /**

@@ -29,8 +29,12 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
-@ContextConfiguration(classes = {HistoryController.class})
-@WebMvcTest(controllers = HistoryController.class, secure = false)
+@ContextConfiguration(
+        classes = {HistoryController.class})
+@WebMvcTest(
+        controllers = HistoryController.class,
+        properties = "synapse.edison.history.enabled=true",
+        secure = false)
 public class HistoryControllerTest {
 
     @Autowired

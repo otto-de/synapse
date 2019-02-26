@@ -88,15 +88,18 @@ public class MessageTraceController {
     }
 
     private String prettyPrint(final String json) {
+        if (json == null) {
+            return "null";
+        }
         try {
             Object jsonObject = currentObjectMapper().readValue(json, Object.class);
-            if (jsonObject != null) {
-                return currentObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
-            } else {
+            if (jsonObject == null) {
                 return "null";
+            } else {
+                return currentObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
             }
         } catch (final Exception e) {
-            throw new RuntimeException(e.getMessage(), e);
+            return json;
         }
     }
 

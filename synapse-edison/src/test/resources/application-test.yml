@@ -1,6 +1,9 @@
 management:
   context-path: /internal
-synapse:
-  edison:
-    history:
-      enabled: true
+
+edison:
+  application:
+    title:  Synapse + Edison Test
+    description:
+    group: synapse-edison-test
+    environment: local

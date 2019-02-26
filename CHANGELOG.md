@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.15.1
+* Fixes NPE in message traces if payload is null
+
 ## 0.15.0
 * Introduces TextMessage that is used instead of Message<String>.
 * Fixes possible threading issue in ObjectMappers.
