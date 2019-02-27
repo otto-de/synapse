@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.15.2
+* Fixes Deployment of kinesis services by reducing the polling after kinesis has been fully consumed 
+
 ## 0.15.1
 * Fixes NPE in message traces if payload is null
 

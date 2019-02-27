@@ -2,6 +2,7 @@ package de.otto.synapse.endpoint.receiver.kinesis;
 
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.channel.ShardResponse;
+import de.otto.synapse.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -9,11 +10,14 @@ import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.time.Clock;
+import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @ThreadSafe
 public class KinesisShardReader {
@@ -69,7 +73,7 @@ public class KinesisShardReader {
                     final ShardResponse response = kinesisShardIterator.next();
                     responseConsumer.accept(response);
 
-                    stopRetrieval = stopCondition.test(response) || isStopping() || waitABit();
+                    stopRetrieval = stopCondition.test(response) || isStopping() || waitABit(response.getDurationBehind());
 
                 } while (!stopRetrieval);
                 return kinesisShardIterator.getShardPosition();
@@ -86,10 +90,14 @@ public class KinesisShardReader {
         }, executorService);
     }
 
-    private boolean waitABit() {
+    private boolean waitABit(Duration durationBehind) {
         try {
             /*Wait one second as documented by amazon: https://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetRecords.html*/
-            Thread.sleep(1000);
+            if (durationBehind.getSeconds() > 10) {
+                Thread.sleep(1000);
+            } else {
+                Thread.sleep(10000);
+            }
         } catch (final InterruptedException e) {
             LOG.warn("Thread got interrupted");
             return true;
