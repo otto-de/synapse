@@ -3,6 +3,7 @@ package de.otto.synapse.messagestore;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Header;
 
+import javax.annotation.Nonnull;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -95,6 +96,26 @@ public interface MessageStore extends AutoCloseable {
     default Stream<MessageStoreEntry> stream(final String channelName) {
         return streamAll().filter(e -> e.getChannelName().equals(channelName));
     }
+
+    /**
+     * Appends the specified element to the end of this list (optional
+     * operation).
+     *
+     * <p>MessageStores that support this operation may place limitations on what
+     * elements may be added to this list.  In particular, some
+     * stores will refuse to add entries for more than a single
+     * {@link MessageStoreEntry#getChannelName() channel}.  MessageStore
+     * classes should clearly specify in their documentation any restrictions
+     * on what elements may be added.
+     *
+     * @param entry element to be appended to this message store
+     * @throws UnsupportedOperationException if the <tt>add</tt> operation
+     *         is not supported by this store
+     * @throws NullPointerException if the specified element is null
+     * @throws IllegalArgumentException if some property of this element
+     *         prevents it from being added to this list
+     */
+    void add(@Nonnull MessageStoreEntry entry);
 
     /**
      * Returns the number of messages contained in the MessageStore.

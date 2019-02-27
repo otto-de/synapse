@@ -54,5 +54,17 @@ public class MessageStores {
             return Stream.empty();
         }
 
+        /**
+         * Guaranteed to throw an exception and leave the message store unmodified.
+         *
+         * @throws UnsupportedOperationException always
+         * @deprecated Unsupported operation.
+         */
+        @Deprecated
+        @Override
+        public void add(MessageStoreEntry entry) {
+            throw new UnsupportedOperationException();
+        }
+
     };
 }

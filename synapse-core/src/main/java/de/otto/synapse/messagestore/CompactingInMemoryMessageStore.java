@@ -18,7 +18,7 @@ import java.util.stream.Stream;
  * </p>
  */
 @ThreadSafe
-public class CompactingInMemoryMessageStore implements WritableMessageStore {
+public class CompactingInMemoryMessageStore implements MessageStore {
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final ConcurrentNavigableMap<String, MessageStoreEntry> entries = new ConcurrentSkipListMap<>();

@@ -4,8 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.message.TextMessage;
+import de.otto.synapse.messagestore.MessageStore;
 import de.otto.synapse.messagestore.MessageStoreEntry;
-import de.otto.synapse.messagestore.WritableMessageStore;
 import de.otto.synapse.translator.*;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisOperations;
@@ -33,7 +33,7 @@ import static java.util.Spliterators.spliteratorUnknownSize;
  *     The store can be configured like a ring-buffer to only store the latest N messages.
  * </p>
  */
-public class RedisIndexedMessageStore implements WritableMessageStore {
+public class RedisIndexedMessageStore implements MessageStore {
 
     private static final int CHARACTERISTICS = Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE;
 

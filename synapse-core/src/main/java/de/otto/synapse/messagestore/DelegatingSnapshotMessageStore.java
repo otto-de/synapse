@@ -2,6 +2,7 @@ package de.otto.synapse.messagestore;
 
 import de.otto.synapse.channel.ChannelPosition;
 
+import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -49,6 +50,17 @@ public class DelegatingSnapshotMessageStore implements SnapshotMessageStore {
     @Override
     public Stream<MessageStoreEntry> stream(String channelName) {
         return delegate.stream(channelName);
+    }
+
+    /**
+     * Guaranteed to throw an exception and leave the message store unmodified.
+     *
+     * @throws UnsupportedOperationException always
+     * @deprecated Unsupported operation.
+     */
+    @Deprecated    @Override
+    public void add(@Nonnull MessageStoreEntry entry) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

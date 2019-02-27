@@ -24,7 +24,7 @@ import java.util.stream.Stream;
  * </p>
  */
 @ThreadSafe
-public class CompactingConcurrentMapMessageStore implements WritableMessageStore {
+public class CompactingConcurrentMapMessageStore implements MessageStore {
 
     private static final int DEFAULT_KEY_SIZE_BYTES = 128;
     private static final double DEFAULT_VALUE_SIZE_BYTES = 512;

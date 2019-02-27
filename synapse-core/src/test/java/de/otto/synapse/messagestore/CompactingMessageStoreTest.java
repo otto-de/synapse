@@ -36,7 +36,7 @@ import static org.hamcrest.Matchers.*;
 public class CompactingMessageStoreTest {
 
     @Parameters
-    public static Iterable<? extends Supplier<WritableMessageStore>> messageStores() {
+    public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
                 () -> new CompactingInMemoryMessageStore("test"),
                 () -> new CompactingConcurrentMapMessageStore("test"),
@@ -45,11 +45,11 @@ public class CompactingMessageStoreTest {
     }
 
     @Parameter
-    public Supplier<WritableMessageStore> messageStoreBuilder;
+    public Supplier<MessageStore> messageStoreBuilder;
 
     @Test
     public void shouldCompactMessagesFromSameChannelByCompactionKey() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
             messageStore.add(MessageStoreEntry.of(
                     "some-channel",
@@ -73,7 +73,7 @@ public class CompactingMessageStoreTest {
 
     @Test
     public void shouldNotCompactMessagesFromDifferentChannel() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
             messageStore.add(MessageStoreEntry.of(
                     "some-channel",
@@ -93,7 +93,7 @@ public class CompactingMessageStoreTest {
 
     @Test
     public void shouldCalculateCompactedMultiShardedChannelPosition() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         final ExecutorService executorService = newFixedThreadPool(10);
         final CompletableFuture[] completion = new CompletableFuture[5];
 
@@ -125,7 +125,7 @@ public class CompactingMessageStoreTest {
 
     @Test
     public void shouldCalculateCompactedMultiShardedChannelPositionForMultipleChannels() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         final ExecutorService executorService = newFixedThreadPool(10);
         final CompletableFuture[] completion = new CompletableFuture[10];
 
@@ -172,7 +172,7 @@ public class CompactingMessageStoreTest {
 
     @Test
     public void shouldCalculateCompactedChannelPosition() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<5; ++i) {
             for (int pos = 0; pos < 10000; ++pos) {
                 messageStore.add(MessageStoreEntry.of("some-channel", TextMessage.of(Key.of(valueOf(pos)), of(fromPosition("some-shard", valueOf(pos))), "some payload")));
@@ -187,7 +187,7 @@ public class CompactingMessageStoreTest {
 
     @Test
     public void shouldRemoveMessagesWithoutChannelPositionWithNullPayload() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
             messageStore.add(MessageStoreEntry.of("some-channel", TextMessage.of(Key.of(valueOf(i)), "some payload")));
             messageStore.add(MessageStoreEntry.of("other-channel", TextMessage.of(Key.of(valueOf(i)), "other payload")));
@@ -201,7 +201,7 @@ public class CompactingMessageStoreTest {
 
     @Test
     public void shouldRemoveMessagesWithNullPayload() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
             messageStore.add(MessageStoreEntry.of("some-channel", TextMessage.of(
                     Key.of(valueOf(i)),

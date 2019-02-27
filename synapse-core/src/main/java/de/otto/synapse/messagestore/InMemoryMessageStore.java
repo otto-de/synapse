@@ -14,7 +14,7 @@ import java.util.stream.Stream;
  * Concurrent in-memory implementation of a MessageStore that is storing all messages in insertion order.
  */
 @ThreadSafe
-public class InMemoryMessageStore implements WritableMessageStore {
+public class InMemoryMessageStore implements MessageStore {
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final Deque<MessageStoreEntry> entries = new ConcurrentLinkedDeque<>();

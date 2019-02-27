@@ -15,7 +15,7 @@ import java.util.stream.Stream;
  * <p>Each time an element is added to a full message store, the message store automatically removes its head element.
  */
 @ThreadSafe
-public class InMemoryRingBufferMessageStore implements WritableMessageStore {
+public class InMemoryRingBufferMessageStore implements MessageStore {
 
     private final String name;
     private final Queue<MessageStoreEntry> entries;

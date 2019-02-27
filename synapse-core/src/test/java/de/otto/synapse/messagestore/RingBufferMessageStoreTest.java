@@ -31,18 +31,18 @@ import static org.hamcrest.Matchers.*;
 public class RingBufferMessageStoreTest {
 
     @Parameters
-    public static Iterable<? extends Supplier<WritableMessageStore>> messageStores() {
+    public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
                 () -> new InMemoryRingBufferMessageStore("test")
         );
     }
 
     @Parameter
-    public Supplier<WritableMessageStore> messageStoreBuilder;
+    public Supplier<MessageStore> messageStoreBuilder;
 
     @Test
     public void shouldKeepNoMoreThanCapacityIndicates() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<101; ++i) {
             messageStore.add(MessageStoreEntry.of("", TextMessage.of(valueOf(i), "some payload")));
         }
@@ -51,7 +51,7 @@ public class RingBufferMessageStoreTest {
 
     @Test
     public void shouldKeepNoMoreThanCapacityIndicatesWithMultipleChannels() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<101; ++i) {
             messageStore.add(MessageStoreEntry.of("first", TextMessage.of(Key.of(), "some payload")));
             messageStore.add(MessageStoreEntry.of("second", TextMessage.of(Key.of(), "some payload")));
@@ -63,7 +63,7 @@ public class RingBufferMessageStoreTest {
 
     @Test
     public void shouldRemoveOldestIfCapacityIsReached() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<102; ++i) {
             messageStore.add(MessageStoreEntry.of("", TextMessage.of(valueOf(i), "some payload")));
         }
@@ -78,7 +78,7 @@ public class RingBufferMessageStoreTest {
     @SuppressWarnings("Duplicates")
     @Test
     public void shouldCalculateMultiShardedChannelPosition() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         final ExecutorService executorService = newFixedThreadPool(10);
         final CompletableFuture[] completion = new CompletableFuture[5];
 
@@ -110,7 +110,7 @@ public class RingBufferMessageStoreTest {
     @SuppressWarnings("Duplicates")
     @Test
     public void shouldCalculateChannelPosition() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<5; ++i) {
             for (int pos = 0; pos < 10; ++pos) {
                 messageStore.add(MessageStoreEntry.of("", TextMessage.of(valueOf(pos), of(fromPosition("some-shard", valueOf(pos))), "some payload")));

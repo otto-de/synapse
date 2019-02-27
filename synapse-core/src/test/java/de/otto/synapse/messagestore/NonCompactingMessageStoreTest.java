@@ -32,7 +32,7 @@ import static org.hamcrest.Matchers.*;
 public class NonCompactingMessageStoreTest {
 
     @Parameterized.Parameters
-    public static Iterable<? extends Supplier<WritableMessageStore>> messageStores() {
+    public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
                 () -> new InMemoryMessageStore("test"),
                 () -> new InMemoryRingBufferMessageStore("test", 50000)
@@ -40,11 +40,11 @@ public class NonCompactingMessageStoreTest {
     }
 
     @Parameter
-    public Supplier<WritableMessageStore> messageStoreBuilder;
+    public Supplier<MessageStore> messageStoreBuilder;
 
     @Test
     public void shouldStreamAllMessages() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         messageStore.add(MessageStoreEntry.of("one", TextMessage.of("1", "1")));
         messageStore.add(MessageStoreEntry.of("two", TextMessage.of("2", "2")));
         messageStore.add(MessageStoreEntry.of("one", TextMessage.of("3", "3")));
@@ -66,7 +66,7 @@ public class NonCompactingMessageStoreTest {
     @SuppressWarnings("Duplicates")
     @Test
     public void shouldCalculateUncompactedChannelPositionsForSingleChannel() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         final ExecutorService executorService = newFixedThreadPool(10);
         final CompletableFuture[] completion = new CompletableFuture[5];
         for (int shard=0; shard<5; ++shard) {
@@ -94,7 +94,7 @@ public class NonCompactingMessageStoreTest {
     @SuppressWarnings("Duplicates")
     @Test
     public void shouldCalculateUncompactedChannelPositionsForMultipleChannels() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         final ExecutorService executorService = newFixedThreadPool(10);
         final CompletableFuture[] completion = new CompletableFuture[10];
         for (int shard = 0; shard<5; ++shard) {

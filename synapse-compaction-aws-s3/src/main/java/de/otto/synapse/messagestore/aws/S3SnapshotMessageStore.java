@@ -152,6 +152,17 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
                 : Stream.empty();
     }
 
+    /**
+     * Guaranteed to throw an exception and leave the message store unmodified.
+     *
+     * @throws UnsupportedOperationException always
+     * @deprecated Unsupported operation.
+     */
+    @Deprecated    @Override
+    public void add(@Nonnull MessageStoreEntry entry) {
+        throw new UnsupportedOperationException();
+    }
+    
     private ChannelPosition processSequenceNumbers(final JsonParser parser) throws IOException {
         final ImmutableMap.Builder<String, ShardPosition> shardPositions = builder();
 

@@ -29,13 +29,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 /**
- * Tests that must be successful for all WritableMessageStore implementations
+ * Tests that must be successful for all MessageStore implementations
  */
 @RunWith(Parameterized.class)
-public class WritableMessageStoreTest {
+public class MessageStoreTest {
 
     @Parameters
-    public static Iterable<? extends Supplier<WritableMessageStore>> messageStores() {
+    public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
                 () -> new InMemoryMessageStore("test"),
                 () -> new InMemoryRingBufferMessageStore("test", 10000),
@@ -45,12 +45,12 @@ public class WritableMessageStoreTest {
     }
 
     @Parameter
-    public Supplier<WritableMessageStore> messageStoreBuilder;
+    public Supplier<MessageStore> messageStoreBuilder;
 
     @SuppressWarnings("Duplicates")
     @Test
     public void shouldAddMessagesWithoutHeaders() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
             messageStore.add(MessageStoreEntry.of("", TextMessage.of(Key.of(valueOf(i)), "some payload")));
         }
@@ -66,7 +66,7 @@ public class WritableMessageStoreTest {
     @SuppressWarnings("Duplicates")
     @Test
     public void shouldKeepInsertionOrderOfMessages() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         final ExecutorService executorService = newFixedThreadPool(10);
         final CompletableFuture[] completion = new CompletableFuture[5];
         for (int shard=0; shard<5; ++shard) {

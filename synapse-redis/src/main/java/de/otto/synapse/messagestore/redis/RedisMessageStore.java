@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
+import de.otto.synapse.messagestore.MessageStore;
 import de.otto.synapse.messagestore.MessageStoreEntry;
-import de.otto.synapse.messagestore.WritableMessageStore;
 import de.otto.synapse.translator.*;
 import org.slf4j.Logger;
 import org.springframework.dao.DataAccessException;
@@ -33,7 +33,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  *     The store can be configured like a ring-buffer to only store the latest N messages.
  * </p>
  */
-public class RedisMessageStore implements WritableMessageStore {
+public class RedisMessageStore implements MessageStore {
 
     private static final Logger LOG = getLogger(RedisMessageStore.class);
 

@@ -27,7 +27,7 @@ import static org.hamcrest.Matchers.is;
 public class CompactingMessageStoreWithoutDeletionsTest {
 
     @Parameters
-    public static Iterable<? extends Supplier<WritableMessageStore>> messageStores() {
+    public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
                 () -> new CompactingInMemoryMessageStore("test", false),
                 () -> new CompactingConcurrentMapMessageStore("test", false),
@@ -36,11 +36,11 @@ public class CompactingMessageStoreWithoutDeletionsTest {
     }
 
     @Parameter
-    public Supplier<WritableMessageStore> messageStoreBuilder;
+    public Supplier<MessageStore> messageStoreBuilder;
 
     @Test
     public void shouldNotRemoveMessagesWithoutChannelPositionWithNullPayload() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
             messageStore.add(MessageStoreEntry.of("", TextMessage.of(Key.of(valueOf(i)), "some payload")));
         }
@@ -53,7 +53,7 @@ public class CompactingMessageStoreWithoutDeletionsTest {
 
     @Test
     public void shouldNotRemoveMessagesWithNullPayload() {
-        final WritableMessageStore messageStore = messageStoreBuilder.get();
+        final MessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
             messageStore.add(MessageStoreEntry.of("some-channel", TextMessage.of(
                     Key.of(valueOf(i), "foo:" + i),
