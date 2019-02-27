@@ -37,10 +37,10 @@ public class WritableMessageStoreTest {
     @Parameters
     public static Iterable<? extends Supplier<WritableMessageStore>> messageStores() {
         return asList(
-                InMemoryMessageStore::new,
-                () -> new InMemoryRingBufferMessageStore(10000),
-                CompactingInMemoryMessageStore::new,
-                CompactingConcurrentMapMessageStore::new
+                () -> new InMemoryMessageStore("test"),
+                () -> new InMemoryRingBufferMessageStore("test", 10000),
+                () -> new CompactingInMemoryMessageStore("test"),
+                () -> new CompactingConcurrentMapMessageStore("test")
         );
     }
 
@@ -52,12 +52,12 @@ public class WritableMessageStoreTest {
     public void shouldAddMessagesWithoutHeaders() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
-            messageStore.add(TextMessage.of(Key.of(valueOf(i)), "some payload"));
+            messageStore.add(MessageStoreEntry.of("", TextMessage.of(Key.of(valueOf(i)), "some payload")));
         }
         assertThat(messageStore.getLatestChannelPosition(), is(fromHorizon()));
         final AtomicInteger expectedKey = new AtomicInteger(0);
-        messageStore.stream().forEach(message -> {
-            assertThat(message.getKey().toString(), is(valueOf(expectedKey.get())));
+        messageStore.stream("").forEach(entry -> {
+            assertThat(entry.getTextMessage().getKey().toString(), is(valueOf(expectedKey.get())));
             expectedKey.incrementAndGet();
         });
         assertThat(messageStore.size(), is(10));
@@ -73,17 +73,17 @@ public class WritableMessageStoreTest {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 10000; ++pos) {
-                    messageStore.add(TextMessage.of(Key.of(valueOf(pos), shardId + pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
-                    assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).startFrom(), is(POSITION));
-                    assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).position(), is(valueOf(pos)));
+                    messageStore.add(MessageStoreEntry.of("", TextMessage.of(Key.of(valueOf(pos), shardId + pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
+                    assertThat(messageStore.getLatestChannelPosition("").shard("shard-" + shardId).startFrom(), is(POSITION));
+                    assertThat(messageStore.getLatestChannelPosition("").shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }
 
             }, executorService);
         }
         allOf(completion).join();
         final Map<String, Integer> lastPositions = new HashMap<>();
-        messageStore.stream().forEach(message -> {
-            final Header header = message.getHeader();
+        messageStore.stream("").forEach(entry -> {
+            final Header header = entry.getTextMessage().getHeader();
             if (header.getShardPosition().isPresent()) {
                 final ShardPosition shard = header.getShardPosition().get();
                 final Integer pos = Integer.valueOf(shard.position());

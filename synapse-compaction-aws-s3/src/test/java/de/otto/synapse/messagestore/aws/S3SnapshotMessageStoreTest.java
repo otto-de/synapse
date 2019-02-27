@@ -42,7 +42,7 @@ public class S3SnapshotMessageStoreTest {
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.of(new File("someFileWithPattern-snapshot-2018-01-01T00-00Z-1234567890123456789.json.zip")));
 
         // when
-        new S3SnapshotMessageStore(STREAM_NAME, snapshotReadService, eventPublisher);
+        new S3SnapshotMessageStore("", STREAM_NAME, snapshotReadService, eventPublisher);
 
         // then expect exception
     }
@@ -54,7 +54,7 @@ public class S3SnapshotMessageStoreTest {
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.of(snapshotFile));
 
         // when
-        final S3SnapshotMessageStore messageStore = new S3SnapshotMessageStore(STREAM_NAME, snapshotReadService, eventPublisher);
+        final S3SnapshotMessageStore messageStore = new S3SnapshotMessageStore("", STREAM_NAME, snapshotReadService, eventPublisher);
 
         // then
         assertThat(messageStore.getSnapshotTimestamp(), is(parse("2017-09-29T09:02:00.00Z")));
@@ -69,7 +69,7 @@ public class S3SnapshotMessageStoreTest {
 
         // when
         try {
-            new S3SnapshotMessageStore(STREAM_NAME, snapshotReadService, eventPublisher);
+            new S3SnapshotMessageStore("", STREAM_NAME, snapshotReadService, eventPublisher);
 
             fail("should throw RuntimeException");
         } catch (RuntimeException ignored) {
@@ -95,7 +95,7 @@ public class S3SnapshotMessageStoreTest {
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.empty());
 
         // when
-        final S3SnapshotMessageStore messageStore = new S3SnapshotMessageStore(STREAM_NAME, snapshotReadService, eventPublisher);
+        final S3SnapshotMessageStore messageStore = new S3SnapshotMessageStore("", STREAM_NAME, snapshotReadService, eventPublisher);
         messageStore.close();
 
         // then
@@ -121,9 +121,9 @@ public class S3SnapshotMessageStoreTest {
         when(snapshotReadService.retrieveLatestSnapshot(any())).thenReturn(Optional.of(bigFile));
 
         long ts = System.currentTimeMillis();
-        final S3SnapshotMessageStore messageStore = new S3SnapshotMessageStore(STREAM_NAME, snapshotReadService, eventPublisher);
+        final S3SnapshotMessageStore messageStore = new S3SnapshotMessageStore("", STREAM_NAME, snapshotReadService, eventPublisher);
         try {
-            messageStore.stream().forEach((m) -> m.getKey());
+            messageStore.streamAll().forEach((m) -> m.getTextMessage().getKey());
         } finally {
             messageStore.close();
         }

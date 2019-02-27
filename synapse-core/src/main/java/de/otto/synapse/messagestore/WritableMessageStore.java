@@ -1,7 +1,5 @@
 package de.otto.synapse.messagestore;
 
-import de.otto.synapse.message.TextMessage;
-
 /**
  * A {@code MessageStore} that is capable to add messages.
  *
@@ -28,10 +26,10 @@ import de.otto.synapse.message.TextMessage;
 public interface WritableMessageStore extends MessageStore {
 
     /**
-     * Adds a Message to the MessageStore.
+     * Adds an entry to the MessageStore.
      *
-     * @param message the message to add
+     * @param entry the message entry to add
      */
-    void add(TextMessage message);
+    void add(MessageStoreEntry entry);
 
 }

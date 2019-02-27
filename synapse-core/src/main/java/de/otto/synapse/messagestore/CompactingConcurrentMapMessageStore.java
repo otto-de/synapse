@@ -2,28 +2,24 @@ package de.otto.synapse.messagestore;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.message.TextMessage;
 import net.openhft.chronicle.map.ChronicleMapBuilder;
 
 import javax.annotation.concurrent.ThreadSafe;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
 
-import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
-import static de.otto.synapse.channel.ChannelPosition.merge;
-
 /**
- * Concurrent implementation of a MessageStore that is compacting messages by {@link Message#getKey() of}.
+ * Concurrent implementation of a MessageStore that is compacting entries by {@link Message#getKey() of}.
  * <p>
- *     The ordering of messages is guaranteed by using a (on-heap) ConcurrentSkipListSet for keys.
+ *     The ordering of entries is guaranteed by using a (on-heap) ConcurrentSkipListSet for keys.
  * </p>
  * <p>
- *     The messages are stored in a ConcurrentMap like, for example, ChronicleMap. This way, the messages
- *     can be stored off-heap, so large numbers of messages can be stored in memory, without getting problems
+ *     The entries are stored in a ConcurrentMap like, for example, ChronicleMap. This way, the entries
+ *     can be stored off-heap, so large numbers of entries can be stored in memory, without getting problems
  *     with Java garbage-collecting.
  * </p>
  */
@@ -36,67 +32,95 @@ public class CompactingConcurrentMapMessageStore implements WritableMessageStore
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final ConcurrentSkipListSet<String> compactedAndOrderedKeys = new ConcurrentSkipListSet<>();
-    private final ConcurrentMap<String, TextMessage> messages;
-    private final AtomicReference<ChannelPosition> latestChannelPosition = new AtomicReference<>(fromHorizon());
+    private final ConcurrentMap<String, MessageStoreEntry> entries;
+    private final InMemoryChannelPositions channelPositions = new InMemoryChannelPositions();
     private final boolean removeNullPayloadMessages;
+    private final String name;
 
-    public CompactingConcurrentMapMessageStore() {
-        this(true);
+    public CompactingConcurrentMapMessageStore(final String name) {
+        this(name, true);
     }
 
-    public CompactingConcurrentMapMessageStore(final boolean removeNullPayloadMessages) {
+    public CompactingConcurrentMapMessageStore(final String name, final boolean removeNullPayloadMessages) {
         // TODO why ChronicleMap as a default??
-        this(removeNullPayloadMessages, ChronicleMapBuilder.of(String.class, TextMessage.class)
+        this(name, removeNullPayloadMessages, ChronicleMapBuilder.of(String.class, MessageStoreEntry.class)
                 .averageKeySize(DEFAULT_KEY_SIZE_BYTES)
                 .averageValueSize(DEFAULT_VALUE_SIZE_BYTES)
                 .entries(DEFAULT_ENTRY_COUNT)
                 .create());
     }
 
-    public CompactingConcurrentMapMessageStore(final boolean removeNullPayloadMessages,
-                                               final ConcurrentMap<String, TextMessage> messageMap) {
-        this.messages = messageMap;
+    public CompactingConcurrentMapMessageStore(final String name,
+                                               final boolean removeNullPayloadMessages,
+                                               final ConcurrentMap<String, MessageStoreEntry> messageMap) {
+        this.name = name;
+        this.entries = messageMap;
         this.removeNullPayloadMessages = removeNullPayloadMessages;
     }
 
     @Override
-    public void add(final TextMessage message) {
-        final String messageKey = message.getKey().compactionKey();
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public void add(final MessageStoreEntry entry) {
+        final String messageKey = entry.getChannelName() + ":" + entry.getTextMessage().getKey().compactionKey();
         lock.writeLock().lock();
         try {
-            if (message.getPayload() == null && removeNullPayloadMessages) {
-                messages.remove(messageKey);
+            if (entry.getTextMessage().getPayload() == null && removeNullPayloadMessages) {
+                entries.remove(messageKey);
                 compactedAndOrderedKeys.remove(messageKey);
             } else {
-                messages.put(messageKey, message);
+                entries.put(messageKey, entry);
                 compactedAndOrderedKeys.add(messageKey);
             }
-            latestChannelPosition.updateAndGet(previous -> message
-                    .getHeader()
-                    .getShardPosition()
-                    .map(messageChannelPosition -> merge(previous, messageChannelPosition))
-                    .orElse(previous)
-            );
+            channelPositions.updateFrom(entry);
         } finally {
             lock.writeLock().unlock();
         }
     }
 
     @Override
-    public ChannelPosition getLatestChannelPosition() {
+    public Set<String> getChannelNames() {
         lock.readLock().lock();
         try {
-            return latestChannelPosition.get();
+            return channelPositions.channelNames();
         } finally {
             lock.readLock().unlock();
         }
     }
 
     @Override
-    public Stream<TextMessage> stream() {
+    public ChannelPosition getLatestChannelPosition(final String channelName) {
         lock.readLock().lock();
         try {
-            return compactedAndOrderedKeys.stream().map(messages::get);
+            return channelPositions.positionOf(channelName);
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public Stream<MessageStoreEntry> streamAll() {
+        lock.readLock().lock();
+        try {
+            return compactedAndOrderedKeys
+                    .stream()
+                    .map(entries::get);
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public Stream<MessageStoreEntry> stream(final String channelName) {
+        lock.readLock().lock();
+        try {
+            return compactedAndOrderedKeys
+                    .stream()
+                    .map(entries::get)
+                    .filter(entry->entry.getChannelName().equals(channelName));
         } finally {
             lock.readLock().unlock();
         }
@@ -104,6 +128,6 @@ public class CompactingConcurrentMapMessageStore implements WritableMessageStore
 
     @Override
     public int size() {
-        return messages.size();
+        return entries.size();
     }
 }

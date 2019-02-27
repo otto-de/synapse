@@ -2,10 +2,11 @@ package de.otto.synapse.messagestore;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Header;
-import de.otto.synapse.message.Message;
-import de.otto.synapse.message.TextMessage;
 
+import java.util.Set;
 import java.util.stream.Stream;
+
+import static com.google.common.collect.Iterables.getFirst;
 
 /**
  * A repository used to store and retrieve Messages in their insertion order.
@@ -33,28 +34,67 @@ import java.util.stream.Stream;
 public interface MessageStore extends AutoCloseable {
 
     /**
-     * Returns the latest {@link ChannelPosition} of the MessageStore.
-     * <p>
-     *     The position is calculated by {@link ChannelPosition#merge(ChannelPosition...) merging} the
-     *     {@link Header#getShardPosition() optional positions} of the messages.
-     * </p>
-     * <p>
-     *     Messages without positions will not change the latest ChannelPosition. If no message contains
-     *     position information, the returned ChannelPosition is {@link ChannelPosition#fromHorizon()}
-     * </p>
-     * @return ChannelPosition
+     * Returns the name of the message store.
+     *
+     * <p>Especially for persistent implementations, two {@code MessageStore} instances might use this property
+     * to identify the underlying database, collection, file etc.</p>
+     *
+     * @return message store name
      */
-    ChannelPosition getLatestChannelPosition();
+    String getName();
 
     /**
-     * Returns a Stream of {@link Message messages} contained in the MessageStore.
+     * Returns a set containing the channel names of the messages contained in the {@code MessageStore}
+     * @return set of channel names
+     */
+    Set<String> getChannelNames();
+
+    /**
+     * Returns the latest {@link ChannelPosition} of the given channel, derived from the messages contained in this
+     * {@code MessageStore}.
+     *
+     * <p>The position is calculated by {@link ChannelPosition#merge(ChannelPosition...) merging} the
+     *    {@link Header#getShardPosition() optional positions} of the messages.</p>
+     *
+     * <p>Messages without positions will not change the latest ChannelPosition. If no message contains
+     *    position information, the returned ChannelPosition is {@link ChannelPosition#fromHorizon()}</p>
+     *
+     * @return ChannelPosition
+     */
+    ChannelPosition getLatestChannelPosition(final String channelName);
+
+    @Deprecated
+    default ChannelPosition getLatestChannelPosition() {
+        if (getChannelNames().size() > 1) {
+            throw new IllegalStateException("GetLatestChannelPosition called on a MessageStore containing messages from several channels: " + getChannelNames());
+        } else {
+            final String channelName = getFirst(getChannelNames(), "");
+            return getLatestChannelPosition(channelName);
+        }
+    }
+
+    /**
+     * Returns a Stream of all entries contained in the MessageStore.
      * <p>
-     *     The stream will maintain the insertion order of the messages.
+     *     The stream will maintain the insertion order of the entries.
      * </p>
      *
-     * @return Stream of messages
+     * @return Stream of entries
      */
-    Stream<TextMessage> stream();
+    Stream<MessageStoreEntry> streamAll();
+
+    /**
+     * Returns a Stream of all entries contained in the MessageStore that where sent over the given channel
+     * <p>
+     *     The stream will maintain the insertion order of the entries.
+     * </p>
+     *
+     * @param channelName the name of the channel
+     * @return Stream of entries
+     */
+    default Stream<MessageStoreEntry> stream(final String channelName) {
+        return streamAll().filter(e -> e.getChannelName().equals(channelName));
+    }
 
     /**
      * Returns the number of messages contained in the MessageStore.

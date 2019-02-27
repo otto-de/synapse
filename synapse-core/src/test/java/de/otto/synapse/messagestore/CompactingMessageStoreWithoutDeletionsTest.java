@@ -29,9 +29,9 @@ public class CompactingMessageStoreWithoutDeletionsTest {
     @Parameters
     public static Iterable<? extends Supplier<WritableMessageStore>> messageStores() {
         return asList(
-                () -> new CompactingInMemoryMessageStore(false),
-                () -> new CompactingConcurrentMapMessageStore(false),
-                () -> new CompactingConcurrentMapMessageStore(false, new ConcurrentHashMap<>())
+                () -> new CompactingInMemoryMessageStore("test", false),
+                () -> new CompactingConcurrentMapMessageStore("test", false),
+                () -> new CompactingConcurrentMapMessageStore("test", false, new ConcurrentHashMap<>())
         );
     }
 
@@ -42,35 +42,35 @@ public class CompactingMessageStoreWithoutDeletionsTest {
     public void shouldNotRemoveMessagesWithoutChannelPositionWithNullPayload() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
-            messageStore.add(TextMessage.of(Key.of(valueOf(i)), "some payload"));
+            messageStore.add(MessageStoreEntry.of("", TextMessage.of(Key.of(valueOf(i)), "some payload")));
         }
         for (int i=0; i<10; ++i) {
-            messageStore.add(TextMessage.of(Key.of(valueOf(i)), null));
+            messageStore.add(MessageStoreEntry.of("", TextMessage.of(Key.of(valueOf(i)), null)));
         }
         assertThat(messageStore.size(), is(10));
-        assertThat(messageStore.getLatestChannelPosition(), is(fromHorizon()));
+        assertThat(messageStore.getLatestChannelPosition(""), is(fromHorizon()));
     }
 
     @Test
     public void shouldNotRemoveMessagesWithNullPayload() {
         final WritableMessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<10; ++i) {
-            messageStore.add(TextMessage.of(
+            messageStore.add(MessageStoreEntry.of("some-channel", TextMessage.of(
                     Key.of(valueOf(i), "foo:" + i),
                     of(fromPosition("foo", valueOf(i))),
-                    "some foo payload"));
-            messageStore.add(TextMessage.of(
+                    "some foo payload")));
+            messageStore.add(MessageStoreEntry.of("some-channel", TextMessage.of(
                     Key.of(valueOf(i), "bar:" + i),
                     of(fromPosition("bar", valueOf(i))),
-                    "some bar payload"));
+                    "some bar payload")));
         }
         for (int i=0; i<10; ++i) {
-            messageStore.add(TextMessage.of(Key.of(valueOf(i), "foo:" + i), of(fromPosition("foo", valueOf(20 + i))), null));
-            messageStore.add(TextMessage.of(Key.of(valueOf(i), "bar:" + i), of(fromPosition("bar", valueOf(42 + i))), null));
+            messageStore.add(MessageStoreEntry.of("some-channel", TextMessage.of(Key.of(valueOf(i), "foo:" + i), of(fromPosition("foo", valueOf(20 + i))), null)));
+            messageStore.add(MessageStoreEntry.of("some-channel", TextMessage.of(Key.of(valueOf(i), "bar:" + i), of(fromPosition("bar", valueOf(42 + i))), null)));
         }
-        assertThat(messageStore.getLatestChannelPosition(), is(channelPosition(fromPosition("foo", "29"), fromPosition("bar", "51"))));
+        assertThat(messageStore.getLatestChannelPosition("some-channel"), is(channelPosition(fromPosition("foo", "29"), fromPosition("bar", "51"))));
         assertThat(messageStore.size(), is(20));
-        assertThat(messageStore.stream().count(), is(20L));
+        assertThat(messageStore.stream("some-channel").count(), is(20L));
     }
 
 }

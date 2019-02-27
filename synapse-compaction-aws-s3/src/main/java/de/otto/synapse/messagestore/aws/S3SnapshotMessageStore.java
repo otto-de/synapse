@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
@@ -16,6 +17,7 @@ import de.otto.synapse.info.SnapshotReaderStatus;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.TextMessage;
+import de.otto.synapse.messagestore.MessageStoreEntry;
 import de.otto.synapse.messagestore.SnapshotMessageStore;
 import de.otto.synapse.translator.Decoder;
 import org.slf4j.Logger;
@@ -29,6 +31,7 @@ import java.time.Instant;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 import java.util.zip.ZipInputStream;
 
@@ -48,12 +51,15 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
     private ChannelPosition channelPosition;
     private ZipInputStream zipInputStream;
     private Instant snapshotTimestamp;
+    private final String name;
     private final String channelName;
     private final ApplicationEventPublisher eventPublisher;
 
-    public S3SnapshotMessageStore(final @Nonnull String channelName,
+    public S3SnapshotMessageStore(final @Nonnull String name,
+                                  final @Nonnull String channelName,
                                   final @Nonnull SnapshotReadService snapshotReadService,
                                   final @Nullable ApplicationEventPublisher eventPublisher) {
+        this.name = name;
         this.channelName = channelName;
         this.eventPublisher = eventPublisher;
         publishEvent(STARTING, "Retrieve snapshot file from S3.", null);
@@ -116,14 +122,33 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
     }
 
     @Override
-    public ChannelPosition getLatestChannelPosition() {
-        return channelPosition != null ? channelPosition : fromHorizon();
+    public String getName() {
+        return name;
     }
 
     @Override
-    public Stream<TextMessage> stream() {
+    public Set<String> getChannelNames() {
+        return ImmutableSet.of(channelName);
+    }
+
+    @Override
+    public ChannelPosition getLatestChannelPosition(String channelName) {
+        return channelName.equals(this.channelName)
+                ? getLatestChannelPosition()
+                : fromHorizon();
+    }
+
+    @Override
+    public ChannelPosition getLatestChannelPosition() {
+        return channelPosition != null
+                ? channelPosition
+                : fromHorizon();
+    }
+
+    @Override
+    public Stream<MessageStoreEntry> streamAll() {
         return messageIterator != null
-                ? Streams.stream(messageIterator)
+                ? Streams.stream(messageIterator).map(msg -> MessageStoreEntry.of(channelName, msg))
                 : Stream.empty();
     }
 

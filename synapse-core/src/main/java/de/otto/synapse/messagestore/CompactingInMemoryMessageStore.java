@@ -2,21 +2,17 @@ package de.otto.synapse.messagestore;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.message.TextMessage;
 
 import javax.annotation.concurrent.ThreadSafe;
+import java.util.Set;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
 
-import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
-import static de.otto.synapse.channel.ChannelPosition.merge;
-
 /**
- * Concurrent in-memory implementation of a MessageStore that is compacting messages by {@link Message#getKey() of}.
+ * Concurrent in-memory implementation of a MessageStore that is compacting entries by {@link Message#getKey() of}.
  * <p>
  *     Messages are stored using a ConcurrentNavigableMap.
  * </p>
@@ -25,52 +21,67 @@ import static de.otto.synapse.channel.ChannelPosition.merge;
 public class CompactingInMemoryMessageStore implements WritableMessageStore {
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
-    private final ConcurrentNavigableMap<String, TextMessage> messages = new ConcurrentSkipListMap<>();
-    private final AtomicReference<ChannelPosition> latestChannelPosition = new AtomicReference<>(fromHorizon());
+    private final ConcurrentNavigableMap<String, MessageStoreEntry> entries = new ConcurrentSkipListMap<>();
+    private final InMemoryChannelPositions channelPositions = new InMemoryChannelPositions();
     private final boolean removeNullPayloadMessages;
+    private final String name;
 
-    public CompactingInMemoryMessageStore() {
+    public CompactingInMemoryMessageStore(final String name) {
+        this.name = name;
         this.removeNullPayloadMessages = true;
     }
 
-    public CompactingInMemoryMessageStore(final boolean removeNullPayloadMessages) {
+    public CompactingInMemoryMessageStore(final String name, final boolean removeNullPayloadMessages) {
         this.removeNullPayloadMessages = removeNullPayloadMessages;
+        this.name = name;
     }
 
     @Override
-    public void add(final TextMessage message) {
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public void add(final MessageStoreEntry entry) {
         lock.writeLock().lock();
         try {
-            if (message.getPayload() == null && removeNullPayloadMessages) {
-                messages.remove(message.getKey().compactionKey());
+            final String internalKey = entry.getChannelName() + ":" + entry.getTextMessage().getKey().compactionKey();
+            if (entry.getTextMessage().getPayload() == null && removeNullPayloadMessages) {
+                entries.remove(internalKey);
             } else {
-                messages.put(message.getKey().compactionKey(), message);
+                entries.put(internalKey, entry);
             }
-            latestChannelPosition.updateAndGet(previous -> message
-                    .getHeader()
-                    .getShardPosition()
-                    .map(shardPosition -> merge(previous, shardPosition))
-                    .orElse(previous));
+            channelPositions.updateFrom(entry);
         } finally {
             lock.writeLock().unlock();
         }
     }
 
     @Override
-    public ChannelPosition getLatestChannelPosition() {
+    public Set<String> getChannelNames() {
         lock.readLock().lock();
         try {
-            return latestChannelPosition.get();
+            return channelPositions.channelNames();
         } finally {
             lock.readLock().unlock();
         }
     }
 
     @Override
-    public Stream<TextMessage> stream() {
+    public ChannelPosition getLatestChannelPosition(final String channelName) {
         lock.readLock().lock();
         try {
-            return messages.values().stream();
+            return channelPositions.positionOf(channelName);
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public Stream<MessageStoreEntry> streamAll() {
+        lock.readLock().lock();
+        try {
+            return entries.values().stream();
         } finally {
             lock.readLock().unlock();
         }
@@ -78,6 +89,6 @@ public class CompactingInMemoryMessageStore implements WritableMessageStore {
 
     @Override
     public int size() {
-        return messages.size();
+        return entries.size();
     }
 }

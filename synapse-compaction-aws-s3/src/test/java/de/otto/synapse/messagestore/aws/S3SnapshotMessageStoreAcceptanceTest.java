@@ -14,6 +14,7 @@ import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.helper.s3.S3Helper;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.messagestore.MessageStoreEntry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -102,9 +103,9 @@ public class S3SnapshotMessageStoreAcceptanceTest {
         compactionService.compact(INTEGRATION_TEST_STREAM);
 
         //then
-        try (final S3SnapshotMessageStore snapshotMessageStore = new S3SnapshotMessageStore(INTEGRATION_TEST_STREAM, snapshotReadService, eventPublisher)) {
+        try (final S3SnapshotMessageStore snapshotMessageStore = new S3SnapshotMessageStore("Snapshot", INTEGRATION_TEST_STREAM, snapshotReadService, eventPublisher)) {
             final List<Message<String>> messages = new ArrayList<>();
-            snapshotMessageStore.stream().forEach(messages::add);
+            snapshotMessageStore.streamAll().map(MessageStoreEntry::getTextMessage).forEach(messages::add);
             assertThat(messages, hasSize(10));
             assertThat(messages.stream().map(Message::getKey).map(Key::partitionKey).collect(toList()), contains("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"));
             final ChannelPosition channelPosition = snapshotMessageStore.getLatestChannelPosition();

@@ -15,6 +15,6 @@ public interface MessageStoreFactory<T extends MessageStore> {
      *
      * @return MessageStore
      */
-    T createMessageStoreFor(@Nonnull String channelName);
+    T createMessageStoreFor(@Nonnull String name, @Nonnull String channelName);
 
 }

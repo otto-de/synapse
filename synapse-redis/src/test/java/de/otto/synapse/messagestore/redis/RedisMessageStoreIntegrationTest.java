@@ -1,10 +1,12 @@
 package de.otto.synapse.messagestore.redis;
 
+import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.TextMessage;
+import de.otto.synapse.messagestore.MessageStoreEntry;
 import de.otto.synapse.testsupport.redis.EmbededRedis;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,16 +22,18 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
+import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.StartFrom.POSITION;
 import static de.otto.synapse.message.Header.of;
-import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
 import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.concurrent.Executors.newFixedThreadPool;
@@ -42,8 +46,9 @@ import static org.hamcrest.Matchers.*;
         basePackages = {"de.otto.synapse.messagestore.redis"})
 @SpringBootTest(
         properties = {
+                "debug=true",
                 "spring.redis.server=localhost",
-                "spring.redis.port=6379"
+                "spring.redis.port=6079"
         },
         classes = {
                 RedisMessageStoreIntegrationTest.class,
@@ -58,7 +63,7 @@ public class RedisMessageStoreIntegrationTest {
     static class TestConfiguration {
         @Bean
         public RedisMessageStore redisMessageStore(final RedisTemplate<String, String> redisTemplate) {
-            return new RedisMessageStore("foo-channel", 100, 1000, redisTemplate);
+            return new RedisMessageStore("Test Store", 100, 1000, redisTemplate);
         }
     }
 
@@ -70,41 +75,139 @@ public class RedisMessageStoreIntegrationTest {
         messageStore.clear();
     }
 
+    @Test
+    public void shouldProvideChannelPositionsForMultipleChannelsAndShards() {
+        messageStore.add(MessageStoreEntry.of(
+                "first.shouldProvideChannelPositionsForMultipleChannelsAndShards",
+                TextMessage.of("1", of(fromPosition("shard-1", "1")), "")));
+        messageStore.add(MessageStoreEntry.of(
+                "second.shouldProvideChannelPositionsForMultipleChannelsAndShards",
+                TextMessage.of("2", of(fromPosition("shard-1", "42")), "")));
+        messageStore.add(MessageStoreEntry.of(
+                "first.shouldProvideChannelPositionsForMultipleChannelsAndShards",
+                TextMessage.of("3", of(fromPosition("shard-2", "1")), "")));
+        messageStore.add(MessageStoreEntry.of(
+                "first.shouldProvideChannelPositionsForMultipleChannelsAndShards",
+                TextMessage.of("4", of(fromPosition("shard-2", "2")), "")));
+        assertThat(messageStore.getLatestChannelPosition("first.shouldProvideChannelPositionsForMultipleChannelsAndShards"), is(channelPosition(
+                ShardPosition.fromPosition("shard-1", "1"),
+                ShardPosition.fromPosition("shard-2", "2")
+        )));
+        assertThat(messageStore.getLatestChannelPosition("second.shouldProvideChannelPositionsForMultipleChannelsAndShards"), is(channelPosition(
+                ShardPosition.fromPosition("shard-1", "42")
+        )));
+        assertThat(messageStore.getLatestChannelPosition("third"), is(ChannelPosition.fromHorizon()));
+    }
+
     @SuppressWarnings("Duplicates")
     @Test
-    public void shouldCalculateUncompactedChannelPositions() {
+    public void shouldStreamAllMessages() {
+        messageStore.add(MessageStoreEntry.of("one", TextMessage.of("1", "1")));
+        messageStore.add(MessageStoreEntry.of("two", TextMessage.of("2", "2")));
+        messageStore.add(MessageStoreEntry.of("one", TextMessage.of("3", "3")));
+
+        final List<String> channelNames = messageStore
+                .streamAll()
+                .map(MessageStoreEntry::getChannelName)
+                .collect(Collectors.toList());
+        final List<String> messageKeys = messageStore
+                .streamAll()
+                .map(MessageStoreEntry::getTextMessage)
+                .map(TextMessage::getKey)
+                .map(Key::partitionKey)
+                .collect(Collectors.toList());
+        assertThat(channelNames, contains("one", "two", "one"));
+        assertThat(messageKeys, contains("1", "2", "3"));
+    }
+
+    @SuppressWarnings("Duplicates")
+    @Test
+    public void shouldCalculateUncompactedChannelPositionsForSingleChannel() {
         final ExecutorService executorService = newFixedThreadPool(10);
         final CompletableFuture[] completion = new CompletableFuture[5];
         for (int shard=0; shard<5; ++shard) {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
-                for (int pos = 0; pos < 1500; ++pos) {
-                    messageStore.add(TextMessage.of(valueOf(pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
-                    assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).startFrom(), is(StartFrom.POSITION));
-                    assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).position(), is(valueOf(pos)));
+                for (int pos = 0; pos < 100; ++pos) {
+                    messageStore.add(MessageStoreEntry.of("", TextMessage.of(Key.of(valueOf(pos)), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
+                    assertThat(messageStore.getLatestChannelPosition("").shard("shard-" + shardId).startFrom(), is(StartFrom.POSITION));
+                    assertThat(messageStore.getLatestChannelPosition("").shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }
 
             }, executorService);
         }
         allOf(completion).join();
-        assertThat(messageStore.getLatestChannelPosition().shards(), containsInAnyOrder("shard-0", "shard-1", "shard-2", "shard-3", "shard-4"));
-        assertThat(messageStore.getLatestChannelPosition().shard("shard-0").position(), is("1499"));
-        assertThat(messageStore.getLatestChannelPosition().shard("shard-1").position(), is("1499"));
-        assertThat(messageStore.getLatestChannelPosition().shard("shard-2").position(), is("1499"));
-        assertThat(messageStore.getLatestChannelPosition().shard("shard-3").position(), is("1499"));
-        assertThat(messageStore.getLatestChannelPosition().shard("shard-4").position(), is("1499"));
+        ChannelPosition position = messageStore.getLatestChannelPosition("");
+        assertThat(position.shards(), containsInAnyOrder("shard-0", "shard-1", "shard-2", "shard-3", "shard-4"));
+        assertThat(position.shard("shard-0").position(), is("99"));
+        assertThat(position.shard("shard-1").position(), is("99"));
+        assertThat(position.shard("shard-2").position(), is("99"));
+        assertThat(position.shard("shard-3").position(), is("99"));
+        assertThat(position.shard("shard-4").position(), is("99"));
+        assertThat(messageStore.size(), is(500));
+    }
+
+    @SuppressWarnings("Duplicates")
+    @Test
+    public void shouldCalculateUncompactedChannelPositionsForMultipleChannels() {
+        final ExecutorService executorService = newFixedThreadPool(10);
+        final CompletableFuture[] completion = new CompletableFuture[10];
+        for (int shard = 0; shard<5; ++shard) {
+            final String shardId = valueOf(shard);
+            completion[shard] = CompletableFuture.runAsync(() -> {
+                for (int pos = 0; pos < 100; ++pos) {
+                    messageStore.add(MessageStoreEntry.of("first", TextMessage.of(Key.of(valueOf(pos)), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
+                    assertThat(messageStore.getLatestChannelPosition("first").shard("shard-" + shardId).startFrom(), is(StartFrom.POSITION));
+                    assertThat(messageStore.getLatestChannelPosition("first").shard("shard-" + shardId).position(), is(valueOf(pos)));
+                }
+
+            }, executorService);
+            completion[5+shard] = CompletableFuture.runAsync(() -> {
+                for (int pos = 0; pos < 100; ++pos) {
+                    messageStore.add(MessageStoreEntry.of("second", TextMessage.of(Key.of(valueOf(pos)), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
+                    assertThat(messageStore.getLatestChannelPosition("second").shard("shard-" + shardId).startFrom(), is(StartFrom.POSITION));
+                    assertThat(messageStore.getLatestChannelPosition("second").shard("shard-" + shardId).position(), is(valueOf(pos)));
+                }
+
+            }, executorService);
+        }
+        allOf(completion).join();
+        ChannelPosition firstPos = messageStore.getLatestChannelPosition("first");
+        assertThat(firstPos.shards(), containsInAnyOrder("shard-0", "shard-1", "shard-2", "shard-3", "shard-4"));
+        assertThat(firstPos.shard("shard-0").position(), is("99"));
+        assertThat(firstPos.shard("shard-1").position(), is("99"));
+        assertThat(firstPos.shard("shard-2").position(), is("99"));
+        assertThat(firstPos.shard("shard-3").position(), is("99"));
+        assertThat(firstPos.shard("shard-4").position(), is("99"));
+        ChannelPosition secondPos = messageStore.getLatestChannelPosition("second");
+        assertThat(secondPos.shards(), containsInAnyOrder("shard-0", "shard-1", "shard-2", "shard-3", "shard-4"));
+        assertThat(secondPos.shard("shard-0").position(), is("99"));
+        assertThat(secondPos.shard("shard-1").position(), is("99"));
+        assertThat(secondPos.shard("shard-2").position(), is("99"));
+        assertThat(secondPos.shard("shard-3").position(), is("99"));
+        assertThat(secondPos.shard("shard-4").position(), is("99"));
         assertThat(messageStore.size(), is(1000));
+    }
+    @Test
+    public void shouldKeepChannelName() {
+        MessageStoreEntry first = MessageStoreEntry.of("first", TextMessage.of("1", "1"));
+        MessageStoreEntry second = MessageStoreEntry.of("second", TextMessage.of("1", "2"));
+        messageStore.add(first);
+        messageStore.add(second);
+        assertThat(messageStore.stream("first").collect(Collectors.toList()), contains(first));
+        assertThat(messageStore.stream("second").collect(Collectors.toList()), contains(second));
+        assertThat(messageStore.streamAll().collect(Collectors.toList()), contains(first, second));
     }
 
     @SuppressWarnings("Duplicates")
     @Test
     public void shouldAddMessagesWithoutHeaders() {
         for (int i=0; i<10; ++i) {
-            messageStore.add(TextMessage.of(valueOf(i), "some payload"));
+            messageStore.add(MessageStoreEntry.of("test", TextMessage.of(valueOf(i), "some payload")));
         }
-        assertThat(messageStore.getLatestChannelPosition(), is(fromHorizon()));
+        assertThat(messageStore.getLatestChannelPosition("test"), is(fromHorizon()));
         final AtomicInteger expectedKey = new AtomicInteger(0);
-        messageStore.stream().forEach(message -> {
+        messageStore.streamAll().map(MessageStoreEntry::getTextMessage).forEach(message -> {
             assertThat(message.getKey(), is(Key.of(valueOf(expectedKey.get()))));
             expectedKey.incrementAndGet();
         });
@@ -120,7 +223,7 @@ public class RedisMessageStoreIntegrationTest {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 1500; ++pos) {
-                    messageStore.add(TextMessage.of(valueOf(pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload"));
+                    messageStore.add(MessageStoreEntry.of("", TextMessage.of(valueOf(pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).startFrom(), is(POSITION));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }
@@ -129,7 +232,7 @@ public class RedisMessageStoreIntegrationTest {
         }
         allOf(completion).join();
         final Map<String, Integer> lastPositions = new HashMap<>();
-        messageStore.stream().forEach(message -> {
+        messageStore.streamAll().map(MessageStoreEntry::getTextMessage).forEach(message -> {
             final Header header = message.getHeader();
             if (header.getShardPosition().isPresent()) {
                 final ShardPosition shard = header.getShardPosition().get();

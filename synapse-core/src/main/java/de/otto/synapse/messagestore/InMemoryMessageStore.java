@@ -1,19 +1,14 @@
 package de.otto.synapse.messagestore;
 
 import de.otto.synapse.channel.ChannelPosition;
-import de.otto.synapse.channel.ShardPosition;
-import de.otto.synapse.message.TextMessage;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.Deque;
-import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
-
-import static de.otto.synapse.channel.ChannelPosition.*;
 
 /**
  * Concurrent in-memory implementation of a MessageStore that is storing all messages in insertion order.
@@ -22,47 +17,71 @@ import static de.otto.synapse.channel.ChannelPosition.*;
 public class InMemoryMessageStore implements WritableMessageStore {
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
-    private final Deque<TextMessage> messages = new ConcurrentLinkedDeque<>();
-    private final AtomicReference<ChannelPosition> latestChannelPosition = new AtomicReference<>(fromHorizon());
+    private final Deque<MessageStoreEntry> entries = new ConcurrentLinkedDeque<>();
+    private final InMemoryChannelPositions channelPositions = new InMemoryChannelPositions();
+    private final String name;
+
+    public InMemoryMessageStore(final String name) {
+        this.name = name;
+    }
 
     @Override
-    public void add(final TextMessage message) {
+    public void add(final MessageStoreEntry entry) {
         lock.writeLock().lock();
         try {
-            messages.add(message);
-            latestChannelPosition.updateAndGet(previous -> {
-                final Optional<ShardPosition> optionalMessagePosition = message.getHeader().getShardPosition();
-                return optionalMessagePosition
-                        .map(messagePosition -> merge(previous, channelPosition(messagePosition)))
-                        .orElse(previous);
-            });
+            entries.add(entry);
+            channelPositions.updateFrom(entry);
         } finally {
             lock.writeLock().unlock();
         }
     }
 
     @Override
-    public ChannelPosition getLatestChannelPosition() {
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public Set<String> getChannelNames() {
         lock.readLock().lock();
         try {
-            return latestChannelPosition.get();
+            return channelPositions.channelNames();
+        } finally {
+          lock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public ChannelPosition getLatestChannelPosition(final String channelName) {
+        lock.readLock().lock();
+        try {
+            return channelPositions.positionOf(channelName);
         } finally {
             lock.readLock().unlock();
         }
     }
 
     @Override
-    public Stream<TextMessage> stream() {
+    public Stream<MessageStoreEntry> streamAll() {
         lock.readLock().lock();
         try {
-            return messages.stream();
+            return entries.stream();
         } finally {
             lock.readLock().unlock();
         }
     }
 
+    @Override
+    public Stream<MessageStoreEntry> stream(final String channelName) {
+        lock.readLock().lock();
+        try {
+            return entries.stream().filter(e -> e.getChannelName().equals(channelName));
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
     @Override
     public int size() {
-        return messages.size();
+        return entries.size();
     }
 }
