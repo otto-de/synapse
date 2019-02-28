@@ -1,5 +1,6 @@
 package de.otto.synapse.messagestore;
 
+import com.google.common.annotations.Beta;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Header;
 
@@ -82,7 +83,22 @@ public interface MessageStore extends AutoCloseable {
      *
      * @return Stream of entries
      */
-    Stream<MessageStoreEntry> streamAll();
+    Stream<MessageStoreEntry> stream();
+
+    /**
+     * Returns a Stream of all entries contained in the MessageStore that have are matching the given Index value
+     * (optional operation).
+     *
+     * @param index the Index
+     * @param value the value identifying the requested messages in the specified index
+     * @return stream of message-store entries matching the index
+     * @throws UnsupportedOperationException if the <tt>stream</tt> operation
+     *         is not supported by this store
+     */
+    @Beta
+    default Stream<MessageStoreEntry> stream(final Index index, final String value) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Appends the specified element to the end of this list (optional

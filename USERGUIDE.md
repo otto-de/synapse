@@ -69,19 +69,30 @@ See [EIP: Command Message](https://www.enterpriseintegrationpatterns.com/pattern
 
 Every Synapse `Message` has a `Key` that is especially used for partitioning and compaction purposes. A key is either
 simple key (`de.synapse.message.SimpleKey`) containing something like an entity-id, or a compound key 
-(`de.synapse.message.CompoundKey`) consisting of a partition-key and a compaction-key. 
+(`de.synapse.message.CompoundKey`) consisting of a partition-key and a compaction-key (see section 
+[Log Compaction](#Log_Compaction) for details about this). 
 
 ````java
 final Key simpleKey = Key.of("urn:product:42");
 final Key compoundKey = Key.of("urn:product:42", "urn:product:price:42");
 ````
 
-It is recommended to not rely on message keys for purposes other than message handling. The `Key#partitionKey()` for 
-example, should not be used to identify business entities. Data inside the message payload should be used instead, 
-even if this involves redundant data beeing transferred in a message. 
-* Different messaging systems might have restrictions regarding the length of message keys. 
-* You might need to change message keys because of infrastructural changes or other changes in the message handling.
-  Changes in the numbers of partitions, introduction of message compaction, etc. pp.  
+In most situations, the `Key#partitionKey()` of a message should be the primary key or entity-id of the entity, that
+is addressed by the message. For example, a `ProductUpdated` event should use the `product id` of the updated product
+as partition key for the message. This way, all the messages concerning a single product will be transmitted in order,
+even if the transport channel is configured with several partitions.
+
+The `Key#compactionKey()` could be something different. For example, product updates might need more than a single 
+kind of message: `ProductDataUpdated`, `ProductPriceUpdated` and `ProductAvailabilityUpdated`. All three messages should
+be transferred using a single channel, and for all three messages, the partition key should be the product-id. In order
+to keep the latest messages for every product, the compaction key could be something like `<product-id>#DATA`, 
+`<product-id>#PRICE` and `<product-id>#AVAILABILITY`. Now, all messages will be sent in order, also in partitioned
+channel configurations, and message-log compaction will keep the latest messages for all three kinds of events.
+
+Please not, however, that...
+* ...different messaging systems might have restrictions regarding the length of message keys. 
+* ...you might need to later change message keys because of infrastructural changes or other changes in the message 
+handling. Changes in the numbers of partitions, introduction of message compaction, etc. pp.  
 
 ## Header
 
@@ -139,6 +150,8 @@ these headers will be available.
 
 ## MessageLog
 
+### Log Compaction
+
 ## MessageQueue
 
 ## MessageConsumer
@@ -194,6 +207,76 @@ access AWS ElastiCache.
   that where changing a single given entity.
 
 See [EIP: Message Store](http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageStore.html) 
+
+### Indexed Access
+
+The `MessageStore` interface is supporting basic indexing of stored entries. For example, you could add an `Index` for
+the `partitionKey` of the messages, so you can later fetch the ordered list of messages for a given key:
+
+```java
+@Configuration
+public class TestConfiguration {
+    @Bean
+    public MessageStore messageStore(final RedisTemplate<String, String> redisTemplate) {
+    
+        return new RedisIndexedMessageStore(
+                "test-store",
+                100 /* batch size */, 
+                10000 /* max. number of entries */,
+                7*24*60*60*1000 /* evict entries after 7 days */,
+                Indexers.partitionKeyIndexer(),
+                redisTemplate);
+    }
+}
+```
+
+In order to retrieve all the messages for some partitionKey, `MessageStore.stream(Index,String)` can be used:
+
+```java
+@Component
+public class Foo {
+    private final MessageStore messageStore;
+    
+    public Foo(final MessageStore messageStore) {
+        this.messageStore = messageStore;
+    }
+    
+    public void printAllMessageFor(final String partitionKey) {
+        messageStore
+                .stream(Index.PARTITION_KEY, partitionKey)
+                .forEach(System.out::println);
+    }
+}
+``` 
+
+The current indexing capabilities are rather limited. While it is already supported to add several indexes, it is only 
+possible to stream the messages for a single index. However, you can stream the messages for an index, and use 
+`Stream.filter` to further reduce the stream using filter values. To do this, `MessageStoreEntry.getFilterValues()` 
+contains the filter values for all calculated indexes.
+
+To create multiple indexes, `Indexers.compositeIndexer()` can be used to create a composite from two or more `Indexer`
+implementations:
+
+```java
+final Indexer indexer = Indexers.composite(
+        Indexers.partitionKeyIndexer(),
+        Indexers.originIndexer("Snapshot"),
+        Indexers.serviceInstanceIndexer("my-service@localhost:8080")
+);
+```
+If the RedisIndexedMessageStore (or some other implementation supporting indexes) is created with this indexer,
+for every message added to the store, all three indexes will be updated. Now we can retrieve all messages that 
+originated in the snapshot that where added to the store by my-service:
+
+```java
+messageStore
+        .stream(Index.ORIGIN, "Snapshot")
+        .filter(entry -> entry
+                .getFilterValues()
+                .getOrDefault(Index.SERVICE_INSTANCE, "")
+                .startsWith("my-service"))
+        .forEach(System.out::println);
+```
 
 # EventSource
 

@@ -65,7 +65,7 @@ public class InMemoryRingBufferMessageStore implements MessageStore {
     }
 
     @Override
-    public synchronized Stream<MessageStoreEntry> streamAll() {
+    public synchronized Stream<MessageStoreEntry> stream() {
         return entries.stream();
     }
 

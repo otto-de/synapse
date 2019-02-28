@@ -108,7 +108,7 @@ public class RedisRingBufferMessageStoreIntegrationTest {
         messageStore.add(MessageStoreEntry.of("one", TextMessage.of("3", "3")));
 
         final List<String> channelNames = messageStore
-                .streamAll()
+                .stream()
                 .map(MessageStoreEntry::getChannelName)
                 .collect(Collectors.toList());
         assertThat(channelNames, contains("one", "two", "one"));
@@ -122,14 +122,14 @@ public class RedisRingBufferMessageStoreIntegrationTest {
         messageStore.add(MessageStoreEntry.of("one", TextMessage.of("3", "3")));
 
         final List<String> messageKeys = messageStore
-                .streamAll()
+                .stream()
                 .map(MessageStoreEntry::getTextMessage)
                 .map(TextMessage::getKey)
                 .map(Key::partitionKey)
                 .collect(Collectors.toList());
         assertThat(messageKeys, contains("1", "2", "3"));
         final List<String> channelNames = messageStore
-                .streamAll()
+                .stream()
                 .map(MessageStoreEntry::getChannelName)
                 .collect(Collectors.toList());
         assertThat(messageKeys, contains("1", "2", "3"));
@@ -209,7 +209,7 @@ public class RedisRingBufferMessageStoreIntegrationTest {
     public void shouldKeepChannelName() {
         messageStore.add(MessageStoreEntry.of("first", TextMessage.of("1", "1")));
         messageStore.add(MessageStoreEntry.of("second", TextMessage.of("1", "2")));
-        assertThat(messageStore.streamAll().map(MessageStoreEntry::getChannelName).collect(Collectors.toList()), contains("first", "second"));
+        assertThat(messageStore.stream().map(MessageStoreEntry::getChannelName).collect(Collectors.toList()), contains("first", "second"));
     }
 
     @SuppressWarnings("Duplicates")
@@ -220,7 +220,7 @@ public class RedisRingBufferMessageStoreIntegrationTest {
         }
         assertThat(messageStore.getLatestChannelPosition("test"), is(fromHorizon()));
         final AtomicInteger expectedKey = new AtomicInteger(0);
-        messageStore.streamAll().map(MessageStoreEntry::getTextMessage).forEach(message -> {
+        messageStore.stream().map(MessageStoreEntry::getTextMessage).forEach(message -> {
             assertThat(message.getKey(), is(Key.of(valueOf(expectedKey.get()))));
             expectedKey.incrementAndGet();
         });
@@ -245,7 +245,7 @@ public class RedisRingBufferMessageStoreIntegrationTest {
         }
         allOf(completion).join();
         final Map<String, Integer> lastPositions = new HashMap<>();
-        messageStore.streamAll().map(MessageStoreEntry::getTextMessage).forEach(message -> {
+        messageStore.stream().map(MessageStoreEntry::getTextMessage).forEach(message -> {
             final Header header = message.getHeader();
             if (header.getShardPosition().isPresent()) {
                 final ShardPosition shard = header.getShardPosition().get();
@@ -262,7 +262,7 @@ public class RedisRingBufferMessageStoreIntegrationTest {
         for (int i = 0; i < 200; i++) {
             messageStore.add(MessageStoreEntry.of("foo-channel", TextMessage.of("" + i, null)));
         }
-        final List<Integer> keys = messageStore.streamAll().map(MessageStoreEntry::getTextMessage).map(Message::getKey).map(Key::partitionKey).map(Integer::valueOf).collect(Collectors.toList());
+        final List<Integer> keys = messageStore.stream().map(MessageStoreEntry::getTextMessage).map(Message::getKey).map(Key::partitionKey).map(Integer::valueOf).collect(Collectors.toList());
         assertThat(keys, hasSize(200));
         assertThat(Range.closed(0, 199).containsAll(keys), is(true));
     }

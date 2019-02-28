@@ -105,7 +105,7 @@ public class S3SnapshotMessageStoreAcceptanceTest {
         //then
         try (final S3SnapshotMessageStore snapshotMessageStore = new S3SnapshotMessageStore("Snapshot", INTEGRATION_TEST_STREAM, snapshotReadService, eventPublisher)) {
             final List<Message<String>> messages = new ArrayList<>();
-            snapshotMessageStore.streamAll().map(MessageStoreEntry::getTextMessage).forEach(messages::add);
+            snapshotMessageStore.stream().map(MessageStoreEntry::getTextMessage).forEach(messages::add);
             assertThat(messages, hasSize(10));
             assertThat(messages.stream().map(Message::getKey).map(Key::partitionKey).collect(toList()), contains("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"));
             final ChannelPosition channelPosition = snapshotMessageStore.getLatestChannelPosition();

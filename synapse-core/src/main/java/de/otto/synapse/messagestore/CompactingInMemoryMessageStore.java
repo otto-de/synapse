@@ -78,7 +78,7 @@ public class CompactingInMemoryMessageStore implements MessageStore {
     }
 
     @Override
-    public Stream<MessageStoreEntry> streamAll() {
+    public Stream<MessageStoreEntry> stream() {
         lock.readLock().lock();
         try {
             return entries.values().stream();

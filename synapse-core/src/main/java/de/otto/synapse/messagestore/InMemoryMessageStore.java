@@ -62,7 +62,7 @@ public class InMemoryMessageStore implements MessageStore {
     }
 
     @Override
-    public Stream<MessageStoreEntry> streamAll() {
+    public Stream<MessageStoreEntry> stream() {
         lock.readLock().lock();
         try {
             return entries.stream();

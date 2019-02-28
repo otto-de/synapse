@@ -1,5 +1,6 @@
 package de.otto.synapse.messagestore.redis;
 
+import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.channel.StartFrom;
@@ -7,6 +8,8 @@ import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.message.TextMessage;
+import de.otto.synapse.messagestore.Index;
+import de.otto.synapse.messagestore.Indexers;
 import de.otto.synapse.messagestore.MessageStoreEntry;
 import de.otto.synapse.testsupport.redis.EmbededRedis;
 import org.junit.Before;
@@ -34,6 +37,10 @@ import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.StartFrom.POSITION;
 import static de.otto.synapse.message.Header.of;
+import static de.otto.synapse.messagestore.Index.*;
+import static de.otto.synapse.messagestore.Indexers.composite;
+import static de.otto.synapse.messagestore.Indexers.partitionKeyIndexer;
+import static de.otto.synapse.messagestore.MessageStoreEntry.of;
 import static java.lang.String.valueOf;
 import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.concurrent.Executors.newFixedThreadPool;
@@ -64,7 +71,17 @@ public class RedisIndexedMessageStoreIntegrationTest {
     static class TestConfiguration {
         @Bean
         public RedisIndexedMessageStore redisIndexedMessageStore(final RedisTemplate<String, String> redisTemplate) {
-            return new RedisIndexedMessageStore("Test Store", 100, 10000, 7*24*60*60*1000, redisTemplate);
+            return new RedisIndexedMessageStore(
+                    "Test Store",
+                    100,
+                    10000,
+                    7*24*60*60*1000,
+                    composite(
+                            partitionKeyIndexer(),
+                            Indexers.originIndexer("RedisIndexedMessageStoreIntegrationTest"),
+                            Indexers.serviceInstanceIndexer("test@localhost")
+                    ),
+                    redisTemplate);
         }
     }
 
@@ -78,16 +95,16 @@ public class RedisIndexedMessageStoreIntegrationTest {
 
     @Test
     public void shouldProvideChannelPositionsForMultipleChannelsAndShards() {
-        messageStore.add(MessageStoreEntry.of(
+        messageStore.add(of(
                 "first.shouldProvideChannelPositionsForMultipleChannelsAndShards",
                 TextMessage.of("1", of(fromPosition("shard-1", "1")), "")));
-        messageStore.add(MessageStoreEntry.of(
+        messageStore.add(of(
                 "second.shouldProvideChannelPositionsForMultipleChannelsAndShards",
                 TextMessage.of("2", of(fromPosition("shard-1", "42")), "")));
-        messageStore.add(MessageStoreEntry.of(
+        messageStore.add(of(
                 "first.shouldProvideChannelPositionsForMultipleChannelsAndShards",
                 TextMessage.of("3", of(fromPosition("shard-2", "1")), "")));
-        messageStore.add(MessageStoreEntry.of(
+        messageStore.add(of(
                 "first.shouldProvideChannelPositionsForMultipleChannelsAndShards",
                 TextMessage.of("4", of(fromPosition("shard-2", "2")), "")));
         assertThat(messageStore.getLatestChannelPosition("first.shouldProvideChannelPositionsForMultipleChannelsAndShards"), is(channelPosition(
@@ -103,9 +120,9 @@ public class RedisIndexedMessageStoreIntegrationTest {
     @SuppressWarnings("Duplicates")
     @Test
     public void shouldReturnChannelNames() {
-        messageStore.add(MessageStoreEntry.of("one", TextMessage.of("1", "1")));
-        messageStore.add(MessageStoreEntry.of("two", TextMessage.of("2", "2")));
-        messageStore.add(MessageStoreEntry.of("one", TextMessage.of("3", "3")));
+        messageStore.add(of("one", TextMessage.of("1", "1")));
+        messageStore.add(of("two", TextMessage.of("2", "2")));
+        messageStore.add(of("one", TextMessage.of("3", "3")));
 
         final Set<String> channelNames = messageStore.getChannelNames();
         assertThat(channelNames, containsInAnyOrder("one", "two"));
@@ -114,19 +131,19 @@ public class RedisIndexedMessageStoreIntegrationTest {
     @SuppressWarnings("Duplicates")
     @Test
     public void shouldStreamAllMessages() {
-        messageStore.add(MessageStoreEntry.of("one", TextMessage.of("1", "1")));
-        messageStore.add(MessageStoreEntry.of("two", TextMessage.of("2", "2")));
-        messageStore.add(MessageStoreEntry.of("one", TextMessage.of("3", "3")));
+        messageStore.add(of("one", TextMessage.of("1", "1")));
+        messageStore.add(of("two", TextMessage.of("2", "2")));
+        messageStore.add(of("one", TextMessage.of("3", "3")));
 
         final List<String> messageKeys = messageStore
-                .streamAll()
+                .stream()
                 .map(MessageStoreEntry::getTextMessage)
                 .map(TextMessage::getKey)
                 .map(Key::partitionKey)
                 .collect(Collectors.toList());
         assertThat(messageKeys, contains("1", "2", "3"));
         final List<String> channelNames = messageStore
-                .streamAll()
+                .stream()
                 .map(MessageStoreEntry::getChannelName)
                 .collect(Collectors.toList());
         assertThat(messageKeys, contains("1", "2", "3"));
@@ -136,21 +153,21 @@ public class RedisIndexedMessageStoreIntegrationTest {
     @SuppressWarnings("Duplicates")
     //@Test
     public void shouldExpireMessages() throws InterruptedException {
-        messageStore.add(MessageStoreEntry.of("one", TextMessage.of("1", "1")));
+        messageStore.add(of("one", TextMessage.of("1", "1")));
 
         Thread.sleep(15000);
-        messageStore.add(MessageStoreEntry.of("two", TextMessage.of("2", "2")));
-        messageStore.add(MessageStoreEntry.of("one", TextMessage.of("3", "3")));
+        messageStore.add(of("two", TextMessage.of("2", "2")));
+        messageStore.add(of("one", TextMessage.of("3", "3")));
 
         final List<String> messageKeys = messageStore
-                .streamAll()
+                .stream()
                 .map(MessageStoreEntry::getTextMessage)
                 .map(TextMessage::getKey)
                 .map(Key::partitionKey)
                 .collect(Collectors.toList());
         assertThat(messageKeys, contains("2", "3"));
         final List<String> channelNames = messageStore
-                .streamAll()
+                .stream()
                 .map(MessageStoreEntry::getChannelName)
                 .collect(Collectors.toList());
         assertThat(messageKeys, contains("2", "3"));
@@ -160,17 +177,59 @@ public class RedisIndexedMessageStoreIntegrationTest {
     @SuppressWarnings("Duplicates")
     @Test
     public void shouldStreamAllMessagesForIndex() {
-        final String partitionkey = UUID.randomUUID().toString();
-        final String someOtherPartitionkey = UUID.randomUUID().toString();
-        messageStore.add(MessageStoreEntry.of("one", TextMessage.of(partitionkey, "1")));
-        messageStore.add(MessageStoreEntry.of("two", TextMessage.of(someOtherPartitionkey, "2")));
-        messageStore.add(MessageStoreEntry.of("one", TextMessage.of(someOtherPartitionkey, "3")));
-        messageStore.add(MessageStoreEntry.of("one", TextMessage.of(partitionkey, "4")));
-        messageStore.add(MessageStoreEntry.of("two", TextMessage.of(partitionkey, "5")));
-        messageStore.add(MessageStoreEntry.of("one", TextMessage.of(partitionkey, "6")));
+        final String entityOne = UUID.randomUUID().toString();
+        final String entityTwo = UUID.randomUUID().toString();
+        messageStore.add(of("one", TextMessage.of(entityOne, "1")));
+        messageStore.add(of("two", TextMessage.of(entityTwo, "2")));
+        messageStore.add(of("one", TextMessage.of(entityTwo, "3")));
+        messageStore.add(of("one", TextMessage.of(entityOne, "4")));
+        messageStore.add(of("two", TextMessage.of(entityOne, "5")));
+        messageStore.add(of("one", TextMessage.of(entityOne, "6")));
 
         final List<String> payloads = messageStore
-                .streamAll(partitionkey)
+                .stream(PARTITION_KEY, entityOne)
+                .map(MessageStoreEntry::getTextMessage)
+                .map(TextMessage::getPayload)
+                .collect(Collectors.toList());
+        assertThat(payloads, contains("1", "4", "5", "6"));
+    }
+
+    @SuppressWarnings("Duplicates")
+    @Test
+    public void shouldReturnFilterValuesFromStream() {
+        final String partitionKey = UUID.randomUUID().toString();
+
+        messageStore.add(of("one", TextMessage.of(partitionKey, "1")));
+        messageStore
+                .stream(Index.ORIGIN, "Snapshot")
+                .filter(entry -> entry.getFilterValues().getOrDefault(Index.SERVICE_INSTANCE.name(), "").startsWith("my-service"))
+                .forEach(System.out::println);
+
+        final MessageStoreEntry entry = messageStore
+                .stream()
+                .findFirst()
+                .get();
+        assertThat(entry.getFilterValues(), is(ImmutableMap.of(
+                PARTITION_KEY, partitionKey,
+                ORIGIN, "RedisIndexedMessageStoreIntegrationTest",
+                SERVICE_INSTANCE, "test@localhost"
+        )));
+    }
+
+    @SuppressWarnings("Duplicates")
+    @Test
+    public void shouldStreamAllMessagesForMultipleIndexes() {
+        final String entityOne = UUID.randomUUID().toString();
+        final String entityTwo = UUID.randomUUID().toString();
+        messageStore.add(of("one", TextMessage.of(entityOne, "1")));
+        messageStore.add(of("two", TextMessage.of(entityTwo, "2")));
+        messageStore.add(of("one", TextMessage.of(entityTwo, "3")));
+        messageStore.add(of("one", TextMessage.of(entityOne, "4")));
+        messageStore.add(of("two", TextMessage.of(entityOne, "5")));
+        messageStore.add(of("one", TextMessage.of(entityOne, "6")));
+
+        final List<String> payloads = messageStore
+                .stream(PARTITION_KEY, entityOne)
                 .map(MessageStoreEntry::getTextMessage)
                 .map(TextMessage::getPayload)
                 .collect(Collectors.toList());
@@ -186,7 +245,7 @@ public class RedisIndexedMessageStoreIntegrationTest {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 100; ++pos) {
-                    messageStore.add(MessageStoreEntry.of("", TextMessage.of(Key.of(valueOf(pos)), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
+                    messageStore.add(of("", TextMessage.of(Key.of(valueOf(pos)), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
                     assertThat(messageStore.getLatestChannelPosition("").shard("shard-" + shardId).startFrom(), is(StartFrom.POSITION));
                     assertThat(messageStore.getLatestChannelPosition("").shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }
@@ -213,7 +272,7 @@ public class RedisIndexedMessageStoreIntegrationTest {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 100; ++pos) {
-                    messageStore.add(MessageStoreEntry.of("first", TextMessage.of(Key.of(valueOf(pos)), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
+                    messageStore.add(of("first", TextMessage.of(Key.of(valueOf(pos)), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
                     assertThat(messageStore.getLatestChannelPosition("first").shard("shard-" + shardId).startFrom(), is(StartFrom.POSITION));
                     assertThat(messageStore.getLatestChannelPosition("first").shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }
@@ -221,7 +280,7 @@ public class RedisIndexedMessageStoreIntegrationTest {
             }, executorService);
             completion[5+shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 100; ++pos) {
-                    messageStore.add(MessageStoreEntry.of("second", TextMessage.of(Key.of(valueOf(pos)), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
+                    messageStore.add(of("second", TextMessage.of(Key.of(valueOf(pos)), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
                     assertThat(messageStore.getLatestChannelPosition("second").shard("shard-" + shardId).startFrom(), is(StartFrom.POSITION));
                     assertThat(messageStore.getLatestChannelPosition("second").shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }
@@ -248,20 +307,20 @@ public class RedisIndexedMessageStoreIntegrationTest {
 
     @Test
     public void shouldKeepChannelName() {
-        messageStore.add(MessageStoreEntry.of("first", TextMessage.of("1", "1")));
-        messageStore.add(MessageStoreEntry.of("second", TextMessage.of("1", "2")));
-        assertThat(messageStore.streamAll().map(MessageStoreEntry::getChannelName).collect(Collectors.toList()), contains("first", "second"));
+        messageStore.add(of("first", TextMessage.of("1", "1")));
+        messageStore.add(of("second", TextMessage.of("1", "2")));
+        assertThat(messageStore.stream().map(MessageStoreEntry::getChannelName).collect(Collectors.toList()), contains("first", "second"));
     }
 
     @SuppressWarnings("Duplicates")
     @Test
     public void shouldAddMessagesWithoutHeaders() {
         for (int i=0; i<10; ++i) {
-            messageStore.add(MessageStoreEntry.of("test", TextMessage.of(valueOf(i), "some payload")));
+            messageStore.add(of("test", TextMessage.of(valueOf(i), "some payload")));
         }
         assertThat(messageStore.getLatestChannelPosition("test"), is(fromHorizon()));
         final AtomicInteger expectedKey = new AtomicInteger(0);
-        messageStore.streamAll().map(MessageStoreEntry::getTextMessage).forEach(message -> {
+        messageStore.stream().map(MessageStoreEntry::getTextMessage).forEach(message -> {
             assertThat(message.getKey(), is(Key.of(valueOf(expectedKey.get()))));
             expectedKey.incrementAndGet();
         });
@@ -277,7 +336,7 @@ public class RedisIndexedMessageStoreIntegrationTest {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 1500; ++pos) {
-                    messageStore.add(MessageStoreEntry.of("", TextMessage.of(valueOf(pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
+                    messageStore.add(of("", TextMessage.of(valueOf(pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).startFrom(), is(POSITION));
                     assertThat(messageStore.getLatestChannelPosition().shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }
@@ -286,7 +345,7 @@ public class RedisIndexedMessageStoreIntegrationTest {
         }
         allOf(completion).join();
         final Map<String, Integer> lastPositions = new HashMap<>();
-        messageStore.streamAll().map(MessageStoreEntry::getTextMessage).forEach(message -> {
+        messageStore.stream().map(MessageStoreEntry::getTextMessage).forEach(message -> {
             final Header header = message.getHeader();
             if (header.getShardPosition().isPresent()) {
                 final ShardPosition shard = header.getShardPosition().get();
@@ -302,19 +361,19 @@ public class RedisIndexedMessageStoreIntegrationTest {
     public void shouldStreamLotsOfMessages() {
         for (int j = 0; j < 100; j++) {
             for (int i = 0; i < 1000; i++) {
-                messageStore.add(MessageStoreEntry.of("foo-channel", TextMessage.of("" + i, "" + j)));
+                messageStore.add(of("foo-channel", TextMessage.of("" + i, "" + j)));
             }
             LOG.info("1000 elements written to Redis");
         }
         AtomicInteger count = new AtomicInteger();
-        final List<Integer> keys = messageStore.streamAll().map(entry -> {
+        final List<Integer> keys = messageStore.stream().map(entry -> {
             final int i = count.incrementAndGet();
             if (i % 1000 == 0) {
                 LOG.info("{} elements read from Redis", i);
             }
             return entry.getTextMessage();
         }).map(Message::getKey).map(Key::partitionKey).map(Integer::valueOf).collect(Collectors.toList());
-        messageStore.streamAll("42").map(entry -> entry.getTextMessage()).forEach(System.out::println);
+        messageStore.stream(PARTITION_KEY, "42").map(MessageStoreEntry::getTextMessage).forEach(System.out::println);
 
         assertThat(keys, hasSize(100000));
         LOG.info("Finished reading entries");

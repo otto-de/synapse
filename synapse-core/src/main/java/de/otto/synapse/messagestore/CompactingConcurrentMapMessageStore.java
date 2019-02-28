@@ -102,7 +102,7 @@ public class CompactingConcurrentMapMessageStore implements MessageStore {
     }
 
     @Override
-    public Stream<MessageStoreEntry> streamAll() {
+    public Stream<MessageStoreEntry> stream() {
         lock.readLock().lock();
         try {
             return compactedAndOrderedKeys

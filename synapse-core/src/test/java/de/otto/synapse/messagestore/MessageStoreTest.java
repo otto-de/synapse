@@ -56,7 +56,7 @@ public class MessageStoreTest {
         }
         assertThat(messageStore.getLatestChannelPosition(), is(fromHorizon()));
         final AtomicInteger expectedKey = new AtomicInteger(0);
-        messageStore.streamAll().forEach(entry -> {
+        messageStore.stream().forEach(entry -> {
             assertThat(entry.getTextMessage().getKey().toString(), is(valueOf(expectedKey.get())));
             expectedKey.incrementAndGet();
         });
@@ -82,7 +82,7 @@ public class MessageStoreTest {
         }
         allOf(completion).join();
         final Map<String, Integer> lastPositions = new HashMap<>();
-        messageStore.streamAll().forEach(entry -> {
+        messageStore.stream().forEach(entry -> {
             final Header header = entry.getTextMessage().getHeader();
             if (header.getShardPosition().isPresent()) {
                 final ShardPosition shard = header.getShardPosition().get();

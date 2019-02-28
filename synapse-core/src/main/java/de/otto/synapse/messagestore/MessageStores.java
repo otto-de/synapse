@@ -45,7 +45,7 @@ public class MessageStores {
         }
 
         @Override
-        public Stream<MessageStoreEntry> streamAll() {
+        public Stream<MessageStoreEntry> stream() {
             return Stream.empty();
         }
 

@@ -43,8 +43,8 @@ public class DelegatingSnapshotMessageStore implements SnapshotMessageStore {
     }
 
     @Override
-    public Stream<MessageStoreEntry> streamAll() {
-        return delegate.streamAll();
+    public Stream<MessageStoreEntry> stream() {
+        return delegate.stream();
     }
 
     /**

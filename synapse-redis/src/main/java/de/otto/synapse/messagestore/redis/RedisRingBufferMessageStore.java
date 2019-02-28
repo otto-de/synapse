@@ -139,7 +139,7 @@ public class RedisRingBufferMessageStore implements MessageStore {
     }
 
     @Override
-    public Stream<MessageStoreEntry> streamAll() {
+    public Stream<MessageStoreEntry> stream() {
         final Iterator<MessageStoreEntry> messageIterator = new BatchedRedisListIterator<>(
                 redisTemplate,
                 this::decode,

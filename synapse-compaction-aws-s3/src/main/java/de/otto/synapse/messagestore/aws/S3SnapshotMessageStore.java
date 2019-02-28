@@ -17,6 +17,7 @@ import de.otto.synapse.info.SnapshotReaderStatus;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.TextMessage;
+import de.otto.synapse.messagestore.Index;
 import de.otto.synapse.messagestore.MessageStoreEntry;
 import de.otto.synapse.messagestore.SnapshotMessageStore;
 import de.otto.synapse.translator.Decoder;
@@ -146,9 +147,9 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
     }
 
     @Override
-    public Stream<MessageStoreEntry> streamAll() {
+    public Stream<MessageStoreEntry> stream() {
         return messageIterator != null
-                ? Streams.stream(messageIterator).map(msg -> MessageStoreEntry.of(channelName, msg))
+                ? Streams.stream(messageIterator).map(msg -> MessageStoreEntry.of(channelName, ImmutableMap.of(Index.ORIGIN, "Snapshot"), msg))
                 : Stream.empty();
     }
 
@@ -158,7 +159,8 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
      * @throws UnsupportedOperationException always
      * @deprecated Unsupported operation.
      */
-    @Deprecated    @Override
+    @Deprecated
+    @Override
     public void add(@Nonnull MessageStoreEntry entry) {
         throw new UnsupportedOperationException();
     }

@@ -38,7 +38,7 @@ public class DefaultEventSourceTest {
         eventSource.consume().get();
 
         // then
-        verify(messageStore).streamAll();
+        verify(messageStore).stream();
     }
 
     @Test
@@ -60,7 +60,7 @@ public class DefaultEventSourceTest {
         // given
         // and some message store having a single message
         final MessageStore messageStore = mock(MessageStore.class);
-        when(messageStore.streamAll()).thenReturn(Stream.of(
+        when(messageStore.stream()).thenReturn(Stream.of(
                 MessageStoreEntry.of("some-channel", TextMessage.of(Key.of("1"), null)))
         );
         when(messageStore.getLatestChannelPosition("some-channel")).thenReturn(fromHorizon());
@@ -87,7 +87,7 @@ public class DefaultEventSourceTest {
         // given
         // and some message store having a single message
         final MessageStore messageStore = mock(MessageStore.class);
-        when(messageStore.streamAll()).thenReturn(Stream.of(
+        when(messageStore.stream()).thenReturn(Stream.of(
                 MessageStoreEntry.of("some-channel", TextMessage.of(Key.of("1"), Header.of(), null))));
         when(messageStore.getLatestChannelPosition("some-channel")).thenReturn(fromHorizon());
         // and some MessageLogReceiverEndpoint with our InterceptorChain:
@@ -112,7 +112,7 @@ public class DefaultEventSourceTest {
         // given
         // and some message store having a single message
         final MessageStore messageStore = mock(MessageStore.class);
-        when(messageStore.streamAll()).thenReturn(Stream.of(
+        when(messageStore.stream()).thenReturn(Stream.of(
                 MessageStoreEntry.of("some-channel", TextMessage.of(Key.of("1"), null))));
         when(messageStore.getLatestChannelPosition(anyString())).thenReturn(fromHorizon());
 
@@ -218,7 +218,7 @@ public class DefaultEventSourceTest {
     private MessageStore mockMessageStore(final ChannelPosition expectedChannelPosition) {
         final MessageStore messageStore = mock(MessageStore.class);
         when(messageStore.getLatestChannelPosition("some-channel")).thenReturn(expectedChannelPosition);
-        when(messageStore.streamAll()).thenReturn(Stream.empty());
+        when(messageStore.stream()).thenReturn(Stream.empty());
         return messageStore;
     }
 }

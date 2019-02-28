@@ -123,7 +123,7 @@ public class S3SnapshotMessageStoreTest {
         long ts = System.currentTimeMillis();
         final S3SnapshotMessageStore messageStore = new S3SnapshotMessageStore("", STREAM_NAME, snapshotReadService, eventPublisher);
         try {
-            messageStore.streamAll().forEach((m) -> m.getTextMessage().getKey());
+            messageStore.stream().forEach((m) -> m.getTextMessage().getKey());
         } finally {
             messageStore.close();
         }

@@ -56,7 +56,7 @@ public class RingBufferMessageStoreTest {
             messageStore.add(MessageStoreEntry.of("", TextMessage.of(valueOf(i), "some payload")));
         }
         final AtomicInteger expectedKey = new AtomicInteger(2);
-        messageStore.streamAll().forEach(entry -> {
+        messageStore.stream().forEach(entry -> {
             assertThat(entry.getTextMessage().getKey(), is(Key.of(valueOf(expectedKey.get()))));
             assertThat(entry.getTextMessage().getPayload(), is("some payload"));
             expectedKey.incrementAndGet();

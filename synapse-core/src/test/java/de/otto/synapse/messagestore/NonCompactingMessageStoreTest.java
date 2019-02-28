@@ -50,11 +50,11 @@ public class NonCompactingMessageStoreTest {
         messageStore.add(MessageStoreEntry.of("one", TextMessage.of("3", "3")));
 
         final List<String> channelNames = messageStore
-                .streamAll()
+                .stream()
                 .map(MessageStoreEntry::getChannelName)
                 .collect(Collectors.toList());
         final List<String> messageKeys = messageStore
-                .streamAll()
+                .stream()
                 .map(MessageStoreEntry::getTextMessage)
                 .map(TextMessage::getKey)
                 .map(Key::partitionKey)

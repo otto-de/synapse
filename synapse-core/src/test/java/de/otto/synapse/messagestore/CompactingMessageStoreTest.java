@@ -63,7 +63,7 @@ public class CompactingMessageStoreTest {
         }
         assertThat(messageStore.getLatestChannelPosition("some-channel"), is(fromHorizon()));
         final AtomicInteger expectedKey = new AtomicInteger(0);
-        messageStore.streamAll().map(MessageStoreEntry::getTextMessage).forEach(message -> {
+        messageStore.stream().map(MessageStoreEntry::getTextMessage).forEach(message -> {
             assertThat(message.getKey(), is(Key.of(valueOf(expectedKey.get()))));
             assertThat(message.getPayload(), is("some updated payload"));
             expectedKey.incrementAndGet();
@@ -87,8 +87,8 @@ public class CompactingMessageStoreTest {
         }
 
         assertThat(messageStore.size(), is(20));
-        assertThat(messageStore.streamAll().filter(entry -> entry.getChannelName().equals("some-channel")).count(), is(10L));
-        assertThat(messageStore.streamAll().filter(entry -> entry.getChannelName().equals("other-channel")).count(), is(10L));
+        assertThat(messageStore.stream().filter(entry -> entry.getChannelName().equals("some-channel")).count(), is(10L));
+        assertThat(messageStore.stream().filter(entry -> entry.getChannelName().equals("other-channel")).count(), is(10L));
     }
 
     @Test
@@ -196,7 +196,7 @@ public class CompactingMessageStoreTest {
             messageStore.add(MessageStoreEntry.of("some-channel", TextMessage.of(Key.of(valueOf(i)), null)));
         }
         assertThat(messageStore.size(), is(10));
-        assertThat(messageStore.streamAll().map(MessageStoreEntry::getChannelName).distinct().collect(toList()), is(ImmutableList.of("other-channel")));
+        assertThat(messageStore.stream().map(MessageStoreEntry::getChannelName).distinct().collect(toList()), is(ImmutableList.of("other-channel")));
     }
 
     @Test
@@ -225,7 +225,7 @@ public class CompactingMessageStoreTest {
                 fromPosition("bar", "51")))
         );
         assertThat(messageStore.size(), is(0));
-        assertThat(messageStore.streamAll().count(), is(0L));
+        assertThat(messageStore.stream().count(), is(0L));
     }
 
 }

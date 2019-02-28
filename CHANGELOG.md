@@ -1,16 +1,23 @@
 # Release Notes
 
 ## 0.16.0
+
 * Fixes design flaw of `MessageStore`: the stores can now contain messages from different channels.
+
 * Removes WritableMessageStore interface and adds optional method `MessageStore.add()`
+
 * Implements a simple Leader Election using Redisson RLock
+
 * StatefulMessageConsumer now supports BiFunctions as arguments. This way, the consumer is able to modify existing
-  entries in the StateRepository by applying the BiFunction to the existing state and the incoming message.
-* Adds implementation of a Redis MessageStore that is providing a secondary index for the message's partitionKey. 
+  entries in the `StateRepository` by applying the `BiFunction` to the existing state and the incoming message.
+
+* Adds possibility to add indexes to a `MessageStore` that can be used to filter messages by partitionKey, channel,
+  hostname, etc. pp.
+  
   Using this MessageStore it is possible to retrieve all messages that where changing the state of a single entity.
 
 ## 0.15.2
-* Fixes Deployment of kinesis services by reducing the polling after kinesis has been fully consumed 
+* Fixes deployment of Kinesis services by reducing the polling after Kinesis has been fully consumed 
 
 ## 0.15.1
 * Fixes NPE in message traces if payload is null
@@ -43,7 +50,7 @@
     - Renames emptyHeader() to of()
     - Renames requestHeader(...) to of(...)
     - Renames responseHeader(...) to of(...)
-* Fixes bug in Kinesis receiver endpoints, that prevented registered MessageInterceptors to intercept received messages.
+* Fixes bug in Kinesis filterValues endpoints, that prevented registered MessageInterceptors to intercept received messages.
 * Fixes usage of Kinesis 'approximateArrivalTimestamp'
 * Fixes possible out-of-order arrival of messages if the message key is
   not suitable for selecting the same partition for all messages of a 
@@ -110,7 +117,7 @@
 * Introduced new module `synapse-aws-sqs` for SQS message queues.
 * Introduced new module `synapse-aws-kinesis` for Kinesis message logs.
 * Updates from old synchronous KinesisClient to new KinesisAsyncClient.
-* Adds `@MessageInterceptor` annotation used to easily intercept messages at sender and/or receiver side of a channel. 
+* Adds `@MessageInterceptor` annotation used to easily intercept messages at sender and/or filterValues side of a channel. 
 * Adds possibility to configure a RetryPolicy for Kinesis.
 * Moved annotations etc. from `de.otto.synapse.annotation.messagequeue` to `de.otto.synapse.annotation`.
 * Renames ChronicleMapStateRepository.chronicleMapConcurrentMapStateRepositoryBuilder() to .builder().
@@ -143,8 +150,8 @@
 ## 0.9.0
 * Adds annotation @EnableMessageQueueReceiverEndpoint to auto-configure SQS message-queue receivers
 * Adds annotation @MessageQueueConsumer to auto-configure SQS message-queue listeners
-* Adds message tracing for SQS queues to sender- and receiver-endpoints
-* Adds combined message trace for all sender and receiver channels
+* Adds message tracing for SQS queues to sender- and filterValues-endpoints
+* Adds combined message trace for all sender and filterValues channels
 * Introduces synapse-testsupport with separate in-memory configurations for message logs and message queues
 
 ## 0.8.0
@@ -177,7 +184,7 @@ CompletedFuture instead of blocking forever.
 * Fixes bug that don't create a new message when retry with a corrupt byte buffer 
 
 ## 0.6.11
-* Adds message traces for sender- and receiver endpoints to Edison µServices. 
+* Adds message traces for sender- and filterValues endpoints to Edison µServices. 
 
 ## 0.6.9
 * Fixes bug that SnapshotAutoConfiguration is not injecting the ApplicationEventPublisher into SnapshotMessageStore
