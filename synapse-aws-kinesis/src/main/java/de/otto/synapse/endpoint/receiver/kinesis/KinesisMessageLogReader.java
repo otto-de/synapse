@@ -37,16 +37,26 @@ public class KinesisMessageLogReader {
     private final AtomicReference<List<KinesisShardReader>> kinesisShardReaders = new AtomicReference<>();
 
     public static final int SKIP_NEXT_PARTS = 8;
+    private final int waitingTimeOnEmptyRecords;
 
 
     public KinesisMessageLogReader(final String channelName,
                                    final KinesisAsyncClient kinesisClient,
                                    final ExecutorService executorService,
                                    final Clock clock) {
+        this(channelName, kinesisClient, executorService, clock, 10000);
+    }
+
+    public KinesisMessageLogReader(final String channelName,
+                                   final KinesisAsyncClient kinesisClient,
+                                   final ExecutorService executorService,
+                                   final Clock clock, final int waitingTimeOnEmptyRecords ) {
         this.channelName = channelName;
         this.kinesisClient = kinesisClient;
         this.executorService = executorService;
         this.clock = clock;
+
+        this.waitingTimeOnEmptyRecords = waitingTimeOnEmptyRecords;
     }
 
     public String getChannelName() {
@@ -161,7 +171,7 @@ public class KinesisMessageLogReader {
         final Set<String> openShards = retrieveAllOpenShards();
         this.kinesisShardReaders.set(openShards
                 .stream()
-                .map(shardName -> new KinesisShardReader(channelName, shardName, kinesisClient, executorService, clock))
+                .map(shardName -> new KinesisShardReader(channelName, shardName, kinesisClient, executorService, clock, waitingTimeOnEmptyRecords))
                 .collect(toList()));
     }
 

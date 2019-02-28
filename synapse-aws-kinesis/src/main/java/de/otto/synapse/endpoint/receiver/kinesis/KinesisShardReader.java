@@ -29,17 +29,28 @@ public class KinesisShardReader {
     private final ExecutorService executorService;
     private final Clock clock;
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
+    private final int waitingTimeOnEmptyRecords;
 
     public KinesisShardReader(final String channelName,
                               final String shardName,
                               final KinesisAsyncClient kinesisClient,
                               final ExecutorService executorService,
                               final Clock clock) {
+        this(channelName, shardName, kinesisClient, executorService, clock, 10000);
+    }
+
+    public KinesisShardReader(final String channelName,
+                              final String shardName,
+                              final KinesisAsyncClient kinesisClient,
+                              final ExecutorService executorService,
+                              final Clock clock,
+                              final int waitingTimeOnEmptyRecords) {
         this.shardName = shardName;
         this.channelName = channelName;
         this.kinesisClient = kinesisClient;
         this.executorService = executorService;
         this.clock = clock;
+        this.waitingTimeOnEmptyRecords = waitingTimeOnEmptyRecords;
     }
 
     public String getChannelName() {
@@ -96,7 +107,7 @@ public class KinesisShardReader {
             if (durationBehind.getSeconds() > 10) {
                 Thread.sleep(1000);
             } else {
-                Thread.sleep(10000);
+                Thread.sleep(waitingTimeOnEmptyRecords);
             }
         } catch (final InterruptedException e) {
             LOG.warn("Thread got interrupted");

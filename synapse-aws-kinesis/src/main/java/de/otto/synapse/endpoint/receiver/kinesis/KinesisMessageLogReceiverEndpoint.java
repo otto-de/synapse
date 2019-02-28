@@ -110,6 +110,18 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
         this.interceptorRegistry = interceptorRegistry;
     }
 
+    public KinesisMessageLogReceiverEndpoint(final String channelName,
+                                             final MessageInterceptorRegistry interceptorRegistry,
+                                             final KinesisAsyncClient kinesisClient,
+                                             final ExecutorService executorService,
+                                             final ApplicationEventPublisher eventPublisher,
+                                             final Clock clock, final int waitingTimeOnEmptyRecords) {
+        super(channelName, interceptorRegistry, eventPublisher);
+        this.eventPublisher = eventPublisher;
+        this.kinesisMessageLogReader = new KinesisMessageLogReader(channelName, kinesisClient, executorService, clock, waitingTimeOnEmptyRecords);
+        this.interceptorRegistry = interceptorRegistry;
+    }
+
     @Nonnull
     public CompletableFuture<ChannelPosition> consumeUntil(final @Nonnull ChannelPosition startFrom,
                                                            final @Nonnull Predicate<ShardResponse> stopCondition) {

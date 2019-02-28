@@ -398,7 +398,7 @@ public class KinesisMessageLogReaderTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", false);
 
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 1000);
 
         // when
         final CompletableFuture<ChannelPosition> finalChannelPosition = logReader.consumeUntil(fromHorizon(), shutdown(), responseConsumer);
@@ -419,7 +419,7 @@ public class KinesisMessageLogReaderTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", false);
 
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 1000);
 
 
         // when
