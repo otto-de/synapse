@@ -20,7 +20,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-public class RedisMessageStoreTest {
+public class RedisRingBufferMessageStoreTest {
 
     @Mock
     private RedisTemplate<String, String> redisTemplate;
@@ -28,14 +28,14 @@ public class RedisMessageStoreTest {
     BoundHashOperations<String, Object, Object> hashOperations;
     @Mock
     BoundSetOperations<String, String> setOperations;
-    private RedisMessageStore testee;
+    private RedisRingBufferMessageStore testee;
 
     @Before
     public void before() {
         initMocks(this);
         when(redisTemplate.boundHashOps(anyString())).thenReturn(hashOperations);
         when(redisTemplate.boundSetOps(anyString())).thenReturn(setOperations);
-        testee = new RedisMessageStore("Test Store", 10, 20, redisTemplate);
+        testee = new RedisRingBufferMessageStore("Test Store", 10, 20, redisTemplate);
     }
 
     @Test

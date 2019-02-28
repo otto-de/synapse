@@ -1,6 +1,7 @@
 package de.otto.synapse.messagestore.redis;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
@@ -9,9 +10,7 @@ import de.otto.synapse.messagestore.MessageStoreEntry;
 import de.otto.synapse.translator.*;
 import org.slf4j.Logger;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.core.RedisOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SessionCallback;
+import org.springframework.data.redis.core.*;
 
 import java.io.IOException;
 import java.util.*;
@@ -33,9 +32,10 @@ import static org.slf4j.LoggerFactory.getLogger;
  *     The store can be configured like a ring-buffer to only store the latest N messages.
  * </p>
  */
-public class RedisMessageStore implements MessageStore {
+@Beta
+public class RedisRingBufferMessageStore implements MessageStore {
 
-    private static final Logger LOG = getLogger(RedisMessageStore.class);
+    private static final Logger LOG = getLogger(RedisRingBufferMessageStore.class);
 
     private static final int CHARACTERISTICS = Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE;
 
@@ -52,10 +52,10 @@ public class RedisMessageStore implements MessageStore {
      * @param ringBufferSize the maximum number of messages stored in the ring-buffer
      * @param stringRedisTemplate the RedisTemplate used to access Redis
      */
-    public RedisMessageStore(final String name,
-                             final int batchSize,
-                             final int ringBufferSize,
-                             final RedisTemplate<String, String> stringRedisTemplate) {
+    public RedisRingBufferMessageStore(final String name,
+                                       final int batchSize,
+                                       final int ringBufferSize,
+                                       final RedisTemplate<String, String> stringRedisTemplate) {
         this(name, batchSize, ringBufferSize, stringRedisTemplate, new TextEncoder(MessageFormat.V2), new TextDecoder());
     }
 
@@ -66,12 +66,12 @@ public class RedisMessageStore implements MessageStore {
      * @param stringRedisTemplate the RedisTemplate used to access Redis
      * @param messageEncoder the encoder used to encode messages into the string-representation stored in Redis
      */
-    public RedisMessageStore(final String name,
-                             final int batchSize,
-                             final int ringBufferSize,
-                             final RedisTemplate<String, String> stringRedisTemplate,
-                             final Encoder<String> messageEncoder,
-                             final Decoder<String> messageDecoder) {
+    public RedisRingBufferMessageStore(final String name,
+                                       final int batchSize,
+                                       final int ringBufferSize,
+                                       final RedisTemplate<String, String> stringRedisTemplate,
+                                       final Encoder<String> messageEncoder,
+                                       final Decoder<String> messageDecoder) {
         this.name = name;
         this.redisTemplate = stringRedisTemplate;
         this.batchSize = batchSize;
@@ -86,28 +86,32 @@ public class RedisMessageStore implements MessageStore {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void add(final MessageStoreEntry entry) {
-        encode(entry);
-
         // This will contain the results of all ops in the transaction
         final List<Object> txResults = redisTemplate.execute(new SessionCallback<List<Object>>() {
             public List<Object> execute(final RedisOperations operations) throws DataAccessException {
                 operations.multi();
-                // Put the Message as a Redis Hash:
+
+                // Store shard position per channel in Redis Hash:
                 entry.getTextMessage().getHeader().getShardPosition().ifPresent(shardPosition -> {
-                    operations
-                            .boundHashOps(name + "-" + entry.getChannelName() + "-channelPos")
-                            .put(shardPosition.shardName(), shardPosition.position());
+                    final String channelPosHashKey = name + "-" + entry.getChannelName() + "-channelPos";
+                    final BoundHashOperations channelPosHash = operations.boundHashOps(channelPosHashKey);
+                    channelPosHash.put(shardPosition.shardName(), shardPosition.position());
                 });
-                operations
-                        .boundSetOps(name + "-channels")
-                        .add(entry.getChannelName());
-                operations
-                        .boundListOps(name + "-messages")
-                        .rightPush(encode(entry));
-                operations
-                        .boundListOps(name + "-messages")
-                        .trim(-maxSize, -1);
+
+                // Store channelName in Redis Set
+                final String channelNamesSetKey = name + "-channels";
+                final BoundSetOperations channelNamesSet = operations.boundSetOps(channelNamesSetKey);
+                channelNamesSet.add(entry.getChannelName());
+
+                // Encode entry into a string and store it in a Redis list:
+                final String messagesListKey = name + "-messages";
+                final BoundListOperations messagesList = operations.boundListOps(messagesListKey);
+                messagesList.rightPush(encode(entry));
+                // Trim the list to <maxSize> elements
+                messagesList.trim(-maxSize, -1);
+
                 return operations.exec();
             }
         });
@@ -158,7 +162,9 @@ public class RedisMessageStore implements MessageStore {
     }
 
     public void clear() {
-        redisTemplate.delete(asList(name + "-channelPos", name + "-messages"));
+        final List<String> keys = new ArrayList<>(asList(name + "-channels", name + "-messages"));
+        getChannelNames().forEach(channel -> keys.add(name + "-" + channel + "-channelPos"));
+        redisTemplate.delete(keys);
     }
 
     private String encode(final MessageStoreEntry entry) {

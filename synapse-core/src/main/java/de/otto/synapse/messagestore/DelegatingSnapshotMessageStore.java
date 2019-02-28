@@ -47,11 +47,6 @@ public class DelegatingSnapshotMessageStore implements SnapshotMessageStore {
         return delegate.streamAll();
     }
 
-    @Override
-    public Stream<MessageStoreEntry> stream(String channelName) {
-        return delegate.stream(channelName);
-    }
-
     /**
      * Guaranteed to throw an exception and leave the message store unmodified.
      *

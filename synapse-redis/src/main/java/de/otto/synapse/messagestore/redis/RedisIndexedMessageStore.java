@@ -1,5 +1,6 @@
 package de.otto.synapse.messagestore.redis;
 
+import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
@@ -7,14 +8,13 @@ import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.messagestore.MessageStore;
 import de.otto.synapse.messagestore.MessageStoreEntry;
 import de.otto.synapse.translator.*;
+import org.slf4j.Logger;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.core.RedisOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.SessionCallback;
+import org.springframework.data.redis.core.*;
 
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -22,9 +22,9 @@ import java.util.stream.StreamSupport;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.message.DefaultHeaderAttr.MSG_ID;
-import static de.otto.synapse.message.DefaultHeaderAttr.MSG_RECEIVER_TS;
 import static java.util.Arrays.asList;
 import static java.util.Spliterators.spliteratorUnknownSize;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Redis-based implementation of a WritableMessageStore.
@@ -33,122 +33,136 @@ import static java.util.Spliterators.spliteratorUnknownSize;
  *     The store can be configured like a ring-buffer to only store the latest N messages.
  * </p>
  */
+@Beta
 public class RedisIndexedMessageStore implements MessageStore {
 
+    private static final Logger LOG = getLogger(RedisIndexedMessageStore.class);
     private static final int CHARACTERISTICS = Spliterator.ORDERED | Spliterator.NONNULL | Spliterator.IMMUTABLE;
 
-    private final String channelName;
+    private final String name;
     private final RedisTemplate<String, String> redisTemplate;
     private final int batchSize;
     private final int maxSize;
     private final Encoder<String> encoder;
     private final Decoder<String> decoder;
+    private final long maxAge;
 
     /**
-     * @param channelName the name of the channel whose messages are stored in the {@code RedisMessageStore}
+     * @param name the name of the message store
      * @param batchSize the size of the batches used to fetch messages from Redis
-     * @param ringBufferSize the maximum number of messages stored in the ring-buffer
+     * @param maxMessages the maximum number of messages stored in the message store
+     * @param maxAge maximum number of seconds after that a message will be evicted
      * @param stringRedisTemplate the RedisTemplate used to access Redis
      */
-    public RedisIndexedMessageStore(final String channelName,
+    public RedisIndexedMessageStore(final String name,
                                     final int batchSize,
-                                    final int ringBufferSize,
+                                    final int maxMessages,
+                                    final long maxAge,
                                     final RedisTemplate<String, String> stringRedisTemplate) {
-        this(channelName, batchSize, ringBufferSize, stringRedisTemplate, new TextEncoder(MessageFormat.V2), new TextDecoder());
+        this(name, batchSize, maxMessages, maxAge, stringRedisTemplate, new TextEncoder(MessageFormat.V2), new TextDecoder());
     }
 
     /**
-     * @param channelName the name of the channel whose messages are stored in the {@code RedisMessageStore}
+     * @param name the name of the message store
      * @param batchSize the size of the batches used to fetch messages from Redis
-     * @param ringBufferSize the maximum number of messages stored in the ring-buffer
+     * @param maxMessages the maximum number of messages stored in the message store
+     * @param maxAge maximum number of seconds after that a message will be evicted
      * @param stringRedisTemplate the RedisTemplate used to access Redis
      * @param messageEncoder the encoder used to encode messages into the string-representation stored in Redis
      */
-    public RedisIndexedMessageStore(final String channelName,
+    public RedisIndexedMessageStore(final String name,
                                     final int batchSize,
-                                    final int ringBufferSize,
+                                    final int maxMessages,
+                                    final long maxAge,
                                     final RedisTemplate<String, String> stringRedisTemplate,
                                     final Encoder<String> messageEncoder,
                                     final Decoder<String> messageDecoder) {
-        this.channelName = channelName;
+        this.name = name;
+        this.maxAge = maxAge;
         this.redisTemplate = stringRedisTemplate;
         this.batchSize = batchSize;
-        this.maxSize = ringBufferSize;
+        this.maxSize = maxMessages;
         this.encoder = messageEncoder;
         this.decoder = messageDecoder;
     }
 
-    public String getChannelName() {
-        return channelName;
+    @Override
+    public String getName() {
+        return name;
     }
 
-//    @Override
-    public void add(final TextMessage message) {
+    @Override
+    @SuppressWarnings("unchecked")
+    public void add(final MessageStoreEntry entry) {
+        final TextMessage textMessage = entry.getTextMessage();
+        final String messageId = messageIdCalculator(textMessage);
+
+        // This will contain the results of all ops in the transaction
         final List<Object> txResults = redisTemplate.execute(new SessionCallback<List<Object>>() {
             public List<Object> execute(final RedisOperations operations) throws DataAccessException {
-                final String messageId = messageIdCalculator(message);
                 operations.multi();
-
-                // Update the channel positition in Hash '<channelName>-channelPos'
-                message.getHeader().getShardPosition().ifPresent(shardPosition -> {
-                    operations
-                            .boundHashOps(channelName + "-channelPos")
-                            .put(shardPosition.shardName(), shardPosition.position());
+                // Store shard position per channel in Redis Hash:
+                textMessage.getHeader().getShardPosition().ifPresent(shardPosition -> {
+                    final String channelPosKey = name + "-" + entry.getChannelName() + "-channelPos";
+                    final BoundHashOperations channelPosHash = operations.boundHashOps(channelPosKey);
+                    channelPosHash.put(shardPosition.shardName(), shardPosition.position());
                 });
-
+                // Store channelName in Redis Set
+                final String channelNamesKey = name + "-channels";
+                final BoundSetOperations channelNamesSet = operations.boundSetOps(channelNamesKey);
+                channelNamesSet.add(entry.getChannelName());
 
                 // Store every Message as a single Redis Hash '<channelName>-message-<messageId>'
-                operations
-                        .boundHashOps(channelName + "-message-" + messageId)
-                        .putAll(ImmutableMap.of(
-                                "channelName", channelName,
-                                "msgId", messageId,
-                                "partitionKey", message.getKey().partitionKey(),
-                                "receiverTs", message.getHeader().getAsInstant(MSG_RECEIVER_TS, Instant.now()).toEpochMilli(),
-                                "message", encoder.apply(message)
-                        ));
+                final String messageHashKey = name + "-message-" + messageId;
+                final BoundHashOperations messageHash = operations.boundHashOps(messageHashKey);
+                messageHash.putAll(ImmutableMap.of(
+                        "channelName", entry.getChannelName(),
+                        "partitionKey", textMessage.getKey().partitionKey(),
+                        "message", encoder.apply(textMessage)
+                ));
                 // ...and set the expiration timeout for the message
-                operations
-                        .boundHashOps(channelName + "-message-" + messageId)
-                        .expire(10, TimeUnit.SECONDS);
+                messageHash.expire(maxAge, TimeUnit.SECONDS);
 
                 // Add id to the List of all messages of the channel in '<channelName>-messages'
-                operations
-                        .boundListOps(channelName + "-messages")
-                        .rightPush(channelName + "-message-" + messageId);
+                final String messagesListKey = name + "-messages";
+                final BoundListOperations messageList = operations.boundListOps(messagesListKey);
+                messageList.rightPush(messageHashKey);
                 // ...and set/update the expiration timeout for this list
-                operations
-                        .boundHashOps(channelName + "-message")
-                        .expire(10, TimeUnit.SECONDS);
+                messageList.expire(maxAge, TimeUnit.SECONDS);
                 // ...and limit the number of entries so it will not grow without bounds
-                operations
-                        .boundListOps(channelName + "-messages")
-                        .trim(-maxSize, -1);
+                messageList.trim(-maxSize, -1);
+
+
+
+
+
+                // Add id to the List of all messages of the channel in '<channelName>-messages'
+                final String partitionIndexListKey = name + "-partitionKey-" + textMessage.getKey().partitionKey();
+                final BoundListOperations partitionIndexList = operations.boundListOps(partitionIndexListKey);
+                partitionIndexList.rightPush(messageHashKey);
+                // ...and set/update the expiration timeout for this list
+                partitionIndexList.expire(maxAge, TimeUnit.SECONDS);
+
+
 
                 return operations.exec();
             }
         });
-    }
-
-    @Override
-    public String getName() {
-        return null;
+        LOG.debug("Redis returned with " + txResults);
     }
 
     @Override
     public Set<String> getChannelNames() {
-        return null;
+        Set<String> members = redisTemplate
+                .boundSetOps(name + "-channels")
+                .members();
+        return members;
     }
 
     @Override
-    public ChannelPosition getLatestChannelPosition(String channelName) {
-        return null;
-    }
-
-    @Override
-    public ChannelPosition getLatestChannelPosition() {
+    public ChannelPosition getLatestChannelPosition(final String channelName) {
         final Set<ShardPosition> shardPositions = redisTemplate
-                .boundHashOps(channelName + "-channelPos")
+                .boundHashOps(name + "-" + channelName + "-channelPos")
                 .entries()
                 .entrySet()
                 .stream()
@@ -159,16 +173,17 @@ public class RedisIndexedMessageStore implements MessageStore {
 
     @Override
     public Stream<MessageStoreEntry> streamAll() {
-        return null;
+        final Function<Map<String, String>, MessageStoreEntry> hashDecoderFunc = (map) -> MessageStoreEntry.of(map.get("channelName"), decoder.apply(map.get("message")));
+        final Iterator<MessageStoreEntry> messageIterator = new BatchedRedisHashedListIterator<>(redisTemplate, hashDecoderFunc, name + "-messages", batchSize);
+        return StreamSupport.stream(
+                spliteratorUnknownSize(messageIterator, CHARACTERISTICS),
+                false
+        );
     }
 
-//    @Override
-    public Stream<TextMessage> stream() {
-        final Iterator<TextMessage> messageIterator = new BatchedRedisListIterator<>(
-                redisTemplate,
-                decoder,
-                channelName + "-messages",
-                batchSize);
+    public Stream<MessageStoreEntry> streamAll(final String partitionKey) {
+        final Function<Map<String, String>, MessageStoreEntry> hashDecoderFunc = (map) -> MessageStoreEntry.of(map.get("channelName"), decoder.apply(map.get("message")));
+        final Iterator<MessageStoreEntry> messageIterator = new BatchedRedisHashedListIterator<>(redisTemplate, hashDecoderFunc, name + "-partitionKey-" + partitionKey, batchSize);
         return StreamSupport.stream(
                 spliteratorUnknownSize(messageIterator, CHARACTERISTICS),
                 false
@@ -177,7 +192,7 @@ public class RedisIndexedMessageStore implements MessageStore {
 
     @Override
     public int size() {
-        return redisTemplate.boundListOps(channelName + "-messages").size().intValue();
+        return redisTemplate.boundListOps(name + "-messages").size().intValue();
     }
 
     @Override
@@ -185,7 +200,9 @@ public class RedisIndexedMessageStore implements MessageStore {
     }
 
     public void clear() {
-        redisTemplate.delete(asList(channelName + "-channelPos", channelName + "-messages"));
+        final List<String> keys = new ArrayList<>(asList(name + "-channels", name + "-messages"));
+        getChannelNames().forEach(channel -> keys.add(name + "-" + channel + "-channelPos"));
+        redisTemplate.delete(keys);
     }
 
     private final String messageIdCalculator(final TextMessage message) {
@@ -193,8 +210,4 @@ public class RedisIndexedMessageStore implements MessageStore {
         return msgId != null ? msgId : UUID.randomUUID().toString();
     }
 
-    @Override
-    public void add(MessageStoreEntry entry) {
-
-    }
 }

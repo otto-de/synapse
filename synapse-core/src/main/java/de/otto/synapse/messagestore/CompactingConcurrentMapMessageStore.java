@@ -114,19 +114,6 @@ public class CompactingConcurrentMapMessageStore implements MessageStore {
     }
 
     @Override
-    public Stream<MessageStoreEntry> stream(final String channelName) {
-        lock.readLock().lock();
-        try {
-            return compactedAndOrderedKeys
-                    .stream()
-                    .map(entries::get)
-                    .filter(entry->entry.getChannelName().equals(channelName));
-        } finally {
-            lock.readLock().unlock();
-        }
-    }
-
-    @Override
     public int size() {
         return entries.size();
     }

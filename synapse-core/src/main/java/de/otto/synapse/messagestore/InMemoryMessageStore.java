@@ -72,15 +72,6 @@ public class InMemoryMessageStore implements MessageStore {
     }
 
     @Override
-    public Stream<MessageStoreEntry> stream(final String channelName) {
-        lock.readLock().lock();
-        try {
-            return entries.stream().filter(e -> e.getChannelName().equals(channelName));
-        } finally {
-            lock.readLock().unlock();
-        }
-    }
-    @Override
     public int size() {
         return entries.size();
     }

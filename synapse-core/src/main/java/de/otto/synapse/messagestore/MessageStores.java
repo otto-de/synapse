@@ -49,11 +49,6 @@ public class MessageStores {
             return Stream.empty();
         }
 
-        @Override
-        public Stream<MessageStoreEntry> stream(String channelName) {
-            return Stream.empty();
-        }
-
         /**
          * Guaranteed to throw an exception and leave the message store unmodified.
          *

@@ -87,8 +87,8 @@ public class CompactingMessageStoreTest {
         }
 
         assertThat(messageStore.size(), is(20));
-        assertThat(messageStore.stream("some-channel").count(), is(10L));
-        assertThat(messageStore.stream("other-channel").count(), is(10L));
+        assertThat(messageStore.streamAll().filter(entry -> entry.getChannelName().equals("some-channel")).count(), is(10L));
+        assertThat(messageStore.streamAll().filter(entry -> entry.getChannelName().equals("other-channel")).count(), is(10L));
     }
 
     @Test
@@ -225,7 +225,7 @@ public class CompactingMessageStoreTest {
                 fromPosition("bar", "51")))
         );
         assertThat(messageStore.size(), is(0));
-        assertThat(messageStore.stream("some-channel").count(), is(0L));
+        assertThat(messageStore.streamAll().count(), is(0L));
     }
 
 }

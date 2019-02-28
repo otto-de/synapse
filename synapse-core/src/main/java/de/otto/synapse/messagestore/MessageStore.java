@@ -85,19 +85,6 @@ public interface MessageStore extends AutoCloseable {
     Stream<MessageStoreEntry> streamAll();
 
     /**
-     * Returns a Stream of all entries contained in the MessageStore that where sent over the given channel
-     * <p>
-     *     The stream will maintain the insertion order of the entries.
-     * </p>
-     *
-     * @param channelName the name of the channel
-     * @return Stream of entries
-     */
-    default Stream<MessageStoreEntry> stream(final String channelName) {
-        return streamAll().filter(e -> e.getChannelName().equals(channelName));
-    }
-
-    /**
      * Appends the specified element to the end of this list (optional
      * operation).
      *

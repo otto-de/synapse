@@ -4,6 +4,10 @@
 * Fixes design flaw of `MessageStore`: the stores can now contain messages from different channels.
 * Removes WritableMessageStore interface and adds optional method `MessageStore.add()`
 * Implements a simple Leader Election using Redisson RLock
+* StatefulMessageConsumer now supports BiFunctions as arguments. This way, the consumer is able to modify existing
+  entries in the StateRepository by applying the BiFunction to the existing state and the incoming message.
+* Adds implementation of a Redis MessageStore that is providing a secondary index for the message's partitionKey. 
+  Using this MessageStore it is possible to retrieve all messages that where changing the state of a single entity.
 
 ## 0.15.2
 * Fixes Deployment of kinesis services by reducing the polling after kinesis has been fully consumed 

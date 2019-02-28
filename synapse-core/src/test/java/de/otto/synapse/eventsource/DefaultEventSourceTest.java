@@ -38,7 +38,7 @@ public class DefaultEventSourceTest {
         eventSource.consume().get();
 
         // then
-        verify(messageStore).stream("some-channel");
+        verify(messageStore).streamAll();
     }
 
     @Test
@@ -60,7 +60,7 @@ public class DefaultEventSourceTest {
         // given
         // and some message store having a single message
         final MessageStore messageStore = mock(MessageStore.class);
-        when(messageStore.stream("some-channel")).thenReturn(Stream.of(
+        when(messageStore.streamAll()).thenReturn(Stream.of(
                 MessageStoreEntry.of("some-channel", TextMessage.of(Key.of("1"), null)))
         );
         when(messageStore.getLatestChannelPosition("some-channel")).thenReturn(fromHorizon());
@@ -112,7 +112,7 @@ public class DefaultEventSourceTest {
         // given
         // and some message store having a single message
         final MessageStore messageStore = mock(MessageStore.class);
-        when(messageStore.stream("some-channel")).thenReturn(Stream.of(
+        when(messageStore.streamAll()).thenReturn(Stream.of(
                 MessageStoreEntry.of("some-channel", TextMessage.of(Key.of("1"), null))));
         when(messageStore.getLatestChannelPosition(anyString())).thenReturn(fromHorizon());
 
@@ -218,7 +218,7 @@ public class DefaultEventSourceTest {
     private MessageStore mockMessageStore(final ChannelPosition expectedChannelPosition) {
         final MessageStore messageStore = mock(MessageStore.class);
         when(messageStore.getLatestChannelPosition("some-channel")).thenReturn(expectedChannelPosition);
-        when(messageStore.stream("some-channel")).thenReturn(Stream.empty());
+        when(messageStore.streamAll()).thenReturn(Stream.empty());
         return messageStore;
     }
 }

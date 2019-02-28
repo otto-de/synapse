@@ -5,12 +5,14 @@ import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
+import de.otto.synapse.message.Message;
 import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.messagestore.MessageStoreEntry;
 import de.otto.synapse.testsupport.redis.EmbededRedis;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,9 +23,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,6 +39,7 @@ import static java.util.concurrent.CompletableFuture.allOf;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.slf4j.LoggerFactory.getLogger;
 
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
@@ -46,29 +47,29 @@ import static org.hamcrest.Matchers.*;
         basePackages = {"de.otto.synapse.messagestore.redis"})
 @SpringBootTest(
         properties = {
-                "debug=true",
                 "spring.redis.server=localhost",
-                "spring.redis.port=6079"
+                "spring.redis.port=6080"
         },
         classes = {
-                RedisMessageStoreIntegrationTest.class,
+                RedisIndexedMessageStoreIntegrationTest.class,
                 EmbededRedis.class
         })
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-public class RedisMessageStoreIntegrationTest {
+public class RedisIndexedMessageStoreIntegrationTest {
 
+    private static final Logger LOG = getLogger(RedisIndexedMessageStoreIntegrationTest.class);
 
     @Configuration
     static class TestConfiguration {
         @Bean
-        public RedisMessageStore redisMessageStore(final RedisTemplate<String, String> redisTemplate) {
-            return new RedisMessageStore("Test Store", 100, 1000, redisTemplate);
+        public RedisIndexedMessageStore redisIndexedMessageStore(final RedisTemplate<String, String> redisTemplate) {
+            return new RedisIndexedMessageStore("Test Store", 100, 10000, 7*24*60*60*1000, redisTemplate);
         }
     }
 
     @Autowired
-    private RedisMessageStore messageStore;
+    private RedisIndexedMessageStore messageStore;
 
     @Before
     public void before() {
@@ -101,23 +102,79 @@ public class RedisMessageStoreIntegrationTest {
 
     @SuppressWarnings("Duplicates")
     @Test
+    public void shouldReturnChannelNames() {
+        messageStore.add(MessageStoreEntry.of("one", TextMessage.of("1", "1")));
+        messageStore.add(MessageStoreEntry.of("two", TextMessage.of("2", "2")));
+        messageStore.add(MessageStoreEntry.of("one", TextMessage.of("3", "3")));
+
+        final Set<String> channelNames = messageStore.getChannelNames();
+        assertThat(channelNames, containsInAnyOrder("one", "two"));
+    }
+
+    @SuppressWarnings("Duplicates")
+    @Test
     public void shouldStreamAllMessages() {
         messageStore.add(MessageStoreEntry.of("one", TextMessage.of("1", "1")));
         messageStore.add(MessageStoreEntry.of("two", TextMessage.of("2", "2")));
         messageStore.add(MessageStoreEntry.of("one", TextMessage.of("3", "3")));
 
-        final List<String> channelNames = messageStore
-                .streamAll()
-                .map(MessageStoreEntry::getChannelName)
-                .collect(Collectors.toList());
         final List<String> messageKeys = messageStore
                 .streamAll()
                 .map(MessageStoreEntry::getTextMessage)
                 .map(TextMessage::getKey)
                 .map(Key::partitionKey)
                 .collect(Collectors.toList());
-        assertThat(channelNames, contains("one", "two", "one"));
         assertThat(messageKeys, contains("1", "2", "3"));
+        final List<String> channelNames = messageStore
+                .streamAll()
+                .map(MessageStoreEntry::getChannelName)
+                .collect(Collectors.toList());
+        assertThat(messageKeys, contains("1", "2", "3"));
+        assertThat(channelNames, contains("one", "two", "one"));
+    }
+
+    @SuppressWarnings("Duplicates")
+    //@Test
+    public void shouldExpireMessages() throws InterruptedException {
+        messageStore.add(MessageStoreEntry.of("one", TextMessage.of("1", "1")));
+
+        Thread.sleep(15000);
+        messageStore.add(MessageStoreEntry.of("two", TextMessage.of("2", "2")));
+        messageStore.add(MessageStoreEntry.of("one", TextMessage.of("3", "3")));
+
+        final List<String> messageKeys = messageStore
+                .streamAll()
+                .map(MessageStoreEntry::getTextMessage)
+                .map(TextMessage::getKey)
+                .map(Key::partitionKey)
+                .collect(Collectors.toList());
+        assertThat(messageKeys, contains("2", "3"));
+        final List<String> channelNames = messageStore
+                .streamAll()
+                .map(MessageStoreEntry::getChannelName)
+                .collect(Collectors.toList());
+        assertThat(messageKeys, contains("2", "3"));
+        assertThat(channelNames, contains("two", "one"));
+    }
+
+    @SuppressWarnings("Duplicates")
+    @Test
+    public void shouldStreamAllMessagesForIndex() {
+        final String partitionkey = UUID.randomUUID().toString();
+        final String someOtherPartitionkey = UUID.randomUUID().toString();
+        messageStore.add(MessageStoreEntry.of("one", TextMessage.of(partitionkey, "1")));
+        messageStore.add(MessageStoreEntry.of("two", TextMessage.of(someOtherPartitionkey, "2")));
+        messageStore.add(MessageStoreEntry.of("one", TextMessage.of(someOtherPartitionkey, "3")));
+        messageStore.add(MessageStoreEntry.of("one", TextMessage.of(partitionkey, "4")));
+        messageStore.add(MessageStoreEntry.of("two", TextMessage.of(partitionkey, "5")));
+        messageStore.add(MessageStoreEntry.of("one", TextMessage.of(partitionkey, "6")));
+
+        final List<String> payloads = messageStore
+                .streamAll(partitionkey)
+                .map(MessageStoreEntry::getTextMessage)
+                .map(TextMessage::getPayload)
+                .collect(Collectors.toList());
+        assertThat(payloads, contains("1", "4", "5", "6"));
     }
 
     @SuppressWarnings("Duplicates")
@@ -188,15 +245,12 @@ public class RedisMessageStoreIntegrationTest {
         assertThat(secondPos.shard("shard-4").position(), is("99"));
         assertThat(messageStore.size(), is(1000));
     }
+
     @Test
     public void shouldKeepChannelName() {
-        MessageStoreEntry first = MessageStoreEntry.of("first", TextMessage.of("1", "1"));
-        MessageStoreEntry second = MessageStoreEntry.of("second", TextMessage.of("1", "2"));
-        messageStore.add(first);
-        messageStore.add(second);
-        assertThat(messageStore.stream("first").collect(Collectors.toList()), contains(first));
-        assertThat(messageStore.stream("second").collect(Collectors.toList()), contains(second));
-        assertThat(messageStore.streamAll().collect(Collectors.toList()), contains(first, second));
+        messageStore.add(MessageStoreEntry.of("first", TextMessage.of("1", "1")));
+        messageStore.add(MessageStoreEntry.of("second", TextMessage.of("1", "2")));
+        assertThat(messageStore.streamAll().map(MessageStoreEntry::getChannelName).collect(Collectors.toList()), contains("first", "second"));
     }
 
     @SuppressWarnings("Duplicates")
@@ -241,6 +295,29 @@ public class RedisMessageStoreIntegrationTest {
                 assertThat(lastPositions.get(shard.shardName()), is(lessThanOrEqualTo(pos)));
             }
         });
-        assertThat(messageStore.size(), isOneOf(10000, 1000));
+        assertThat(messageStore.size(), is(7500));
     }
+
+    //@Test
+    public void shouldStreamLotsOfMessages() {
+        for (int j = 0; j < 100; j++) {
+            for (int i = 0; i < 1000; i++) {
+                messageStore.add(MessageStoreEntry.of("foo-channel", TextMessage.of("" + i, "" + j)));
+            }
+            LOG.info("1000 elements written to Redis");
+        }
+        AtomicInteger count = new AtomicInteger();
+        final List<Integer> keys = messageStore.streamAll().map(entry -> {
+            final int i = count.incrementAndGet();
+            if (i % 1000 == 0) {
+                LOG.info("{} elements read from Redis", i);
+            }
+            return entry.getTextMessage();
+        }).map(Message::getKey).map(Key::partitionKey).map(Integer::valueOf).collect(Collectors.toList());
+        messageStore.streamAll("42").map(entry -> entry.getTextMessage()).forEach(System.out::println);
+
+        assertThat(keys, hasSize(100000));
+        LOG.info("Finished reading entries");
+    }
+
 }

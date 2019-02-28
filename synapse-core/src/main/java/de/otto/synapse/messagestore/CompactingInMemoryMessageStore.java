@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
 
 /**
- * Concurrent in-memory implementation of a MessageStore that is compacting entries by {@link Message#getKey() of}.
+ * Concurrent in-memory implementation of a MessageStore that is compacting entries by {@link Message#getKey() key}.
  * <p>
  *     Messages are stored using a ConcurrentNavigableMap.
  * </p>

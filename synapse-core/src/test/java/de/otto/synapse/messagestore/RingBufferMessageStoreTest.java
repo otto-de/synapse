@@ -50,18 +50,6 @@ public class RingBufferMessageStoreTest {
     }
 
     @Test
-    public void shouldKeepNoMoreThanCapacityIndicatesWithMultipleChannels() {
-        final MessageStore messageStore = messageStoreBuilder.get();
-        for (int i=0; i<101; ++i) {
-            messageStore.add(MessageStoreEntry.of("first", TextMessage.of(Key.of(), "some payload")));
-            messageStore.add(MessageStoreEntry.of("second", TextMessage.of(Key.of(), "some payload")));
-        }
-        assertThat(messageStore.size(), is(100));
-        assertThat(messageStore.stream("first").count(), is(50L));
-        assertThat(messageStore.stream("second").count(), is(50L));
-    }
-
-    @Test
     public void shouldRemoveOldestIfCapacityIsReached() {
         final MessageStore messageStore = messageStoreBuilder.get();
         for (int i=0; i<102; ++i) {

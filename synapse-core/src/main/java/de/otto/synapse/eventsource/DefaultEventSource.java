@@ -51,7 +51,8 @@ public class DefaultEventSource extends AbstractEventSource {
         final String channelName = getChannelName();
         return CompletableFuture.supplyAsync(() -> {
             messageStore
-                    .stream(channelName)
+                    .streamAll()
+                    .filter(entry -> entry.getChannelName().equals(channelName))
                     .map(MessageStoreEntry::getTextMessage)
                     .map(message -> getMessageLogReceiverEndpoint().intercept(message))
                     .filter(Objects::nonNull)

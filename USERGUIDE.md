@@ -95,7 +95,7 @@ Synapse is supporting a number of default headers that are defined in `de.synaps
     Other channel implementations may use this attribute for similar timestamps, as long as the semantics of the property 
     is the met.
 * `synapse_msg_sender_ts`: The timestamp to which the message was sent.
-* `synapse_msg_receiver_ts`: The timestamp to which the message was received by a [](#MessageReceiverEndpoint).
+* `synapse_msg_receiver_ts`: The timestamp to which the message was received by a [MessageReceiverEndpoint](#MessageReceiverEndpoint).
 
 Example: Reading headers
 ```java
@@ -112,7 +112,7 @@ void foo(final Message msg) {
 }
 ```
 
-See [](#DefaultSenderHeadersInterceptor) and [](#DefaultReceiverHeadersInterceptor) for details about how and when 
+See [DefaultSenderHeadersInterceptor](#DefaultSenderHeadersInterceptor) and [DefaultReceiverHeadersInterceptor](#DefaultReceiverHeadersInterceptor) for details about how and when 
 these headers will be available.
  
 ## Payload
@@ -146,6 +146,54 @@ these headers will be available.
 ## StateRepository
 
 ## MessageStore
+
+    `de.otto.synapse.messagestore.MessageStore'
+
+A MessageStore is a repository that is storing messages, while keeping the insertion-order of the messages. 
+
+![Message Store](http://www.enterpriseintegrationpatterns.com/img/MessageStore.gif)
+
+The `MessageStore` interface supports streaming access to the stored messages. The implementation are expected to 
+support large amounts of messages, so returning collections instead of streams is not appropriate.
+
+Messages can be originated in different [channels](#Channels). `MessageStore.stream(channelName)` provides access
+to the messages for a single stream. Using `MessageStore.getChannelNames()`, the set of channel-names known by the
+store can be accessed. 
+
+Synapse `MessageStore` also provides access to the latest `ChannelPosition` for every known channel name. The position 
+is derived from the (optional) message-[header](#Header)'s `ShardPosition`, so it will only be usable for messages
+originated in a  [MessageLog](#MessageLog). 
+
+If the `MessageStore` is used as a store for message snapshots, the `ChannelPosition` can be used to determine the 
+starting position in a `MessageLog`. 
+
+In most cases, messages can be added to Message Stores. Only a few special-purpose implementation do not support 
+adding messages to the store. 
+    
+There are several implementations of the `MessageStore` interface available in Synapse:
+* `de.otto.synapse.messagestore.InMemoryMessageStore`: A `MessageStore` that is implemented using a 
+  `ConcurrentLinkedDeque`. Primarily used for testing purposes.
+* `de.otto.synapse.messagestore.InMemoryRingBufferMessageStore`: A `MessageStore` that is implemented using a 
+  Guava `EvictingQueue`. Primarily used for testing purposes, or for smaller data-sets without any need for durability.
+* `de.otto.synapse.messagestore.CompactingInMemoryMessageStore`: A compacting `MessageStore` that is compacting messages
+  by compaction-key when writing into the store. It's implementation is based on a `ConcurrentNavigableMap`.
+* `de.otto.synapse.messagestore.CompactingConcurrentMapMessageStore`: A compacting store that is delegating the storage
+  of the messages to another ConcurrentMap like, for example, a `ChronicleMap` that is suitable to store gigabytes of 
+  data off the heap. Can be used whenever durability is not required, but large amounts of messages must be kept in 
+  memory for quickest possible access. 
+
+For larger datasets, Redis is supported by the separate, add-on library `synapse-redis`. It can also be used to
+access AWS ElastiCache. 
+* `de.otto.synapse.messagestore.redis.RedisRingBufferMessageStore`: a Redis implementation of the `MessageStore` 
+  interface that can be configured with a maximum number of messages. The latest N messages will be stored, so the
+  implementation is behaving like a fixed-sized ring buffer.
+* `de.otto.synapse.messagestore.redis.RedisIndexedMessageStore`: another Redis implementation, that is using
+  both maximum size + eviction to prevent the `MessageStore` to increase in size without any bounds. This implementation
+  is also offering a single index that is by default indexing the message's partition key. Using this index, it is
+  possible to retrieve all messages for a given partition-key, which in most cases is equivalent to all the messages 
+  that where changing a single given entity.
+
+See [EIP: Message Store](http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageStore.html) 
 
 # EventSource
 

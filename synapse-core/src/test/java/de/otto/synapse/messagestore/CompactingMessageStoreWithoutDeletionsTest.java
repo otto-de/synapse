@@ -70,7 +70,7 @@ public class CompactingMessageStoreWithoutDeletionsTest {
         }
         assertThat(messageStore.getLatestChannelPosition("some-channel"), is(channelPosition(fromPosition("foo", "29"), fromPosition("bar", "51"))));
         assertThat(messageStore.size(), is(20));
-        assertThat(messageStore.stream("some-channel").count(), is(20L));
+        assertThat(messageStore.streamAll().count(), is(20L));
     }
 
 }
