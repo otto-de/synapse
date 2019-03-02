@@ -159,6 +159,17 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
      * @throws UnsupportedOperationException always
      * @deprecated Unsupported operation.
      */
+    @Override
+    public Stream<MessageStoreEntry> stream(Index index, String value) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Guaranteed to throw an exception and leave the message store unmodified.
+     *
+     * @throws UnsupportedOperationException always
+     * @deprecated Unsupported operation.
+     */
     @Deprecated
     @Override
     public void add(@Nonnull MessageStoreEntry entry) {

@@ -47,6 +47,11 @@ public class DelegatingSnapshotMessageStore implements SnapshotMessageStore {
         return delegate.stream();
     }
 
+    @Override
+    public Stream<MessageStoreEntry> stream(Index index, String value) {
+        return delegate.stream(index, value);
+    }
+
     /**
      * Guaranteed to throw an exception and leave the message store unmodified.
      *

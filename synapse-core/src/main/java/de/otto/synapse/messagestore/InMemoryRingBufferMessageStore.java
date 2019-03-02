@@ -13,6 +13,8 @@ import java.util.stream.Stream;
  * with a configurable capacity.
  *
  * <p>Each time an element is added to a full message store, the message store automatically removes its head element.
+ *
+ * <p>This implementation does not support indexing of entries.</p>
  */
 @ThreadSafe
 public class InMemoryRingBufferMessageStore implements MessageStore {
@@ -51,7 +53,7 @@ public class InMemoryRingBufferMessageStore implements MessageStore {
 
     @Override
     public String getName() {
-        return null;
+        return name;
     }
 
     @Override
@@ -67,6 +69,11 @@ public class InMemoryRingBufferMessageStore implements MessageStore {
     @Override
     public synchronized Stream<MessageStoreEntry> stream() {
         return entries.stream();
+    }
+
+    @Override
+    public Stream<MessageStoreEntry> stream(Index index, String value) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -2,15 +2,17 @@ package de.otto.synapse.messagestore;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Message;
-import net.openhft.chronicle.map.ChronicleMapBuilder;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
+
+import static de.otto.synapse.messagestore.Indexers.noOpIndexer;
 
 /**
  * Concurrent implementation of a MessageStore that is compacting entries by {@link Message#getKey() of}.
@@ -26,36 +28,29 @@ import java.util.stream.Stream;
 @ThreadSafe
 public class CompactingConcurrentMapMessageStore implements MessageStore {
 
-    private static final int DEFAULT_KEY_SIZE_BYTES = 128;
-    private static final double DEFAULT_VALUE_SIZE_BYTES = 512;
-    private static final long DEFAULT_ENTRY_COUNT = 1_000_00;
-
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final ConcurrentSkipListSet<String> compactedAndOrderedKeys = new ConcurrentSkipListSet<>();
     private final ConcurrentMap<String, MessageStoreEntry> entries;
+    private final ConcurrentMap<String,ConcurrentSkipListSet<String>> indexes = new ConcurrentHashMap<>();
     private final InMemoryChannelPositions channelPositions = new InMemoryChannelPositions();
     private final boolean removeNullPayloadMessages;
+    private final Indexer indexer;
     private final String name;
-
-    public CompactingConcurrentMapMessageStore(final String name) {
-        this(name, true);
-    }
-
-    public CompactingConcurrentMapMessageStore(final String name, final boolean removeNullPayloadMessages) {
-        // TODO why ChronicleMap as a default??
-        this(name, removeNullPayloadMessages, ChronicleMapBuilder.of(String.class, MessageStoreEntry.class)
-                .averageKeySize(DEFAULT_KEY_SIZE_BYTES)
-                .averageValueSize(DEFAULT_VALUE_SIZE_BYTES)
-                .entries(DEFAULT_ENTRY_COUNT)
-                .create());
-    }
 
     public CompactingConcurrentMapMessageStore(final String name,
                                                final boolean removeNullPayloadMessages,
                                                final ConcurrentMap<String, MessageStoreEntry> messageMap) {
+        this(name, removeNullPayloadMessages, messageMap, noOpIndexer());
+    }
+
+    public CompactingConcurrentMapMessageStore(final String name,
+                                               final boolean removeNullPayloadMessages,
+                                               final ConcurrentMap<String, MessageStoreEntry> messageMap,
+                                               final Indexer indexer) {
         this.name = name;
         this.entries = messageMap;
         this.removeNullPayloadMessages = removeNullPayloadMessages;
+        this.indexer = indexer;
     }
 
     @Override
@@ -68,12 +63,28 @@ public class CompactingConcurrentMapMessageStore implements MessageStore {
         final String messageKey = entry.getChannelName() + ":" + entry.getTextMessage().getKey().compactionKey();
         lock.writeLock().lock();
         try {
+            final MessageStoreEntry indexedEntry = indexer.index(entry);
             if (entry.getTextMessage().getPayload() == null && removeNullPayloadMessages) {
                 entries.remove(messageKey);
                 compactedAndOrderedKeys.remove(messageKey);
+                indexedEntry.getFilterValues().forEach((key, value) -> {
+                    final String indexKey = indexKeyOf(key, value);
+                    if (indexes.containsKey(indexKey)) {
+                        indexes.get(indexKey).remove(messageKey);
+                    }
+                });
             } else {
-                entries.put(messageKey, entry);
+                entries.put(messageKey, indexedEntry);
                 compactedAndOrderedKeys.add(messageKey);
+
+                indexedEntry.getFilterValues().forEach((key, value) -> {
+                    final String indexKey = indexKeyOf(key, value);
+                    if (!indexes.containsKey(indexKey)) {
+                        indexes.put(indexKey, new ConcurrentSkipListSet<>());
+                    }
+                    indexes.get(indexKey).add(messageKey);
+                });
+
             }
             channelPositions.updateFrom(entry);
         } finally {
@@ -114,7 +125,22 @@ public class CompactingConcurrentMapMessageStore implements MessageStore {
     }
 
     @Override
+    public Stream<MessageStoreEntry> stream(final Index index, final String value) {
+        String indexKey = indexKeyOf(index, value);
+        if (indexes.containsKey(indexKey)) {
+            return indexes.get(indexKey).stream().map(entries::get);
+        } else {
+            return Stream.empty();
+        }
+    }
+
+    @Override
     public int size() {
         return entries.size();
     }
+
+    private String indexKeyOf(Index index, String value) {
+        return index.name() + "#" + value;
+    }
+
 }

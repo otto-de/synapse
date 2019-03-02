@@ -201,10 +201,6 @@ public class RedisIndexedMessageStoreIntegrationTest {
         final String partitionKey = UUID.randomUUID().toString();
 
         messageStore.add(of("one", TextMessage.of(partitionKey, "1")));
-        messageStore
-                .stream(Index.ORIGIN, "Snapshot")
-                .filter(entry -> entry.getFilterValues().getOrDefault(Index.SERVICE_INSTANCE.name(), "").startsWith("my-service"))
-                .forEach(System.out::println);
 
         final MessageStoreEntry entry = messageStore
                 .stream()
@@ -381,7 +377,7 @@ public class RedisIndexedMessageStoreIntegrationTest {
     }
 
     @Test
-    public void shouldThrowIllegalArgumentExceptionForNonExistingIndex() {
+    public void shouldReturnEmptyStreamForNonExistingIndex() {
         Stream<MessageStoreEntry> stream = messageStore.stream(Index.valueOf("unknown"), "42");
         assertThat(stream.count(), is(0L));
     }

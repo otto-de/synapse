@@ -13,6 +13,7 @@ import org.junit.runners.Parameterized.Parameters;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -39,8 +40,8 @@ public class MessageStoreTest {
         return asList(
                 () -> new InMemoryMessageStore("test"),
                 () -> new InMemoryRingBufferMessageStore("test", 10000),
-                () -> new CompactingInMemoryMessageStore("test"),
-                () -> new CompactingConcurrentMapMessageStore("test")
+                () -> new CompactingInMemoryMessageStore("test", true),
+                () -> new CompactingConcurrentMapMessageStore("test", true, new ConcurrentHashMap<>())
         );
     }
 

@@ -5,11 +5,15 @@ import de.otto.synapse.message.Message;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
+
+import static de.otto.synapse.messagestore.Indexers.noOpIndexer;
 
 /**
  * Concurrent in-memory implementation of a MessageStore that is compacting entries by {@link Message#getKey() key}.
@@ -20,20 +24,27 @@ import java.util.stream.Stream;
 @ThreadSafe
 public class CompactingInMemoryMessageStore implements MessageStore {
 
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
-    private final ConcurrentNavigableMap<String, MessageStoreEntry> entries = new ConcurrentSkipListMap<>();
-    private final InMemoryChannelPositions channelPositions = new InMemoryChannelPositions();
-    private final boolean removeNullPayloadMessages;
     private final String name;
+    private final boolean removeNullPayloadMessages;
+    private final Indexer indexer;
+    private final InMemoryChannelPositions channelPositions = new InMemoryChannelPositions();
+    private final ConcurrentNavigableMap<String, MessageStoreEntry> entries = new ConcurrentSkipListMap<>();
+    private final ConcurrentMap<String, ConcurrentNavigableMap<String, MessageStoreEntry>> indexes = new ConcurrentHashMap<>();
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public CompactingInMemoryMessageStore(final String name) {
-        this.name = name;
-        this.removeNullPayloadMessages = true;
-    }
-
-    public CompactingInMemoryMessageStore(final String name, final boolean removeNullPayloadMessages) {
+    public CompactingInMemoryMessageStore(final String name,
+                                          final boolean removeNullPayloadMessages) {
         this.removeNullPayloadMessages = removeNullPayloadMessages;
         this.name = name;
+        this.indexer = noOpIndexer();
+    }
+
+    public CompactingInMemoryMessageStore(final String name,
+                                          final boolean removeNullPayloadMessages,
+                                          final Indexer indexer) {
+        this.removeNullPayloadMessages = removeNullPayloadMessages;
+        this.name = name;
+        this.indexer = indexer;
     }
 
     @Override
@@ -45,13 +56,29 @@ public class CompactingInMemoryMessageStore implements MessageStore {
     public void add(final MessageStoreEntry entry) {
         lock.writeLock().lock();
         try {
+            final MessageStoreEntry indexedEntry = indexer.index(entry);
             final String internalKey = entry.getChannelName() + ":" + entry.getTextMessage().getKey().compactionKey();
             if (entry.getTextMessage().getPayload() == null && removeNullPayloadMessages) {
                 entries.remove(internalKey);
+
+                indexedEntry.getFilterValues().forEach((key, value) -> {
+                    final String indexKey = indexKeyOf(key, value);
+                    if (indexes.containsKey(indexKey)) {
+                        indexes.get(indexKey).remove(internalKey);
+                    }
+                });
             } else {
-                entries.put(internalKey, entry);
+                entries.put(internalKey, indexedEntry);
+
+                indexedEntry.getFilterValues().forEach((key, value) -> {
+                    final String indexKey = indexKeyOf(key, value);
+                    if (!indexes.containsKey(indexKey)) {
+                        indexes.put(indexKey, new ConcurrentSkipListMap<>());
+                    }
+                    indexes.get(indexKey).put(internalKey, indexedEntry);
+                });
             }
-            channelPositions.updateFrom(entry);
+            channelPositions.updateFrom(indexedEntry);
         } finally {
             lock.writeLock().unlock();
         }
@@ -88,7 +115,21 @@ public class CompactingInMemoryMessageStore implements MessageStore {
     }
 
     @Override
+    public Stream<MessageStoreEntry> stream(final Index index, final String value) {
+        String indexKey = indexKeyOf(index, value);
+        if (indexes.containsKey(indexKey)) {
+            return indexes.get(indexKey).values().stream();
+        } else {
+            return Stream.empty();
+        }
+    }
+
+    @Override
     public int size() {
         return entries.size();
+    }
+
+    private String indexKeyOf(Index index, String value) {
+        return index.name() + "#" + value;
     }
 }

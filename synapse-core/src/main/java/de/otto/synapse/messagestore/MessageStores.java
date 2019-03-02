@@ -49,6 +49,11 @@ public class MessageStores {
             return Stream.empty();
         }
 
+        @Override
+        public Stream<MessageStoreEntry> stream(final Index index, final String value) {
+            return Stream.empty();
+        }
+
         /**
          * Guaranteed to throw an exception and leave the message store unmodified.
          *

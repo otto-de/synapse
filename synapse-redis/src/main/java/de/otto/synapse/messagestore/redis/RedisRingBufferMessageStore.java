@@ -5,6 +5,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
+import de.otto.synapse.messagestore.Index;
 import de.otto.synapse.messagestore.MessageStore;
 import de.otto.synapse.messagestore.MessageStoreEntry;
 import de.otto.synapse.translator.*;
@@ -150,6 +151,17 @@ public class RedisRingBufferMessageStore implements MessageStore {
                 spliteratorUnknownSize(messageIterator, CHARACTERISTICS),
                 false
         );
+    }
+
+    /**
+     * Guaranteed to throw an exception and leave the message store unmodified.
+     *
+     * @throws UnsupportedOperationException always
+     * @deprecated Unsupported operation.
+     */
+    @Override
+    public Stream<MessageStoreEntry> stream(Index index, String value) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

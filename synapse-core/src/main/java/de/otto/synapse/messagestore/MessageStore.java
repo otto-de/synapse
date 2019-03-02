@@ -97,9 +97,7 @@ public interface MessageStore extends AutoCloseable {
      *         is not supported by this store
      */
     @Beta
-    default Stream<MessageStoreEntry> stream(final Index index, final String value) {
-        throw new UnsupportedOperationException();
-    }
+    Stream<MessageStoreEntry> stream(final Index index, final String value);
 
     /**
      * Appends the specified element to the end of this list (optional
