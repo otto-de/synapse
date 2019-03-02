@@ -2,6 +2,7 @@ package de.otto.synapse.messagestore;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.TextMessage;
 
@@ -17,6 +18,36 @@ import static java.util.Objects.requireNonNull;
 public class Indexers {
 
     private Indexers() {}
+
+    /**
+     * @return no-op Indexer that is not doing anything.
+     */
+    public static Indexer noOpIndexer() {
+        return new Indexer() {
+            @Nonnull
+            @Override
+            public ImmutableSet<Index> getIndexes() {
+                return ImmutableSet.of();
+            }
+
+            @Override
+            public boolean supports(@Nonnull Index index) {
+                return false;
+            }
+
+            @Nonnull
+            @Override
+            public String calc(@Nonnull Index index, @Nonnull MessageStoreEntry entry) {
+                return "";
+            }
+
+            @Nonnull
+            @Override
+            public MessageStoreEntry index(@Nonnull MessageStoreEntry entry) {
+                return entry;
+            }
+        };
+    }
 
     /**
      * Returns a composite Indexer that is able to support several indexes.
