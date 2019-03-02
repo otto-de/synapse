@@ -31,6 +31,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
@@ -379,4 +380,9 @@ public class RedisIndexedMessageStoreIntegrationTest {
         LOG.info("Finished reading entries");
     }
 
+    @Test
+    public void shouldThrowIllegalArgumentExceptionForNonExistingIndex() {
+        Stream<MessageStoreEntry> stream = messageStore.stream(Index.valueOf("unknown"), "42");
+        assertThat(stream.count(), is(0L));
+    }
 }

@@ -91,8 +91,9 @@ public interface MessageStore extends AutoCloseable {
      *
      * @param index the Index
      * @param value the value identifying the requested messages in the specified index
-     * @return stream of message-store entries matching the index
-     * @throws UnsupportedOperationException if the <tt>stream</tt> operation
+     * @return stream of message-store entries matching the index or emptyStream, if the
+     *         index is not known, or if there are no entries
+     * @throws UnsupportedOperationException if the <tt>stream(Index,String)</tt> operation
      *         is not supported by this store
      */
     @Beta
