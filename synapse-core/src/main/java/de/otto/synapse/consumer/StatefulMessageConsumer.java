@@ -79,9 +79,6 @@ public class StatefulMessageConsumer<P, S> implements MessageConsumer<P> {
         this.keyPattern = Pattern.compile(keyPattern);
         this.payloadType = payloadType;
         this.stateRepository = stateRepository;
-
-        // TODO: State + KeyMapper in das StateRepository verschieben!
-
         this.payloadToStateMapper = (_previousValue, message) -> payloadToStateMapper.apply(message);
         this.keyMapper = keyMapper;
     }
@@ -103,9 +100,6 @@ public class StatefulMessageConsumer<P, S> implements MessageConsumer<P> {
         this.keyPattern = Pattern.compile(keyPattern);
         this.payloadType = payloadType;
         this.stateRepository = stateRepository;
-
-        // TODO: State + KeyMapper in das StateRepository verschieben!
-
         this.payloadToStateMapper = payloadToStateMapper;
         this.keyMapper = keyMapper;
     }
