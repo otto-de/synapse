@@ -1,5 +1,6 @@
 package de.otto.synapse.messagestore;
 
+import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Message;
 
@@ -92,6 +93,11 @@ public class CompactingInMemoryMessageStore implements MessageStore {
         } finally {
             lock.readLock().unlock();
         }
+    }
+
+    @Override
+    public ImmutableSet<Index> getIndexes() {
+        return indexer.getIndexes();
     }
 
     @Override

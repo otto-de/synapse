@@ -1,5 +1,6 @@
 package de.otto.synapse.messagestore;
 
+import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.channel.ChannelPosition;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -69,6 +70,11 @@ public class InMemoryMessageStore implements MessageStore {
         } finally {
           lock.readLock().unlock();
         }
+    }
+
+    @Override
+    public ImmutableSet<Index> getIndexes() {
+        return indexer.getIndexes();
     }
 
     @Override

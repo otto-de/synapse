@@ -3,6 +3,7 @@ package de.otto.synapse.messagestore.redis;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.messagestore.Index;
@@ -125,6 +126,11 @@ public class RedisRingBufferMessageStore implements MessageStore {
                 .boundSetOps(name + "-channels")
                 .members();
         return members;
+    }
+
+    @Override
+    public ImmutableSet<Index> getIndexes() {
+        return ImmutableSet.of();
     }
 
     @Override

@@ -1,6 +1,7 @@
 package de.otto.synapse.messagestore;
 
 import com.google.common.collect.EvictingQueue;
+import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.channel.ChannelPosition;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -59,6 +60,11 @@ public class InMemoryRingBufferMessageStore implements MessageStore {
     @Override
     public synchronized Set<String> getChannelNames() {
         return channelPositions.channelNames();
+    }
+
+    @Override
+    public ImmutableSet<Index> getIndexes() {
+        return ImmutableSet.of();
     }
 
     @Override

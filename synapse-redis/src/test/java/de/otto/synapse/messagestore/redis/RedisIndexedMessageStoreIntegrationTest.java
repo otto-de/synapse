@@ -1,6 +1,7 @@
 package de.otto.synapse.messagestore.redis;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.channel.StartFrom;
@@ -92,6 +93,13 @@ public class RedisIndexedMessageStoreIntegrationTest {
     @Before
     public void before() {
         messageStore.clear();
+    }
+
+    @Test
+    public void shouldReturnIndexes() {
+        ImmutableSet<Index> expectedIndexes = ImmutableSet.of(PARTITION_KEY, ORIGIN, SERVICE_INSTANCE);
+        ImmutableSet<Index> indexes = messageStore.getIndexes();
+        assertThat(indexes, is(expectedIndexes));
     }
 
     @Test

@@ -133,6 +133,11 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
     }
 
     @Override
+    public ImmutableSet<Index> getIndexes() {
+        return ImmutableSet.of();
+    }
+
+    @Override
     public ChannelPosition getLatestChannelPosition(String channelName) {
         return channelName.equals(this.channelName)
                 ? getLatestChannelPosition()

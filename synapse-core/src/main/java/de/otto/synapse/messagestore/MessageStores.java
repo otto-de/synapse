@@ -35,6 +35,11 @@ public class MessageStores {
         }
 
         @Override
+        public ImmutableSet<Index> getIndexes() {
+            return ImmutableSet.of();
+        }
+
+        @Override
         public ChannelPosition getLatestChannelPosition(String channelName) {
             return ChannelPosition.fromHorizon();
         }

@@ -1,6 +1,7 @@
 package de.otto.synapse.messagestore;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
@@ -52,6 +53,13 @@ public class IndexingMessageStoreTest {
 
     @Parameter
     public Supplier<MessageStore> channelIndexedMessageStore;
+
+    @Test
+    public void shouldReturnIndexes() {
+        ImmutableSet<Index> expectedIndexes = ImmutableSet.of(CHANNEL_NAME);
+        ImmutableSet<Index> indexes = channelIndexedMessageStore.get().getIndexes();
+        assertThat(indexes, is(expectedIndexes));
+    }
 
     @Test
     public void shouldReturnEmptyStreamForNonExistingIndex() {

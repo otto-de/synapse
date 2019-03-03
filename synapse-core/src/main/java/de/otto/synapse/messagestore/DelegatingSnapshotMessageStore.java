@@ -1,5 +1,6 @@
 package de.otto.synapse.messagestore;
 
+import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.channel.ChannelPosition;
 
 import javax.annotation.Nonnull;
@@ -29,6 +30,11 @@ public class DelegatingSnapshotMessageStore implements SnapshotMessageStore {
     @Override
     public Set<String> getChannelNames() {
         return delegate.getChannelNames();
+    }
+
+    @Override
+    public ImmutableSet<Index> getIndexes() {
+        return delegate.getIndexes();
     }
 
     @Override

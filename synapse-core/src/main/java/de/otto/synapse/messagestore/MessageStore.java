@@ -1,6 +1,7 @@
 package de.otto.synapse.messagestore;
 
 import com.google.common.annotations.Beta;
+import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Header;
 
@@ -51,6 +52,8 @@ public interface MessageStore extends AutoCloseable {
      */
     Set<String> getChannelNames();
 
+    ImmutableSet<Index> getIndexes();
+
     /**
      * Returns the latest {@link ChannelPosition} of the given channel, derived from the messages contained in this
      * {@code MessageStore}.
@@ -77,9 +80,8 @@ public interface MessageStore extends AutoCloseable {
 
     /**
      * Returns a Stream of all entries contained in the MessageStore.
-     * <p>
-     *     The stream will maintain the insertion order of the entries.
-     * </p>
+     *
+     * <p>The stream will maintain the insertion order of the entries.</p>
      *
      * @return Stream of entries
      */
@@ -88,6 +90,8 @@ public interface MessageStore extends AutoCloseable {
     /**
      * Returns a Stream of all entries contained in the MessageStore that have are matching the given Index value
      * (optional operation).
+     *
+     * <p>The stream will maintain the insertion order of the entries.</p>
      *
      * @param index the Index
      * @param value the value identifying the requested messages in the specified index
