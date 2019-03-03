@@ -21,6 +21,10 @@ public class CompositeIndexer implements Indexer {
     /**
      * Creates a {@code CompositeIndex} from a list of {@code Indexers}.
      *
+     * <p>If there are multiple {@code Indexers} responsible for the same {@link Index},
+     * the first {@code Indexer} instance will be used and all other instances will not be used
+     * to calculate the {@code Index}.</p>
+     *
      * @param indexers the indexers used to build the composite
      */
     public CompositeIndexer(final ImmutableList<Indexer> indexers) {
