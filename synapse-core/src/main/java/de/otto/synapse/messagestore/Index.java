@@ -42,6 +42,8 @@ public class Index {
      */
     public static final Index PARTITION_KEY = new Index("partitionKey");
 
+    public static final Index JOURNAL_KEY = new Index("journalKey");
+
     private final String fieldName;
 
     public Index(final String name) {

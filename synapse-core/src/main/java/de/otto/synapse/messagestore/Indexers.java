@@ -100,6 +100,10 @@ public class Indexers {
         return new CalculatedValueIndexer(PARTITION_KEY, entry -> entry.getTextMessage().getKey().partitionKey());
     }
 
+    public static Indexer journalKeyIndexer() {
+        return new CalculatedValueIndexer(JOURNAL_KEY, entry -> entry.getTextMessage().getKey().partitionKey());
+    }
+
     /**
      * Returns an Indexer that is indexing {@link TextMessage} by {@link Key#partitionKey()}.
      *
