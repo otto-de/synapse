@@ -44,7 +44,7 @@ public class StaticValueIndexer implements Indexer {
         if (supports(index)) {
             return value;
         } else {
-            throw new IllegalArgumentException("Unknown index " + index.name());
+            throw new IllegalArgumentException("Unknown index " + index.getName());
         }
     }
 

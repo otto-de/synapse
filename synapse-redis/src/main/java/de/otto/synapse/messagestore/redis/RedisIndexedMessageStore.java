@@ -139,7 +139,7 @@ public class RedisIndexedMessageStore implements MessageStore {
                 // Calculate the indexes and add message keys to the different indexes
                 indexedEntry.getFilterValues().entrySet().forEach(filterEntry -> {
                     // Add id to the List of all messages of the channel in '<channelName>-messages'
-                    final String indexListKey = name + "-" + filterEntry.getKey().name() + "-" + filterEntry.getValue();
+                    final String indexListKey = name + "-" + filterEntry.getKey().getName() + "-" + filterEntry.getValue();
                     final BoundListOperations partitionIndexList = operations.boundListOps(indexListKey);
                     partitionIndexList.rightPush(messageHashKey);
                     // ...and set/update the expiration timeout for this list
@@ -194,7 +194,7 @@ public class RedisIndexedMessageStore implements MessageStore {
         final Iterator<MessageStoreEntry> messageIterator = new BatchedRedisHashedListIterator<>(
                 redisTemplate,
                 this::decode,
-                name + "-" + index.name() + "-" + value,
+                name + "-" + index.getName() + "-" + value,
                 batchSize);
         return StreamSupport.stream(
                 spliteratorUnknownSize(messageIterator, CHARACTERISTICS),
@@ -221,7 +221,7 @@ public class RedisIndexedMessageStore implements MessageStore {
         final ImmutableMap.Builder<String, String> builder = ImmutableMap.<String, String>builder()
                 .put("_channelName", entry.getChannelName())
                 .put("_message", encoder.apply(entry.getTextMessage()));
-        entry.getFilterValues().forEach((key, value) -> builder.put(key.name(), value));
+        entry.getFilterValues().forEach((key, value) -> builder.put(key.getName(), value));
         return builder.build();
     }
 

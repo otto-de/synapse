@@ -71,7 +71,7 @@ public interface MessageStore extends AutoCloseable {
     @Deprecated
     default ChannelPosition getLatestChannelPosition() {
         if (getChannelNames().size() > 1) {
-            throw new IllegalStateException("GetLatestChannelPosition called on a MessageStore containing messages from several channels: " + getChannelNames());
+            throw new IllegalStateException("Deprecated method getLatestChannelPosition() called on a MessageStore containing messages from several channels: " + getChannelNames());
         } else {
             final String channelName = getFirst(getChannelNames(), "");
             return getLatestChannelPosition(channelName);

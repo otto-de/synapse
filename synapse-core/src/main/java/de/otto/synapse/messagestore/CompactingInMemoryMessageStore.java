@@ -136,6 +136,6 @@ public class CompactingInMemoryMessageStore implements MessageStore {
     }
 
     private String indexKeyOf(Index index, String value) {
-        return index.name() + "#" + value;
+        return index.getName() + "#" + value;
     }
 }

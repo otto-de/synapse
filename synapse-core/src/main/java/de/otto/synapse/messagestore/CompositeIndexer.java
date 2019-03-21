@@ -60,7 +60,7 @@ public class CompositeIndexer implements Indexer {
                     .map(indexer -> indexer.calc(index, entry))
                     .orElseThrow(IllegalStateException::new);
         } else {
-            throw new IllegalArgumentException("Unknown index " + index.name());
+            throw new IllegalArgumentException("Unknown index " + index.getName());
         }
     }
 

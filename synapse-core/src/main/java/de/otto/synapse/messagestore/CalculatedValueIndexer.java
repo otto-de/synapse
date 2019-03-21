@@ -47,7 +47,7 @@ public class CalculatedValueIndexer implements Indexer {
         if (supports(index)) {
             return calculator.apply(entry);
         } else {
-            throw new IllegalArgumentException("Unknown index " + index.name());
+            throw new IllegalArgumentException("Unknown index " + index.getName());
         }
     }
 

@@ -77,7 +77,7 @@ public final class MessageStoreEntry implements Serializable {
      * {@code MessageStoreEntry} is added to an indexing {@link MessageStore} like, for example,
      * {@code RedisIndexedMessageStore}.</p>
      *
-     * <p>The keys of the filter values should be derived from {@link Index#name()} ()} of the index
+     * <p>The keys of the filter values should be derived from {@link Index#getName()} ()} of the index
      * updated by the {@code Indexer}.</p>
      *
      * @return filter values

@@ -38,16 +38,16 @@ public class Index {
     /**
      * Index that is used to access messages in a {@link MessageStore} by {@link Key#partitionKey()}
      *
-     * <p>The {@link #name()} of the index is {@code 'partitionKey'}</p>
+     * <p>The {@link #getName() name} of the index is {@code 'partitionKey'}</p>
      */
     public static final Index PARTITION_KEY = new Index("partitionKey");
 
     public static final Index JOURNAL_KEY = new Index("journalKey");
 
-    private final String fieldName;
+    private final String name;
 
     public Index(final String name) {
-        this.fieldName = name;
+        this.name = name;
     }
 
     public static Index valueOf(final String name) {
@@ -63,8 +63,8 @@ public class Index {
      * @return field name
      */
     @Nonnull
-    public String name() {
-        return fieldName;
+    public String getName() {
+        return name;
     }
 
     @Override
@@ -72,18 +72,18 @@ public class Index {
         if (this == o) return true;
         if (!(o instanceof Index)) return false;
         Index that = (Index) o;
-        return Objects.equals(fieldName, that.fieldName);
+        return Objects.equals(name, that.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(fieldName);
+        return Objects.hash(name);
     }
 
     @Override
     public String toString() {
         return "Index{" +
-                "name='" + fieldName + '\'' +
+                "name='" + name + '\'' +
                 '}';
     }
 }

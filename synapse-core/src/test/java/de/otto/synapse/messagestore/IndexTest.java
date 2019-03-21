@@ -9,12 +9,12 @@ public class IndexTest {
 
     @Test
     public void shouldReturnName() {
-        assertThat(Index.PARTITION_KEY.name(), is("partitionKey"));
+        assertThat(Index.PARTITION_KEY.getName(), is("partitionKey"));
     }
 
     @Test
     public void shouldReturnFieldName() {
-        assertThat(Index.PARTITION_KEY.name(), is("partitionKey"));
+        assertThat(Index.PARTITION_KEY.getName(), is("partitionKey"));
     }
 
     @Test
