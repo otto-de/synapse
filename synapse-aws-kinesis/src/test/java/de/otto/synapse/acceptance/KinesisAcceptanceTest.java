@@ -23,14 +23,17 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static de.otto.synapse.configuration.kinesis.KinesisTestConfiguration.KINESIS_INTEGRATION_TEST_CHANNEL;
 import static de.otto.synapse.message.DefaultHeaderAttr.*;
 import static de.otto.synapse.message.Header.of;
+import static de.otto.synapse.message.Key.of;
+import static de.otto.synapse.message.Message.copyOf;
 import static de.otto.synapse.message.Message.message;
-import static java.time.Instant.now;
 import static java.time.Instant.ofEpochSecond;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
@@ -61,7 +64,7 @@ public class KinesisAcceptanceTest {
 
     private static final Logger LOG = getLogger(KinesisAcceptanceTest.class);
 
-    private final AtomicReference<Message<String>> lastEventSourceMessage = new AtomicReference<>(null);
+    private final ConcurrentMap<String, Message<String>> receivedMessages = new ConcurrentHashMap<>();
 
     @Autowired
     private MessageSenderEndpoint kinesisSender;
@@ -79,7 +82,7 @@ public class KinesisAcceptanceTest {
     @EventSourceConsumer(eventSource = "kinesisEventSource", payloadType = String.class)
     public void eventSourceConsumer(final Message<String> message) {
         LOG.info("Received message {} from EventSource", message);
-        lastEventSourceMessage.set(message);
+        receivedMessages.put(message.getKey().partitionKey(), message);
     }
 
     @Test
@@ -88,90 +91,44 @@ public class KinesisAcceptanceTest {
     }
 
     @Test
-    public void shouldSendAndReceiveKinesisMessage() {
-        final String expectedPayload = "some payload: " + LocalDateTime.now();
-        kinesisSender.send(message("shouldSendAndReceiveKinesisMessage", expectedPayload)).join();
-        await()
-                .atMost(10, SECONDS)
-                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveKinesisMessage")) && expectedPayload.equals(lastEventSourceMessage.get().getPayload()));
-    }
-
-    @Test
-    // TODO: V1 format as default format is subject to change in 0.15.0 or later
-    public void shouldSendAndReceiveDefaultKinesisMessageWithCompoundKey() {
-        final String expectedPayload = "some payload: " + LocalDateTime.now();
-        kinesisV1Sender.send(message(Key.of("shouldSendAndReceiveDefaultKinesisMessageWithCompoundKey", "0815"), expectedPayload)).join();
-        await()
-                .atMost(10, SECONDS)
-                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveDefaultKinesisMessageWithCompoundKey")) && expectedPayload.equals(lastEventSourceMessage.get().getPayload()));
-    }
-
-    @Test
-    public void shouldSendAndReceiveV1KinesisMessageWithCompoundKey() {
-        final String expectedPayload = "some payload: " + LocalDateTime.now();
-        kinesisV1Sender.send(message(Key.of("shouldSendAndReceiveV1KinesisMessageWithCompoundKey", "0815"), expectedPayload)).join();
-        await()
-                .atMost(10, SECONDS)
-                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveV1KinesisMessageWithCompoundKey")) && expectedPayload.equals(lastEventSourceMessage.get().getPayload()));
-    }
-
-    @Test
     public void shouldSendAndReceiveV2KinesisMessageWithCompoundKey() {
-        final String expectedPayload = "shouldSendAndReceiveV2KinesisMessageWithCompoundKey payload: " + LocalDateTime.now();
-        kinesisV2Sender.send(message(Key.of("shouldSendAndReceiveV2KinesisMessageWithCompoundKey", "0815"), expectedPayload)).join();
-        await()
-                .atMost(10, SECONDS)
-                .until(() -> lastEventSourceMessage.get() != null && expectedPayload.equals(lastEventSourceMessage.get().getPayload()));
-        assertThat(lastEventSourceMessage.get().getKey(), is(Key.of("shouldSendAndReceiveV2KinesisMessageWithCompoundKey", "0815")));
+        final Key compoundKey = of(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        final Message<String> receivedMessage = sendMessageAndAwait(message(compoundKey, ""), kinesisV2Sender);
+
+        assertThat(receivedMessage.getKey(), is(compoundKey));
     }
 
     @Test
     // TODO: V1 format as default format is subject to change in 0.15.0 or later
     public void shouldSendAndReceiveKinesisMessageInDefaultFormat() {
-        kinesisSender.send(message("shouldSendAndReceiveKinesisMessageInDefaultFormat", "")).join();
-        await()
-                .atMost(10, SECONDS)
-                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveKinesisMessageInDefaultFormat")));
+        final Message<String> receivedMessage = sendMessageAndAwait(message("", ""), kinesisSender);
 
-        final ImmutableMap<String, String> attributes = lastEventSourceMessage.get().getHeader().getAll();
+        final ImmutableMap<String, String> attributes = receivedMessage.getHeader().getAll();
         assertThat(attributes.keySet(), contains(MSG_ARRIVAL_TS.key(), MSG_RECEIVER_TS.key()));
     }
 
     @Test
     public void shouldSendAndReceiveKinesisMessageInV1Format() {
-        kinesisV1Sender.send(
-                message("shouldSendAndReceiveKinesisMessageInV1Format","no special payload"))
-                .join();
-        await()
-                .atMost(10, SECONDS)
-                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveKinesisMessageInV1Format")));
-
-        final ImmutableMap<String, String> attributes = lastEventSourceMessage.get().getHeader().getAll();
+        final Message<String> receivedMessage = sendMessageAndAwait(message("", ""), kinesisV1Sender);
+        final ImmutableMap<String, String> attributes = receivedMessage.getHeader().getAll();
         assertThat(attributes.keySet(), contains(MSG_ARRIVAL_TS.key(), MSG_RECEIVER_TS.key()));
     }
 
     @Test
     public void shouldSendAndReceiveKinesisMessageInV2FormatWithDefaultHeaders() {
-        final Instant started = now();
-        kinesisV2Sender.send(message("shouldSendAndReceiveKinesisMessageWithDefaultHeaders", "{}")).join();
-        await()
-                .atMost(10, SECONDS)
-                .until(() ->
-                        lastEventSourceMessage.get() != null
-                                && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveKinesisMessageWithDefaultHeaders"))
-                                && lastEventSourceMessage.get().getHeader().getAsInstant(MSG_ARRIVAL_TS).isAfter(started));
+        final Message<String> receivedMessage = sendMessageAndAwait(message("", "{}"), kinesisV2Sender);
 
-        final ImmutableMap<String, String> attributes = lastEventSourceMessage.get().getHeader().getAll();
+        final ImmutableMap<String, String> attributes = receivedMessage.getHeader().getAll();
         assertThat(attributes, hasEntry(equalTo(MSG_ID.key()), not(isEmptyOrNullString())));
         assertThat(attributes, hasEntry(equalTo(MSG_SENDER_TS.key()), not(isEmptyOrNullString())));
         assertThat(attributes, hasEntry(equalTo(MSG_ARRIVAL_TS.key()), not(isEmptyOrNullString())));
         assertThat(attributes, hasEntry(equalTo(MSG_RECEIVER_TS.key()), not(isEmptyOrNullString())));
         assertThat(attributes, hasEntry(MSG_SENDER.key(), "Synapse"));
-        assertThat(lastEventSourceMessage.get().getPayload(), is("{}"));
-        assertThat(lastEventSourceMessage.get().getKey(), is(instanceOf(SimpleKey.class)));
-        final Instant sent = lastEventSourceMessage.get().getHeader().getAsInstant(MSG_SENDER_TS);
-        final Instant arrived = lastEventSourceMessage.get().getHeader().getAsInstant(MSG_ARRIVAL_TS);
-        final Instant received = lastEventSourceMessage.get().getHeader().getAsInstant(MSG_RECEIVER_TS);
+        assertThat(receivedMessage.getPayload(), is("{}"));
+        assertThat(receivedMessage.getKey(), is(instanceOf(SimpleKey.class)));
+        final Instant sent = receivedMessage.getHeader().getAsInstant(MSG_SENDER_TS);
+        final Instant arrived = receivedMessage.getHeader().getAsInstant(MSG_ARRIVAL_TS);
+        final Instant received = receivedMessage.getHeader().getAsInstant(MSG_RECEIVER_TS);
         assertThat(sent.isAfter(arrived), is(false));
         assertThat(arrived.isAfter(received), is(false));
     }
@@ -182,14 +139,32 @@ public class KinesisAcceptanceTest {
                 "string", "some value",
                 "timestamp", ofEpochSecond(42).toString())
         );
-        kinesisV2Sender.send(message("shouldSendAndReceiveKinesisMessageWithCustomHeaders", header, "")).join();
-        await()
-                .atMost(10, SECONDS)
-                .until(() -> lastEventSourceMessage.get() != null && lastEventSourceMessage.get().getKey().equals(Key.of("shouldSendAndReceiveKinesisMessageWithCustomHeaders")));
-        final ImmutableMap<String, String> attributes = lastEventSourceMessage.get().getHeader().getAll();
+        final Message<?> receivedMessage = sendMessageAndAwait(message("", header, ""), kinesisV2Sender);
+        final ImmutableMap<String, String> attributes = receivedMessage.getHeader().getAll();
         assertThat(attributes, hasEntry("string", "some value"));
         assertThat(attributes, hasEntry("timestamp", "1970-01-01T00:00:42Z"));
     }
 
 
+    private Message<String> sendMessageAndAwait(final Message<String> message,
+                                                final MessageSenderEndpoint kinesisSender) {
+        final AtomicReference<Message<String>> result = new AtomicReference<>();
+        final String messageId = "urn:message:kinesis:" + UUID.randomUUID().toString();
+        kinesisSender
+                .send(copyOf(message)
+                        .withKey(message.getKey() instanceof SimpleKey ? of(messageId) : of(messageId, message.getKey().compactionKey()))
+                        .build())
+                .join();
+        await()
+                .atMost(30, SECONDS)
+                .until(() -> {
+                    final Message<String> msg = receivedMessages.get(messageId);
+                    if (msg != null && msg.getKey().partitionKey().equals(messageId)) {
+                        result.set(copyOf(msg).withKey(message.getKey()).build());
+                        return true;
+                    }
+                    return false;
+                });
+        return result.get();
+    }
 }

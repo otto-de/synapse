@@ -37,7 +37,7 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
     private static final Logger LOG = getLogger(KinesisTestConfiguration.class);
 
     public static final int EXPECTED_NUMBER_OF_SHARDS = 2;
-    public static final String KINESIS_INTEGRATION_TEST_CHANNEL = "kinesis-ml-test-channel";
+    public static final String KINESIS_INTEGRATION_TEST_CHANNEL = "kinesis-test-channel";
 
     @Override
     public void configureMessageInterceptors(final MessageInterceptorRegistry registry) {

@@ -14,7 +14,6 @@ import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.message.TextMessage;
-import org.awaitility.Awaitility;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +34,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
@@ -47,7 +45,9 @@ import static java.lang.String.valueOf;
 import static java.lang.Thread.sleep;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.synchronizedSet;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -84,9 +84,6 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
 
     @Before
     public void before() {
-        /* We have to setup the EventSource manually, because otherwise the stream created above is not yet available
-           when initializing it via @EnableEventSource
-         */
         kinesisMessageLog = endpointFactory.create(KINESIS_INTEGRATION_TEST_CHANNEL);
         kinesisMessageLog.register(MessageConsumer.of(".*", String.class, (message) -> {
             messages.add(message);
@@ -188,13 +185,13 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
 
             final CompletableFuture<ChannelPosition> completableFuture = kinesisMessageLog.consume(startFrom);
 
-            Awaitility.await().atMost(2, TimeUnit.SECONDS).until(() -> messages.size() > 0);
+            await().atMost(20, SECONDS).until(() -> messages.size() > 0);
 
             // when
             kinesisMessageLog.stop();
 
             // then
-            assertThat(completableFuture.get(2L, TimeUnit.SECONDS), is(notNullValue()));
+            assertThat(completableFuture.get(20L, SECONDS), is(notNullValue()));
             assertThat(completableFuture.isDone(), is(true));
             assertThat(messages.size(), lessThan(10));
         } finally {
