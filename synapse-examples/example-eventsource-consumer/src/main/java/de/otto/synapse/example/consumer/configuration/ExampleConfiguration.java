@@ -27,8 +27,8 @@ public class ExampleConfiguration implements MessageEndpointConfigurer {
     private static final Logger LOG = getLogger(ExampleConfiguration.class);
 
     @Bean
-    public StateRepository<BananaProduct> bananaProductConcurrentStateRepository() {
-        return ChronicleMapStateRepository.builder(BananaProduct.class).build();
+    public StateRepository<BananaProduct> bananaProductStateRepository() {
+        return ChronicleMapStateRepository.builder(BananaProduct.class).withName("bananaProducts").build();
     }
 
     @Bean

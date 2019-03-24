@@ -6,7 +6,20 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
+/**
+ * A {@code StateRepository} is used to store the aggregated state of event-sourced entities.
+ *
+ * @param <V>
+ */
 public interface StateRepository<V> extends AutoCloseable {
+
+    /**
+     * The unique name of the {@code StateRepository}.
+     *
+     * <p>Using the same name for multiple repositories will lead to </p>
+     * @return name
+     */
+    String getName();
 
     /**
      * Attempts to compute a mapping for the specified key and its current
@@ -142,6 +155,14 @@ public interface StateRepository<V> extends AutoCloseable {
      */
     long size();
 
+    /**
+     * Closes the {@code StateRepository}.
+     *
+     * <p>Depending on the implementation of the interface, it might be required to close() the repository on
+     * shutdown in order to prevent data loss.</p>
+     *
+     * @throws Exception if closing the repository fails for some reason.
+     */
     @Override
     void close() throws Exception;
 }

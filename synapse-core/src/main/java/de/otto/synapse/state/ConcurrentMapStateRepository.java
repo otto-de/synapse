@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -15,10 +16,18 @@ public class ConcurrentMapStateRepository<V> implements StateRepository<V> {
 
     private static final Logger LOG = getLogger(ConcurrentMapStateRepository.class);
 
-    private ConcurrentMap<String, V> concurrentMap;
+    private final String name;
+    private final ConcurrentMap<String, V> concurrentMap;
 
-    public ConcurrentMapStateRepository(final ConcurrentMap<String, V> concurrentMap) {
-        this.concurrentMap = concurrentMap;
+    public ConcurrentMapStateRepository(final String name,
+                                        final ConcurrentMap<String, V> map) {
+        this.name = requireNonNull(name, "Parameter 'name' must not be null");
+        this.concurrentMap = requireNonNull(map, "Parameter 'map' must not be null");
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 
     @Override

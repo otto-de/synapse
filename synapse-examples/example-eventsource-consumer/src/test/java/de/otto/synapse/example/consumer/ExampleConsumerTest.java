@@ -23,7 +23,7 @@ public class ExampleConsumerTest {
 
     @Before
     public void setUp() throws Exception {
-        stateRepository = new ConcurrentHashMapStateRepository<>();
+        stateRepository = new ConcurrentHashMapStateRepository<>("");
         exampleConsumer = new ExampleConsumer(stateRepository);
     }
 

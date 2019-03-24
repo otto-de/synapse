@@ -58,7 +58,7 @@ public class SnapshotWriteServiceTest {
 
     @Test
     public void shouldUploadSnapshotFile() throws Exception {
-        StateRepository<String> stateRepository = new ConcurrentHashMapStateRepository<>();
+        StateRepository<String> stateRepository = new ConcurrentHashMapStateRepository<>("test");
         stateRepository.put("testKey", "{\"content\":\"testValue1\"}");
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class))).thenReturn(PutObjectResponse.builder().build());
         //when
@@ -74,7 +74,7 @@ public class SnapshotWriteServiceTest {
 
     @Test
     public void shouldCreateCorrectSnapshotFile() throws Exception {
-        StateRepository<String> stateRepository = new ConcurrentHashMapStateRepository<>();
+        StateRepository<String> stateRepository = new ConcurrentHashMapStateRepository<>("test");
         stateRepository.put("testKey", "{\"testValue1\": \"value1\"}");
         stateRepository.put("testKey2", "{\"testValue2\": \"value2\"}");
 
@@ -104,7 +104,7 @@ public class SnapshotWriteServiceTest {
     public void shouldDeleteSnapshotEvenIfUploadFails() throws Exception {
         // given
 //        doThrow(new RuntimeException("forced test exception")).when(s3Helper).upload(any(), any());
-        StateRepository<String> stateRepository = new ConcurrentHashMapStateRepository<>();
+        StateRepository<String> stateRepository = new ConcurrentHashMapStateRepository<>("test");
         stateRepository.put("testKey", "testValue1");
         stateRepository.put("testKey2", "testValue2");
 

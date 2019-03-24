@@ -21,7 +21,7 @@ public class CompactionAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = "compactionStateRepository")
     public StateRepository<String> compactionStateRepository() {
-        return new ConcurrentHashMapStateRepository<>();
+        return new ConcurrentHashMapStateRepository<>("Compaction");
     }
 
     @Bean

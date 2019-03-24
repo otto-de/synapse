@@ -19,8 +19,9 @@ public class ChronicleMapStateRepository<V> extends ConcurrentMapStateRepository
     private static final double DEFAULT_VALUE_SIZE_BYTES = 512;
     private static final long DEFAULT_ENTRY_COUNT = 1_000_00;
 
-    private ChronicleMapStateRepository(final ChronicleMap<String, V> chronicleMap) {
-        super(chronicleMap);
+    private ChronicleMapStateRepository(final String name,
+                                        final ChronicleMap<String, V> chronicleMap) {
+        super(name, chronicleMap);
     }
 
     @Override
@@ -62,6 +63,7 @@ public class ChronicleMapStateRepository<V> extends ConcurrentMapStateRepository
         private ObjectMapper objectMapper = currentObjectMapper();
 
         private final Class<V> clazz;
+        private String name;
         private ChronicleMapBuilder<String, V> chronicleMapBuilder;
 
         private Builder(Class<V> clazz) {
@@ -70,6 +72,11 @@ public class ChronicleMapStateRepository<V> extends ConcurrentMapStateRepository
 
         public Builder<V> withObjectMapper(ObjectMapper val) {
             objectMapper = val;
+            return this;
+        }
+
+        public Builder<V> withName(final String val) {
+            name = val;
             return this;
         }
 
@@ -92,7 +99,7 @@ public class ChronicleMapStateRepository<V> extends ConcurrentMapStateRepository
                 chronicleMapBuilder.valueMarshaller(new ChronicleMapBytesMarshaller<>(objectMapper, clazz));
             }
 
-            return new ChronicleMapStateRepository<>(chronicleMapBuilder.create());
+            return new ChronicleMapStateRepository<>(name, chronicleMapBuilder.create());
         }
     }
 }

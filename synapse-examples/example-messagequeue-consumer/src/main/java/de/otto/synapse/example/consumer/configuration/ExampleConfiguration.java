@@ -49,8 +49,8 @@ public class ExampleConfiguration implements MessageEndpointConfigurer {
     }
 
     @Bean
-    public StateRepository<BananaProduct> bananaProductConcurrentStateRepository() {
-        return new ConcurrentHashMapStateRepository<>();
+    public StateRepository<BananaProduct> bananaProductStateRepository() {
+        return new ConcurrentHashMapStateRepository<>("bananaProducts");
     }
 
 }

@@ -2,19 +2,26 @@
 
 ## 0.16.0
 
+*StateRepository*
+
 * Fixes design flaw of `MessageStore`: the stores can now contain messages from different channels.
 
 * Removes WritableMessageStore interface and adds optional method `MessageStore.add()`
 
-* Implements a simple Leader Election using Redisson RLock
+* Introduces required property `StateRepository.getName()`
 
 * StatefulMessageConsumer now supports BiFunctions as arguments. This way, the consumer is able to modify existing
   entries in the `StateRepository` by applying the `BiFunction` to the existing state and the incoming message.
+
+*MessageStore*
 
 * Adds possibility to add indexes to a `MessageStore` that can be used to filter messages by partitionKey, channel,
   hostname, etc. pp.
   
   Using this MessageStore it is possible to retrieve all messages that where changing the state of a single entity.
+
+*Leader Election*
+* Implements a simple Leader Election using Redisson RLock
 
 ## 0.15.2
 * Fixes deployment of Kinesis services by reducing the polling after Kinesis has been fully consumed 

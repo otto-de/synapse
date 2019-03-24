@@ -15,6 +15,11 @@ public class DelegatingStateRepository<V> implements StateRepository<V> {
     }
 
     @Override
+    public String getName() {
+        return delegate.getName();
+    }
+
+    @Override
     public Optional<V> compute(String key, BiFunction<? super String, ? super Optional<V>, ? extends V> remappingFunction) {
         return delegate.compute(key, remappingFunction);
     }

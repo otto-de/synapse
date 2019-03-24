@@ -19,7 +19,7 @@ public class StatefulMessageConsumerTest {
 
     @Before
     public void setup() {
-        stateRepository = new ConcurrentHashMapStateRepository<>();
+        stateRepository = new ConcurrentHashMapStateRepository<>("");
     }
 
     @Test
