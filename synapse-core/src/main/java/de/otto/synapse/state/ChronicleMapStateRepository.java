@@ -8,9 +8,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 import static de.otto.synapse.translator.ObjectMappers.currentObjectMapper;
+import static java.util.Collections.unmodifiableSet;
 
+/**
+ * A {@code StateRepository} that is using a {@code ChronicleMap} to store the event-sourced entities off the heap.
+ *
+ * <p>Suitable for larger amounts of data, without problems because of garbage-collection issues because of the
+ * usage of off-heap memory.</p>
+ *
+ * <p>In order to be able to access the {@link #keySet()} of the stored entities, this implementation is storing
+ * a copy of the keys in a separate {@link java.util.concurrent.ConcurrentSkipListSet}</p>
+ *
+ * @param <V>
+ */
 public class ChronicleMapStateRepository<V> extends ConcurrentMapStateRepository<V> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ChronicleMapStateRepository.class);
@@ -19,14 +35,18 @@ public class ChronicleMapStateRepository<V> extends ConcurrentMapStateRepository
     private static final double DEFAULT_VALUE_SIZE_BYTES = 512;
     private static final long DEFAULT_ENTRY_COUNT = 1_000_00;
 
+    private final Set<String> keySet;
+
     private ChronicleMapStateRepository(final String name,
                                         final ChronicleMap<String, V> chronicleMap) {
         super(name, chronicleMap);
+        keySet = new ConcurrentSkipListSet<>(chronicleMap.keySet());
     }
 
     @Override
-    public Optional<V> put(String key, V value) {
+    public Optional<V> put(final String key, final V value) {
         try {
+            keySet.add(key);
             return super.put(key, value);
         } catch (ChronicleHashClosedException e) {
             LOG.warn("could not put on closed state repository", e);
@@ -35,7 +55,7 @@ public class ChronicleMapStateRepository<V> extends ConcurrentMapStateRepository
     }
 
     @Override
-    public Optional<V> get(String key) {
+    public Optional<V> get(final String key) {
         try {
             return super.get(key);
         } catch (ChronicleHashClosedException e) {
@@ -45,15 +65,43 @@ public class ChronicleMapStateRepository<V> extends ConcurrentMapStateRepository
     }
 
     @Override
+    public Optional<V> compute(final String key,
+                               final BiFunction<? super String, ? super Optional<V>, ? extends V> remappingFunction) {
+        keySet.add(key);
+        return super.compute(key, remappingFunction);
+    }
+
+    @Override
+    public void consumeAll(final BiConsumer<? super String, ? super V> consumer) {
+        super.consumeAll(consumer);
+    }
+
+    @Override
+    public Optional<V> remove(final String key) {
+        keySet.remove(key);
+        return super.remove(key);
+    }
+
+    @Override
+    public void clear() {
+        keySet.clear();
+        super.clear();
+    }
+
+    @Override
+    public Set<String> keySet() {
+        return unmodifiableSet(keySet);
+    }
+
+    @Override
     public long size() {
         try {
             return super.size();
-        } catch (ChronicleHashClosedException e) {
+        } catch (final ChronicleHashClosedException e) {
             LOG.warn("could not get size on closed state repository", e);
             return 0;
         }
     }
-
     public static <V> Builder<V> builder(Class<V> clazz) {
         return new Builder<>(clazz);
     }
@@ -68,6 +116,7 @@ public class ChronicleMapStateRepository<V> extends ConcurrentMapStateRepository
 
         private Builder(Class<V> clazz) {
             this.clazz = clazz;
+            this.name = clazz.getSimpleName();
         }
 
         public Builder<V> withObjectMapper(ObjectMapper val) {

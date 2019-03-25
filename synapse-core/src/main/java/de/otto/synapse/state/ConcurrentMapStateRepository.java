@@ -1,13 +1,14 @@
 package de.otto.synapse.state;
 
-import com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
+import static java.util.Collections.unmodifiableSet;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -61,8 +62,8 @@ public class ConcurrentMapStateRepository<V> implements StateRepository<V> {
     }
 
     @Override
-    public ImmutableSet<String> keySet() {
-        return ImmutableSet.copyOf(concurrentMap.keySet());
+    public Set<String> keySet() {
+        return unmodifiableSet(concurrentMap.keySet());
     }
 
     @Override

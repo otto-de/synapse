@@ -1,8 +1,7 @@
 package de.otto.synapse.state;
 
-import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
@@ -141,10 +140,8 @@ public interface StateRepository<V> extends AutoCloseable {
      * Returns an immutable set of the keys in this repository.
      *
      * @return a set view of the keys contained in this repository
-     * @deprecated to retrieve the keys (and values), use consumeAll() instead
      */
-    @Deprecated
-    ImmutableSet<String> keySet();
+    Set<String> keySet();
 
     /**
      * Returns the number of key-value mappings in this repository.  If the

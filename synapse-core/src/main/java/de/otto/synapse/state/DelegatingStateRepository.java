@@ -1,8 +1,7 @@
 package de.otto.synapse.state;
 
-import com.google.common.collect.ImmutableSet;
-
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
@@ -50,7 +49,7 @@ public class DelegatingStateRepository<V> implements StateRepository<V> {
     }
 
     @Override
-    public ImmutableSet<String> keySet() {
+    public Set<String> keySet() {
         return delegate.keySet();
     }
 
