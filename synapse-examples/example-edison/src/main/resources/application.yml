@@ -1,6 +1,13 @@
 spring:
   application:
     name: synapse-edison-example
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
 edison:
   application:
     title:  Synapse + Edison Example
@@ -16,5 +23,6 @@ logging:
   config: classpath:logback-console.xml
 
 server:
-  context-path: /example
   port: 5555
+#  servlet:
+#    context-path: /example
