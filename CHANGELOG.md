@@ -12,15 +12,19 @@
 
 * StatefulMessageConsumer now supports BiFunctions as arguments. This way, the consumer is able to modify existing
   entries in the `StateRepository` by applying the `BiFunction` to the existing state and the incoming message.
+  
+* Adds an UI and a REST API to access entities of a StateRepository in Edison microservices. 
 
 *MessageStore*
 
 * Adds possibility to add indexes to a `MessageStore` that can be used to filter messages by partitionKey, channel,
   hostname, etc. pp.
   
-  Using this MessageStore it is possible to retrieve all messages that where changing the state of a single entity.
+  By indexing the partition-key of the messages, it is possible to retrieve all messages that where changing the 
+  state of a single entity.
 
 *Leader Election*
+
 * Implements a simple Leader Election using Redisson RLock
 
 ## 0.15.2

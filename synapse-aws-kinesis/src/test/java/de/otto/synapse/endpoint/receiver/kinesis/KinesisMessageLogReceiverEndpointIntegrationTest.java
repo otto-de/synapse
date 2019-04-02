@@ -84,6 +84,7 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
 
     @Before
     public void before() {
+        messages.clear();
         kinesisMessageLog = endpointFactory.create(KINESIS_INTEGRATION_TEST_CHANNEL);
         kinesisMessageLog.register(MessageConsumer.of(".*", String.class, (message) -> {
             messages.add(message);

@@ -64,6 +64,7 @@ public interface MessageStore extends AutoCloseable {
      * <p>Messages without positions will not change the latest ChannelPosition. If no message contains
      *    position information, the returned ChannelPosition is {@link ChannelPosition#fromHorizon()}</p>
      *
+     * @param channelName the name of the channel
      * @return ChannelPosition
      */
     ChannelPosition getLatestChannelPosition(final String channelName);

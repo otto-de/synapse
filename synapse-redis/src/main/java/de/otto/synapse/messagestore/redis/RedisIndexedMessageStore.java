@@ -56,6 +56,7 @@ public class RedisIndexedMessageStore implements MessageStore {
      * @param batchSize the size of the batches used to fetch messages from Redis
      * @param maxMessages the maximum number of messages stored in the message store
      * @param maxAge maximum number of seconds after that a message will be evicted
+     * @param indexer the {@code Indexer} used to index entities stored in the message store
      * @param stringRedisTemplate the RedisTemplate used to access Redis
      */
     public RedisIndexedMessageStore(final String name,
@@ -72,8 +73,10 @@ public class RedisIndexedMessageStore implements MessageStore {
      * @param batchSize the size of the batches used to fetch messages from Redis
      * @param maxMessages the maximum number of messages stored in the message store
      * @param maxAge maximum number of seconds after that a message will be evicted
+     * @param indexer the {@code Indexer} used to index entities stored in the message store
      * @param stringRedisTemplate the RedisTemplate used to access Redis
      * @param messageEncoder the encoder used to encode messages into the string-representation stored in Redis
+     * @param messageDecoder the decoder used to decode messages from the string-representation stored in Redis
      */
     public RedisIndexedMessageStore(final String name,
                                     final int batchSize,

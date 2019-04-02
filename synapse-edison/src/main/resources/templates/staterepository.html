@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head th:replace="fragments/head  :: head" />
+
+<body>
+
+    <script type="text/javascript" th:src="@{/js/prettyprint.js}"></script>
+
+    <link rel="stylesheet" type="text/css" th:href="@{/css/panel-actions.css}" />
+
+    <div th:replace="fragments/navigation  :: navigation" />
+
+
+    <div class="container">
+
+        <!-- Open Panel -->
+        <div class="row">
+            <!-- Open Panel -->
+            <div class="col-xs-12">
+                <div th:include="fragments/open-entity :: open-entity-panel"></div>
+            </div>
+        </div>
+
+        <!-- The paged list of all entities: -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title" th:text="${repositoryName}">Some Repository</h3>
+                        <ul class="list-inline panel-actions">
+                            <li>
+                                <a class="toggle-fullscreen" href="#" role="button" title="Toggle Fullscreen">
+                                    <span class="glyphicon glyphicon-resize-full"></span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="panel-body">
+
+                        <div th:include="fragments/open-entity :: pager(${pager})"></div>
+
+                        <th:block th:each="entity : ${entities}">
+                            <div th:id="${entity.entityId}">
+                            </div>
+                            <hr>
+                            <script th:inline="javascript">
+                                /*<![CDATA[*/
+                                var entityJson = /*[[${entity.entityJson}]]*/ 'default';
+                                var ppTable = prettyPrint(JSON.parse(entityJson));
+                                document.getElementById(/*[[${entity.entityId}]]*/).appendChild(ppTable);
+                                /*]]>*/
+                            </script>
+                        </th:block>
+
+                        <a th:if="${singleEntity}" class="btn btn-outline-secondary" th:href="@{'/' + ${basePath} + '/staterepositories/' + ${repositoryName}}">Show All</a>
+
+                        <div th:include="fragments/open-entity :: pager(${pager})"></div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- /container -->
+
+    <span th:replace="fragments/footer :: footer" />
+    <script type="text/javascript" th:src="@{/js/init-fullscreen.js}"></script>
+
+</body>
+</html>

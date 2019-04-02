@@ -25,7 +25,7 @@ import static java.util.Collections.unmodifiableSet;
  * <p>In order to be able to access the {@link #keySet()} of the stored entities, this implementation is storing
  * a copy of the keys in a separate {@link java.util.concurrent.ConcurrentSkipListSet}</p>
  *
- * @param <V>
+ * @param <V> The type of the event-sourced entities stored in the {@code StateRepository}
  */
 public class ChronicleMapStateRepository<V> extends ConcurrentMapStateRepository<V> {
 

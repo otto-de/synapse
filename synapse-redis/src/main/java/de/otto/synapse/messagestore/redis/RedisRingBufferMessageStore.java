@@ -67,6 +67,7 @@ public class RedisRingBufferMessageStore implements MessageStore {
      * @param ringBufferSize the maximum number of messages stored in the ring-buffer
      * @param stringRedisTemplate the RedisTemplate used to access Redis
      * @param messageEncoder the encoder used to encode messages into the string-representation stored in Redis
+     * @param messageDecoder the decoder used to decode messages from the string-representation stored in Redis
      */
     public RedisRingBufferMessageStore(final String name,
                                        final int batchSize,

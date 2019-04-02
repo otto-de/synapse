@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+    <div th:fragment="open-entity-panel">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Open Entity</h3>
+            </div>
+            <div class="panel-body">
+                <form class="form-inline" method="GET" th:action="@{'/' + ${basePath} + '/staterepositories/' + ${repositoryName}}">
+                    <div class="form-group">
+                        <label for="id-input" class="col-md-4 col-form-label">Entity ID</label>
+                        <div class="col-md-4">
+                            <input class="form-control" name="entityId" type="text" autofocus="autofocus" required="required" placeholder="entityid" th:value="${entityId}" id="id-input">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-default">Open</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div th:fragment="pager(pager)">
+        <ul class="pager" th:if="${pager.available}">
+            <li>
+                <a class="btn" th:classappend="${pager.first != null} ? 'btn-default' : 'disabled'" th:href="${pager.first}" data-toggle="tooltip" data-placement="top" data-delay="750" title="First Page">
+                    <span class="glyphicon glyphicon-fast-backward"></span>
+                </a>
+            </li>
+            <li>
+                <a class="btn" th:classappend="${pager.prev != null} ? 'btn-default' : 'disabled'" th:href="${pager.prev}" data-toggle="tooltip" data-placement="top" data-delay="750" title="Previous Page">
+                    <span class="glyphicon glyphicon-backward"></span>
+                </a>
+            </li>
+            <li>
+                <a class="btn" th:classappend="${pager.next != null} ? 'btn-default' : 'disabled'" th:href="${pager.next}" data-toggle="tooltip" data-placement="top" data-delay="750" title="Next Page">
+                    <span class="glyphicon glyphicon-forward"></span>
+                </a>
+            </li>
+            <li>
+                <a class="btn" th:classappend="${pager.last != null} ? 'btn-default' : 'disabled'" th:href="${pager.last}" data-toggle="tooltip" data-placement="top" data-delay="750" title="Last Page">
+                    <span class="glyphicon glyphicon glyphicon-fast-forward"></span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+</body>
+</html>

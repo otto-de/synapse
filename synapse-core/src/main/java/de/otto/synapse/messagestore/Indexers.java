@@ -73,6 +73,10 @@ public class Indexers {
     /**
      * Returns an Indexer that is indexing all entries with static value that is identifying the origin of some message.
      *
+     * <p>The origin can be the name of the service sending the message, or some other identifier like, for example
+     * 'Snapshot'.</p>
+     *
+     * @param origin the origin of the indexed message
      * @return origin indexer
      */
     public static Indexer originIndexer(final @Nonnull String origin) {
@@ -80,11 +84,13 @@ public class Indexers {
     }
 
     /**
-     * Returns an Indexer that is indexing all entries with static value that is identifying the service-instance of
-     * some message.
+     * Returns an Indexer that is indexing all entries with static value that is identifying the service-instance that
+     * has added the message to the {@code MessageStore}.
      *
      * <p>In most cases, a {@code hostname:port} or {@code service-name@hostname:port} value is sufficient to
      * identify the instance of some service</p>
+     *
+     * @param serviceInstance a string identifying a single instance of a cluster.
      * @return serviceInstance indexer
      */
     public static Indexer serviceInstanceIndexer(final @Nonnull String serviceInstance) {

@@ -1,13 +1,13 @@
 apply plugin: 'java-library'
 
 dependencies {
-    implementation project(':synapse-core:')
+    api project(':synapse-core:')
     implementation "de.otto.edison:edison-core:${edisonVersion}"
     implementation "org.springframework:spring-context:${springVersion}"
     implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
     implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
+    implementation "de.otto.edison:edison-hal:2.0.2"
 
-    // Use JUnit test framework
     testImplementation project(':synapse-testsupport:')
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'

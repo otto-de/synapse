@@ -8,7 +8,7 @@ import java.util.function.BiFunction;
 /**
  * A {@code StateRepository} is used to store the aggregated state of event-sourced entities.
  *
- * @param <V>
+ * @param <V> The type of the event-sourced entities stored in the {@code StateRepository}
  */
 public interface StateRepository<V> extends AutoCloseable {
 
