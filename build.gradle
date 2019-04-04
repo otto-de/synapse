@@ -13,7 +13,7 @@ ext {
     awsSdkVersion = "2.5.14"
     springVersion = "5.1.4.RELEASE"
     springBootVersion = "2.1.2.RELEASE"
-    edisonVersion = "2.0.0-rc3"
+    edisonVersion = "2.0.0-rc4"
 }
 
 apply plugin: 'java'
@@ -48,7 +48,7 @@ subprojects {
 
     compileJava.dependsOn(processResources)
 
-    version = '0.16.0'
+    version = '0.16.1'
     group = 'de.otto.synapse'
 
     repositories {
