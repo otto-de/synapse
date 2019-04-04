@@ -10,7 +10,7 @@ import de.otto.synapse.endpoint.sender.InMemoryMessageSender;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.example.edison.state.BananaProduct;
 import de.otto.synapse.message.TextMessage;
-import de.otto.synapse.state.ConcurrentHashMapStateRepository;
+import de.otto.synapse.state.ConcurrentMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.translator.MessageTranslator;
 import de.otto.synapse.translator.TextMessageTranslator;
@@ -34,7 +34,7 @@ public class ExampleConfiguration {
 
     @Bean
     public StateRepository<BananaProduct> bananaProductStateRepository() {
-        return new ConcurrentHashMapStateRepository<>("bananaProducts");
+        return new ConcurrentMapStateRepository<>("bananaProducts");
     }
 
     @Bean

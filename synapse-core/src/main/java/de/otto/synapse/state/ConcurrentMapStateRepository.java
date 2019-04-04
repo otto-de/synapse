@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -20,6 +21,25 @@ public class ConcurrentMapStateRepository<V> implements StateRepository<V> {
     private final String name;
     private final ConcurrentMap<String, V> concurrentMap;
 
+    /**
+     * Creates a StateRepository with the given name, that is using a {@code ConcurrentHashMap} to store
+     * event-sourced entities.
+     *
+     * @param name the {@link #getName() name}  of the repository.
+     */
+    public ConcurrentMapStateRepository(final String name) {
+        this(name, new ConcurrentHashMap<>());
+    }
+
+    /**
+     * Creates a StateRepository with the given name, that is using the given {@code ConcurrentMap} to store
+     * event-sourced entities.
+     *
+     * <p>Usable to create StateRepository instances from ConcurrentMap implementations like, for example,
+     * ChronicleMap</p>
+     *
+     * @param name the {@link #getName() name}  of the repository.
+     */
     public ConcurrentMapStateRepository(final String name,
                                         final ConcurrentMap<String, V> map) {
         this.name = requireNonNull(name, "Parameter 'name' must not be null");

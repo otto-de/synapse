@@ -5,7 +5,7 @@ import de.otto.synapse.example.edison.payload.BananaPayload;
 import de.otto.synapse.example.edison.payload.ProductPayload;
 import de.otto.synapse.example.edison.state.BananaProduct;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.state.ConcurrentHashMapStateRepository;
+import de.otto.synapse.state.ConcurrentMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,7 +23,7 @@ public class ExampleConsumerTest {
 
     @Before
     public void setUp() throws Exception {
-        stateRepository = new ConcurrentHashMapStateRepository<>("");
+        stateRepository = new ConcurrentMapStateRepository<>("");
         exampleConsumer = new ExampleConsumer(stateRepository);
     }
 

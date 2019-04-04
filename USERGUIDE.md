@@ -158,6 +158,40 @@ these headers will be available.
 
 ## StateRepository
 
+A StateRepository is a repository that is holding the current state of event-sourced entities. For example,
+a ProductStateRepository might contain Product entities, with some productId beeing the entityId used in 
+the StateRepository as a key to look up products.
+
+Synapse provides a number of default implementations for the StateRepository interface:
+* *ConcurrentMapStateRepository*: A StateRepository that is using a configurable ConcurrentMap to store entities
+* *ChronicleMapStateRepository*: A ConcurrentMapStateRepository using a ChronicleMap for large amounts of data stored
+  outside off the heap. 
+
+### StateRepository UI
+
+The optional synapse-edison library contains an auto-configured UI for Edison microservices. For every StateRepository
+in the application context, a link to a page is registered in the /internal navigation. The UI renders a representation
+of all entities in the StateRepository using Jackson's ObjectMapper. Therefore, entities should be able to be 
+transformed into a proper JSON representation, otherwise the UI will not be very helpful.
+
+Registration of StateRepository UIs can be globally disabled by setting `synapse.edison.state.ui.enabled = false`.
+
+Single repositories can be excluded, too: `synapse.edison.state.ui.excluded = FirstStateRepository,SecondStateRepository`
+or, using Yaml configuration files,
+````yaml
+synapse:
+  edison:
+    state:
+      ui:
+        enabled: true
+        excluded:
+          - FirstStateRepository
+          - SecondStateRepository    
+```` 
+
+Beside of the UI, Synapse-Edison also offers a REST-API to access the entities of the StateRepositories. The API 
+uses `application/hal+json` as media type and is accessible by default under `/internal/staterepositories`.
+
 ## MessageStore
 
     `de.otto.synapse.messagestore.MessageStore'

@@ -3,7 +3,7 @@ package de.otto.synapse.compaction.s3;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
-import de.otto.synapse.state.ConcurrentHashMapStateRepository;
+import de.otto.synapse.state.ConcurrentMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import org.junit.After;
 import org.junit.Before;
@@ -58,7 +58,7 @@ public class SnapshotWriteServiceTest {
 
     @Test
     public void shouldUploadSnapshotFile() throws Exception {
-        StateRepository<String> stateRepository = new ConcurrentHashMapStateRepository<>("test");
+        StateRepository<String> stateRepository = new ConcurrentMapStateRepository<>("test");
         stateRepository.put("testKey", "{\"content\":\"testValue1\"}");
         when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class))).thenReturn(PutObjectResponse.builder().build());
         //when
@@ -74,7 +74,7 @@ public class SnapshotWriteServiceTest {
 
     @Test
     public void shouldCreateCorrectSnapshotFile() throws Exception {
-        StateRepository<String> stateRepository = new ConcurrentHashMapStateRepository<>("test");
+        StateRepository<String> stateRepository = new ConcurrentMapStateRepository<>("test");
         stateRepository.put("testKey", "{\"testValue1\": \"value1\"}");
         stateRepository.put("testKey2", "{\"testValue2\": \"value2\"}");
 
@@ -104,7 +104,7 @@ public class SnapshotWriteServiceTest {
     public void shouldDeleteSnapshotEvenIfUploadFails() throws Exception {
         // given
 //        doThrow(new RuntimeException("forced test exception")).when(s3Helper).upload(any(), any());
-        StateRepository<String> stateRepository = new ConcurrentHashMapStateRepository<>("test");
+        StateRepository<String> stateRepository = new ConcurrentMapStateRepository<>("test");
         stateRepository.put("testKey", "testValue1");
         stateRepository.put("testKey2", "testValue2");
 

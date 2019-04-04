@@ -1,7 +1,7 @@
 package de.otto.synapse.consumer;
 
 import de.otto.synapse.message.Message;
-import de.otto.synapse.state.ConcurrentHashMapStateRepository;
+import de.otto.synapse.state.ConcurrentMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,7 +19,7 @@ public class StatefulMessageConsumerTest {
 
     @Before
     public void setup() {
-        stateRepository = new ConcurrentHashMapStateRepository<>("");
+        stateRepository = new ConcurrentMapStateRepository<>("");
     }
 
     @Test

@@ -4,7 +4,7 @@ import de.otto.synapse.compaction.s3.CompactionService;
 import de.otto.synapse.compaction.s3.SnapshotWriteService;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import de.otto.synapse.eventsource.EventSourceBuilder;
-import de.otto.synapse.state.ConcurrentHashMapStateRepository;
+import de.otto.synapse.state.ConcurrentMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -21,7 +21,7 @@ public class CompactionAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(name = "compactionStateRepository")
     public StateRepository<String> compactionStateRepository() {
-        return new ConcurrentHashMapStateRepository<>("Compaction");
+        return new ConcurrentMapStateRepository<>("Compaction");
     }
 
     @Bean

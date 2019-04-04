@@ -60,15 +60,18 @@ public class StateRepositoryController {
 
     public StateRepositoryController(final List<StateRepository<?>> stateRepositories,
                                      final NavBar rightNavBar,
+                                     final EdisonStateRepositoryUiProperties properties,
                                      final @Value("${edison.application.management.base-path:internal}") String managementBasePath) {
-        this.stateRepositories = uniqueIndex(stateRepositories, StateRepository::getName);
+        this.stateRepositories = uniqueIndex(stateRepositories
+                .stream()
+                .filter(repo -> !properties.getExcluded().contains(repo.getName()))
+                .collect(Collectors.toSet()), StateRepository::getName);
         this.managementBasePath = managementBasePath;
-        stateRepositories.forEach(repository -> {
-            rightNavBar.register(navBarItem(
-                    15,
-                    "StateRepository: " + repository.getName(),
-                    format("/%s/staterepositories/%s", managementBasePath, repository.getName())));
-        });
+        this.stateRepositories.forEach((repositoryName, _repository) ->
+                rightNavBar.register(navBarItem(
+                        15,
+                        "StateRepository: " + repositoryName,
+                        format("/%s/staterepositories/%s", managementBasePath, repositoryName))));
     }
 
     @GetMapping(

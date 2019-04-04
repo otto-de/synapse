@@ -8,6 +8,15 @@ management:
       exposure:
         include: '*'
 
+synapse:
+  edison:
+    state:
+      ui:
+        enabled: true
+        excluded:
+          - Snapshot
+          - Compaction
+
 edison:
   application:
     title:  Synapse + Edison Example

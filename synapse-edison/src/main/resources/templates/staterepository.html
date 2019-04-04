@@ -40,18 +40,16 @@
 
                         <div th:include="fragments/open-entity :: pager(${pager})"></div>
 
-                        <th:block th:each="entity : ${entities}">
-                            <div th:id="${entity.entityId}">
-                            </div>
-                            <hr>
-                            <script th:inline="javascript">
-                                /*<![CDATA[*/
-                                var entityJson = /*[[${entity.entityJson}]]*/ 'default';
-                                var ppTable = prettyPrint(JSON.parse(entityJson));
-                                document.getElementById(/*[[${entity.entityId}]]*/).appendChild(ppTable);
-                                /*]]>*/
-                            </script>
-                        </th:block>
+<th:block th:each="entity : ${entities}"><div th:id="${entity.entityId}">
+                        </div>
+                        <hr>
+                        <script th:inline="javascript">
+                            /*<![CDATA[*/
+                            var entityJson = /*[[${entity.entityJson}]]*/ 'default';
+                            var ppTable = prettyPrint(JSON.parse(entityJson));
+                            document.getElementById(/*[[${entity.entityId}]]*/).appendChild(ppTable);
+                            /*]]>*/
+                        </script></th:block>
 
                         <a th:if="${singleEntity}" class="btn btn-outline-secondary" th:href="@{'/' + ${basePath} + '/staterepositories/' + ${repositoryName}}">Show All</a>
 

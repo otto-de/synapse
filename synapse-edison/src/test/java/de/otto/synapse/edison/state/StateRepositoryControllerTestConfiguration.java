@@ -1,7 +1,7 @@
 package de.otto.synapse.edison.state;
 
 import de.otto.edison.navigation.NavBar;
-import de.otto.synapse.state.ConcurrentHashMapStateRepository;
+import de.otto.synapse.state.ConcurrentMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +20,7 @@ public class StateRepositoryControllerTestConfiguration {
 
     @Bean
     public StateRepository<String> testStateRepository() {
-        final StateRepository<String> test = new ConcurrentHashMapStateRepository<>("test");
+        final StateRepository<String> test = new ConcurrentMapStateRepository<>("test");
         test.put("first", "one");
         test.put("second", "two");
         return test;

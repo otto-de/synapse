@@ -7,7 +7,7 @@ import de.otto.synapse.configuration.InMemoryMessageQueueTestConfiguration;
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.example.consumer.state.BananaProduct;
-import de.otto.synapse.state.ConcurrentHashMapStateRepository;
+import de.otto.synapse.state.ConcurrentMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import org.slf4j.Logger;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -50,7 +50,7 @@ public class ExampleConfiguration implements MessageEndpointConfigurer {
 
     @Bean
     public StateRepository<BananaProduct> bananaProductStateRepository() {
-        return new ConcurrentHashMapStateRepository<>("bananaProducts");
+        return new ConcurrentMapStateRepository<>("bananaProducts");
     }
 
 }
