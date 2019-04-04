@@ -170,7 +170,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
                             .build())
                     .handle((response, throwable) -> {
                         if (response != null) {
-                            LOG.info("Received DeleteMessageResponse={}", response);
+                            LOG.debug("Received DeleteMessageResponse={}", response);
                             return response;
                         } else {
                             LOG.info("Received exception while deleting message: " + throwable.getMessage());
