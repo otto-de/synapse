@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.16.2
+
+* Adds an edison status detail indicator to expose the number of entries in a state repository.
+
 ## 0.16.0
 
 *StateRepository*
