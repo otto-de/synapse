@@ -21,6 +21,8 @@ ext['jackson.version'] = "2.9.6"
 dependencies {
     compile project(':synapse-core:')
     compile project(':synapse-edison:')
+
+    compile "de.otto.edison:edison-core:${edisonVersion}"
     compile "software.amazon.awssdk:kinesis:${awsSdkVersion}"
 
     compile("org.springframework.boot:spring-boot-starter-web:${springBootVersion}") {

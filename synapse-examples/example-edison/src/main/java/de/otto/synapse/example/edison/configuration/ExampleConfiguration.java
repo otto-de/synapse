@@ -1,10 +1,12 @@
 package de.otto.synapse.example.edison.configuration;
 
+import de.otto.edison.status.indicator.StatusDetailIndicator;
 import de.otto.synapse.annotation.EnableEventSource;
 import de.otto.synapse.annotation.EnableMessageQueueReceiverEndpoint;
 import de.otto.synapse.channel.InMemoryChannels;
 import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
 import de.otto.synapse.configuration.InMemoryMessageQueueTestConfiguration;
+import de.otto.synapse.edison.statusdetail.StateRepositoryStatusDetailIndicator;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.InMemoryMessageSender;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
@@ -35,6 +37,11 @@ public class ExampleConfiguration {
     @Bean
     public StateRepository<BananaProduct> bananaProductStateRepository() {
         return new ConcurrentMapStateRepository<>("bananaProducts");
+    }
+
+    @Bean
+    public StatusDetailIndicator bananaProductStatusDetailIndicator(StateRepository<BananaProduct> bananaProductStateRepository) {
+        return new StateRepositoryStatusDetailIndicator(bananaProductStateRepository, "bananaProducts");
     }
 
     @Bean
