@@ -45,7 +45,7 @@ public class DelegatingStateRepository<V> implements StateRepository<V> {
 
     @Override
     public Optional<V> get(String key) {
-        return Optional.empty();
+        return delegate.get(key);
     }
 
     @Override
