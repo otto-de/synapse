@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.16.4
+
+* Fixes bean instantiation of sqs retry policy.
+
 ## 0.16.3
 
 * Adds a retry policy to sqs async client.

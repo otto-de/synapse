@@ -42,13 +42,13 @@ public class SqsAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(SqsAsyncClient.class)
-    public SqsAsyncClient sqsAsyncClient(final AwsCredentialsProvider credentialsProvider) {
+    public SqsAsyncClient sqsAsyncClient(final AwsCredentialsProvider credentialsProvider, final RetryPolicy sqsRetryPolicy) {
         return SqsAsyncClient.builder()
                 .credentialsProvider(credentialsProvider)
                 .region(Region.of(awsProperties.getRegion()))
                 .overrideConfiguration(ClientOverrideConfiguration.builder()
                         .apiCallAttemptTimeout(Duration.ofSeconds(5))
-                        .retryPolicy(sqsRetryPolicy()).build())
+                        .retryPolicy(sqsRetryPolicy).build())
                 .build();
     }
 
