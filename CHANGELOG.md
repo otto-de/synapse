@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.16.3
+
+* Adds a retry policy to sqs async client.
+
 ## 0.16.2
 
 * Adds an edison status detail indicator to expose the number of entries in a state repository.
