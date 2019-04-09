@@ -17,8 +17,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.core.internal.retry.SdkDefaultRetrySetting;
+import software.amazon.awssdk.core.retry.RetryPolicy;
+import software.amazon.awssdk.core.retry.backoff.FullJitterBackoffStrategy;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
+
+import java.time.Duration;
+
+import static software.amazon.awssdk.core.retry.conditions.RetryCondition.defaultRetryCondition;
 
 @Configuration
 @Import({SynapseAwsAuthConfiguration.class, SynapseAutoConfiguration.class})
@@ -35,10 +43,26 @@ public class SqsAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(SqsAsyncClient.class)
     public SqsAsyncClient sqsAsyncClient(final AwsCredentialsProvider credentialsProvider) {
-            return SqsAsyncClient.builder()
-                    .credentialsProvider(credentialsProvider)
-                    .region(Region.of(awsProperties.getRegion()))
-                    .build();
+        return SqsAsyncClient.builder()
+                .credentialsProvider(credentialsProvider)
+                .region(Region.of(awsProperties.getRegion()))
+                .overrideConfiguration(ClientOverrideConfiguration.builder()
+                        .apiCallAttemptTimeout(Duration.ofSeconds(5))
+                        .retryPolicy(sqsRetryPolicy()).build())
+                .build();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(name = "sqsRetryPolicy", value = RetryPolicy.class)
+    public RetryPolicy sqsRetryPolicy() {
+        return RetryPolicy.defaultRetryPolicy().toBuilder()
+                .retryCondition(defaultRetryCondition())
+                .numRetries(Integer.MAX_VALUE)
+                .backoffStrategy(FullJitterBackoffStrategy.builder()
+                        .baseDelay(Duration.ofSeconds(1))
+                        .maxBackoffTime(SdkDefaultRetrySetting.MAX_BACKOFF)
+                        .build())
+                .build();
     }
 
     @Bean
