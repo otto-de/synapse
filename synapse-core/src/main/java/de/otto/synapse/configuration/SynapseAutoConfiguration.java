@@ -5,6 +5,7 @@ import de.otto.synapse.annotation.MessageInterceptorBeanPostProcessor;
 import de.otto.synapse.endpoint.DefaultReceiverHeadersInterceptor;
 import de.otto.synapse.endpoint.DefaultSenderHeadersInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.journal.JournalingStateRepositoryBeanPostProcessor;
 import org.slf4j.Logger;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -89,7 +90,7 @@ public class SynapseAutoConfiguration {
     }
 
     /**
-     * Activate the MessageInterceptorBeanPostProcessor used to pose-process beans having methods annotated as a
+     * Activate the MessageInterceptorBeanPostProcessor used to post-process beans having methods annotated as a
      * {@link de.otto.synapse.annotation.MessageInterceptor}.
      *
      * @return MessageInterceptorBeanPostProcessor
@@ -98,6 +99,18 @@ public class SynapseAutoConfiguration {
     @Role(ROLE_INFRASTRUCTURE)
     public MessageInterceptorBeanPostProcessor messageInterceptorBeanPostProcessor() {
         return new MessageInterceptorBeanPostProcessor();
+    }
+
+    /**
+     * Activate the JournalingStateRepositoryBeanPostProcessor used to post-process beans extending the
+     * JournaledStateRepository interface
+     *
+     * @return MessageInterceptorBeanPostProcessor
+     */
+    @Bean
+    @Role(ROLE_INFRASTRUCTURE)
+    public JournalingStateRepositoryBeanPostProcessor journalingStateRepositoryBeanPostProcessor() {
+        return new JournalingStateRepositoryBeanPostProcessor();
     }
 
 }

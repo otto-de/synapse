@@ -36,27 +36,18 @@ public class CompactingConcurrentMapMessageStore implements MessageStore {
     private final InMemoryChannelPositions channelPositions = new InMemoryChannelPositions();
     private final boolean removeNullPayloadMessages;
     private final Indexer indexer;
-    private final String name;
 
-    public CompactingConcurrentMapMessageStore(final String name,
-                                               final boolean removeNullPayloadMessages,
+    public CompactingConcurrentMapMessageStore(final boolean removeNullPayloadMessages,
                                                final ConcurrentMap<String, MessageStoreEntry> messageMap) {
-        this(name, removeNullPayloadMessages, messageMap, noOpIndexer());
+        this(removeNullPayloadMessages, messageMap, noOpIndexer());
     }
 
-    public CompactingConcurrentMapMessageStore(final String name,
-                                               final boolean removeNullPayloadMessages,
+    public CompactingConcurrentMapMessageStore(final boolean removeNullPayloadMessages,
                                                final ConcurrentMap<String, MessageStoreEntry> messageMap,
                                                final Indexer indexer) {
-        this.name = name;
         this.entries = messageMap;
         this.removeNullPayloadMessages = removeNullPayloadMessages;
         this.indexer = indexer;
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 
     @Override

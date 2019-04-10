@@ -45,9 +45,9 @@ public class IndexingMessageStoreTest {
     @Parameters
     public static Iterable<? extends Supplier<MessageStore>> channelIndexedMessageStore() {
         return asList(
-                () -> new InMemoryMessageStore("test", channelNameIndexer()),
-                () -> new CompactingInMemoryMessageStore("test", true, channelNameIndexer()),
-                () -> new CompactingConcurrentMapMessageStore("test", true, new ConcurrentHashMap<>(), channelNameIndexer())
+                () -> new InMemoryMessageStore(channelNameIndexer()),
+                () -> new CompactingInMemoryMessageStore(true, channelNameIndexer()),
+                () -> new CompactingConcurrentMapMessageStore(true, new ConcurrentHashMap<>(), channelNameIndexer())
         );
     }
 

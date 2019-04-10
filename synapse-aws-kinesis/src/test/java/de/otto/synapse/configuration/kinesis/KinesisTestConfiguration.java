@@ -47,7 +47,7 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
     @Bean
     public EventSourceBuilder eventSourceBuilder() {
         return (messageLog) -> {
-            final MessageStore messageStore = new InMemoryMessageStore("test");
+            final MessageStore messageStore = new InMemoryMessageStore();
             return new DefaultEventSource(messageStore, messageLog);
         };
     }

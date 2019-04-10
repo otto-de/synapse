@@ -20,29 +20,23 @@ import java.util.stream.Stream;
 @ThreadSafe
 public class InMemoryRingBufferMessageStore implements MessageStore {
 
-    private final String name;
     private final Queue<MessageStoreEntry> entries;
     private final InMemoryChannelPositions channelPositions = new InMemoryChannelPositions();
 
     /**
      * Creates a new instance with default capacity of 100.
      *
-     * @param name the name of the message store
      */
-    public InMemoryRingBufferMessageStore(final String name) {
-        this.name = name;
+    public InMemoryRingBufferMessageStore() {
         this.entries = EvictingQueue.create(100);
     }
 
     /**
      * Creates a new instance with specified capacity.
      *
-     * @param name the name of the message store
      * @param capacity the size of the underlying ring buffer.
      */
-    public InMemoryRingBufferMessageStore(final String name,
-                                          final int capacity) {
-        this.name = name;
+    public InMemoryRingBufferMessageStore(final int capacity) {
         this.entries = EvictingQueue.create(capacity);
     }
 
@@ -50,11 +44,6 @@ public class InMemoryRingBufferMessageStore implements MessageStore {
     public synchronized void add(final MessageStoreEntry entry) {
         entries.add(entry);
         channelPositions.updateFrom(entry);
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 
     @Override

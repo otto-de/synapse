@@ -34,8 +34,8 @@ public class NonCompactingMessageStoreTest {
     @Parameterized.Parameters
     public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
-                () -> new InMemoryMessageStore("test"),
-                () -> new InMemoryRingBufferMessageStore("test", 50000)
+                () -> new InMemoryMessageStore(),
+                () -> new InMemoryRingBufferMessageStore(50000)
         );
     }
 

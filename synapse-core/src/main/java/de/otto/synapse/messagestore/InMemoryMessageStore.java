@@ -25,16 +25,13 @@ public class InMemoryMessageStore implements MessageStore {
     private final Deque<MessageStoreEntry> entries = new ConcurrentLinkedDeque<>();
     private final ConcurrentMap<String, Deque<MessageStoreEntry>> indexes = new ConcurrentHashMap<>();
     private final InMemoryChannelPositions channelPositions = new InMemoryChannelPositions();
-    private final String name;
     private final Indexer indexer;
 
-    public InMemoryMessageStore(final String name) {
-        this.name = name;
+    public InMemoryMessageStore() {
         this.indexer = noOpIndexer();
     }
 
-    public InMemoryMessageStore(final String name, final Indexer indexer) {
-        this.name = name;
+    public InMemoryMessageStore(final Indexer indexer) {
         this.indexer = indexer;
     }
 
@@ -55,11 +52,6 @@ public class InMemoryMessageStore implements MessageStore {
         } finally {
             lock.writeLock().unlock();
         }
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 
     @Override

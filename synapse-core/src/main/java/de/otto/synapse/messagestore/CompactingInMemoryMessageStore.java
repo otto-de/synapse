@@ -25,7 +25,6 @@ import static de.otto.synapse.messagestore.Indexers.noOpIndexer;
 @ThreadSafe
 public class CompactingInMemoryMessageStore implements MessageStore {
 
-    private final String name;
     private final boolean removeNullPayloadMessages;
     private final Indexer indexer;
     private final InMemoryChannelPositions channelPositions = new InMemoryChannelPositions();
@@ -33,24 +32,15 @@ public class CompactingInMemoryMessageStore implements MessageStore {
     private final ConcurrentMap<String, ConcurrentNavigableMap<String, MessageStoreEntry>> indexes = new ConcurrentHashMap<>();
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public CompactingInMemoryMessageStore(final String name,
-                                          final boolean removeNullPayloadMessages) {
+    public CompactingInMemoryMessageStore(final boolean removeNullPayloadMessages) {
         this.removeNullPayloadMessages = removeNullPayloadMessages;
-        this.name = name;
         this.indexer = noOpIndexer();
     }
 
-    public CompactingInMemoryMessageStore(final String name,
-                                          final boolean removeNullPayloadMessages,
+    public CompactingInMemoryMessageStore(final boolean removeNullPayloadMessages,
                                           final Indexer indexer) {
         this.removeNullPayloadMessages = removeNullPayloadMessages;
-        this.name = name;
         this.indexer = indexer;
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 
     @Override

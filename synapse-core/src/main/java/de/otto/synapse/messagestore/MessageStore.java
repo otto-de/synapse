@@ -37,16 +37,6 @@ import static com.google.common.collect.Iterables.getFirst;
 public interface MessageStore extends AutoCloseable {
 
     /**
-     * Returns the name of the message store.
-     *
-     * <p>Especially for persistent implementations, two {@code MessageStore} instances might use this property
-     * to identify the underlying database, collection, file etc.</p>
-     *
-     * @return message store name
-     */
-    String getName();
-
-    /**
      * Returns a set containing the channel names of the messages contained in the {@code MessageStore}
      * @return set of channel names
      */

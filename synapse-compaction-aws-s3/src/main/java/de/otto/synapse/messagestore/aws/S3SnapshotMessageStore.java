@@ -52,15 +52,12 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
     private ChannelPosition channelPosition;
     private ZipInputStream zipInputStream;
     private Instant snapshotTimestamp;
-    private final String name;
     private final String channelName;
     private final ApplicationEventPublisher eventPublisher;
 
-    public S3SnapshotMessageStore(final @Nonnull String name,
-                                  final @Nonnull String channelName,
+    public S3SnapshotMessageStore(final @Nonnull String channelName,
                                   final @Nonnull SnapshotReadService snapshotReadService,
                                   final @Nullable ApplicationEventPublisher eventPublisher) {
-        this.name = name;
         this.channelName = channelName;
         this.eventPublisher = eventPublisher;
         publishEvent(STARTING, "Retrieve snapshot file from S3.", null);
@@ -120,11 +117,6 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
     @Override
     public Instant getSnapshotTimestamp() {
         return snapshotTimestamp;
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 
     @Override

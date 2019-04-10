@@ -84,11 +84,6 @@ public class RedisRingBufferMessageStore implements MessageStore {
     }
 
     @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
     @SuppressWarnings("unchecked")
     public void add(final MessageStoreEntry entry) {
         // This will contain the results of all ops in the transaction

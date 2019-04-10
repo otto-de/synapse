@@ -39,11 +39,6 @@ public class RedisRingBufferMessageStoreTest {
     }
 
     @Test
-    public void shouldReturnMessageStoreName() {
-        assertThat(testee.getName(), is("Test Store"));
-    }
-
-    @Test
     public void shouldReturnChannelNames() {
         when(setOperations.members()).thenReturn(ImmutableSet.of("foo", "bar"));
         assertThat(testee.getChannelNames(), containsInAnyOrder("foo", "bar"));

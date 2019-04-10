@@ -38,10 +38,10 @@ public class MessageStoreTest {
     @Parameters
     public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
-                () -> new InMemoryMessageStore("test"),
-                () -> new InMemoryRingBufferMessageStore("test", 10000),
-                () -> new CompactingInMemoryMessageStore("test", true),
-                () -> new CompactingConcurrentMapMessageStore("test", true, new ConcurrentHashMap<>())
+                () -> new InMemoryMessageStore(),
+                () -> new InMemoryRingBufferMessageStore(10000),
+                () -> new CompactingInMemoryMessageStore(true),
+                () -> new CompactingConcurrentMapMessageStore(true, new ConcurrentHashMap<>())
         );
     }
 

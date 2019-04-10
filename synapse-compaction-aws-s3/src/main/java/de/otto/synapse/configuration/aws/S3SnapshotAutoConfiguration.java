@@ -35,7 +35,7 @@ public class S3SnapshotAutoConfiguration {
     @ConditionalOnMissingBean
     MessageStoreFactory<SnapshotMessageStore> snapshotMessageStoreFactory(final SnapshotReadService snapshotReadService,
                                                                           final ApplicationEventPublisher eventPublisher) {
-        return (_name, channelName) -> new S3SnapshotMessageStore("Snapshot", channelName, snapshotReadService, eventPublisher);
+        return (channelName) -> new S3SnapshotMessageStore(channelName, snapshotReadService, eventPublisher);
     }
 
 }

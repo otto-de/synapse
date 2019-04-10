@@ -16,11 +16,6 @@ public class DelegatingSnapshotMessageStore implements SnapshotMessageStore {
     }
 
     @Override
-    public String getName() {
-        return delegate.getName();
-    }
-
-    @Override
     public Instant getSnapshotTimestamp() {
         return delegate instanceof SnapshotMessageStore
                 ? ((SnapshotMessageStore)delegate).getSnapshotTimestamp()

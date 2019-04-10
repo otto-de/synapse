@@ -29,9 +29,8 @@ public class CompactingMessageStoreWithoutDeletionsTest {
     @Parameters
     public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
-                () -> new CompactingInMemoryMessageStore("test", false),
-                () -> new CompactingConcurrentMapMessageStore("test", false, new ConcurrentHashMap<>()),
-                () -> new CompactingConcurrentMapMessageStore("test", false, new ConcurrentHashMap<>())
+                () -> new CompactingInMemoryMessageStore(false),
+                () -> new CompactingConcurrentMapMessageStore(false, new ConcurrentHashMap<>())
         );
     }
 

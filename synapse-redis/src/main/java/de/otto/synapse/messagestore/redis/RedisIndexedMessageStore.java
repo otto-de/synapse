@@ -97,11 +97,6 @@ public class RedisIndexedMessageStore implements MessageStore {
     }
 
     @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
     @SuppressWarnings("unchecked")
     public void add(final MessageStoreEntry entry) {
         final MessageStoreEntry indexedEntry = indexer.index(entry);

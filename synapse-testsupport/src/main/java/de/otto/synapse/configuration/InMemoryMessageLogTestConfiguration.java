@@ -46,8 +46,8 @@ public class InMemoryMessageLogTestConfiguration {
 
     @Bean
     public MessageStoreFactory<SnapshotMessageStore> snapshotMessageStoreFactory() {
-        return ((_name, channelName) -> new DelegatingSnapshotMessageStore(
-                new CompactingInMemoryMessageStore(channelName, true))
+        return (channelName -> new DelegatingSnapshotMessageStore(
+                new CompactingInMemoryMessageStore(true))
         );
     }
 

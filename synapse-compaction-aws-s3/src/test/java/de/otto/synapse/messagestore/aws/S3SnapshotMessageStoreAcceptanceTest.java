@@ -103,7 +103,7 @@ public class S3SnapshotMessageStoreAcceptanceTest {
         compactionService.compact(INTEGRATION_TEST_STREAM);
 
         //then
-        try (final S3SnapshotMessageStore snapshotMessageStore = new S3SnapshotMessageStore("Snapshot", INTEGRATION_TEST_STREAM, snapshotReadService, eventPublisher)) {
+        try (final S3SnapshotMessageStore snapshotMessageStore = new S3SnapshotMessageStore(INTEGRATION_TEST_STREAM, snapshotReadService, eventPublisher)) {
             final List<Message<String>> messages = new ArrayList<>();
             snapshotMessageStore.stream().map(MessageStoreEntry::getTextMessage).forEach(messages::add);
             assertThat(messages, hasSize(10));

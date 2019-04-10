@@ -25,11 +25,6 @@ public class MessageStores {
     private static final MessageStore EMPTY_MESSAGE_STORE = new MessageStore() {
 
         @Override
-        public String getName() {
-            return "nil";
-        }
-
-        @Override
         public Set<String> getChannelNames() {
             return ImmutableSet.of();
         }

@@ -38,9 +38,8 @@ public class CompactingMessageStoreTest {
     @Parameters
     public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
-                () -> new CompactingInMemoryMessageStore("test", true),
-                () -> new CompactingConcurrentMapMessageStore("test", true, new ConcurrentHashMap<>()),
-                () -> new CompactingConcurrentMapMessageStore("test", true, new ConcurrentHashMap<>())
+                () -> new CompactingInMemoryMessageStore(true),
+                () -> new CompactingConcurrentMapMessageStore(true, new ConcurrentHashMap<>())
         );
     }
 
