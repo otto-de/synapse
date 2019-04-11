@@ -1,5 +1,16 @@
 # Release Notes
 
+## 0.17.0
+
+*MessageStore*
+* Removes unused MessageStore.getName()
+
+*Journaling*
+
+* Introduces journaling for event-sourced entities stored in a JournalingStateRepository.
+  Using message journals, it is possible to retrieve all messages that where used to modify
+  the state of an event-sourced entity.
+
 ## 0.16.4
 
 * Fixes bean instantiation of sqs retry policy.

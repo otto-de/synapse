@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+    <div th:fragment="header(message)">
+        <dl>
+            <th:block th:if="${message.channelName != null}">
+                <dt>Channel</dt>
+                <dd th:text="${message.channelName}"></dd>
+            </th:block>
+            <dt>Shard</dt>
+            <dd th:text="${message.header.shardPosition.orElse(null)?.shardName()}"></dd>
+            <dt>Start From</dt>
+            <dd th:text="${message.header.shardPosition.orElse(null)?.startFrom()}"></dd>
+            <th:block th:if="${message.header.shardPosition.orElse(null)?.position() != null}">
+                <dt>Position</dt>
+                <dd th:text="${message.header.shardPosition.orElse(null)?.position()}">Timestamp</dd>
+            </th:block>
+            <th:block th:if="${message.header.shardPosition.orElse(null)?.timestamp() != null}">
+                <dt>Timestamp</dt>
+                <dd th:text="${header.shardPosition.orElse(null)?.timestamp()}">Timestamp</dd>
+            </th:block>
+            <th:block th:each="attr : ${message.header.all}">
+                <dt th:text="${attr.key}">Key</dt>
+                <dd th:text="${attr.value}">value</dd>
+            </th:block>
+        </dl>
+    </div>
+
+    <div th:fragment="payload(message)">
+        <div th:id="'msg:' + ${message.sequenceNumber}"></div>
+            <hr>
+            <script th:inline="javascript">
+                /*<![CDATA[*/
+                var payloadJson = /*[[${message.payload}]]*/ 'default';
+                var ppTable = prettyPrint(JSON.parse(payloadJson));
+                document.getElementById(/*[['msg:' + ${message.sequenceNumber}]]*/).appendChild(ppTable);
+                /*]]>*/
+            </script></th:block>
+    </div>
+
+</body>
+</html>

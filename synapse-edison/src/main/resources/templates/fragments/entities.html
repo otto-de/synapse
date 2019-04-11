@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<body>
+
+    <div th:fragment="open-entity">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Open Entity</h3>
+            </div>
+            <div class="panel-body">
+                <form class="form-inline" method="GET" th:action="@{'/' + ${basePath} + '/staterepositories/' + ${repositoryName}}">
+                    <div class="form-group">
+                        <label for="id-input" class="col-md-4 col-form-label">Entity ID</label>
+                        <div class="col-md-4">
+                            <input class="form-control" name="entityId" type="text" autofocus="autofocus" required="required" placeholder="entityid" th:value="${entityId}" id="id-input">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-default">Open</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div th:fragment="entitiesList(entities)">
+        <th:block th:each="entity : ${entities}"><div th:id="${entity.entityId}"></div>
+            <th:div th:if="${journaled}">
+                <br>
+                <a class="btn btn-default btn-xs" th:href="@{'/' + ${basePath} + '/journals/' + ${repositoryName} + '/' + ${entity.entityId}}" role="button">Open Journal</a>
+            </th:div>
+            <hr>
+            <script th:inline="javascript">
+                /*<![CDATA[*/
+                var entityJson = /*[[${entity.entityJson}]]*/ 'default';
+                var ppTable = prettyPrint(JSON.parse(entityJson));
+                document.getElementById(/*[[${entity.entityId}]]*/).appendChild(ppTable);
+                /*]]>*/
+            </script>
+
+        </th:block>
+    </div>
+</body>
+</html>

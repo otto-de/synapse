@@ -6,6 +6,7 @@ import de.otto.synapse.endpoint.DefaultReceiverHeadersInterceptor;
 import de.otto.synapse.endpoint.DefaultSenderHeadersInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.journal.JournalingStateRepositoryBeanPostProcessor;
+import de.otto.synapse.journal.Journals;
 import org.slf4j.Logger;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -49,6 +50,11 @@ public class SynapseAutoConfiguration {
             }
         }
         return registry;
+    }
+
+    @Bean
+    public Journals journals() {
+        return new Journals();
     }
 
     /**

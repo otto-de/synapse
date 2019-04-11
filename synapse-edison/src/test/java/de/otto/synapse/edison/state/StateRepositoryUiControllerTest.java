@@ -1,12 +1,18 @@
 package de.otto.synapse.edison.state;
 
 import de.otto.edison.navigation.NavBar;
+import de.otto.synapse.journal.Journal;
+import de.otto.synapse.journal.Journals;
+import de.otto.synapse.message.TextMessage;
+import de.otto.synapse.messagestore.MessageStoreEntry;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -14,8 +20,13 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.Optional;
+import java.util.stream.Stream;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
@@ -23,20 +34,23 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @ContextConfiguration(
-        classes = StateRepositoryController.class)
+        classes = StateRepositoryUiController.class)
 @WebMvcTest(
-        controllers = StateRepositoryController.class,
+        controllers = StateRepositoryUiController.class,
         secure = false)
 @EnableAutoConfiguration
 @ComponentScan(
-        basePackages = "de.otto.synapse.edison.state")
-public class StateRepositoryControllerTest {
+        basePackages = {"de.otto.synapse.edison.state", "de.otto.synapse.journal"})
+public class StateRepositoryUiControllerTest {
 
     @Autowired
     private WebApplicationContext context;
 
     @Autowired
     private NavBar rightNavBar;
+
+    @MockBean
+    private Journals journals;
 
     private MockMvc mockMvc;
 
@@ -54,41 +68,30 @@ public class StateRepositoryControllerTest {
     }
 
     @Test
-    public void shouldConfigureStateRepositoryController() {
-        assertThat(context.containsBean("stateRepositoryController"), is(true));
+    public void shouldConfigureStateRepositoryUiController() {
+        assertThat(context.containsBean("stateRepositoryUiController"), is(true));
     }
 
+
     @Test
-    public void shouldGetStateRepositoriesJson() throws Exception {
+    public void shouldLinkToJournal() throws Exception {
+        final Journal journal = mock(Journal.class);
+        when(journal.getJournalFor("first"))
+                .thenReturn(Stream.of(
+                        MessageStoreEntry.of("test", TextMessage.of("first", null)))
+                );
+        when(journals.containsKey("test")).thenReturn(true);
+        when(journals.getJournal("test")).thenReturn(Optional.of(journal));
         mockMvc
                 .perform(
-                        get("/internal/staterepositories"))
+                        get("/internal/staterepositories/test/first").accept("text/html"))
                 .andExpect(
                         status().isOk())
                 .andExpect(
-                        jsonPath("$._links.item")
-                                .value(hasSize(1)))
+                        model().attribute("journaled", is(true))
+                )
                 .andExpect(
-                        jsonPath("$._links.item[0].href")
-                                .value(endsWith("/internal/staterepositories/test")));
-    }
-
-    @Test
-    public void shouldGetStateRepositoryJson() throws Exception {
-        mockMvc
-                .perform(
-                        get("/internal/staterepositories/test"))
-                .andExpect(
-                        status().isOk())
-                .andExpect(
-                        jsonPath("$._links.item")
-                                .value(hasSize(2)))
-                .andExpect(
-                        jsonPath("$._links.item[0].href")
-                                .value(endsWith("/internal/staterepositories/test/first")))
-                .andExpect(
-                        jsonPath("$._links.item[1].href")
-                                .value(endsWith("/internal/staterepositories/test/second")));
+                        content().string(Matchers.containsString("<a class=\"btn btn-default btn-xs\" href=\"/internal/journals/test/first\" role=\"button\">Open Journal</a>")));
     }
 
     @Test
@@ -154,15 +157,12 @@ public class StateRepositoryControllerTest {
     }
 
     @Test
-    public void shouldGetEntityJson() throws Exception {
+    public void shouldGet404ForMissingStateRepositoryHtml() throws Exception {
         mockMvc
                 .perform(
-                        get("/internal/staterepositories/test/first"))
+                        get("/internal/staterepositories/unknown").accept("text/html"))
                 .andExpect(
-                        status().isOk())
-                .andExpect(
-                        content().string("\"one\""));
+                        status().isNotFound());
     }
-
 
 }

@@ -39,6 +39,7 @@ public class ConcurrentMapStateRepository<V> implements StateRepository<V> {
      * ChronicleMap</p>
      *
      * @param name the {@link #getName() name}  of the repository.
+     * @param map the delegate map used to store the entity state
      */
     public ConcurrentMapStateRepository(final String name,
                                         final ConcurrentMap<String, V> map) {
