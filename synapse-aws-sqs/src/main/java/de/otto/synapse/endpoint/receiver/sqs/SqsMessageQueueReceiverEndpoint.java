@@ -20,9 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.otto.synapse.message.Key.NO_KEY;
-import static de.otto.synapse.message.Message.message;
 import static java.time.Duration.ofMillis;
-import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -123,17 +121,21 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
 
     private void processMessage(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {
         LOG.debug("Processing message from channel={}: messageId={} receiptHandle={}, messageAttributes={}", getChannelName(), sqsMessage.messageId(), sqsMessage.receiptHandle(), sqsMessage.messageAttributes());
-        final TextMessage message = TextMessage.of(
-                messageKeyOf(sqsMessage),
-                Header.of(null, messageAttributesOf(sqsMessage)),
-                sqsMessage.body());
+        try {
+            final TextMessage message = TextMessage.of(
+                    messageKeyOf(sqsMessage),
+                    Header.of(null, messageAttributesOf(sqsMessage)),
+                    sqsMessage.body());
 
-        final TextMessage interceptedMessage = intercept(message);
-        if (interceptedMessage != null) {
-            LOG.debug("Dispatching message {} ", interceptedMessage);
-            getMessageDispatcher().accept(interceptedMessage);
+            final TextMessage interceptedMessage = intercept(message);
+            if (interceptedMessage != null) {
+                LOG.debug("Dispatching message {} ", interceptedMessage);
+                getMessageDispatcher().accept(interceptedMessage);
+            }
+            deleteMessage(sqsMessage);
+        } catch (final Exception e) {
+            LOG.error("Failed to process SQS message " + sqsMessage);
         }
-        deleteMessage(sqsMessage);
     }
 
     private Key messageKeyOf(software.amazon.awssdk.services.sqs.model.Message sqsMessage) {

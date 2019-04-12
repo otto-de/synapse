@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint.receiver.sqs;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
@@ -20,6 +21,7 @@ import software.amazon.awssdk.services.sqs.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -40,6 +42,7 @@ public class SqsMessageQueueReceiverEndpointTest {
 
     private static final int EXPECTED_NUMBER_OF_ENTRIES = 3;
 
+    private static final String BROKEN_PAYLOAD = "{kaput!}";
     private static final String PAYLOAD_1 = "{\"data\":\"red\"}";
     private static final String PAYLOAD_2 = "{\"data\":\"green\"}";
     private static final String PAYLOAD_3 = "{\"data\":\"blue\"}";
@@ -114,6 +117,73 @@ public class SqsMessageQueueReceiverEndpointTest {
         assertThat(messages.get(1).getPayload(), is(PAYLOAD_2));
         assertThat(messages.get(2).getKey(), is(Key.of("third")));
         assertThat(messages.get(2).getPayload(), is(PAYLOAD_3));
+    }
+
+    public static class TestFoo {
+        public TestFoo() {
+        }
+
+        public TestFoo(String data) {
+            this.data = data;
+        }
+
+        @JsonProperty
+        public String data;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof TestFoo)) return false;
+            TestFoo testFoo = (TestFoo) o;
+            return Objects.equals(data, testFoo.data);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(data);
+        }
+
+        @Override
+        public String toString() {
+            return "{" +
+                    "\"data\":\"" + data + '\"' +
+                    '}';
+        }
+    }
+
+    @Test
+    public void shouldNotDeleteBrokenMessages() {
+        final List<Message<TestFoo>> typedMessages = new ArrayList<>();
+
+        // given:
+        addSqsMessagesToQueue(
+                sqsMessage("first", BROKEN_PAYLOAD),
+                sqsMessage("second", BROKEN_PAYLOAD),
+                sqsMessage("third", PAYLOAD_3));
+
+        sqsQueueReceiver = new SqsMessageQueueReceiverEndpoint("channelName", new MessageInterceptorRegistry(), sqsAsyncClient, newSingleThreadExecutor(), null);
+        sqsQueueReceiver.register(MessageConsumer.of(".*", TestFoo.class, typedMessages::add));
+
+        final ArgumentCaptor<DeleteMessageRequest> deleteRequestCaptor = ArgumentCaptor.forClass(DeleteMessageRequest.class);
+
+        // when: consumption is started
+        sqsQueueReceiver.consume();
+
+        // then:
+        // wait some time
+        await()
+                .atMost(Duration.FIVE_SECONDS)
+                .until(() -> typedMessages.size() == 1);
+
+        // and:
+        // expect the payload to be the added messages
+        assertThat(typedMessages.size(), is(1));
+        assertThat(typedMessages.get(0).getKey(), is(Key.of("third")));
+        assertThat(typedMessages.get(0).getPayload(), is(new TestFoo("blue")));
+
+        // and:
+        // expect delete message to be executed
+        verify(sqsAsyncClient, times(1)).deleteMessage(deleteRequestCaptor.capture());
     }
 
     @Test
@@ -221,6 +291,29 @@ public class SqsMessageQueueReceiverEndpointTest {
         assertThat(messages.get(0).getPayload(), is(PAYLOAD_2));
     }
 
+    @Test
+    public void shouldDeleteMessagesDroppedByInterceptor() {
+        // given:
+        addSqsMessagesToQueue(sqsMessage("some of", PAYLOAD_1), sqsMessage("some of", PAYLOAD_2));
+
+        interceptorRegistry.register(
+                receiverChannelsWith(message -> message.getPayload().equals(PAYLOAD_1) ? null : message)
+        );
+
+        // when: consumption is started
+        sqsQueueReceiver.consume();
+
+        // then:
+        // wait some time
+        await()
+                .atMost(Duration.FIVE_SECONDS)
+                .until(() -> messages.size() == 1);
+
+        // and:
+        // expect the message to be deleted
+        verify(sqsAsyncClient, times(2)).deleteMessage(any(DeleteMessageRequest.class));
+    }
+
     @Test(expected = RuntimeException.class)
     public void shouldShutdownServiceOnRuntimeExceptionOnConsume() throws Throwable {
         //given
@@ -228,17 +321,6 @@ public class SqsMessageQueueReceiverEndpointTest {
 
         //then
         expectExceptionToBeThrownAndNotDeleteMessage();
-
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void shouldShutdownServiceOnRuntimeExceptionOnDelete() throws Throwable {
-        //given
-        addSqsMessagesToQueue(sqsMessage("some of", PAYLOAD_1));
-        when(sqsAsyncClient.deleteMessage(any(DeleteMessageRequest.class))).thenThrow(RuntimeException.class); // could be SdkException, SQSException etc.
-
-        //then
-        expectExceptionToBeThrownAndWithDeleteMessage();
 
     }
 
@@ -256,19 +338,6 @@ public class SqsMessageQueueReceiverEndpointTest {
         }
     }
 
-    private void expectExceptionToBeThrownAndWithDeleteMessage() throws Throwable{
-        ArgumentCaptor<DeleteMessageRequest> deleteRequestCaptor = ArgumentCaptor.forClass(DeleteMessageRequest.class);
-
-        try {
-            sqsQueueReceiver.consume().get();
-            fail();
-        } catch (ExecutionException e) {
-            // and:
-            // expect delete message to be executed
-            verify(sqsAsyncClient, times(1)).deleteMessage(deleteRequestCaptor.capture());
-            throw e.getCause();
-        }
-    }
 
     private void addSqsMessagesToQueue(software.amazon.awssdk.services.sqs.model.Message... sqsMessages) {
         //and: some records

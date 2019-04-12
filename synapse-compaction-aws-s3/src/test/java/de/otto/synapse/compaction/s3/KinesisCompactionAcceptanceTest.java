@@ -17,7 +17,6 @@ import de.otto.synapse.message.Key;
 import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.translator.Decoder;
 import de.otto.synapse.translator.MessageFormat;
-import de.otto.synapse.translator.AbstractTextDecoder;
 import net.minidev.json.JSONArray;
 import org.junit.After;
 import org.junit.Before;
@@ -50,7 +49,8 @@ import static de.otto.synapse.message.Message.message;
 import static java.lang.String.valueOf;
 import static java.lang.Thread.sleep;
 import static java.util.stream.Collectors.toList;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
@@ -148,6 +148,7 @@ public class KinesisCompactionAcceptanceTest {
                 .stream()
                 .map(Thread::getName)
                 .filter((name)->name.startsWith("kinesis-message-log-"))
+                .sorted()
                 .collect(toList());
 
         compactionService.compact(INTEGRATION_TEST_STREAM);
@@ -158,6 +159,7 @@ public class KinesisCompactionAcceptanceTest {
                 .stream()
                 .map(Thread::getName)
                 .filter((name)->name.startsWith("kinesis-message-log-"))
+                .sorted()
                 .collect(toList());
         assertThat(threadNamesAfter, is(not(empty())));
         assertThat(threadNamesBefore, is(threadNamesAfter));

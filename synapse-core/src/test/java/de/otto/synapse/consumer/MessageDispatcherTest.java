@@ -9,6 +9,7 @@ import static de.otto.synapse.consumer.TestMessageConsumer.testEventConsumer;
 import static de.otto.synapse.message.Header.of;
 import static de.otto.synapse.message.Message.message;
 import static java.util.Arrays.asList;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -39,6 +40,34 @@ public class MessageDispatcherTest {
         verify(eventConsumerA).accept(any(Message.class));
         verify(eventConsumerB).accept(any(Message.class));
         verify(eventConsumerC).accept(any(Message.class));
+    }
+
+    @Test(expected = IllegalStateException.class)
+    @SuppressWarnings("unchecked")
+    public void shouldNotDelegateBrokenEventsToConsumers() {
+        // given
+        TestMessageConsumer<Apple> consumer = spy(testEventConsumer(".*", Apple.class));
+
+        MessageDispatcher messageDispatcher = new MessageDispatcher();
+        messageDispatcher.add(consumer);
+
+        // when
+        try {
+
+            TextMessage someMessage = TextMessage.of(
+                    "someKey",
+                    of(fromHorizon("test")),
+                    "kawumm!"
+            );
+            messageDispatcher.accept(someMessage);
+            fail();
+        } catch (final IllegalStateException e) {
+            // then
+            verify(consumer).keyPattern();
+            verify(consumer).payloadType();
+            verifyNoMoreInteractions(consumer);
+            throw e;
+        }
     }
 
     @Test

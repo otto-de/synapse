@@ -2,11 +2,14 @@
 
 ## 0.17.0
 
+*Bugfixes*
+* Messages that can not be translated and/or processed by consumers will not be deleted from
+  SQS anymore, so that the message will be sent to the dead-letter queue after some time.
+
 *MessageStore*
 * Removes unused MessageStore.getName()
 
 *Journaling*
-
 * Introduces journaling for event-sourced entities stored in a JournalingStateRepository.
   Using message journals, it is possible to retrieve all messages that where used to modify
   the state of an event-sourced entity.
