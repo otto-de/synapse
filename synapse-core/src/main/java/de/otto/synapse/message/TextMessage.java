@@ -3,13 +3,14 @@ package de.otto.synapse.message;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import static de.otto.synapse.message.Header.copyOf;
-
 /**
  * A {@code Message} that is used by Synapse for messages with String payloads.
  *
  */
 public class TextMessage extends Message<String> {
+
+
+    private static final long serialVersionUID = 4270568972655971096L;
 
     protected TextMessage(final @Nonnull Key key,
                           final @Nonnull Header header,

@@ -28,6 +28,9 @@ import static de.otto.synapse.message.Header.of;
  */
 public class Message<P> implements Serializable {
 
+
+    private static final long serialVersionUID = -2723145950340871252L;
+
     public static <P> Message<P> message(final @Nonnull Key key,
                                          final @Nullable P payload) {
         return new Message<>(key, of(), payload);

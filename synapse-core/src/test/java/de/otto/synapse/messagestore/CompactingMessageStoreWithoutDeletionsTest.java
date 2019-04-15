@@ -8,7 +8,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
@@ -29,8 +28,7 @@ public class CompactingMessageStoreWithoutDeletionsTest {
     @Parameters
     public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
-                () -> new CompactingInMemoryMessageStore(false),
-                () -> new CompactingConcurrentMapMessageStore(false, new ConcurrentHashMap<>())
+                () -> new CompactingInMemoryMessageStore(false)
         );
     }
 

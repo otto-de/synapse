@@ -224,10 +224,6 @@ There are several implementations of the `MessageStore` interface available in S
   Guava `EvictingQueue`. Primarily used for testing purposes, or for smaller data-sets without any need for durability.
 * `de.otto.synapse.messagestore.CompactingInMemoryMessageStore`: A compacting `MessageStore` that is compacting messages
   by compaction-key when writing into the store. It's implementation is based on a `ConcurrentNavigableMap`.
-* `de.otto.synapse.messagestore.CompactingConcurrentMapMessageStore`: A compacting store that is delegating the storage
-  of the messages to another ConcurrentMap like, for example, a `ChronicleMap` that is suitable to store gigabytes of 
-  data off the heap. Can be used whenever durability is not required, but large amounts of messages must be kept in 
-  memory for quickest possible access. 
 
 For larger datasets, Redis is supported by the separate, add-on library `synapse-redis`. It can also be used to
 access AWS ElastiCache. 

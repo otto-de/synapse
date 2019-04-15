@@ -96,7 +96,7 @@ public final class ChannelPosition implements Serializable {
 
     @Override
     public String toString() {
-        return "StreamPosition{" +
+        return "ChannelPosition{" +
                 "shardPositions=" + shardPositions +
                 '}';
     }

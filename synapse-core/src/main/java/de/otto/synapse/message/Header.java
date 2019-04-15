@@ -32,6 +32,9 @@ import java.util.Optional;
  */
 public class Header implements Serializable {
 
+
+    private static final long serialVersionUID = -6285737687861009394L;
+
     public static Header of() {
         return new Header(null, ImmutableMap.of());
     }

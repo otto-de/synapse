@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -25,7 +24,6 @@ import java.util.stream.Stream;
 import static com.google.common.collect.Sets.newHashSet;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.StartFrom.POSITION;
-import static de.otto.synapse.message.Header.of;
 import static de.otto.synapse.messagestore.Index.CHANNEL_NAME;
 import static de.otto.synapse.messagestore.Indexers.channelNameIndexer;
 import static java.lang.String.valueOf;
@@ -45,9 +43,7 @@ public class IndexingMessageStoreTest {
     @Parameters
     public static Iterable<? extends Supplier<MessageStore>> channelIndexedMessageStore() {
         return asList(
-                () -> new InMemoryMessageStore(channelNameIndexer()),
-                () -> new CompactingInMemoryMessageStore(true, channelNameIndexer()),
-                () -> new CompactingConcurrentMapMessageStore(true, new ConcurrentHashMap<>(), channelNameIndexer())
+                () -> new InMemoryMessageStore(channelNameIndexer())
         );
     }
 
@@ -114,8 +110,18 @@ public class IndexingMessageStoreTest {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
                 for (int pos = 0; pos < 100; ++pos) {
-                    messageStore.add(MessageStoreEntry.of("first", TextMessage.of(Key.of(valueOf(pos), shardId + pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
-                    messageStore.add(MessageStoreEntry.of("second", TextMessage.of(Key.of(valueOf(pos), shardId + pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
+                    messageStore.add(MessageStoreEntry.of(
+                            "first",
+                            TextMessage.of(
+                                    Key.of(shardId + "#" + pos),
+                                    Header.of(fromPosition("shard-" + shardId, valueOf(pos))),
+                                    "some payload")));
+                    messageStore.add(MessageStoreEntry.of(
+                            "second",
+                            TextMessage.of(
+                                    Key.of(shardId + "#" + pos),
+                                    Header.of(fromPosition("shard-" + shardId, valueOf(pos))),
+                                    "some payload")));
                     assertThat(messageStore.getLatestChannelPosition("first").shard("shard-" + shardId).startFrom(), is(POSITION));
                     assertThat(messageStore.getLatestChannelPosition("second").shard("shard-" + shardId).position(), is(valueOf(pos)));
                 }

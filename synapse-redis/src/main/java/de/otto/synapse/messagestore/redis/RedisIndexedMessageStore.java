@@ -205,10 +205,6 @@ public class RedisIndexedMessageStore implements MessageStore {
         return redisTemplate.boundListOps(name + "-messages").size().intValue();
     }
 
-    @Override
-    public void close() {
-    }
-
     public void clear() {
         final List<String> keys = new ArrayList<>(asList(name + "-channels", name + "-messages"));
         getChannelNames().forEach(channel -> keys.add(name + "-" + channel + "-channelPos"));

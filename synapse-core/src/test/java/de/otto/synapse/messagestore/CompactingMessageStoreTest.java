@@ -12,7 +12,6 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -38,8 +37,7 @@ public class CompactingMessageStoreTest {
     @Parameters
     public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
-                () -> new CompactingInMemoryMessageStore(true),
-                () -> new CompactingConcurrentMapMessageStore(true, new ConcurrentHashMap<>())
+                () -> new CompactingInMemoryMessageStore(true)
         );
     }
 

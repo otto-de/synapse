@@ -7,6 +7,8 @@ import static java.util.Objects.requireNonNull;
 
 public final class CompoundKey implements Key {
 
+    private static final long serialVersionUID = -39690651225375664L;
+
     private final String partitionKey;
     private final String compactionKey;
 

@@ -22,6 +22,9 @@ dependencies {
         exclude group: "com.intellij", module: "annotations"
     }
 
+    implementation "org.mapdb:mapdb:3.0.7"
+    implementation "com.googlecode.concurrentlinkedhashmap:concurrentlinkedhashmap-lru:1.4.2"
+
     testImplementation project(':synapse-testsupport:')
 
     testImplementation 'junit:junit:4.12'

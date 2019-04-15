@@ -13,15 +13,14 @@ import org.junit.runners.Parameterized.Parameters;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
+import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.StartFrom.POSITION;
-import static de.otto.synapse.message.Header.of;
 import static java.lang.String.valueOf;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.CompletableFuture.allOf;
@@ -39,9 +38,9 @@ public class MessageStoreTest {
     public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
                 () -> new InMemoryMessageStore(),
-                () -> new InMemoryRingBufferMessageStore(10000),
-                () -> new CompactingInMemoryMessageStore(true),
-                () -> new CompactingConcurrentMapMessageStore(true, new ConcurrentHashMap<>())
+                () -> new MapDbMessageStore(),
+                () -> new InMemoryRingBufferMessageStore(1000),
+                () -> new CompactingInMemoryMessageStore(true)
         );
     }
 
@@ -73,10 +72,8 @@ public class MessageStoreTest {
         for (int shard=0; shard<5; ++shard) {
             final String shardId = valueOf(shard);
             completion[shard] = CompletableFuture.runAsync(() -> {
-                for (int pos = 0; pos < 10000; ++pos) {
-                    messageStore.add(MessageStoreEntry.of("", TextMessage.of(Key.of(valueOf(pos), shardId + pos), of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
-                    assertThat(messageStore.getLatestChannelPosition("").shard("shard-" + shardId).startFrom(), is(POSITION));
-                    assertThat(messageStore.getLatestChannelPosition("").shard("shard-" + shardId).position(), is(valueOf(pos)));
+                for (int pos = 1000; pos > 0; --pos) {
+                    messageStore.add(MessageStoreEntry.of("", TextMessage.of(Key.of(valueOf(pos), shardId + pos), Header.of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
                 }
 
             }, executorService);
@@ -89,10 +86,45 @@ public class MessageStoreTest {
                 final ShardPosition shard = header.getShardPosition().get();
                 final Integer pos = Integer.valueOf(shard.position());
                 lastPositions.putIfAbsent(shard.shardName(), pos);
-                assertThat(lastPositions.get(shard.shardName()), is(lessThanOrEqualTo(pos)));
+                assertThat(lastPositions.get(shard.shardName()), is(greaterThanOrEqualTo(pos)));
             }
         });
-        assertThat(messageStore.size(), isOneOf(10000, 50000));
+        assertThat(messageStore.size(), isOneOf(1000, 5000));
+    }
+
+    @SuppressWarnings("Duplicates")
+    @Test
+    public void shouldTrackLatestChannelPosition() {
+        final MessageStore messageStore = messageStoreBuilder.get();
+        final ExecutorService executorService = newFixedThreadPool(10);
+        final CompletableFuture[] completion = new CompletableFuture[5];
+        for (int shard=0; shard<5; ++shard) {
+            final String shardId = valueOf(shard);
+            completion[shard] = CompletableFuture.runAsync(() -> {
+                for (int pos = 0; pos < 1000; ++pos) {
+                    messageStore.add(MessageStoreEntry.of("", TextMessage.of(Key.of(valueOf(pos), shardId + pos), Header.of(fromPosition("shard-" + shardId, valueOf(pos))), "some payload")));
+                    assertThat(messageStore.getLatestChannelPosition("").shard("shard-" + shardId).startFrom(), is(POSITION));
+                    assertThat(messageStore.getLatestChannelPosition("").shard("shard-" + shardId).position(), is(valueOf(pos)));
+                }
+
+            }, executorService);
+        }
+        allOf(completion).join();
+        assertThat(messageStore.size(), isOneOf(1000, 5000));
+        assertThat(messageStore.getLatestChannelPosition(""), is(channelPosition(
+                fromPosition("shard-0", "999"),
+                fromPosition("shard-1", "999"),
+                fromPosition("shard-2", "999"),
+                fromPosition("shard-3", "999"),
+                fromPosition("shard-4", "999")
+        )));
+    }
+
+    @Test
+    public void shouldReturnFromHorizonForMessagesWithoutPosition() {
+        final MessageStore messageStore = messageStoreBuilder.get();
+        messageStore.add(MessageStoreEntry.of("", TextMessage.of("foo", "some payload")));
+        assertThat(messageStore.getLatestChannelPosition(""), is(fromHorizon()));
     }
 
 }

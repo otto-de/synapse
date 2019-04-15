@@ -7,6 +7,8 @@ import static java.util.Objects.requireNonNull;
 
 public final class SimpleKey implements Key {
 
+    private static final long serialVersionUID = 5169912180358849391L;
+
     private final String key;
 
     SimpleKey(final @Nonnull String key) {

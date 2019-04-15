@@ -13,6 +13,8 @@ import java.util.Objects;
  */
 public final class MessageStoreEntry implements Serializable {
 
+    private static final long serialVersionUID = 8581441886626974935L;
+
     private final @Nonnull String channelName;
     private final @Nonnull ImmutableMap<Index,String> filterValues;
     private final @Nonnull TextMessage textMessage;
