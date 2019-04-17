@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 public class InMemoryRingBufferMessageStore implements MessageStore {
 
     private final Queue<MessageStoreEntry> entries;
-    private final InMemoryChannelPositions channelPositions = new InMemoryChannelPositions();
+    private final ChannelPositions channelPositions = new ChannelPositions();
 
     /**
      * Creates a new instance with default capacity of 100.
@@ -48,7 +48,7 @@ public class InMemoryRingBufferMessageStore implements MessageStore {
 
     @Override
     public synchronized Set<String> getChannelNames() {
-        return channelPositions.channelNames();
+        return channelPositions.getChannelNames();
     }
 
     @Override
@@ -58,7 +58,7 @@ public class InMemoryRingBufferMessageStore implements MessageStore {
 
     @Override
     public synchronized ChannelPosition getLatestChannelPosition(final String channelName) {
-        return channelPositions.positionOf(channelName);
+        return channelPositions.getLatestChannelPosition(channelName);
     }
 
     @Override

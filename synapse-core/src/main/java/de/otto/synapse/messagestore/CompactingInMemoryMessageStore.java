@@ -32,7 +32,7 @@ public class CompactingInMemoryMessageStore implements MessageStore {
 
     private final long maxCapacity;
     private final boolean removeNullPayloadMessages;
-    private final InMemoryChannelPositions channelPositions = new InMemoryChannelPositions();
+    private final ChannelPositions channelPositions = new ChannelPositions();
     private final ConcurrentMap<Long, MessageStoreEntry> entries;
     private final ConcurrentMap<String, Long> keys = new ConcurrentHashMap<>();
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
@@ -79,7 +79,7 @@ public class CompactingInMemoryMessageStore implements MessageStore {
     public Set<String> getChannelNames() {
         lock.readLock().lock();
         try {
-            return channelPositions.channelNames();
+            return channelPositions.getChannelNames();
         } finally {
             lock.readLock().unlock();
         }
@@ -94,7 +94,7 @@ public class CompactingInMemoryMessageStore implements MessageStore {
     public ChannelPosition getLatestChannelPosition(final String channelName) {
         lock.readLock().lock();
         try {
-            return channelPositions.positionOf(channelName);
+            return channelPositions.getLatestChannelPosition(channelName);
         } finally {
             lock.readLock().unlock();
         }

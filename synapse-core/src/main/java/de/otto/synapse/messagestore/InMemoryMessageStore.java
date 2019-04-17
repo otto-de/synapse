@@ -16,7 +16,9 @@ import java.util.stream.Stream;
 import static de.otto.synapse.messagestore.Indexers.noOpIndexer;
 
 /**
- * Concurrent in-memory implementation of a MessageStore that is storing all messages in insertion order.
+ * Concurrent in-memory and on-heap implementation of a MessageStore that is storing all messages in insertion order.
+ *
+ * <p>Indexing of messages is supported by this implementation</p>
  */
 @ThreadSafe
 public class InMemoryMessageStore implements MessageStore {
@@ -24,7 +26,7 @@ public class InMemoryMessageStore implements MessageStore {
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final Deque<MessageStoreEntry> entries = new ConcurrentLinkedDeque<>();
     private final ConcurrentMap<String, Deque<MessageStoreEntry>> indexes = new ConcurrentHashMap<>();
-    private final InMemoryChannelPositions channelPositions = new InMemoryChannelPositions();
+    private final ChannelPositions channelPositions = new ChannelPositions();
     private final Indexer indexer;
 
     public InMemoryMessageStore() {
@@ -58,7 +60,7 @@ public class InMemoryMessageStore implements MessageStore {
     public Set<String> getChannelNames() {
         lock.readLock().lock();
         try {
-            return channelPositions.channelNames();
+            return channelPositions.getChannelNames();
         } finally {
           lock.readLock().unlock();
         }
@@ -73,7 +75,7 @@ public class InMemoryMessageStore implements MessageStore {
     public ChannelPosition getLatestChannelPosition(final String channelName) {
         lock.readLock().lock();
         try {
-            return channelPositions.positionOf(channelName);
+            return channelPositions.getLatestChannelPosition(channelName);
         } finally {
             lock.readLock().unlock();
         }

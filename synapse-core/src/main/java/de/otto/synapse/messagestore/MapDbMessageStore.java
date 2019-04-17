@@ -28,7 +28,7 @@ public class MapDbMessageStore implements MessageStore {
 
     private static final Logger LOG = getLogger(MapDbMessageStore.class);
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
-    private final InMemoryChannelPositions channelPositions = new InMemoryChannelPositions();
+    private final ChannelPositions channelPositions = new ChannelPositions();
     private final Indexer indexer;
     private final BTreeMap<Long,MessageStoreEntry> entries;
     private final DB mapDb;
@@ -67,7 +67,7 @@ public class MapDbMessageStore implements MessageStore {
     public Set<String> getChannelNames() {
         lock.readLock().lock();
         try {
-            return channelPositions.channelNames();
+            return channelPositions.getChannelNames();
         } finally {
           lock.readLock().unlock();
         }
@@ -82,7 +82,7 @@ public class MapDbMessageStore implements MessageStore {
     public ChannelPosition getLatestChannelPosition(final String channelName) {
         lock.readLock().lock();
         try {
-            return channelPositions.positionOf(channelName);
+            return channelPositions.getLatestChannelPosition(channelName);
         } finally {
             lock.readLock().unlock();
         }

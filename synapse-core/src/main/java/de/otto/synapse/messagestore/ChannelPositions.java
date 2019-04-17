@@ -3,6 +3,7 @@ package de.otto.synapse.messagestore;
 import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
+import net.jcip.annotations.ThreadSafe;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,7 +11,8 @@ import java.util.concurrent.ConcurrentMap;
 
 import static de.otto.synapse.channel.ChannelPosition.*;
 
-class InMemoryChannelPositions {
+@ThreadSafe
+class ChannelPositions {
 
     private final ConcurrentMap<String, ChannelPosition> channelPositions = new ConcurrentHashMap<>();
 
@@ -28,11 +30,11 @@ class InMemoryChannelPositions {
         });
     }
 
-    public ImmutableSet<String> channelNames() {
+    public ImmutableSet<String> getChannelNames() {
         return ImmutableSet.copyOf(channelPositions.keySet());
     }
 
-    public ChannelPosition positionOf(final String channelName) {
+    public ChannelPosition getLatestChannelPosition(final String channelName) {
         return channelPositions.getOrDefault(channelName, fromHorizon());
     }
 }
