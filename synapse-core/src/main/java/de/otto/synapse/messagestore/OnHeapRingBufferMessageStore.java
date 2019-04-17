@@ -15,10 +15,16 @@ import java.util.stream.Stream;
  *
  * <p>Each time an element is added to a full message store, the message store automatically removes its head element.
  *
- * <p>This implementation does not support indexing of entries.</p>
+ * <p><em>Features:</em></p>
+ * <ul>
+ *     <li>Thread-Safe</li>
+ *     <li>Support for maximum capacity.</li>
+ *     <li>No support for compaction.</li>
+ *     <li>No support for indexing of messages.</li>
+ * </ul>
  */
 @ThreadSafe
-public class InMemoryRingBufferMessageStore implements MessageStore {
+public class OnHeapRingBufferMessageStore implements MessageStore {
 
     private final Queue<MessageStoreEntry> entries;
     private final ChannelPositions channelPositions = new ChannelPositions();
@@ -27,7 +33,7 @@ public class InMemoryRingBufferMessageStore implements MessageStore {
      * Creates a new instance with default capacity of 100.
      *
      */
-    public InMemoryRingBufferMessageStore() {
+    public OnHeapRingBufferMessageStore() {
         this.entries = EvictingQueue.create(100);
     }
 
@@ -36,7 +42,7 @@ public class InMemoryRingBufferMessageStore implements MessageStore {
      *
      * @param capacity the size of the underlying ring buffer.
      */
-    public InMemoryRingBufferMessageStore(final int capacity) {
+    public OnHeapRingBufferMessageStore(final int capacity) {
         this.entries = EvictingQueue.create(capacity);
     }
 

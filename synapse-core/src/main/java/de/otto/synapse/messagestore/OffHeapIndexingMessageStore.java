@@ -20,18 +20,18 @@ import static org.dizitart.no2.IndexOptions.indexOptions;
 import static org.dizitart.no2.IndexType.NonUnique;
 import static org.dizitart.no2.filters.Filters.eq;
 
-public class NitriteMessageStore implements MessageStore {
+public class OffHeapIndexingMessageStore implements MessageStore {
 
     private final Nitrite nitrite;
     private final NitriteCollection messages;
     private final ChannelPositions channelPositions = new ChannelPositions();
     private final Indexer indexer;
 
-    public NitriteMessageStore(final String name) {
+    public OffHeapIndexingMessageStore(final String name) {
         this(name, Indexers.noOpIndexer());
     }
     
-    public NitriteMessageStore(final String name, final Indexer indexer) {
+    public OffHeapIndexingMessageStore(final String name, final Indexer indexer) {
         nitrite = Nitrite
                 .builder()
                 .openOrCreate();

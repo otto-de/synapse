@@ -33,7 +33,7 @@ public class RingBufferMessageStoreTest {
     @Parameters
     public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
-                () -> new InMemoryRingBufferMessageStore()
+                () -> new OnHeapRingBufferMessageStore()
         );
     }
 

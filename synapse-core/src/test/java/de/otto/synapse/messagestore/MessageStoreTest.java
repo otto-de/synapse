@@ -37,10 +37,10 @@ public class MessageStoreTest {
     @Parameters
     public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
-                () -> new InMemoryMessageStore(),
-                () -> new NitriteMessageStore("test"),
-                () -> new InMemoryRingBufferMessageStore(1000),
-                () -> new CompactingInMemoryMessageStore(true)
+                () -> new OnHeapIndexingMessageStore(),
+                () -> new OffHeapIndexingMessageStore("test"),
+                () -> new OnHeapRingBufferMessageStore(1000),
+                () -> new OnHeapCompactingMessageStore(true)
         );
     }
 

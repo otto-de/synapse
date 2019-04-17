@@ -7,9 +7,9 @@ import de.otto.synapse.endpoint.receiver.InMemoryMessageLogReceiverEndpointFacto
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import de.otto.synapse.endpoint.sender.InMemoryMessageSenderFactory;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
-import de.otto.synapse.messagestore.CompactingInMemoryMessageStore;
 import de.otto.synapse.messagestore.DelegatingSnapshotMessageStore;
 import de.otto.synapse.messagestore.MessageStoreFactory;
+import de.otto.synapse.messagestore.OnHeapCompactingMessageStore;
 import de.otto.synapse.messagestore.SnapshotMessageStore;
 import org.slf4j.Logger;
 import org.springframework.context.annotation.Bean;
@@ -47,7 +47,7 @@ public class InMemoryMessageLogTestConfiguration {
     @Bean
     public MessageStoreFactory<SnapshotMessageStore> snapshotMessageStoreFactory() {
         return (channelName -> new DelegatingSnapshotMessageStore(
-                new CompactingInMemoryMessageStore(true))
+                new OnHeapCompactingMessageStore(true))
         );
     }
 

@@ -15,15 +15,19 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
 
 /**
- * Concurrent in-memory (on heap) implementation of a MessageStore that is compacting entries by the message's
- * {@link Key#compactionKey()}
+ * Thread-safe in-memory (on heap) implementation of a MessageStore that is compacting entries by the message's
+ * {@link Key#compactionKey()}.
  *
- * <p>
- *     Indexing of messages is not supported by this implementation.
- * </p>
+ * <p><em>Features:</em></p>
+ * <ul>
+ *     <li>Thread-Safe</li>
+ *     <li>Supports a maximum capacity, with eviction of least-recently used (LRU) messages </li>
+ *     <li>Supports instant compaction of messages.</li>
+ *     <li>No indexing of messages is supported.</li>
+ * </ul>
  */
 @ThreadSafe
-public class CompactingInMemoryMessageStore implements MessageStore {
+public class OnHeapCompactingMessageStore implements MessageStore {
 
 
     // TODO: Introduce Builder
@@ -34,13 +38,18 @@ public class CompactingInMemoryMessageStore implements MessageStore {
     private final boolean removeNullPayloadMessages;
     private final ChannelPositions channelPositions = new ChannelPositions();
     private final ConcurrentMap<Long, MessageStoreEntry> entries;
-    private final ConcurrentMap<String, Long> keys = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Long> internalKeyToIndexMapping = new ConcurrentHashMap<>();
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final AtomicLong nextKey = new AtomicLong();
 
-    public CompactingInMemoryMessageStore(final boolean removeNullPayloadMessages) {
+    public OnHeapCompactingMessageStore(final boolean removeNullPayloadMessages) {
+        this(removeNullPayloadMessages, Long.MAX_VALUE);
+    }
+
+    public OnHeapCompactingMessageStore(final boolean removeNullPayloadMessages,
+                                        final long maxCapacity) {
         this.removeNullPayloadMessages = removeNullPayloadMessages;
-        this.maxCapacity = Long.MAX_VALUE;
+        this.maxCapacity = maxCapacity;
         this.entries = new ConcurrentLinkedHashMap.Builder<Long,MessageStoreEntry>()
                 .initialCapacity(1000)
                 .maximumWeightedCapacity(maxCapacity)
@@ -55,18 +64,18 @@ public class CompactingInMemoryMessageStore implements MessageStore {
             final long index = nextKey.getAndIncrement();
 
             if (entry.getTextMessage().getPayload() == null && removeNullPayloadMessages) {
-                final Long previousIndex = keys.get(internalKey);
+                final Long previousIndex = internalKeyToIndexMapping.get(internalKey);
                 if (previousIndex != null) {
                     entries.remove(previousIndex);
                 }
-                keys.remove(internalKey);
+                internalKeyToIndexMapping.remove(internalKey);
             } else {
-                final Long previousIndex = keys.get(internalKey);
+                final Long previousIndex = internalKeyToIndexMapping.get(internalKey);
                 if (previousIndex != null) {
                     entries.put(previousIndex, entry);
                 } else {
                     entries.put(index, entry);
-                    keys.put(internalKey, index);
+                    internalKeyToIndexMapping.put(internalKey, index);
                 }
             }
             channelPositions.updateFrom(entry);
@@ -120,7 +129,4 @@ public class CompactingInMemoryMessageStore implements MessageStore {
         return entries.size();
     }
 
-    private String indexKeyOf(Index index, String value) {
-        return index.getName() + "#" + value;
-    }
 }

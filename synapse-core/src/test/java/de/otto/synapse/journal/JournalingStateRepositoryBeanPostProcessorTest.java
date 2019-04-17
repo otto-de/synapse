@@ -13,9 +13,9 @@ import de.otto.synapse.endpoint.MessageInterceptorRegistration;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.message.TextMessage;
-import de.otto.synapse.messagestore.InMemoryMessageStore;
 import de.otto.synapse.messagestore.Index;
 import de.otto.synapse.messagestore.MessageStore;
+import de.otto.synapse.messagestore.OnHeapIndexingMessageStore;
 import de.otto.synapse.state.ConcurrentMapStateRepository;
 import org.junit.After;
 import org.junit.Before;
@@ -124,7 +124,7 @@ public class JournalingStateRepositoryBeanPostProcessorTest {
         public SingleConsumerJournaledStateRepository() {
             super(
                     new ConcurrentMapStateRepository("test"),
-                    new InMemoryMessageStore(journalKeyIndexer())
+                    new OnHeapIndexingMessageStore(journalKeyIndexer())
             );
         }
 

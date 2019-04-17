@@ -37,7 +37,7 @@ public class CompactingMessageStoreTest {
     @Parameters
     public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
-                () -> new CompactingInMemoryMessageStore(true)
+                () -> new OnHeapCompactingMessageStore(true)
         );
     }
 

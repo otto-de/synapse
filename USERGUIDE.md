@@ -218,12 +218,13 @@ In most cases, messages can be added to Message Stores. Only a few special-purpo
 adding messages to the store. 
     
 There are several implementations of the `MessageStore` interface available in Synapse:
-* `de.otto.synapse.messagestore.InMemoryMessageStore`: A `MessageStore` that is implemented using a 
-  `ConcurrentLinkedDeque`. Primarily used for testing purposes.
-* `de.otto.synapse.messagestore.InMemoryRingBufferMessageStore`: A `MessageStore` that is implemented using a 
+* `de.otto.synapse.messagestore.OnHeapIndexingMessageStore`: A `MessageStore` that is implemented using a 
+  `ConcurrentLinkedDeque` with support for message-indexing. Primarily used for testing purposes.
+* `de.otto.synapse.messagestore.OnHeapRingBufferMessageStore`: A `MessageStore` that is implemented using a 
   Guava `EvictingQueue`. Primarily used for testing purposes, or for smaller data-sets without any need for durability.
-* `de.otto.synapse.messagestore.CompactingInMemoryMessageStore`: A compacting `MessageStore` that is compacting messages
-  by compaction-key when writing into the store. It's implementation is based on a `ConcurrentNavigableMap`.
+* `de.otto.synapse.messagestore.OnHeapCompactingMessageStore`: A compacting `MessageStore` that is compacting messages
+  by compaction-key when writing into the store. It's implementation is based on a `ConcurrentLinkedHashMap` in order
+  to preserve the insertion-order of messages.
 
 For larger datasets, Redis is supported by the separate, add-on library `synapse-redis`. It can also be used to
 access AWS ElastiCache. 

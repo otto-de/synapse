@@ -16,12 +16,18 @@ import java.util.stream.Stream;
 import static de.otto.synapse.messagestore.Indexers.noOpIndexer;
 
 /**
- * Concurrent in-memory and on-heap implementation of a MessageStore that is storing all messages in insertion order.
+ * Thread-safe in-memory (on heap) implementation of a MessageStore that is able to index entries.
  *
- * <p>Indexing of messages is supported by this implementation</p>
+ * <p><em>Features:</em></p>
+ * <ul>
+ *     <li>Thread-Safe</li>
+ *     <li>No support for maximum capacity, will grow without bounds.</li>
+ *     <li>No support for compaction.</li>
+ *     <li>Supports ndexing of messages.</li>
+ * </ul>
  */
 @ThreadSafe
-public class InMemoryMessageStore implements MessageStore {
+public class OnHeapIndexingMessageStore implements MessageStore {
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private final Deque<MessageStoreEntry> entries = new ConcurrentLinkedDeque<>();
@@ -29,11 +35,11 @@ public class InMemoryMessageStore implements MessageStore {
     private final ChannelPositions channelPositions = new ChannelPositions();
     private final Indexer indexer;
 
-    public InMemoryMessageStore() {
+    public OnHeapIndexingMessageStore() {
         this.indexer = noOpIndexer();
     }
 
-    public InMemoryMessageStore(final Indexer indexer) {
+    public OnHeapIndexingMessageStore(final Indexer indexer) {
         this.indexer = indexer;
     }
 

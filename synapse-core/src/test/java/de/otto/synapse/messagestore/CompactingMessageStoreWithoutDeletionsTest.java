@@ -28,7 +28,7 @@ public class CompactingMessageStoreWithoutDeletionsTest {
     @Parameters
     public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
-                () -> new CompactingInMemoryMessageStore(false)
+                () -> new OnHeapCompactingMessageStore(false)
         );
     }
 

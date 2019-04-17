@@ -6,8 +6,8 @@ import de.otto.synapse.example.edison.payload.ProductPayload;
 import de.otto.synapse.example.edison.state.BananaProduct;
 import de.otto.synapse.example.edison.state.BananaProductStateRepository;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.messagestore.InMemoryMessageStore;
 import de.otto.synapse.messagestore.Indexers;
+import de.otto.synapse.messagestore.OnHeapIndexingMessageStore;
 import de.otto.synapse.state.ConcurrentMapStateRepository;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,7 +26,7 @@ public class ExampleConsumerTest {
     public void setUp() throws Exception {
         stateRepository = new BananaProductStateRepository(
                 new ConcurrentMapStateRepository<>("BananaProducts"),
-                new InMemoryMessageStore(Indexers.journalKeyIndexer())
+                new OnHeapIndexingMessageStore(Indexers.journalKeyIndexer())
         );
     }
 

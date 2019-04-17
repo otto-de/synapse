@@ -43,8 +43,8 @@ public class IndexingMessageStoreTest {
     @Parameters
     public static Iterable<? extends Supplier<MessageStore>> channelIndexedMessageStore() {
         return asList(
-                () -> new InMemoryMessageStore(channelNameIndexer()),
-                () -> new NitriteMessageStore("test", channelNameIndexer())
+                () -> new OnHeapIndexingMessageStore(channelNameIndexer()),
+                () -> new OffHeapIndexingMessageStore("test", channelNameIndexer())
         );
     }
 

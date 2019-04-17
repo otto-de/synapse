@@ -6,8 +6,8 @@ import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.kinesis.KinesisMessageSender;
 import de.otto.synapse.eventsource.DefaultEventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
-import de.otto.synapse.messagestore.InMemoryMessageStore;
 import de.otto.synapse.messagestore.MessageStore;
+import de.otto.synapse.messagestore.OnHeapIndexingMessageStore;
 import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.TextMessageTranslator;
 import org.slf4j.Logger;
@@ -47,7 +47,7 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
     @Bean
     public EventSourceBuilder eventSourceBuilder() {
         return (messageLog) -> {
-            final MessageStore messageStore = new InMemoryMessageStore();
+            final MessageStore messageStore = new OnHeapIndexingMessageStore();
             return new DefaultEventSource(messageStore, messageLog);
         };
     }
