@@ -38,7 +38,7 @@ public class MessageStoreTest {
     public static Iterable<? extends Supplier<MessageStore>> messageStores() {
         return asList(
                 () -> new InMemoryMessageStore(),
-                () -> new MapDbMessageStore(),
+                () -> new NitriteMessageStore("test"),
                 () -> new InMemoryRingBufferMessageStore(1000),
                 () -> new CompactingInMemoryMessageStore(true)
         );
