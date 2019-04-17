@@ -66,4 +66,10 @@ public abstract class JournalingStateRepository<V> extends DelegatingStateReposi
         return messageStore;
     }
 
+    @Override
+    public void close() throws Exception {
+        messageStore.close();
+        super.close();
+    }
+
 }
