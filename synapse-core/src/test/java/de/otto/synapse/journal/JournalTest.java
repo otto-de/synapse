@@ -1,5 +1,6 @@
 package de.otto.synapse.journal;
 
+import com.google.common.collect.ImmutableList;
 import de.otto.synapse.messagestore.Index;
 import de.otto.synapse.messagestore.MessageStore;
 import de.otto.synapse.messagestore.MessageStoreEntry;
@@ -33,6 +34,11 @@ public class JournalTest {
             @Override
             public String getName() {
                 return "";
+            }
+
+            @Override
+            public ImmutableList<String> getJournaledChannels() {
+                return ImmutableList.of("foo");
             }
 
             @Override

@@ -2,7 +2,7 @@ package de.otto.synapse.edison.state;
 
 import de.otto.edison.navigation.NavBar;
 import de.otto.synapse.journal.Journal;
-import de.otto.synapse.journal.Journals;
+import de.otto.synapse.journal.JournalRegistry;
 import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.messagestore.MessageStoreEntry;
 import org.hamcrest.Matchers;
@@ -50,7 +50,7 @@ public class StateRepositoryUiControllerTest {
     private NavBar rightNavBar;
 
     @MockBean
-    private Journals journals;
+    private JournalRegistry journals;
 
     private MockMvc mockMvc;
 
@@ -80,7 +80,7 @@ public class StateRepositoryUiControllerTest {
                 .thenReturn(Stream.of(
                         MessageStoreEntry.of("test", TextMessage.of("first", null)))
                 );
-        when(journals.containsKey("test")).thenReturn(true);
+        when(journals.hasJournal("test")).thenReturn(true);
         when(journals.getJournal("test")).thenReturn(Optional.of(journal));
         mockMvc
                 .perform(

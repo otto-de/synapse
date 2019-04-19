@@ -4,11 +4,10 @@ import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.example.edison.payload.BananaPayload;
 import de.otto.synapse.example.edison.payload.ProductPayload;
 import de.otto.synapse.example.edison.state.BananaProduct;
-import de.otto.synapse.example.edison.state.BananaProductStateRepository;
+import de.otto.synapse.example.edison.state.EventConsumers;
 import de.otto.synapse.message.Message;
-import de.otto.synapse.messagestore.Indexers;
-import de.otto.synapse.messagestore.OnHeapIndexingMessageStore;
 import de.otto.synapse.state.ConcurrentMapStateRepository;
+import de.otto.synapse.state.StateRepository;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,14 +19,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 public class ExampleConsumerTest {
 
-    private BananaProductStateRepository stateRepository;
+    private StateRepository<BananaProduct> stateRepository;
+    private EventConsumers eventConsumers;
 
     @Before
-    public void setUp() throws Exception {
-        stateRepository = new BananaProductStateRepository(
-                new ConcurrentMapStateRepository<>("BananaProducts"),
-                new OnHeapIndexingMessageStore(Indexers.journalKeyIndexer())
-        );
+    public void setUp() {
+        this.stateRepository = new ConcurrentMapStateRepository<>("BananaProducts");
+        this.eventConsumers = new EventConsumers(stateRepository);
     }
 
     @Test
@@ -38,7 +36,7 @@ public class ExampleConsumerTest {
         bananaPayload.setColor("green");
 
         // when
-        stateRepository.consumeBananas(testMessage("banana_id", bananaPayload));
+        eventConsumers.consumeBananas(testMessage("banana_id", bananaPayload));
 
         // then
         Optional<BananaProduct> retrievedBanana = stateRepository.get("banana_id");
@@ -54,7 +52,7 @@ public class ExampleConsumerTest {
         productPayload.setPrice(300L);
 
         // when
-        stateRepository.consumeProducts(testMessage("banana_id", productPayload));
+        eventConsumers.consumeProducts(testMessage("banana_id", productPayload));
 
         // then
         Optional<BananaProduct> retrievedBanana = stateRepository.get("banana_id");
@@ -73,8 +71,8 @@ public class ExampleConsumerTest {
         bananaPayload.setColor("green");
 
         // when
-        stateRepository.consumeProducts(testMessage("banana_id", productPayload));
-        stateRepository.consumeBananas(testMessage("banana_id", bananaPayload));
+        eventConsumers.consumeProducts(testMessage("banana_id", productPayload));
+        eventConsumers.consumeBananas(testMessage("banana_id", bananaPayload));
 
         // then
         Optional<BananaProduct> retrievedBanana = stateRepository.get("banana_id");

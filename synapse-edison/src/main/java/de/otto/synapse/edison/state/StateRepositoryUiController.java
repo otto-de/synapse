@@ -6,7 +6,7 @@ import de.otto.edison.hal.Link;
 import de.otto.edison.hal.Links;
 import de.otto.edison.hal.paging.PagingRel;
 import de.otto.edison.navigation.NavBar;
-import de.otto.synapse.journal.Journals;
+import de.otto.synapse.journal.JournalRegistry;
 import de.otto.synapse.state.StateRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -48,12 +48,12 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
         matchIfMissing = true)
 public class StateRepositoryUiController {
 
-    private final Journals journals;
+    private final JournalRegistry journals;
     private final ImmutableMap<String,StateRepository<?>> stateRepositories;
     private final String managementBasePath;
 
     public StateRepositoryUiController(final List<StateRepository<?>> stateRepositories,
-                                       final Journals journals,
+                                       final JournalRegistry journals,
                                        final NavBar rightNavBar,
                                        final EdisonStateRepositoryUiProperties properties,
                                        final @Value("${edison.application.management.base-path:internal}") String managementBasePath) {
@@ -109,7 +109,7 @@ public class StateRepositoryUiController {
                     ImmutableMap.<String,Object>builder()
                             .put("basePath", managementBasePath)
                             .put("singleEntity", false)
-                            .put("journaled", journals.containsKey(repositoryName))
+                            .put("journaled", journals.hasJournal(repositoryName))
                             .put("repositoryName", repositoryName)
                             .put("entities", entitiesModel)
                             .put("pager", pagerModel)
@@ -144,7 +144,7 @@ public class StateRepositoryUiController {
                     ImmutableMap.<String,Object>builder()
                             .put("basePath", managementBasePath)
                             .put("singleEntity", true)
-                            .put("journaled", journals.containsKey(repositoryName))
+                            .put("journaled", journals.hasJournal(repositoryName))
                             .put("repositoryName", repositoryName)
                             .put("entities", singletonList(
                                     toEntityModel(entityId, stateRepository.get(entityId).get())))

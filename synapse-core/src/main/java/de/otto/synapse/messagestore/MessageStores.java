@@ -18,7 +18,6 @@ public class MessageStores {
     }
 
     public static MessageStore emptyMessageStore() {
-
         return EMPTY_MESSAGE_STORE;
     }
 

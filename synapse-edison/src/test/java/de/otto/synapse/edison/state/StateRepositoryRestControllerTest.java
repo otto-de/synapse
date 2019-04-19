@@ -1,6 +1,6 @@
 package de.otto.synapse.edison.state;
 
-import de.otto.synapse.journal.Journals;
+import de.otto.synapse.journal.JournalRegistry;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,7 +37,7 @@ public class StateRepositoryRestControllerTest {
     private WebApplicationContext context;
 
     @MockBean
-    private Journals journals;
+    private JournalRegistry journals;
 
     private MockMvc mockMvc;
 

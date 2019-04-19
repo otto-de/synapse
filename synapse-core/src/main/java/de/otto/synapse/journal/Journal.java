@@ -1,5 +1,6 @@
 package de.otto.synapse.journal;
 
+import com.google.common.collect.ImmutableList;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.messagestore.Index;
 import de.otto.synapse.messagestore.MessageStore;
@@ -10,18 +11,22 @@ import java.util.stream.Stream;
 
 /**
  * A Journal contains all the messages that where leading to the current state of a single event-sourced entity
- * stored in a {@link StateRepository}.
+ * stored in a {@link StateRepository} or in some other kind of storage.
  *
- * <p>It is associated with a {@link MessageStore} used to store the messages. The store must provide a
+ * <p>Messages can come from different channels. The Journal will keep track not only of the messages for a single
+ * entity, but also from the originating channel for every message.</p>
+ *
+ * <p>The messages of a {@code Journal} will be stored in a {@link MessageStore}. The store must have a
  * {@link Index#JOURNAL_KEY journal-key index}, so the {@code Journal} is able to return the {@code Stream}
  * of messages (more precisely {@link MessageStoreEntry}) for every entity stored in the {code StateRepository}
  * when calling {@link #getJournalFor(String)}.</p>
  *
  * <p>In order to identify the messages for an entity, {@link #journalKeyOf(String)} must return the key of
  * the associated messages for a given {@code entityId}, which is the key of the stored entities: the key that
- * would be used, for example, to {@link StateRepository#get(String)} the entity from the StateRepository.</p>
+ * would be used, for example, to {@link StateRepository#get(String) get} the entity from the StateRepository.</p>
  *
- * <p>The default implementation of a {@code Journal} is {@link JournalingStateRepository}.</p>
+ * <p>A number of default implementations of the {@code Journal} interface can be created using the {@code Journal}
+ * helper {@link Journals}.</p>
  *
  * <p>Implementation hints:</p>
  *
@@ -45,6 +50,17 @@ public interface Journal {
      * @return journal name
      */
     String getName();
+
+    /**
+     * The List of channels that take influence on this Journal.
+     *
+     * <p>For every channel, a {@link JournalingInterceptor} is auto-configured, if the {@code Journal} is registered
+     * as a Spring Bean. The interceptors will take care of {@link MessageStore#add(MessageStoreEntry) adding} incoming
+     * messages to the {@link #getMessageStore() journal's MessageStore}.</p>
+     *
+     * @return list of channel names
+     */
+    ImmutableList<String> getJournaledChannels();
 
     /**
      * Returns the {@code MessageStore} used to store the messages of the journaled entities.

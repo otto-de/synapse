@@ -80,4 +80,4 @@ public @interface EnableEventSource {
      */
     String messageLogReceiverEndpoint() default "";
 
-    }
+}

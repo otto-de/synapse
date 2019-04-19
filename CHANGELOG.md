@@ -10,9 +10,10 @@
 * Removes unused MessageStore.getName()
 
 *Journaling*
-* Introduces journaling for event-sourced entities stored in a JournalingStateRepository.
+* Introduces journaling for event-sourced entities stored in a StateRepository.
   Using message journals, it is possible to retrieve all messages that where used to modify
-  the state of an event-sourced entity.
+  the state of an event-sourced entity. Have a look at `de.otto.synapse.journal.Journal` for
+  more information.
 
 ## 0.16.4
 

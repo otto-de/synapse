@@ -6,8 +6,8 @@ import de.otto.edison.hal.HalRepresentation;
 import de.otto.edison.hal.Link;
 import de.otto.edison.hal.Links;
 import de.otto.edison.hal.paging.PagingRel;
-import de.otto.synapse.journal.JournalingStateRepository;
-import de.otto.synapse.journal.Journals;
+import de.otto.synapse.journal.Journal;
+import de.otto.synapse.journal.JournalRegistry;
 import de.otto.synapse.state.StateRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -45,12 +45,12 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
         matchIfMissing = true)
 public class StateRepositoryRestController {
 
-    private final Journals journals;
+    private final JournalRegistry journals;
     private final ImmutableMap<String,StateRepository<?>> stateRepositories;
     private final String managementBasePath;
 
     public StateRepositoryRestController(final List<StateRepository<?>> stateRepositories,
-                                         final Journals journals,
+                                         final JournalRegistry journals,
                                          final EdisonStateRepositoryUiProperties properties,
                                          final @Value("${edison.application.management.base-path:internal}") String managementBasePath) {
         this.stateRepositories = uniqueIndex(stateRepositories
@@ -143,7 +143,7 @@ public class StateRepositoryRestController {
      * Returns an application/hal+json representation of a single event-sourced entity stored in the
      * {@link StateRepository} with the specified {@code repositoryName}.
      *
-     * <p>If the state repository is a {@link JournalingStateRepository}, the returned
+     * <p>If the state repository has a {@link Journal}, the returned
      * entity representation will contain a link to the messages that where leading to the current state of the
      * entity.</p>
      *
@@ -171,7 +171,7 @@ public class StateRepositoryRestController {
 
                     .single(
                             collection(baseUri + "/staterepositories/" + repositoryName + "{?page,pageSize}"));
-            if (journals.containsKey(repositoryName)) {
+            if (journals.hasJournal(repositoryName)) {
                 links.single(
                         link("working-copy-of", baseUri + "/journals/" + repositoryName + "/" + entityId));
             }

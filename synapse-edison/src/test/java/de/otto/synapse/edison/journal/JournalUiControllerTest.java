@@ -1,7 +1,7 @@
 package de.otto.synapse.edison.journal;
 
 import de.otto.synapse.journal.Journal;
-import de.otto.synapse.journal.Journals;
+import de.otto.synapse.journal.JournalRegistry;
 import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.messagestore.MessageStoreEntry;
 import org.junit.Before;
@@ -46,7 +46,7 @@ public class JournalUiControllerTest {
     private WebApplicationContext context;
 
     @MockBean
-    private Journals journals;
+    private JournalRegistry journals;
 
     private MockMvc mockMvc;
 
@@ -65,7 +65,7 @@ public class JournalUiControllerTest {
         final Journal journal = mock(Journal.class);
         when(journal.getJournalFor("first")).thenReturn(Stream.of());
 
-        when(journals.containsKey("test")).thenReturn(true);
+        when(journals.hasJournal("test")).thenReturn(true);
         when(journals.getJournal("test")).thenReturn(Optional.of(journal));
 
         mockMvc
@@ -88,7 +88,7 @@ public class JournalUiControllerTest {
                         MessageStoreEntry.of("test", TextMessage.of("first", "bar"))
                 ));
 
-        when(journals.containsKey("test")).thenReturn(true);
+        when(journals.hasJournal("test")).thenReturn(true);
         when(journals.getJournal("test")).thenReturn(Optional.of(journal));
 
         mockMvc
@@ -106,7 +106,7 @@ public class JournalUiControllerTest {
 
     @Test
     public void shouldGet404ForMissingJournalHtml() throws Exception {
-        when(journals.containsKey("test")).thenReturn(false);
+        when(journals.hasJournal("test")).thenReturn(false);
 
         mockMvc
                 .perform(

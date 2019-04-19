@@ -5,8 +5,8 @@ import de.otto.synapse.annotation.MessageInterceptorBeanPostProcessor;
 import de.otto.synapse.endpoint.DefaultReceiverHeadersInterceptor;
 import de.otto.synapse.endpoint.DefaultSenderHeadersInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.journal.JournalingStateRepositoryBeanPostProcessor;
-import de.otto.synapse.journal.Journals;
+import de.otto.synapse.journal.Journal;
+import de.otto.synapse.journal.JournalRegistry;
 import org.slf4j.Logger;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -15,14 +15,15 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Role;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 
+import java.util.List;
 import java.util.Map;
 
 import static de.otto.synapse.translator.ObjectMappers.currentObjectMapper;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.beans.factory.config.BeanDefinition.ROLE_INFRASTRUCTURE;
+import static org.springframework.core.Ordered.LOWEST_PRECEDENCE;
 
 @Configuration
 @EnableConfigurationProperties(SynapseProperties.class)
@@ -53,8 +54,9 @@ public class SynapseAutoConfiguration {
     }
 
     @Bean
-    public Journals journals() {
-        return new Journals();
+    public JournalRegistry journals(final List<Journal> journals,
+                                    final MessageInterceptorRegistry registry) {
+        return new JournalRegistry(journals, registry);
     }
 
     /**
@@ -65,7 +67,7 @@ public class SynapseAutoConfiguration {
      * @return DefaultSenderHeadersInterceptor
      */
     @Bean
-    @Order(Ordered.LOWEST_PRECEDENCE)
+    @Order(LOWEST_PRECEDENCE)
     @ConditionalOnMissingBean
     @ConditionalOnProperty(
             prefix = "synapse.sender.default-headers",
@@ -84,7 +86,7 @@ public class SynapseAutoConfiguration {
      * @return DefaultReceiverHeadersInterceptor
      */
     @Bean
-    @Order(Ordered.LOWEST_PRECEDENCE)
+    @Order(LOWEST_PRECEDENCE)
     @ConditionalOnMissingBean
     @ConditionalOnProperty(
             prefix = "synapse.receiver.default-headers",
@@ -105,18 +107,6 @@ public class SynapseAutoConfiguration {
     @Role(ROLE_INFRASTRUCTURE)
     public MessageInterceptorBeanPostProcessor messageInterceptorBeanPostProcessor() {
         return new MessageInterceptorBeanPostProcessor();
-    }
-
-    /**
-     * Activate the JournalingStateRepositoryBeanPostProcessor used to post-process beans extending the
-     * JournaledStateRepository interface
-     *
-     * @return MessageInterceptorBeanPostProcessor
-     */
-    @Bean
-    @Role(ROLE_INFRASTRUCTURE)
-    public JournalingStateRepositoryBeanPostProcessor journalingStateRepositoryBeanPostProcessor() {
-        return new JournalingStateRepositoryBeanPostProcessor();
     }
 
 }

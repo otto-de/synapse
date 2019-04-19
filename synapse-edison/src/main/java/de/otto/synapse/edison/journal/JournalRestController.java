@@ -5,7 +5,7 @@ import de.otto.edison.hal.HalRepresentation;
 import de.otto.edison.hal.Links;
 import de.otto.synapse.edison.state.EdisonStateRepositoryUiProperties;
 import de.otto.synapse.journal.Journal;
-import de.otto.synapse.journal.Journals;
+import de.otto.synapse.journal.JournalRegistry;
 import de.otto.synapse.state.StateRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -38,12 +38,12 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
         matchIfMissing = true)
 public class JournalRestController {
 
-    private final Journals journals;
+    private final JournalRegistry journals;
     private final ImmutableMap<String,StateRepository<?>> stateRepositories;
     private final String managementBasePath;
 
     public JournalRestController(final List<StateRepository<?>> stateRepositories,
-                                 final Journals journals,
+                                 final JournalRegistry journals,
                                  final EdisonStateRepositoryUiProperties properties,
                                  final @Value("${edison.application.management.base-path:internal}") String managementBasePath) {
         this.stateRepositories = uniqueIndex(stateRepositories
@@ -74,7 +74,7 @@ public class JournalRestController {
         final String baseUri = uriComponentsBuilder.pathSegment(managementBasePath).toUriString();
         final String selfUri = baseUri + "/journals/" + repositoryName + "/" + entityId;
 
-        if (journals.containsKey(repositoryName)) {
+        if (journals.hasJournal(repositoryName)) {
             final List<MessageStoreEntryRepresentation> messages =
                 journals.getJournal(repositoryName)
                         .map(journal -> journal.getJournalFor(entityId)

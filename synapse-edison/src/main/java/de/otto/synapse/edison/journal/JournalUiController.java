@@ -2,7 +2,7 @@ package de.otto.synapse.edison.journal;
 
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.journal.Journal;
-import de.otto.synapse.journal.Journals;
+import de.otto.synapse.journal.JournalRegistry;
 import de.otto.synapse.messagestore.MessageStoreEntry;
 import de.otto.synapse.state.StateRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -30,9 +30,9 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
         matchIfMissing = true)
 public class JournalUiController {
 
-    private final Journals journals;
+    private final JournalRegistry journals;
 
-    public JournalUiController(final Journals journals) {
+    public JournalUiController(final JournalRegistry journals) {
         this.journals = journals;
     }
 
@@ -50,7 +50,7 @@ public class JournalUiController {
     )
     public ModelAndView getEntityJournalHtml(final @PathVariable String repositoryName,
                                              final @PathVariable String entityId) {
-        if (journals.containsKey(repositoryName)) {
+        if (journals.hasJournal(repositoryName)) {
             final AtomicLong nextSequenceNumber = new AtomicLong(0L);
             final Stream<MessageStoreEntry> entries = journals.getJournal(repositoryName).get().getJournalFor(entityId);
             return new ModelAndView(

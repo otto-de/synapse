@@ -1,36 +1,101 @@
 package de.otto.synapse.journal;
 
-import org.slf4j.Logger;
+import com.google.common.collect.ImmutableList;
+import de.otto.synapse.messagestore.MessageStore;
+import de.otto.synapse.messagestore.MessageStores;
+import de.otto.synapse.messagestore.OffHeapIndexingMessageStore;
+import de.otto.synapse.state.StateRepository;
 
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
-import static java.util.Optional.ofNullable;
-import static org.slf4j.LoggerFactory.getLogger;
+import static com.google.common.base.CaseFormat.LOWER_HYPHEN;
+import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+import static de.otto.synapse.messagestore.Indexers.journalKeyIndexer;
 
 public class Journals {
-    private static final Logger LOG = getLogger(Journals.class);
-    private final ConcurrentMap<String,Journal> journals;
 
-    public Journals() {
-        journals = new ConcurrentHashMap<>();
+    private Journals() {
     }
 
-    public Optional<Journal> getJournal(final String name) {
-        return ofNullable(
-                journals.get(name)
-        );
+    public static Journal noOpJournal() {
+        return new Journal() {
+            @Override
+            public String getName() {
+                return "no-op";
+            }
+
+            @Override
+            public ImmutableList<String> getJournaledChannels() {
+                return ImmutableList.of();
+            }
+
+            @Override
+            public MessageStore getMessageStore() {
+                return MessageStores.emptyMessageStore();
+            }
+        };
     }
 
-    public void add(final Journal journal) {
-        final Journal existing = journals.putIfAbsent(journal.getName(), journal);
-        if (existing != null && existing != journal) {
-            throw new IllegalStateException("Unable to register Journal " + journal.getName() + " as there is already a different journal registered for this name");
-        }
+    public static Journal singleChannelJournal(final StateRepository<?> stateRepository,
+                                               final String channelName) {
+        return singleChannelJournal(stateRepository.getName(), channelName);
     }
 
-    public boolean containsKey(final String repositoryName) {
-        return journals.containsKey(repositoryName);
+    public static Journal singleChannelJournal(final String name,
+                                               final String channelName) {
+        return new Journal() {
+            final MessageStore messageStore = new OffHeapIndexingMessageStore(nameFrom(channelName, "MessageStore"), journalKeyIndexer());
+
+            @Override
+            public String getName() {
+                return name;
+            }
+
+            @Override
+            public ImmutableList<String> getJournaledChannels() {
+                return ImmutableList.of(channelName);
+            }
+
+            @Override
+            public MessageStore getMessageStore() {
+                return messageStore;
+            }
+        };
     }
+
+    public static Journal multiChannelJournal(final StateRepository<?> stateRepository,
+                                              final String channelName,
+                                              final String... moreChannelNames) {
+        return multiChannelJournal(stateRepository.getName(), channelName, moreChannelNames);
+    }
+
+    public static Journal multiChannelJournal(final String name,
+                                              final String channelName,
+                                              final String... moreChannelNames) {
+        return new Journal() {
+            final MessageStore messageStore = new OffHeapIndexingMessageStore(nameFrom(channelName, "MessageStore"), journalKeyIndexer());
+
+            @Override
+            public String getName() {
+                return name;
+            }
+
+            @Override
+            public ImmutableList<String> getJournaledChannels() {
+                if (moreChannelNames != null && moreChannelNames.length > 0) {
+                    return ImmutableList.<String>builder().add(channelName).add(moreChannelNames).build();
+                } else {
+                    return ImmutableList.of(channelName);
+                }
+            }
+
+            @Override
+            public MessageStore getMessageStore() {
+                return messageStore;
+            }
+        };
+    }
+
+    private static String nameFrom(final String channelName, final String suffix) {
+        return LOWER_HYPHEN.to(UPPER_CAMEL, channelName) + suffix;
+    }
+
 }

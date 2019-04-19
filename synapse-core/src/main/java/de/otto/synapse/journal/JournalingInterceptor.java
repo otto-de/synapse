@@ -45,4 +45,7 @@ public class JournalingInterceptor implements MessageInterceptor {
         return message;
     }
 
+    public Journal getJournal() {
+        return journal;
+    }
 }

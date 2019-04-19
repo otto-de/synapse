@@ -21,5 +21,9 @@ public class BeanNameHelper {
         return LOWER_HYPHEN.to(LOWER_CAMEL, channelName) + "MessageSenderEndpoint";
     }
 
+    public static String beanNameForJournal(final String channelName) {
+        return LOWER_HYPHEN.to(LOWER_CAMEL, channelName) + "Journal";
+    }
+
 }
 

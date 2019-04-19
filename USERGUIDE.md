@@ -309,5 +309,69 @@ messageStore
         .forEach(System.out::println);
 ```
 
+## Journal
+
+One of the promises of eventsourcing architectures is the possibility to not only see the current state of some
+entity, but also to track and analyze all the single changes that lead to the current state. In Synapse, the 
+`Journal` takes responsibility for providing exactly this functionality.
+
+A `Journal` contains all the messages that where leading to the current state of a single event-sourced entity
+stored in a `StateRepository` or in some other kind of storage.
+
+Messages can come from different channels. The `Journal` will keep track not only of the messages for a single
+entity, but also from the originating channel for every message.
+
+The messages of a `Journal` will be stored in a `MessageStore`. The store must have a
+journal-key index (see Index.JOURNAL_KEY), so the `Journal` is able to return the `Stream`
+of messages (more precisely `MessageStoreEntry`) for every entity stored in the `StateRepository`
+when calling `Journal.getJournalFor(String)`.
+
+In order to identify the messages for an entity, `Journal.journalKeyOf(String)` must return the key of
+the associated messages for a given `entityId`, which is the key of the stored entities: the key that
+would be used, for example, to get the entity from the StateRepository.
+
+A number of default implementations of the `Journal` interface can be created using the helper class 
+`de.otto.synapse.journal.Journals`.</p>
+
+The following example is showing how to configure a `StateRepository` that has a `Journal` for two 
+different channels:
+
+```java
+@Configuration
+@EnableEventSource(
+        name = "priceUpdateSource",
+        channelName = "price-update-channel")
+@EnableEventSource(
+        name = "availabilityUpdateSource",
+        channelName = "availability-update-channel")
+public class ExampleConfiguration {
+
+    private static final Logger LOG = getLogger(ExampleConfiguration.class);
+
+    @Bean
+    public StateRepository<PricesAndAvailabilities> stateRepository() {
+        return new ConcurrentMapStateRepository<>("Prices with Availabilities");
+    }
+
+    @Bean
+    public Journal journal(final StateRepository<PricesAndAvailabilities> stateRepository) {
+        return multiChannelJournal(
+                bananaProductStateRepository, 
+                "price-update-channel", 
+                "availability-update-channel");
+    }
+
+}
+```
+
+The `Journal` needs to know about the channels that are the source for entities stored in the `StateRepository`, 
+otherwise it would not know about the connection between the messages from the channels, and the entities stored
+in the repository.
+
+Synapse will take care of auto-configuring the `JournalingInterceptor` instances required to add incoming messages
+to the journal(s). Multiple journals for different (or same) channels are supported, so even in more complex situations,
+journaling can be used to track the processing of messages in Synapse services.
+
+
 # EventSource
 
