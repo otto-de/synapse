@@ -108,7 +108,7 @@ public class OnHeapIndexingMessageStore implements MessageStore {
     }
 
     @Override
-    public int size() {
+    public long size() {
         return entries.size();
     }
 

@@ -98,7 +98,7 @@ public class IndexingMessageStoreTest {
         messageStore.stream(Index.CHANNEL_NAME, "even-channel").forEach(entry -> {
             assertThat(expectedKeys.contains(entry.getTextMessage().getKey().partitionKey()), is(true));
         });
-        assertThat(messageStore.size(), is(10));
+        assertThat(messageStore.size(), is(10L));
     }
 
     @SuppressWarnings("Duplicates")
@@ -140,7 +140,7 @@ public class IndexingMessageStoreTest {
                 assertThat(lastPositions.get(shard.shardName()), is(lessThanOrEqualTo(pos)));
             }
         });
-        assertThat(messageStore.size(), is(1000));
+        assertThat(messageStore.size(), is(1000L));
     }
 
 }

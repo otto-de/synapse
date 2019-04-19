@@ -46,10 +46,12 @@ public class MessageDispatcherTest {
     @SuppressWarnings("unchecked")
     public void shouldNotDelegateBrokenEventsToConsumers() {
         // given
-        TestMessageConsumer<Apple> consumer = spy(testEventConsumer(".*", Apple.class));
+        TestMessageConsumer<Apple> appleConsumer = spy(testEventConsumer(".*", Apple.class));
+        TestMessageConsumer<Banana> bananaConsumer = spy(testEventConsumer(".*", Banana.class));
 
         MessageDispatcher messageDispatcher = new MessageDispatcher();
-        messageDispatcher.add(consumer);
+        messageDispatcher.add(appleConsumer);
+        messageDispatcher.add(bananaConsumer);
 
         // when
         try {
@@ -63,9 +65,10 @@ public class MessageDispatcherTest {
             fail();
         } catch (final IllegalStateException e) {
             // then
-            verify(consumer).keyPattern();
-            verify(consumer).payloadType();
-            verifyNoMoreInteractions(consumer);
+            verify(appleConsumer).keyPattern();
+            verify(appleConsumer).payloadType();
+            verifyNoMoreInteractions(appleConsumer);
+            verifyZeroInteractions(bananaConsumer);
             throw e;
         }
     }

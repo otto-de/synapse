@@ -60,7 +60,7 @@ public class MessageStoreTest {
             assertThat(entry.getTextMessage().getKey().toString(), is(valueOf(expectedKey.get())));
             expectedKey.incrementAndGet();
         });
-        assertThat(messageStore.size(), is(10));
+        assertThat(messageStore.size(), is(10L));
     }
 
     @SuppressWarnings("Duplicates")
@@ -89,7 +89,7 @@ public class MessageStoreTest {
                 assertThat(lastPositions.get(shard.shardName()), is(greaterThanOrEqualTo(pos)));
             }
         });
-        assertThat(messageStore.size(), isOneOf(1000, 5000));
+        assertThat(messageStore.size(), isOneOf(1000L, 5000L));
     }
 
     @SuppressWarnings("Duplicates")
@@ -110,7 +110,7 @@ public class MessageStoreTest {
             }, executorService);
         }
         allOf(completion).join();
-        assertThat(messageStore.size(), isOneOf(1000, 5000));
+        assertThat(messageStore.size(), isOneOf(1000L, 5000L));
         assertThat(messageStore.getLatestChannelPosition(""), is(channelPosition(
                 fromPosition("shard-0", "999"),
                 fromPosition("shard-1", "999"),

@@ -88,7 +88,7 @@ public class NonCompactingMessageStoreTest {
         assertThat(position.shard("shard-2").position(), is("9999"));
         assertThat(position.shard("shard-3").position(), is("9999"));
         assertThat(position.shard("shard-4").position(), is("9999"));
-        assertThat(messageStore.size(), is(50000));
+        assertThat(messageStore.size(), is(50000L));
     }
 
     @SuppressWarnings("Duplicates")
@@ -131,7 +131,7 @@ public class NonCompactingMessageStoreTest {
         assertThat(secondPos.shard("shard-2").position(), is("999"));
         assertThat(secondPos.shard("shard-3").position(), is("999"));
         assertThat(secondPos.shard("shard-4").position(), is("999"));
-        assertThat(messageStore.size(), is(10000));
+        assertThat(messageStore.size(), is(10000L));
     }
 
 }

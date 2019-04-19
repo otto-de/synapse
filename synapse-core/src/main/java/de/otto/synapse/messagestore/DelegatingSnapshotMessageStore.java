@@ -65,7 +65,7 @@ public class DelegatingSnapshotMessageStore implements SnapshotMessageStore {
     }
 
     @Override
-    public int size() {
+    public long size() {
         return delegate.size();
     }
 

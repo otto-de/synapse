@@ -124,8 +124,8 @@ public interface MessageStore extends AutoCloseable {
      * </p>
      * @return number of messages
      */
-    default int size() {
-        return -1;
+    default long size() {
+        return -1L;
     }
 
     default void close() {

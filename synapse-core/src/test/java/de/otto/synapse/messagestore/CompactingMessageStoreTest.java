@@ -65,7 +65,7 @@ public class CompactingMessageStoreTest {
             assertThat(message.getPayload(), is("some updated payload"));
             expectedKey.incrementAndGet();
         });
-        assertThat(messageStore.size(), is(10));
+        assertThat(messageStore.size(), is(10L));
     }
 
     @Test
@@ -83,7 +83,7 @@ public class CompactingMessageStoreTest {
                     TextMessage.of(Key.of(valueOf(i)), "some updated payload")));
         }
 
-        assertThat(messageStore.size(), is(20));
+        assertThat(messageStore.size(), is(20L));
         assertThat(messageStore.stream().filter(entry -> entry.getChannelName().equals("some-channel")).count(), is(10L));
         assertThat(messageStore.stream().filter(entry -> entry.getChannelName().equals("other-channel")).count(), is(10L));
     }
@@ -117,7 +117,7 @@ public class CompactingMessageStoreTest {
         assertThat(channelPosition.shard("shard-2").position(), is("999"));
         assertThat(channelPosition.shard("shard-3").position(), is("999"));
         assertThat(channelPosition.shard("shard-4").position(), is("999"));
-        assertThat(messageStore.size(), is(5000));
+        assertThat(messageStore.size(), is(5000L));
     }
 
     @Test
@@ -150,7 +150,7 @@ public class CompactingMessageStoreTest {
             allOf(completion).join();
         }
 
-        assertThat(messageStore.size(), is(10000));
+        assertThat(messageStore.size(), is(10000L));
         final ChannelPosition someChannelPosition = messageStore.getLatestChannelPosition("some-channel");
         assertThat(someChannelPosition.shards(), containsInAnyOrder("shard-0", "shard-1", "shard-2", "shard-3", "shard-4"));
         assertThat(someChannelPosition.shard("shard-0").position(), is("999"));
@@ -179,7 +179,7 @@ public class CompactingMessageStoreTest {
         }
         assertThat(messageStore.getLatestChannelPosition("some-channel").shards(), contains("some-shard"));
         assertThat(messageStore.getLatestChannelPosition("some-channel").shard("some-shard").position(), is("9999"));
-        assertThat(messageStore.size(), is(10000));
+        assertThat(messageStore.size(), is(10000L));
     }
 
     @Test
@@ -192,7 +192,7 @@ public class CompactingMessageStoreTest {
         for (int i=0; i<10; ++i) {
             messageStore.add(MessageStoreEntry.of("some-channel", TextMessage.of(Key.of(valueOf(i)), null)));
         }
-        assertThat(messageStore.size(), is(10));
+        assertThat(messageStore.size(), is(10L));
         assertThat(messageStore.stream().map(MessageStoreEntry::getChannelName).distinct().collect(toList()), is(ImmutableList.of("other-channel")));
     }
 
@@ -221,7 +221,7 @@ public class CompactingMessageStoreTest {
                 fromPosition("foo", "29"),
                 fromPosition("bar", "51")))
         );
-        assertThat(messageStore.size(), is(0));
+        assertThat(messageStore.size(), is(0L));
         assertThat(messageStore.stream().count(), is(0L));
     }
 

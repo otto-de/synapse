@@ -78,7 +78,7 @@ public class OnHeapRingBufferMessageStore implements MessageStore {
     }
 
     @Override
-    public synchronized int size() {
+    public synchronized long size() {
         return entries.size();
     }
 }

@@ -265,7 +265,7 @@ public class RedisIndexedMessageStoreIntegrationTest {
         assertThat(position.shard("shard-2").position(), is("99"));
         assertThat(position.shard("shard-3").position(), is("99"));
         assertThat(position.shard("shard-4").position(), is("99"));
-        assertThat(messageStore.size(), is(500));
+        assertThat(messageStore.size(), is(500L));
     }
 
     @SuppressWarnings("Duplicates")
@@ -307,7 +307,7 @@ public class RedisIndexedMessageStoreIntegrationTest {
         assertThat(secondPos.shard("shard-2").position(), is("99"));
         assertThat(secondPos.shard("shard-3").position(), is("99"));
         assertThat(secondPos.shard("shard-4").position(), is("99"));
-        assertThat(messageStore.size(), is(1000));
+        assertThat(messageStore.size(), is(1000L));
     }
 
     @Test
@@ -329,7 +329,7 @@ public class RedisIndexedMessageStoreIntegrationTest {
             assertThat(message.getKey(), is(Key.of(valueOf(expectedKey.get()))));
             expectedKey.incrementAndGet();
         });
-        assertThat(messageStore.size(), is(10));
+        assertThat(messageStore.size(), is(10L));
     }
 
     @SuppressWarnings("Duplicates")
@@ -359,7 +359,7 @@ public class RedisIndexedMessageStoreIntegrationTest {
                 assertThat(lastPositions.get(shard.shardName()), is(lessThanOrEqualTo(pos)));
             }
         });
-        assertThat(messageStore.size(), is(7500));
+        assertThat(messageStore.size(), is(7500L));
     }
 
     //@Test

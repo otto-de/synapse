@@ -125,7 +125,7 @@ public class OnHeapCompactingMessageStore implements MessageStore {
     }
 
     @Override
-    public int size() {
+    public long size() {
         return entries.size();
     }
 

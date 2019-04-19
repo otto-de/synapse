@@ -44,7 +44,7 @@ public class CompactingMessageStoreWithoutDeletionsTest {
         for (int i=0; i<10; ++i) {
             messageStore.add(MessageStoreEntry.of("", TextMessage.of(Key.of(valueOf(i)), null)));
         }
-        assertThat(messageStore.size(), is(10));
+        assertThat(messageStore.size(), is(10L));
         assertThat(messageStore.getLatestChannelPosition(""), is(fromHorizon()));
     }
 
@@ -66,7 +66,7 @@ public class CompactingMessageStoreWithoutDeletionsTest {
             messageStore.add(MessageStoreEntry.of("some-channel", TextMessage.of(Key.of(valueOf(i), "bar:" + i), of(fromPosition("bar", valueOf(42 + i))), null)));
         }
         assertThat(messageStore.getLatestChannelPosition("some-channel"), is(channelPosition(fromPosition("foo", "29"), fromPosition("bar", "51"))));
-        assertThat(messageStore.size(), is(20));
+        assertThat(messageStore.size(), is(20L));
         assertThat(messageStore.stream().count(), is(20L));
     }
 

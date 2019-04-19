@@ -46,7 +46,7 @@ public class RingBufferMessageStoreTest {
         for (int i=0; i<101; ++i) {
             messageStore.add(MessageStoreEntry.of("", TextMessage.of(valueOf(i), "some payload")));
         }
-        assertThat(messageStore.size(), is(100));
+        assertThat(messageStore.size(), is(100L));
     }
 
     @Test
@@ -92,7 +92,7 @@ public class RingBufferMessageStoreTest {
         assertThat(channelPosition.shard("shard-2").position(), is("999"));
         assertThat(channelPosition.shard("shard-3").position(), is("999"));
         assertThat(channelPosition.shard("shard-4").position(), is("999"));
-        assertThat(messageStore.size(), is(100));
+        assertThat(messageStore.size(), is(100L));
     }
 
     @SuppressWarnings("Duplicates")
@@ -108,6 +108,6 @@ public class RingBufferMessageStoreTest {
         }
         assertThat(messageStore.getLatestChannelPosition("").shards(), contains("some-shard"));
         assertThat(messageStore.getLatestChannelPosition("").shard("some-shard").position(), is("9"));
-        assertThat(messageStore.size(), is(50));
+        assertThat(messageStore.size(), is(50L));
     }
 }

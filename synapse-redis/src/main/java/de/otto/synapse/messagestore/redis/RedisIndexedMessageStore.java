@@ -201,8 +201,8 @@ public class RedisIndexedMessageStore implements MessageStore {
     }
 
     @Override
-    public int size() {
-        return redisTemplate.boundListOps(name + "-messages").size().intValue();
+    public long size() {
+        return redisTemplate.boundListOps(name + "-messages").size();
     }
 
     public void clear() {

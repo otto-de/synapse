@@ -80,7 +80,7 @@ public class OffHeapIndexingMessageStore implements MessageStore {
     }
 
     @Override
-    public int size() {
+    public long size() {
         return Math.toIntExact(messages.size());
     }
 

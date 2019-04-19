@@ -160,7 +160,7 @@ public class RedisRingBufferMessageStoreIntegrationTest {
         assertThat(position.shard("shard-2").position(), is("99"));
         assertThat(position.shard("shard-3").position(), is("99"));
         assertThat(position.shard("shard-4").position(), is("99"));
-        assertThat(messageStore.size(), is(500));
+        assertThat(messageStore.size(), is(500L));
     }
 
     @SuppressWarnings("Duplicates")
@@ -202,7 +202,7 @@ public class RedisRingBufferMessageStoreIntegrationTest {
         assertThat(secondPos.shard("shard-2").position(), is("99"));
         assertThat(secondPos.shard("shard-3").position(), is("99"));
         assertThat(secondPos.shard("shard-4").position(), is("99"));
-        assertThat(messageStore.size(), is(1000));
+        assertThat(messageStore.size(), is(1000L));
     }
 
     @Test
@@ -224,7 +224,7 @@ public class RedisRingBufferMessageStoreIntegrationTest {
             assertThat(message.getKey(), is(Key.of(valueOf(expectedKey.get()))));
             expectedKey.incrementAndGet();
         });
-        assertThat(messageStore.size(), is(10));
+        assertThat(messageStore.size(), is(10L));
     }
 
     @SuppressWarnings("Duplicates")
@@ -254,7 +254,7 @@ public class RedisRingBufferMessageStoreIntegrationTest {
                 assertThat(lastPositions.get(shard.shardName()), is(lessThanOrEqualTo(pos)));
             }
         });
-        assertThat(messageStore.size(), isOneOf(10000, 1000));
+        assertThat(messageStore.size(), isOneOf(10000L, 1000L));
     }
 
     @Test
