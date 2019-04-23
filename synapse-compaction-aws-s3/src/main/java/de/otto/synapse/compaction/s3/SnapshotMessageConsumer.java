@@ -31,6 +31,7 @@ public class SnapshotMessageConsumer implements MessageConsumer<String> {
      *     The message's {@link Key#partitionKey()} is used as the key for repository entries.
      * </p>
      *
+     * @param messageFormat the format used to write messages into the snapshot
      * @param stateRepository the StateRepository that is holding the State
      */
     public SnapshotMessageConsumer(final MessageFormat messageFormat,
