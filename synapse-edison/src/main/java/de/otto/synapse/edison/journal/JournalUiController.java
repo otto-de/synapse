@@ -16,7 +16,6 @@ import org.springframework.web.servlet.ModelAndView;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
-import static de.otto.synapse.translator.JsonHelper.prettyPrint;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -64,7 +63,7 @@ public class JournalUiController {
                                             "channelName", message.getChannelName(),
                                             "key", message.getTextMessage().getKey().toString(),
                                             "header", message.getTextMessage().getHeader(),
-                                            "payload", prettyPrint(message.getTextMessage().getPayload())
+                                            "payload", message.getTextMessage().getPayload()
                                     ))
                                     .collect(toList())
                     )

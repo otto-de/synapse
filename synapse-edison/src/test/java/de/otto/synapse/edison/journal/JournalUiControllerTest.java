@@ -101,7 +101,7 @@ public class JournalUiControllerTest {
                 .andExpect(
                         model().attribute("messages", hasSize(2)))
                 .andExpect(
-                        content().string(containsString("<td class=\"col-md-1\">first</td>")));
+                        content().string(containsString("<dd>first</dd>")));
     }
 
     @Test

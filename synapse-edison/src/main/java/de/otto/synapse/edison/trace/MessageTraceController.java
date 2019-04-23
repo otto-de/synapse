@@ -50,9 +50,10 @@ public class MessageTraceController {
                                 .stream(channelName, EndpointType.valueOf(endpointType.toUpperCase()))
                                 .map(traceEntry -> ImmutableMap.of(
                                         "sequenceNumber", traceEntry.getSequenceNumber(),
-                                        "key", prettyPrint(traceEntry.getMessage().getKey()),
-                                        "header", prettyPrint(traceEntry.getMessage().getHeader()),
-                                        "payload", prettyPrint(traceEntry.getMessage().getPayload())
+                                        "channelName", channelName,
+                                        "key", traceEntry.getMessage().getKey().toString(),
+                                        "header", traceEntry.getMessage().getHeader(),
+                                        "payload", traceEntry.getMessage().getPayload()
                                 ))
                                 .collect(toList())
                 )

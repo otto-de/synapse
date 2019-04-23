@@ -11,7 +11,7 @@
 
     <div th:replace="fragments/navigation  :: navigation" />
 
-    <div class="container">
+    <div class="container-fluid">
         <div class="row">
             <div class="col-md-12">
                 <div class="panel panel-default">
@@ -26,28 +26,7 @@
                         </ul>
                     </div>
                     <div class="panel-body">
-                        <table class="table table-striped">
-                            <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Key</th>
-                                <th>Headers</th>
-                                <th>Payload</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr th:each="message : ${messages}">
-                                <td class="col-md-1" th:text="${message.sequenceNumber}">#</td>
-                                <td class="col-md-1" th:text="${message.key}">key</td>
-                                <td class="col-md-5">
-                                    <span th:replace="fragments/message :: header(${message})" />
-                                </td>
-                                <td class="col-md-5">
-                                    <span th:replace="fragments/message :: payload(${message})" />
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
+                        <span th:replace="fragments/message :: list(${messages})" />
                     </div>
                 </div>
             </div>

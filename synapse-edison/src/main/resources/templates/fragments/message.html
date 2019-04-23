@@ -2,28 +2,39 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <body>
 
+    <div th:fragment="key(message)">
+        <dl>
+                <dt>Key</dt>
+                <dd th:text="${message.key}"></dd>
+        </dl>
+    </div>
+
     <div th:fragment="header(message)">
         <dl>
-            <th:block th:if="${message.channelName != null}">
-                <dt>Channel</dt>
-                <dd th:text="${message.channelName}"></dd>
-            </th:block>
-            <dt>Shard</dt>
-            <dd th:text="${message.header.shardPosition.orElse(null)?.shardName()}"></dd>
-            <dt>Start From</dt>
-            <dd th:text="${message.header.shardPosition.orElse(null)?.startFrom()}"></dd>
-            <th:block th:if="${message.header.shardPosition.orElse(null)?.position() != null}">
-                <dt>Position</dt>
-                <dd th:text="${message.header.shardPosition.orElse(null)?.position()}">Timestamp</dd>
-            </th:block>
-            <th:block th:if="${message.header.shardPosition.orElse(null)?.timestamp() != null}">
-                <dt>Timestamp</dt>
-                <dd th:text="${header.shardPosition.orElse(null)?.timestamp()}">Timestamp</dd>
-            </th:block>
-            <th:block th:each="attr : ${message.header.all}">
-                <dt th:text="${attr.key}">Key</dt>
-                <dd th:text="${attr.value}">value</dd>
-            </th:block>
+            <button data-toggle="collapse" th:attr="data-target='#more-headers-' + ${message.sequenceNumber}">Show Headers</button>
+
+            <div th:id="'more-headers-' + ${message.sequenceNumber}" class="collapse">
+                <th:block th:if="${message.channelName != null}">
+                    <dt>Channel</dt>
+                    <dd th:text="${message.channelName}"></dd>
+                </th:block>
+                <dt>Shard</dt>
+                <dd th:text="${message.header.shardPosition.orElse(null)?.shardName()}"></dd>
+                <dt>Start From</dt>
+                <dd th:text="${message.header.shardPosition.orElse(null)?.startFrom()}"></dd>
+                <th:block th:if="${message.header.shardPosition.orElse(null)?.position() != null}">
+                    <dt>Position</dt>
+                    <dd th:text="${message.header.shardPosition.orElse(null)?.position()}">Timestamp</dd>
+                </th:block>
+                <th:block th:if="${message.header.shardPosition.orElse(null)?.timestamp() != null}">
+                    <dt>Timestamp</dt>
+                    <dd th:text="${header.shardPosition.orElse(null)?.timestamp()}">Timestamp</dd>
+                </th:block>
+                <th:block th:each="attr : ${message.header.all}">
+                    <dt th:text="${attr.key}">Key</dt>
+                    <dd th:text="${attr.value}">value</dd>
+                </th:block>
+            </div>
         </dl>
     </div>
 
@@ -39,5 +50,29 @@
             </script></th:block>
     </div>
 
+    <div th:fragment="list(messages)">
+        <table class="table table-striped table-hover table-responsive">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Message</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="message : ${messages}">
+                <td class="col-md-1" th:text="${message.sequenceNumber}">#</td>
+                <td class="col-md-11">
+                    <div class="col-md-3">
+                        <span th:replace="fragments/message :: key(${message})" />
+                        <span th:replace="fragments/message :: header(${message})" />
+                    </div>
+                    <div class="col-md-9">
+                        <span th:replace="fragments/message :: payload(${message})" />
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>
