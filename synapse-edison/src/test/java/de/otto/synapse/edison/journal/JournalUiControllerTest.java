@@ -74,7 +74,9 @@ public class JournalUiControllerTest {
                 .andExpect(
                         status().isOk())
                 .andExpect(
-                        model().attribute("title", is("Journal: test/first")))
+                        model().attribute("repositoryName", is("test")))
+                .andExpect(
+                        model().attribute("entityId", is("first")))
                 .andExpect(
                         model().attribute("messages", is(emptyList())));
     }
@@ -82,7 +84,7 @@ public class JournalUiControllerTest {
     @Test
     public void shouldGetJournalHtml() throws Exception {
         final Journal journal = mock(Journal.class);
-        when(journal.getJournalFor("first"))
+        when(journal.getJournalFor("one"))
                 .thenReturn(Stream.of(
                         MessageStoreEntry.of("test", TextMessage.of("first", "foo")),
                         MessageStoreEntry.of("test", TextMessage.of("second", null))
@@ -93,11 +95,13 @@ public class JournalUiControllerTest {
 
         mockMvc
                 .perform(
-                        get("/internal/journals/test/first").accept("text/html"))
+                        get("/internal/journals/test/one").accept("text/html"))
                 .andExpect(
                         status().isOk())
                 .andExpect(
-                        model().attribute("title", is("Journal: test/first")))
+                        model().attribute("repositoryName", is("test")))
+                .andExpect(
+                        model().attribute("entityId", is("one")))
                 .andExpect(
                         model().attribute("messages", hasSize(2)))
                 .andExpect(

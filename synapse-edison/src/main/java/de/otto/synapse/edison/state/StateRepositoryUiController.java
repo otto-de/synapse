@@ -66,7 +66,7 @@ public class StateRepositoryUiController {
         this.stateRepositories.forEach((repositoryName, _repository) ->
                 rightNavBar.register(navBarItem(
                         15,
-                        "StateRepository: " + repositoryName,
+                        "State Repository: " + repositoryName,
                         format("/%s/staterepositories/%s", managementBasePath, repositoryName))));
     }
 

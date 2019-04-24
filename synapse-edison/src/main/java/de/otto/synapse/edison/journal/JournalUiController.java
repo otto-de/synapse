@@ -56,7 +56,8 @@ public class JournalUiController {
             return new ModelAndView(
                     "journal",
                     ImmutableMap.of(
-                            "title", "Journal: " + repositoryName + "/" + entityId,
+                            "repositoryName", repositoryName,
+                            "entityId", entityId,
                             "messages",
                             entries
                                     .map(message -> new HashMap() {{

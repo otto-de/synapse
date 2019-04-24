@@ -66,6 +66,7 @@ public class MessageTrace {
     }
 
     private final Queue<TraceEntry> traceEntries;
+    private final int capacity;
     private final ConcurrentMap<String, Boolean> senders = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Boolean> receivers = new ConcurrentHashMap<>();
 
@@ -76,6 +77,7 @@ public class MessageTrace {
      */
     public MessageTrace(final int capacity) {
         traceEntries = EvictingQueue.create(capacity);
+        this.capacity = capacity;
     }
 
     public SortedSet<String> getSenderChannels() {
@@ -84,6 +86,10 @@ public class MessageTrace {
 
     public SortedSet<String> getReceiverChannels() {
         return newTreeSet(receivers.keySet());
+    }
+
+    public int getCapacity() {
+        return capacity;
     }
 
     /**

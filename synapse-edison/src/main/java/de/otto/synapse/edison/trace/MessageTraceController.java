@@ -45,7 +45,11 @@ public class MessageTraceController {
         return new ModelAndView(
                 "single-channel-trace",
                 ImmutableMap.of(
-                        "title", endpointType.equals("receiver") ? "Receiver: " : "Sender: " + channelName,
+                        "endpointType", endpointType.equals("receiver")
+                                ? "Receiver"
+                                : "Sender",
+                        "channelName", channelName,
+                        "capacity", messageTrace.getCapacity(),
                         "messages",
                         messageTrace
                                 .stream(channelName, EndpointType.valueOf(endpointType.toUpperCase()))

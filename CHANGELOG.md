@@ -4,7 +4,10 @@
 
 *Bugfixes*
 * Fixes NPE for null payloads in message traces and journals
- 
+
+*Journaling, MessageTrace, StateRepository*
+* Adds short help texts to Edison UIs
+
 ## 0.17.0
 
 *Bugfixes*

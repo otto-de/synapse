@@ -8,16 +8,17 @@
     <script type="text/javascript" th:src="@{/js/prettyprint.js}"></script>
 
     <link rel="stylesheet" type="text/css" th:href="@{/css/panel-actions.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/help.css}" />
 
     <div th:replace="fragments/navigation  :: navigation" />
 
 
-    <div class="container">
+    <div class="container-fluid">
 
         <!-- Open Panel -->
         <div class="row">
             <!-- Open Panel -->
-            <div class="col-xs-12">
+            <div class="col-md-12">
                 <div th:include="fragments/entities :: open-entity"></div>
             </div>
         </div>
@@ -30,13 +31,28 @@
                         <h3 class="panel-title" th:text="'StateRepository: ' + ${repositoryName}">Some Repository</h3>
                         <ul class="list-inline panel-actions">
                             <li>
+                                <a id="helpButton" href="#" role="button" title="Help">
+                                    <span class="glyphicon glyphicon-question-sign"></span>
+                                </a>
+                            </li>
+                            <li>
                                 <a class="toggle-fullscreen" href="#" role="button" title="Toggle Fullscreen">
                                     <span class="glyphicon glyphicon-resize-full"></span>
                                 </a>
                             </li>
                         </ul>
                     </div>
+
                     <div class="panel-body">
+
+                        <div id="helpModal" class="modal">
+                            <div class="modal-content">
+                                <span class="close">&times;</span>
+                                <h3>State Repository</h3>
+                                <p>Displays all event-sourced entities stored in repository
+                                    <span th:text="${repositoryName}"></span>.</p>
+                            </div>
+                        </div>
 
                         <div th:include="fragments/pager :: pager(${pager})"></div>
 
@@ -54,7 +70,9 @@
     </div> <!-- /container -->
 
     <span th:replace="fragments/footer :: footer" />
+
     <script type="text/javascript" th:src="@{/js/init-fullscreen.js}"></script>
+    <script type="text/javascript" th:src="@{/js/help.js}"></script>
 
 </body>
 </html>

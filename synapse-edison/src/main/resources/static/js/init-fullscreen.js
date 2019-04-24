@@ -15,6 +15,7 @@ var toggleFullScreen = function (e) {
     panel.toggleClass('panel-fullscreen');
     panel.children('.panel-collapse').collapse('show');
 };
+
 $(document).ready(function () {
     $(".toggle-fullscreen").each(function (index) {
         $(this).click(toggleFullScreen)

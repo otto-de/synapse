@@ -62,7 +62,7 @@ public class StateRepositoryUiControllerTest {
     @Test
     public void shouldRegisterNavBar() {
         assertThat(rightNavBar.getItems(), hasSize(1));
-        assertThat(rightNavBar.getItems().get(0).getTitle(), is("StateRepository: test"));
+        assertThat(rightNavBar.getItems().get(0).getTitle(), is("State Repository: test"));
         assertThat(rightNavBar.getItems().get(0).getPosition(), is(15));
         assertThat(rightNavBar.getItems().get(0).getLink(), is("/internal/staterepositories/test"));
     }
