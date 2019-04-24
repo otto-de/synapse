@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
@@ -58,13 +59,13 @@ public class JournalUiController {
                             "title", "Journal: " + repositoryName + "/" + entityId,
                             "messages",
                             entries
-                                    .map(message -> ImmutableMap.of(
-                                            "sequenceNumber", nextSequenceNumber.getAndIncrement(),
-                                            "channelName", message.getChannelName(),
-                                            "key", message.getTextMessage().getKey().toString(),
-                                            "header", message.getTextMessage().getHeader(),
-                                            "payload", message.getTextMessage().getPayload()
-                                    ))
+                                    .map(message -> new HashMap() {{
+                                        put("sequenceNumber", nextSequenceNumber.getAndIncrement());
+                                        put("channelName", message.getChannelName());
+                                        put("key", message.getTextMessage().getKey().toString());
+                                        put("header", message.getTextMessage().getHeader());
+                                        put("payload", message.getTextMessage().getPayload());
+                                    }})
                                     .collect(toList())
                     )
             );

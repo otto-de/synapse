@@ -15,6 +15,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import static de.otto.synapse.translator.ObjectMappers.currentObjectMapper;
@@ -48,13 +49,13 @@ public class MessageTraceController {
                         "messages",
                         messageTrace
                                 .stream(channelName, EndpointType.valueOf(endpointType.toUpperCase()))
-                                .map(traceEntry -> ImmutableMap.of(
-                                        "sequenceNumber", traceEntry.getSequenceNumber(),
-                                        "channelName", channelName,
-                                        "key", traceEntry.getMessage().getKey().toString(),
-                                        "header", traceEntry.getMessage().getHeader(),
-                                        "payload", traceEntry.getMessage().getPayload()
-                                ))
+                                .map(traceEntry -> new HashMap() {{
+                                    put("sequenceNumber", traceEntry.getSequenceNumber());
+                                    put("channelName", channelName);
+                                    put("key", traceEntry.getMessage().getKey().toString());
+                                    put("header", traceEntry.getMessage().getHeader());
+                                    put("payload", traceEntry.getMessage().getPayload());
+                                }})
                                 .collect(toList())
                 )
         );

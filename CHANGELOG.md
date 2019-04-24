@@ -1,5 +1,10 @@
 # Release Notes
 
+## 0.17.1
+
+*Bugfixes*
+* Fixes NPE for null payloads in message traces and journals
+ 
 ## 0.17.0
 
 *Bugfixes*

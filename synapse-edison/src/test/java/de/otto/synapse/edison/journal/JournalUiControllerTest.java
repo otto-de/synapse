@@ -85,7 +85,7 @@ public class JournalUiControllerTest {
         when(journal.getJournalFor("first"))
                 .thenReturn(Stream.of(
                         MessageStoreEntry.of("test", TextMessage.of("first", "foo")),
-                        MessageStoreEntry.of("test", TextMessage.of("first", "bar"))
+                        MessageStoreEntry.of("test", TextMessage.of("second", null))
                 ));
 
         when(journals.hasJournal("test")).thenReturn(true);
@@ -101,7 +101,13 @@ public class JournalUiControllerTest {
                 .andExpect(
                         model().attribute("messages", hasSize(2)))
                 .andExpect(
-                        content().string(containsString("<dd>first</dd>")));
+                        content().string(containsString("<dd>first</dd>")))
+                .andExpect(
+                        content().string(containsString("var payloadJson = \"foo\";")))
+                .andExpect(
+                        content().string(containsString("<dd>second</dd>")))
+                .andExpect(
+                        content().string(containsString("var payloadJson = null;")));
     }
 
     @Test
