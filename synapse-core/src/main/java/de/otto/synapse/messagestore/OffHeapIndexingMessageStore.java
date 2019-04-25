@@ -20,6 +20,16 @@ import static org.dizitart.no2.IndexOptions.indexOptions;
 import static org.dizitart.no2.IndexType.NonUnique;
 import static org.dizitart.no2.filters.Filters.eq;
 
+/**
+ * A {@code MessageStore} that is storing messages off the heap and supports indexing of messages.
+ *
+ * <p>Implementation Hints:</p>
+ * <ul>
+ *     <li>The store is using Nitrite to messages</li>
+ * </ul>
+ *
+ * @see <a href="https://www.dizitart.org/nitrite-database.html">Nitrite Database</a>
+ */
 public class OffHeapIndexingMessageStore implements MessageStore {
 
     private final Nitrite nitrite;
@@ -81,7 +91,7 @@ public class OffHeapIndexingMessageStore implements MessageStore {
 
     @Override
     public long size() {
-        return Math.toIntExact(messages.size());
+        return messages.size();
     }
 
     @Override

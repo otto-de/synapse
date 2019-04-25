@@ -1,5 +1,8 @@
 package de.otto.synapse.state;
 
+import com.google.common.collect.ImmutableSet;
+import de.otto.synapse.messagestore.Index;
+
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -19,6 +22,66 @@ public interface StateRepository<V> extends AutoCloseable {
      * @return name
      */
     String getName();
+
+    /**
+     * Returns the set of {@link Index indexes} for entities stored in the {@code StateRepository},
+     * or an empty set, if no indexers will be created.
+     *
+     * @return set of indexes
+     */
+    default ImmutableSet<Index> getIndexes() {
+        return ImmutableSet.of();
+    }
+
+    /**
+     * Returns an immutable set of the keys in this repository.
+     *
+     * @return a set view of the keys contained in this repository
+     */
+    Set<String> keySet();
+
+    /**
+     * Returns the optional value to which the specified key is mapped,
+     * or {@code Optional.empty()} if this repository contains no mapping for the key.
+     *
+     * <p>More formally, if this repository contains a mapping from a key
+     * {@code k} to a value {@code v} such that {@code (key==null ? k==null :
+     * key.equals(k))}, then this method returns {@code Optional.of(v)}; otherwise
+     * it returns {@code Optional.empty()}.  (There can be at most one such mapping.)
+     *
+     * @param key the key whose associated value is to be returned
+     * @return the Optional containing the value to which the specified key is mapped, or
+     * {@code Optional.empty()} if this repository contains no mapping for the key
+     * @throws NullPointerException if the specified key is null
+     */
+    Optional<V> get(String key);
+
+    /**
+     * Computes each entry within the repository.
+     *
+     * @param consumer the consumer that will be applied on each repository entry
+     */
+    void consumeAll(BiConsumer<? super String, ? super V> consumer);
+
+    /**
+     * Associates the specified value with the specified key in this repository.
+     * If the repository previously contained a mapping for
+     * the key, the old value is replaced by the specified value.  (A repository
+     * <tt>m</tt> is said to contain a mapping for a key <tt>k</tt> if and only
+     * if {@link #get(String) m.get(k)} would return
+     * a non-empty value.)
+     *
+     * @param key   key with which the specified value is to be associated
+     * @param value value to be associated with the specified key
+     * @return the previous value associated with <tt>key</tt>, or
+     * <tt>Optional.empty()</tt> if there was no mapping for <tt>key</tt>.
+     * @throws ClassCastException       if the class of the specified value
+     *                                  prevents it from being stored in this repository
+     * @throws NullPointerException     if the specified key or value is null
+     * @throws IllegalArgumentException if some property of the specified key
+     *                                  or value prevents it from being stored in this repository
+     */
+    Optional<V> put(String key, V value);
 
     /**
      * Attempts to compute a mapping for the specified key and its current
@@ -65,33 +128,6 @@ public interface StateRepository<V> extends AutoCloseable {
     Optional<V> compute(String key, BiFunction<? super String, ? super Optional<V>, ? extends V> remappingFunction);
 
     /**
-     * Computes each entry within the repository.
-     *
-     * @param consumer the consumer that will be applied on each repository entry
-     */
-    void consumeAll(BiConsumer<? super String, ? super V> consumer);
-
-    /**
-     * Associates the specified value with the specified key in this repository.
-     * If the repository previously contained a mapping for
-     * the key, the old value is replaced by the specified value.  (A repository
-     * <tt>m</tt> is said to contain a mapping for a key <tt>k</tt> if and only
-     * if {@link #get(String) m.get(k)} would return
-     * a non-empty value.)
-     *
-     * @param key   key with which the specified value is to be associated
-     * @param value value to be associated with the specified key
-     * @return the previous value associated with <tt>key</tt>, or
-     * <tt>Optional.empty()</tt> if there was no mapping for <tt>key</tt>.
-     * @throws ClassCastException       if the class of the specified value
-     *                                  prevents it from being stored in this repository
-     * @throws NullPointerException     if the specified key or value is null
-     * @throws IllegalArgumentException if some property of the specified key
-     *                                  or value prevents it from being stored in this repository
-     */
-    Optional<V> put(String key, V value);
-
-    /**
      * Removes the mapping for a key from this repository if it is present.
      * More formally, if this repository contains a mapping
      * from key <tt>k</tt> to value <tt>v</tt> such that
@@ -119,29 +155,6 @@ public interface StateRepository<V> extends AutoCloseable {
      *                                       is not supported by this repository
      */
     void clear();
-
-    /**
-     * Returns the optional value to which the specified key is mapped,
-     * or {@code Optional.empty()} if this repository contains no mapping for the key.
-     *
-     * <p>More formally, if this repository contains a mapping from a key
-     * {@code k} to a value {@code v} such that {@code (key==null ? k==null :
-     * key.equals(k))}, then this method returns {@code Optional.of(v)}; otherwise
-     * it returns {@code Optional.empty()}.  (There can be at most one such mapping.)
-     *
-     * @param key the key whose associated value is to be returned
-     * @return the Optional containing the value to which the specified key is mapped, or
-     * {@code Optional.empty()} if this repository contains no mapping for the key
-     * @throws NullPointerException if the specified key is null
-     */
-    Optional<V> get(String key);
-
-    /**
-     * Returns an immutable set of the keys in this repository.
-     *
-     * @return a set view of the keys contained in this repository
-     */
-    Set<String> keySet();
 
     /**
      * Returns the number of key-value mappings in this repository.  If the
