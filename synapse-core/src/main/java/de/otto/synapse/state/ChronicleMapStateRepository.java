@@ -113,6 +113,8 @@ public class ChronicleMapStateRepository<V> extends ConcurrentMapStateRepository
         private final Class<V> clazz;
         private String name;
         private ChronicleMapBuilder<String, V> chronicleMapBuilder;
+        private boolean customValueMarshaller = false;
+
 
         private Builder(Class<V> clazz) {
             this.clazz = clazz;
@@ -134,6 +136,11 @@ public class ChronicleMapStateRepository<V> extends ConcurrentMapStateRepository
             return this;
         }
 
+        public Builder<V> withCustomValueMarshaller(boolean val) {
+            this.customValueMarshaller = val;
+            return this;
+        }
+
         public ChronicleMapStateRepository<V> build() {
 
             if (chronicleMapBuilder == null) {
@@ -144,7 +151,7 @@ public class ChronicleMapStateRepository<V> extends ConcurrentMapStateRepository
             }
 
             boolean doesClassNeedToBeSerialized = clazz != String.class;
-            if (doesClassNeedToBeSerialized) {
+            if (!customValueMarshaller && doesClassNeedToBeSerialized) {
                 chronicleMapBuilder.valueMarshaller(new ChronicleMapBytesMarshaller<>(objectMapper, clazz));
             }
 

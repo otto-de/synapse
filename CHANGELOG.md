@@ -1,5 +1,12 @@
 # Release Notes
 
+## 0.17.2-SNAPSHOT
+*StateRepository*
+
+* You can specify your own custom ValueMarshaller for your ChronicleMapStateRepository.
+  Add the valueMarshaller to the ChronicleMapBuilder AND specify .withCustomValueMarshaller(true) when building the
+  ChronicleMapStateRepository.
+
 ## 0.17.1
 
 *Bugfixes*
