@@ -33,6 +33,7 @@ import static de.otto.edison.navigation.NavBarItem.navBarItem;
 import static de.otto.synapse.edison.state.PagerModel.UNAVAILABLE;
 import static de.otto.synapse.translator.JsonHelper.prettyPrint;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.EnumSet.allOf;
 import static java.util.stream.Collectors.toList;
@@ -138,7 +139,12 @@ public class StateRepositoryUiController {
     public ModelAndView getEntityHtml(final @PathVariable String repositoryName,
                                       final @PathVariable String entityId) {
         final StateRepository<?> stateRepository = stateRepositories.get(repositoryName);
-        if (stateRepository != null && stateRepository.get(entityId).isPresent()) {
+        if (stateRepository != null) {
+
+            List<ImmutableMap<String,String>> entities = stateRepository.get(entityId).isPresent()
+                    ? singletonList(toEntityModel(entityId, stateRepository.get(entityId).get()))
+                    : emptyList();
+
             return new ModelAndView(
                     "staterepository",
                     ImmutableMap.<String,Object>builder()
@@ -146,8 +152,7 @@ public class StateRepositoryUiController {
                             .put("singleEntity", true)
                             .put("journaled", journals.hasJournal(repositoryName))
                             .put("repositoryName", repositoryName)
-                            .put("entities", singletonList(
-                                    toEntityModel(entityId, stateRepository.get(entityId).get())))
+                            .put("entities", entities)
                             .put("pager", UNAVAILABLE)
                             .build()
             );

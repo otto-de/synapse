@@ -114,6 +114,25 @@ public class StateRepositoryUiControllerTest {
     }
 
     @Test
+    public void shouldReturnEmptyEntityListHtml() throws Exception {
+        mockMvc
+                .perform(
+                        get("/internal/staterepositories/test/unknown").accept("text/html"))
+                .andExpect(
+                        status().isOk())
+                .andExpect(
+                        model().attribute("basePath", is("internal")))
+                .andExpect(
+                        model().attribute("singleEntity", is(true)))
+                .andExpect(
+                        model().attribute("repositoryName", is("test")))
+                .andExpect(
+                        model().attribute("entities", hasSize(0)))
+                .andExpect(
+                        model().attribute("pager", is(PagerModel.UNAVAILABLE)));
+    }
+
+    @Test
     public void shouldGetStateRepositoryHtml() throws Exception {
         mockMvc
                 .perform(
