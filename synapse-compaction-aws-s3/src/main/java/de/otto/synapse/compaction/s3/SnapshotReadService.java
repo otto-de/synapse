@@ -74,7 +74,7 @@ public class SnapshotReadService {
                 return Optional.of(snapshotFile.toFile());
             }
 
-            removeTempFiles("*-snapshot-*.json.zip");
+            removeTempFiles(String.format("*-%s-snapshot-*.json.zip", channelName));
             LOG.info("Downloading snapshot file to {}", snapshotFile.getFileName().toAbsolutePath().toString());
             if (s3Helper.download(snapshotBucketName, latestSnapshotKey, snapshotFile)) {
                 return Optional.of(snapshotFile.toFile());

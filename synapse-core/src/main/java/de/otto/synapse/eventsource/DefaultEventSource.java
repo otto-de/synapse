@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import javax.annotation.Nonnull;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -54,12 +56,13 @@ public class DefaultEventSource extends AbstractEventSource {
         if (messageStore.isCompacting()) {
             numberOfDispatcherThreads = 16;
         }
+
         final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("synapse-messagestore-dispatcher-"));
         final Semaphore lock = new Semaphore(numberOfDispatcherThreads);
-
         final String channelName = getChannelName();
 
-        final AtomicBoolean started = new AtomicBoolean(false);
+        LOG.info("Starting to read message store for channel '{}'.", channelName);
+        Instant startTime = Instant.now();
 
         return CompletableFuture.supplyAsync(() -> {
             messageStore
@@ -74,7 +77,6 @@ public class DefaultEventSource extends AbstractEventSource {
                         } catch (InterruptedException e) {
                             LOG.error(e.getMessage(), e);
                         }
-                        started.set(true);
                         executorService.execute(() -> {
                             try {
                                 getMessageLogReceiverEndpoint().getMessageDispatcher().accept(message);
@@ -89,6 +91,9 @@ public class DefaultEventSource extends AbstractEventSource {
             } catch (InterruptedException e) {
                 LOG.error(e.getMessage(), e);
             }
+
+            LOG.info("Finished reading message store for channel '{}'. Duration was {}.", channelName, Duration.between(startTime, Instant.now()));
+
             return messageStore.getLatestChannelPosition(channelName);
         }, newSingleThreadExecutor(
                 new CustomizableThreadFactory("synapse-eventsource-")
