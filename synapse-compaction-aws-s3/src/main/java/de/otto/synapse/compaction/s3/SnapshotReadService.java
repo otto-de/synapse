@@ -70,7 +70,7 @@ public class SnapshotReadService {
             Path snapshotFile = getTempFile(latestSnapshotKey);
 
             if (existsAndHasSize(snapshotFile, s3Object.get().size())) {
-                LOG.info("Snapshot on disk is same as in S3, keep it and use it: {}", snapshotFile.toAbsolutePath().toString());
+                LOG.info("Locally available snapshot file is the same as in S3, skip download and use it: {}", snapshotFile.toAbsolutePath().toString());
                 return Optional.of(snapshotFile.toFile());
             }
 
