@@ -33,9 +33,9 @@ public class EventSourcingAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public EventSourceBuilder eventSourceBuilder(final MessageStoreFactory<SnapshotMessageStore> snapshotMessageStoreFactory) {
-        return (messageLog) -> {
-            final SnapshotMessageStore messageStore = snapshotMessageStoreFactory.createMessageStoreFor(messageLog.getChannelName());
-            return new DefaultEventSource(messageStore, messageLog);
+        return (messageLogReceiverEndpoint) -> {
+            final SnapshotMessageStore messageStore = snapshotMessageStoreFactory.createMessageStoreFor(messageLogReceiverEndpoint.getChannelName());
+            return new DefaultEventSource(messageStore, messageLogReceiverEndpoint);
         };
     }
 

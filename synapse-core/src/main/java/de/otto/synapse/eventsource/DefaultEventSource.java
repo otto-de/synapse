@@ -10,7 +10,8 @@ import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -48,7 +49,18 @@ public class DefaultEventSource extends AbstractEventSource {
 
 
     private CompletableFuture<ChannelPosition> consumeMessageStore() {
+
+        int numberOfDispatcherThreads = 1;
+        if (messageStore.isCompacting()) {
+            numberOfDispatcherThreads = 16;
+        }
+        final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("synapse-messagestore-dispatcher-"));
+        final Semaphore lock = new Semaphore(numberOfDispatcherThreads);
+
         final String channelName = getChannelName();
+
+        final AtomicBoolean started = new AtomicBoolean(false);
+
         return CompletableFuture.supplyAsync(() -> {
             messageStore
                     .stream()
@@ -57,8 +69,26 @@ public class DefaultEventSource extends AbstractEventSource {
                     .map(message -> getMessageLogReceiverEndpoint().intercept(message))
                     .filter(Objects::nonNull)
                     .forEach(message -> {
-                        getMessageLogReceiverEndpoint().getMessageDispatcher().accept(message);
+                        try {
+                            lock.acquire();
+                        } catch (InterruptedException e) {
+                            LOG.error(e.getMessage(), e);
+                        }
+                        started.set(true);
+                        executorService.execute(() -> {
+                            try {
+                                getMessageLogReceiverEndpoint().getMessageDispatcher().accept(message);
+                            } finally {
+                                lock.release();
+                            }
+                        });
                     });
+            executorService.shutdown();
+            try {
+                executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
+            } catch (InterruptedException e) {
+                LOG.error(e.getMessage(), e);
+            }
             return messageStore.getLatestChannelPosition(channelName);
         }, newSingleThreadExecutor(
                 new CustomizableThreadFactory("synapse-eventsource-")

@@ -230,6 +230,11 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
         }
     }
 
+    @Override
+    public boolean isCompacting() {
+        return true;
+    }
+
     private static class MessageIterator implements Iterator<TextMessage> {
 
         private TextMessage nextMessage = null;

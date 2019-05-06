@@ -130,4 +130,8 @@ public interface MessageStore extends AutoCloseable {
 
     default void close() {
     }
+
+    default boolean isCompacting() {
+        return false;
+    }
 }
