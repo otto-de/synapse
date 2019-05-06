@@ -7,8 +7,15 @@
   Add the valueMarshaller to the ChronicleMapBuilder AND specify .withCustomValueMarshaller(true) when building the
   ChronicleMapStateRepository.
 
+*MessageStore*
+
+* MessageStore has a isCompacting() property now which is used to dispatch messages from snapshots concurrently. This
+  speeds up the processing of compacted snapshots at startup significantly.
+
 *Bugfixes*
 * Fixes the exception for an empty result of entries in the staterepository
+* Fix re-using of already downloaded snapshots when having multiple channels (wildcard deletion of snapshots before
+  downloading was too wild)
 
 ## 0.17.1
 
