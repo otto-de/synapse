@@ -7,6 +7,9 @@
   Add the valueMarshaller to the ChronicleMapBuilder AND specify .withCustomValueMarshaller(true) when building the
   ChronicleMapStateRepository.
 
+*Bugfixes*
+* Fixes the exception for an empty result of entries in the staterepository
+
 ## 0.17.1
 
 *Bugfixes*
