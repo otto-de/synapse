@@ -1,6 +1,6 @@
 # Release Notes
 
-## 0.17.2-SNAPSHOT
+## 0.17.2
 *StateRepository*
 
 * You can specify your own custom ValueMarshaller for your ChronicleMapStateRepository.
