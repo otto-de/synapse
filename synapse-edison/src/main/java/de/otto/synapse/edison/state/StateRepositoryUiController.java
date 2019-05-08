@@ -98,7 +98,7 @@ public class StateRepositoryUiController {
             final UriTemplate repositoryUri = fromTemplate(baseUriBuilder.toUriString() + "/" + repositoryName + "{?page,pageSize}");
 
             final PagerModel pagerModel = toPagerModel(pageSize > 0
-                    ? zeroBasedNumberedPaging(page, pageSize, allEntityIds.size()).links(repositoryUri, allOf(PagingRel.class))
+                    ? zeroBasedNumberedPaging(page, pageSize, (int)stateRepository.size()).links(repositoryUri, allOf(PagingRel.class))
                     : emptyLinks());
 
             final List<ImmutableMap<String, String>> entitiesModel = entityPageIds

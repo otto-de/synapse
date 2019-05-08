@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.damnhandy.uri.template.UriTemplate.fromTemplate;
 import static com.google.common.collect.Maps.uniqueIndex;
@@ -113,9 +114,10 @@ public class StateRepositoryRestController {
             final UriTemplate repositoryUri = fromTemplate(baseUriBuilder.toUriString() + "/" + repositoryName + "{?page,pageSize}");
             final UriTemplate entityUri = fromTemplate(baseUriBuilder.toUriString() + "/" + repositoryName + "/{entityId}");
 
-            final Set<String> allEntityIds = stateRepositories
-                    .get(repositoryName)
-                    .keySet();
+            final StateRepository<?> stateRepository = stateRepositories
+                    .get(repositoryName);
+
+            final Set<String> allEntityIds = stateRepository.keySet();
             final List<String> entityPageIds = allEntityIds
                     .stream()
                     .skip(page * pageSize)
@@ -123,7 +125,7 @@ public class StateRepositoryRestController {
                     .collect(toList());
 
             final Links pagingLinks = pageSize > 0
-                    ? zeroBasedNumberedPaging(page, pageSize, allEntityIds.size()).links(repositoryUri, allOf(PagingRel.class))
+                    ? zeroBasedNumberedPaging(page, pageSize, (int)stateRepository.size()).links(repositoryUri, allOf(PagingRel.class))
                     : emptyLinks();
 
             final List<Link> itemLinks = entityItemLinks(entityUri, entityPageIds);
