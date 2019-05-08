@@ -1,5 +1,10 @@
 # Release Notes
 
+## 0.17.3
+*StateRepository*
+
+* Don't use on-heap keySet in ChronicleMapStateRepository
+
 ## 0.17.2
 *StateRepository*
 
