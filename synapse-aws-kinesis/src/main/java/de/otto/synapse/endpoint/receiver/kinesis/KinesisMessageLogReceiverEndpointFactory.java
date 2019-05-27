@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint.receiver.kinesis;
 
+import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
@@ -41,7 +42,12 @@ public class KinesisMessageLogReceiverEndpointFactory implements MessageLogRecei
 
     @Override
     public MessageLogReceiverEndpoint create(@Nonnull String channelName) {
-        return new KinesisMessageLogReceiverEndpoint(channelName, interceptorRegistry, kinesisClient, executorService, eventPublisher, clock);
+        return new KinesisMessageLogReceiverEndpoint(channelName, StartFrom.HORIZON.toString(), interceptorRegistry, kinesisClient, executorService, eventPublisher, clock);
+    }
+
+    @Override
+    public MessageLogReceiverEndpoint create(@Nonnull String channelName, @Nonnull StartFrom iteratorAt) {
+        return new KinesisMessageLogReceiverEndpoint(channelName, iteratorAt.toString(), interceptorRegistry, kinesisClient, executorService, eventPublisher, clock);
     }
 
 }

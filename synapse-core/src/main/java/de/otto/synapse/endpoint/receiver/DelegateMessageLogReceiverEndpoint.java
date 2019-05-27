@@ -22,7 +22,7 @@ public class DelegateMessageLogReceiverEndpoint implements MessageLogReceiverEnd
     public DelegateMessageLogReceiverEndpoint(final @Nonnull String channelName,
                                               final @Nonnull String iteratorAt,
                                               final @Nonnull MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory) {
-        this.delegate = messageLogReceiverEndpointFactory.create(channelName);
+        this.delegate = messageLogReceiverEndpointFactory.create(channelName, StartFrom.valueOf(iteratorAt));
         this.iteratorAt = StartFrom.valueOf(iteratorAt);
     }
 
