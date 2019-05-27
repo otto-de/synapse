@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint.sender;
 
+import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.endpoint.AbstractMessageEndpoint;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.MessageInterceptor;
@@ -22,7 +23,7 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
  * and {@link de.otto.synapse.endpoint.MessageInterceptor interception}.
  *
  * <p>
- *     <img src="http://www.enterpriseintegrationpatterns.com/img/MessageEndpointSolution.gif" alt="Message Endpoint">
+ * <img src="http://www.enterpriseintegrationpatterns.com/img/MessageEndpointSolution.gif" alt="Message Endpoint">
  * </p>
  *
  * @see <a href="http://www.enterpriseintegrationpatterns.com/patterns/messaging/MessageEndpoint.html">EIP: Message Endpoint</a>
@@ -35,16 +36,24 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
     /**
      * Constructor used to create a new MessageEndpoint.
      *
-     * @param channelName the name of the underlying channel / stream / queue / message log.
+     * @param channelName         the name of the underlying channel / stream / queue / message log.
      * @param interceptorRegistry registry used to determine {@link MessageInterceptor message interceptors} for this
      *                            endpoint.
-     * @param messageTranslator the MessageTranslator used to translate message payloads as expected by the
-     * {@link de.otto.synapse.consumer.MessageConsumer consumers}.
+     * @param messageTranslator   the MessageTranslator used to translate message payloads as expected by the
+     *                            {@link de.otto.synapse.consumer.MessageConsumer consumers}.
      */
     public AbstractMessageSenderEndpoint(final @Nonnull String channelName,
+                                         final @Nonnull String iteratorAt,
                                          final @Nonnull MessageInterceptorRegistry interceptorRegistry,
                                          final @Nonnull MessageTranslator<TextMessage> messageTranslator) {
-        super(channelName, interceptorRegistry);
+        super(channelName, iteratorAt, interceptorRegistry);
+        this.messageTranslator = messageTranslator;
+    }
+
+    AbstractMessageSenderEndpoint(final @Nonnull String channelName,
+                                  final @Nonnull MessageInterceptorRegistry interceptorRegistry,
+                                  final @Nonnull MessageTranslator<TextMessage> messageTranslator) {
+        super(channelName, StartFrom.HORIZON.toString(), interceptorRegistry);
         this.messageTranslator = messageTranslator;
     }
 
@@ -52,7 +61,7 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
      * Sends a {@link Message} to the message channel.
      *
      * @param message the message to send
-     * @param <T> type of the message's payload
+     * @param <T>     type of the message's payload
      */
     @Override
     public final <T> CompletableFuture<Void> send(@Nonnull final Message<T> message) {
@@ -70,7 +79,7 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
      * batches are supported by the infrastructure. If not, the messages are send one by one.
      *
      * @param batch a stream of messages that is sent in batched mode, if supported
-     * @param <T> the type of the message payload
+     * @param <T>   the type of the message payload
      */
     @Override
     public final <T> CompletableFuture<Void> sendBatch(@Nonnull final Stream<Message<T>> batch) {

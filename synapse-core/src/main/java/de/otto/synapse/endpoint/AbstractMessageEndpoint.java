@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint;
 
+import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
@@ -41,6 +42,7 @@ public abstract class AbstractMessageEndpoint implements MessageEndpoint {
     private final String channelName;
     @Nonnull
     private final MessageInterceptorRegistry interceptorRegistry;
+    private final StartFrom iteratorAt;
 
     /**
      * Constructor used to create a new AbstractMessageEndpoint.
@@ -50,9 +52,18 @@ public abstract class AbstractMessageEndpoint implements MessageEndpoint {
      *                            endpoint.
      */
     public AbstractMessageEndpoint(final @Nonnull String channelName,
+                                   final @Nonnull String iteratorAt,
                                    final @Nonnull MessageInterceptorRegistry interceptorRegistry) {
         this.channelName = requireNonNull(channelName, "ChannelName must not be null");
         this.interceptorRegistry = requireNonNull(interceptorRegistry);
+        this.iteratorAt = StartFrom.valueOf(iteratorAt);
+    }
+
+    AbstractMessageEndpoint(final @Nonnull String channelName,
+                                   final @Nonnull MessageInterceptorRegistry interceptorRegistry) {
+        this.channelName = requireNonNull(channelName, "ChannelName must not be null");
+        this.interceptorRegistry = requireNonNull(interceptorRegistry);
+        this.iteratorAt = StartFrom.HORIZON;
     }
 
     /**
@@ -104,4 +115,8 @@ public abstract class AbstractMessageEndpoint implements MessageEndpoint {
         return getInterceptorChain().intercept(message);
     }
 
+    @Override
+    public StartFrom getIterator() {
+        return iteratorAt;
+    }
 }

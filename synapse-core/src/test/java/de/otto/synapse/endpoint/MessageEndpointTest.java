@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint;
 
+import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.message.TextMessage;
 import org.junit.Test;
 

@@ -2,6 +2,7 @@ package de.otto.synapse.endpoint.receiver;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardResponse;
+import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.EndpointType;
@@ -16,10 +17,13 @@ import java.util.function.Predicate;
 public class DelegateMessageLogReceiverEndpoint implements MessageLogReceiverEndpoint {
 
     private final MessageLogReceiverEndpoint delegate;
+    private final StartFrom iteratorAt;
 
     public DelegateMessageLogReceiverEndpoint(final @Nonnull String channelName,
+                                              final @Nonnull String iteratorAt,
                                               final @Nonnull MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory) {
         this.delegate = messageLogReceiverEndpointFactory.create(channelName);
+        this.iteratorAt = StartFrom.valueOf(iteratorAt);
     }
 
     @Nonnull
@@ -67,5 +71,10 @@ public class DelegateMessageLogReceiverEndpoint implements MessageLogReceiverEnd
     @Override
     public TextMessage intercept(final @Nonnull TextMessage message) {
         return delegate.intercept(message);
+    }
+
+    @Override
+    public StartFrom getIterator() {
+        return iteratorAt;
     }
 }

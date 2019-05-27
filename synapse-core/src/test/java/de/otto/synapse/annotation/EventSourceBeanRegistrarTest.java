@@ -1,7 +1,7 @@
 package de.otto.synapse.annotation;
 
+import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
-import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.DefaultEventSource;
 import de.otto.synapse.eventsource.DelegateEventSource;
@@ -46,6 +46,10 @@ public class EventSourceBeanRegistrarTest {
     @EnableEventSource(name = "firstEventSource", channelName = "first-stream")
     @EnableEventSource(name = "secondEventSource", channelName = "${test.stream-name}")
     static class RepeatableMultiEventSourceTestConfig {
+    }
+
+    @EnableEventSource(name = "testEventSource", channelName = "test-stream", iteratorAt = StartFrom.LATEST)
+    static class IteratorAtEventSourceTestConfig {
     }
 
     @Test(expected = BeanCreationException.class)
@@ -123,5 +127,17 @@ public class EventSourceBeanRegistrarTest {
         final MessageLogReceiverEndpoint receiverEndpoint = context.getBean("testMessageLog", MessageLogReceiverEndpoint.class);
         assertThat(receiverEndpoint.getChannelName()).isEqualTo("test-stream");
     }
+
+    @Test
+    public void shouldRegisterEventSourceWithIteratorAt() {
+        context.register(IteratorAtEventSourceTestConfig.class);
+        context.register(InMemoryMessageLogTestConfiguration.class);
+        context.refresh();
+
+        assertThat(context.containsBean("testEventSource")).isTrue();
+        final EventSource eventSource = context.getBean("testEventSource", DelegateEventSource.class).getDelegate();
+        assertThat(eventSource.getIterator()).isEqualTo(StartFrom.LATEST);
+    }
+
 
 }

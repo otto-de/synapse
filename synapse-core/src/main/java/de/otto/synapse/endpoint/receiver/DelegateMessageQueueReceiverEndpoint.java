@@ -1,5 +1,6 @@
 package de.otto.synapse.endpoint.receiver;
 
+import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.EndpointType;
@@ -68,5 +69,10 @@ public class DelegateMessageQueueReceiverEndpoint implements MessageQueueReceive
     @Override
     public TextMessage intercept(final @Nonnull TextMessage message) {
         return delegate.intercept(message);
+    }
+
+    @Override
+    public StartFrom getIterator() {
+        return null;
     }
 }

@@ -18,9 +18,10 @@ import javax.annotation.Nullable;
 public abstract class AbstractMessageLogReceiverEndpoint extends AbstractMessageReceiverEndpoint implements MessageLogReceiverEndpoint {
 
     public AbstractMessageLogReceiverEndpoint(final @Nonnull String channelName,
+                                              final @Nonnull String iteratorAt,
                                               final @Nonnull MessageInterceptorRegistry interceptorRegistry,
                                               final @Nullable ApplicationEventPublisher eventPublisher) {
-        super(channelName, interceptorRegistry, eventPublisher);
+        super(channelName, iteratorAt, interceptorRegistry, eventPublisher);
     }
 
 }
