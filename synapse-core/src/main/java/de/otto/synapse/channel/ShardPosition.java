@@ -38,6 +38,13 @@ public final class ShardPosition implements Serializable {
         this.startFrom = startFrom;
     }
 
+    private ShardPosition(final String shardName) {
+        this.shardName = requireNonNull(shardName);
+        this.position = "";
+        this.timestamp = null;
+        this.startFrom = StartFrom.LATEST;
+    }
+
     @Nonnull
     public static ShardPosition fromHorizon(final @Nonnull String shardName) {
         return new ShardPosition(shardName, "");
@@ -59,6 +66,11 @@ public final class ShardPosition implements Serializable {
     public static ShardPosition fromTimestamp(final @Nonnull String shardName,
                                               final @Nonnull Instant timestamp) {
         return new ShardPosition(shardName, timestamp);
+    }
+
+    @Nonnull
+    public static ShardPosition fromLatest(final @Nonnull String shardName) {
+        return new ShardPosition(shardName);
     }
 
     @Nonnull

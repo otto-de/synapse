@@ -126,6 +126,10 @@ public class KinesisShardIterator {
                         .shardIteratorType(AT_TIMESTAMP)
                         .timestamp(shardPosition.timestamp());
                 break;
+            case LATEST:
+                shardRequestBuilder
+                        .shardIteratorType(LATEST);
+                break;
         }
         return shardRequestBuilder.build();
     }
