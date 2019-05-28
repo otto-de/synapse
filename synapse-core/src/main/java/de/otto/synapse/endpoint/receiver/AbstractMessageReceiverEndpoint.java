@@ -28,10 +28,9 @@ public class AbstractMessageReceiverEndpoint extends AbstractMessageEndpoint imp
     private final ApplicationEventPublisher eventPublisher;
 
     public AbstractMessageReceiverEndpoint(final @Nonnull String channelName,
-                                           final @Nonnull String iteratorAt,
                                            final @Nonnull MessageInterceptorRegistry interceptorRegistry,
                                            final @Nullable ApplicationEventPublisher eventPublisher) {
-        super(channelName, iteratorAt, interceptorRegistry);
+        super(channelName, interceptorRegistry);
         messageDispatcher = new MessageDispatcher();
         this.eventPublisher = eventPublisher;
     }

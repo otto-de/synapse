@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.sender;
 
-import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.InterceptorChain;
@@ -17,7 +16,7 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class DelegateMessageSenderEndpoint implements MessageSenderEndpoint {
+public class DelegateMessageSenderEndpoint implements MessageSenderEndpoint{
 
     private static final Logger LOG = getLogger(DelegateMessageSenderEndpoint.class);
     private final MessageSenderEndpoint delegate;
@@ -66,10 +65,5 @@ public class DelegateMessageSenderEndpoint implements MessageSenderEndpoint {
     @Override
     public <T> CompletableFuture<Void> sendBatch(@Nonnull Stream<Message<T>> batch) {
         return delegate.sendBatch(batch);
-    }
-
-    @Override
-    public StartFrom getIterator() {
-        return null;
     }
 }

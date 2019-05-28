@@ -25,7 +25,6 @@ public class DefaultEventSource extends AbstractEventSource {
 
     private final MessageStore messageStore;
 
-
     public DefaultEventSource(final @Nonnull MessageStore messageStore,
                               final @Nonnull MessageLogReceiverEndpoint messageLog) {
         super(messageLog);

@@ -43,14 +43,14 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
 
     public InMemoryChannel(final String channelName,
                            final MessageInterceptorRegistry interceptorRegistry) {
-        super(channelName, HORIZON.toString(), interceptorRegistry, null);
+        super(channelName, interceptorRegistry, null);
         this.eventQueue = synchronizedList(new ArrayList<>());
     }
 
     public InMemoryChannel(final String channelName,
                            final MessageInterceptorRegistry interceptorRegistry,
                            final ApplicationEventPublisher eventPublisher) {
-        super(channelName, HORIZON.toString(), interceptorRegistry, eventPublisher);
+        super(channelName, interceptorRegistry, eventPublisher);
         this.eventQueue = synchronizedList(new ArrayList<>());
     }
 

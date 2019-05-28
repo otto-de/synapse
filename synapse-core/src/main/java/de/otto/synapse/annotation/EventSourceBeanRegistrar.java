@@ -15,7 +15,8 @@ import org.springframework.util.MultiValueMap;
 import java.util.Objects;
 
 import static com.google.common.base.Strings.emptyToNull;
-import static de.otto.synapse.annotation.BeanNameHelper.*;
+import static de.otto.synapse.annotation.BeanNameHelper.beanNameForEventSource;
+import static de.otto.synapse.annotation.BeanNameHelper.beanNameForMessageLogReceiverEndpoint;
 import static java.lang.String.format;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.beans.factory.support.AbstractBeanDefinition.DEPENDENCY_CHECK_ALL;
@@ -69,22 +70,16 @@ public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, 
             final String eventSourceBeanName = Objects.toString(
                     emptyToNull(annotationAttributes.getString("name")),
                     beanNameForEventSource(channelName));
-
             final String messageLogBeanName = Objects.toString(
                     emptyToNull(annotationAttributes.getString("messageLogReceiverEndpoint")),
                     beanNameForMessageLogReceiverEndpoint(channelName));
-
-            final String iteratorAt = Objects.toString(
-                    emptyToNull(annotationAttributes.getEnum("iteratorAt").toString()),
-                    beanNameForIteratorAt(channelName));
-
             if (!registry.containsBeanDefinition(messageLogBeanName)) {
-                registerMessageLogBeanDefinition(registry, messageLogBeanName, channelName, iteratorAt);
+                registerMessageLogBeanDefinition(registry, messageLogBeanName, channelName);
             } else {
                 throw new BeanCreationException(messageLogBeanName, format("MessageLogReceiverEndpoint %s is already registered.", messageLogBeanName));
             }
             if (!registry.containsBeanDefinition(eventSourceBeanName)) {
-                registerEventSourceBeanDefinition(registry, eventSourceBeanName, messageLogBeanName, channelName, iteratorAt);
+                registerEventSourceBeanDefinition(registry, eventSourceBeanName, messageLogBeanName, channelName);
             } else {
                 throw new BeanCreationException(eventSourceBeanName, format("EventSource %s is already registered.", eventSourceBeanName));
             }
@@ -106,17 +101,13 @@ public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, 
                     emptyToNull(eventSourceAttr.getFirst("messageLogReceiverEndpoint").toString()),
                     beanNameForMessageLogReceiverEndpoint(channelName));
 
-            final String iteratorAt = Objects.toString(
-                    emptyToNull(eventSourceAttr.getFirst("iteratorAt").toString()),
-                    beanNameForIteratorAt(channelName));
-
             if (!registry.containsBeanDefinition(messageLogBeanName)) {
-                registerMessageLogBeanDefinition(registry, messageLogBeanName, channelName, iteratorAt);
+                registerMessageLogBeanDefinition(registry, messageLogBeanName, channelName);
             } else {
                 throw new BeanCreationException(messageLogBeanName, format("MessageLogReceiverEndpoint %s is already registered.", messageLogBeanName));
             }
             if (!registry.containsBeanDefinition(eventSourceBeanName)) {
-                registerEventSourceBeanDefinition(registry, eventSourceBeanName, messageLogBeanName, channelName, iteratorAt);
+                registerEventSourceBeanDefinition(registry, eventSourceBeanName, messageLogBeanName, channelName);
             } else {
                 throw new BeanCreationException(eventSourceBeanName, format("EventSource %s is already registered.", eventSourceBeanName));
             }
@@ -125,15 +116,13 @@ public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, 
 
     private void registerMessageLogBeanDefinition(final BeanDefinitionRegistry registry,
                                                   final String beanName,
-                                                  final String channelName,
-                                                  final String iteratorAt) {
+                                                  final String channelName) {
 
 
         registry.registerBeanDefinition(
                 beanName,
                 genericBeanDefinition(DelegateMessageLogReceiverEndpoint.class)
                         .addConstructorArgValue(channelName)
-                        .addConstructorArgValue(iteratorAt)
                         .setDependencyCheck(DEPENDENCY_CHECK_ALL)
                         .getBeanDefinition()
         );
@@ -144,13 +133,11 @@ public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, 
     private void registerEventSourceBeanDefinition(final BeanDefinitionRegistry registry,
                                                    final String beanName,
                                                    final String messageLogBeanName,
-                                                   final String channelName,
-                                                   final String iteratorAt) {
+                                                   final String channelName) {
         registry.registerBeanDefinition(
                 beanName,
                 genericBeanDefinition(DelegateEventSource.class)
                         .addConstructorArgValue(messageLogBeanName)
-                        .addConstructorArgValue(iteratorAt)
                         .setDependencyCheck(DEPENDENCY_CHECK_ALL)
                         .getBeanDefinition()
         );

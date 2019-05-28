@@ -25,9 +25,5 @@ public class BeanNameHelper {
         return LOWER_HYPHEN.to(LOWER_CAMEL, channelName) + "Journal";
     }
 
-    public static String beanNameForIteratorAt(final String iteratorAt) {
-        return LOWER_HYPHEN.to(LOWER_CAMEL, iteratorAt) + "IteratorAt";
-    }
-
 }
 

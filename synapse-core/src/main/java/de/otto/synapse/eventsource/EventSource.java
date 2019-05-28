@@ -2,7 +2,6 @@ package de.otto.synapse.eventsource;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardResponse;
-import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
@@ -89,6 +88,4 @@ public interface EventSource {
     void stop();
 
     boolean isStopping();
-
-    StartFrom getIterator();
 }

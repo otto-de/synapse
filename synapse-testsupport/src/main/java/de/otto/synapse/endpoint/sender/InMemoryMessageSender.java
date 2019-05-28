@@ -17,7 +17,7 @@ public class InMemoryMessageSender extends AbstractMessageSenderEndpoint {
     public InMemoryMessageSender(final MessageInterceptorRegistry interceptorRegistry,
                                  final MessageTranslator<TextMessage> messageTranslator,
                                  final InMemoryChannel channel) {
-        super(channel.getChannelName(), channel.getIterator().toString(), interceptorRegistry, messageTranslator);
+        super(channel.getChannelName(), interceptorRegistry, messageTranslator);
         this.channel = channel;
     }
 

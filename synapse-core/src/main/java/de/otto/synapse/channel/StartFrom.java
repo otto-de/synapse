@@ -16,9 +16,5 @@ public enum StartFrom {
     /**
      * Start consumption of messages at first message at the specified timestamp.
      */
-    TIMESTAMP,
-    /**
-     * Start reading just after the most recent record in the shard, so that you always read the most recent data in the shard.
-     */
-    LATEST
+    TIMESTAMP
 }

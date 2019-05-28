@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint;
 
-import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
@@ -84,11 +83,4 @@ public interface MessageEndpoint {
      */
     @Nullable
     TextMessage intercept(@Nonnull TextMessage message);
-
-    /**
-     * Returns the
-     *
-     * @return StartFrom
-     */
-    StartFrom getIterator();
 }

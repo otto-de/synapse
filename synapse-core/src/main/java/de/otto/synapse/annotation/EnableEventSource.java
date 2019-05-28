@@ -1,6 +1,5 @@
 package de.otto.synapse.annotation;
 
-import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
@@ -80,10 +79,5 @@ public @interface EnableEventSource {
      * @return bean name of the {@code MessageLogReceiverEndpoint}
      */
     String messageLogReceiverEndpoint() default "";
-
-    /**
-     *
-     */
-    StartFrom iteratorAt() default StartFrom.HORIZON;
 
 }

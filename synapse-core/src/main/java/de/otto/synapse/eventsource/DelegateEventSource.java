@@ -2,7 +2,6 @@ package de.otto.synapse.eventsource;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardResponse;
-import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
@@ -16,15 +15,12 @@ import java.util.function.Predicate;
 public class DelegateEventSource implements EventSource {
 
     private final EventSource delegate;
-    private final StartFrom iteratorAt;
 
     public DelegateEventSource(final String messageLogBeanName,
-                               final String iteratorAt,
                                final EventSourceBuilder eventSourceBuilder,
                                final ApplicationContext applicationContext) {
         final MessageLogReceiverEndpoint messageLogReceiverEndpoint = applicationContext.getBean(messageLogBeanName, MessageLogReceiverEndpoint.class);
         this.delegate = eventSourceBuilder.buildEventSource(messageLogReceiverEndpoint);
-        this.iteratorAt = StartFrom.valueOf(iteratorAt);
     }
 
     public EventSource getDelegate() {
@@ -119,11 +115,6 @@ public class DelegateEventSource implements EventSource {
     @Override
     public boolean isStopping() {
         return delegate.isStopping();
-    }
-
-    @Override
-    public StartFrom getIterator() {
-        return iteratorAt;
     }
 
     @Override

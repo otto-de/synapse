@@ -1,6 +1,5 @@
 package de.otto.synapse.eventsource;
 
-import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
@@ -67,8 +66,4 @@ public abstract class AbstractEventSource implements EventSource {
         return messageLog;
     }
 
-    @Override
-    public StartFrom getIterator() {
-        return messageLog.getIterator();
-    }
 }
