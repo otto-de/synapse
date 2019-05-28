@@ -50,7 +50,7 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
         this.messageTranslator = messageTranslator;
     }
 
-    public AbstractMessageSenderEndpoint(final @Nonnull String channelName,
+    AbstractMessageSenderEndpoint(final @Nonnull String channelName,
                                   final @Nonnull MessageInterceptorRegistry interceptorRegistry,
                                   final @Nonnull MessageTranslator<TextMessage> messageTranslator) {
         super(channelName, StartFrom.HORIZON.toString(), interceptorRegistry);

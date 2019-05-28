@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelDurationBehind;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardResponse;
-import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
@@ -95,30 +94,20 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
 
 
     public KinesisMessageLogReceiverEndpoint(final String channelName,
-                                             final String iteratorAt,
                                              final MessageInterceptorRegistry interceptorRegistry,
                                              final KinesisAsyncClient kinesisClient,
                                              final ExecutorService executorService,
                                              final ApplicationEventPublisher eventPublisher) {
-        this(channelName, iteratorAt, interceptorRegistry, kinesisClient, executorService, eventPublisher, Clock.systemDefaultZone());
+        this(channelName, interceptorRegistry, kinesisClient, executorService, eventPublisher, Clock.systemDefaultZone());
     }
 
     public KinesisMessageLogReceiverEndpoint(final String channelName,
-                                             final MessageInterceptorRegistry interceptorRegistry,
-                                             final KinesisAsyncClient kinesisClient,
-                                             final ExecutorService executorService,
-                                             final ApplicationEventPublisher eventPublisher) {
-        this(channelName, StartFrom.HORIZON.toString(), interceptorRegistry, kinesisClient, executorService, eventPublisher, Clock.systemDefaultZone());
-    }
-
-    public KinesisMessageLogReceiverEndpoint(final String channelName,
-                                             final String iteratorAt,
                                              final MessageInterceptorRegistry interceptorRegistry,
                                              final KinesisAsyncClient kinesisClient,
                                              final ExecutorService executorService,
                                              final ApplicationEventPublisher eventPublisher,
                                              final Clock clock) {
-        super(channelName, iteratorAt, interceptorRegistry, eventPublisher);
+        super(channelName, interceptorRegistry, eventPublisher);
         this.eventPublisher = eventPublisher;
         this.kinesisMessageLogReader = new KinesisMessageLogReader(channelName, kinesisClient, executorService, clock);
         this.interceptorRegistry = interceptorRegistry;
@@ -129,33 +118,8 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
                                              final KinesisAsyncClient kinesisClient,
                                              final ExecutorService executorService,
                                              final ApplicationEventPublisher eventPublisher,
-                                             final Clock clock) {
-        super(channelName, StartFrom.HORIZON.toString(), interceptorRegistry, eventPublisher);
-        this.eventPublisher = eventPublisher;
-        this.kinesisMessageLogReader = new KinesisMessageLogReader(channelName, kinesisClient, executorService, clock);
-        this.interceptorRegistry = interceptorRegistry;
-    }
-
-    public KinesisMessageLogReceiverEndpoint(final String channelName,
-                                             final String iteratorAt,
-                                             final MessageInterceptorRegistry interceptorRegistry,
-                                             final KinesisAsyncClient kinesisClient,
-                                             final ExecutorService executorService,
-                                             final ApplicationEventPublisher eventPublisher,
                                              final Clock clock, final int waitingTimeOnEmptyRecords) {
-        super(channelName, iteratorAt, interceptorRegistry, eventPublisher);
-        this.eventPublisher = eventPublisher;
-        this.kinesisMessageLogReader = new KinesisMessageLogReader(channelName, kinesisClient, executorService, clock, waitingTimeOnEmptyRecords);
-        this.interceptorRegistry = interceptorRegistry;
-    }
-
-    public KinesisMessageLogReceiverEndpoint(final String channelName,
-                                             final MessageInterceptorRegistry interceptorRegistry,
-                                             final KinesisAsyncClient kinesisClient,
-                                             final ExecutorService executorService,
-                                             final ApplicationEventPublisher eventPublisher,
-                                             final Clock clock, final int waitingTimeOnEmptyRecords) {
-        super(channelName, StartFrom.HORIZON.toString(), interceptorRegistry, eventPublisher);
+        super(channelName, interceptorRegistry, eventPublisher);
         this.eventPublisher = eventPublisher;
         this.kinesisMessageLogReader = new KinesisMessageLogReader(channelName, kinesisClient, executorService, clock, waitingTimeOnEmptyRecords);
         this.interceptorRegistry = interceptorRegistry;
