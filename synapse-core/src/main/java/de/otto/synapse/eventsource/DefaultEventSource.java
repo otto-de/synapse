@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
@@ -64,6 +65,8 @@ public class DefaultEventSource extends AbstractEventSource {
         LOG.info("Starting to read message store for channel '{}'.", channelName);
         Instant startTime = Instant.now();
 
+        AtomicLong messageCounter = new AtomicLong();
+
         return CompletableFuture.supplyAsync(() -> {
             messageStore
                     .stream()
@@ -81,6 +84,10 @@ public class DefaultEventSource extends AbstractEventSource {
                             try {
                                 getMessageLogReceiverEndpoint().getMessageDispatcher().accept(message);
                             } finally {
+                                long counter = messageCounter.getAndIncrement();
+                                if (counter % 100_000 == 0) {
+                                    LOG.info("Consumed {} messages from message store for channel '{}'", counter, channelName);
+                                }
                                 lock.release();
                             }
                         });
@@ -88,6 +95,7 @@ public class DefaultEventSource extends AbstractEventSource {
             executorService.shutdown();
             try {
                 executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.MINUTES);
+                LOG.info("Consumed {} messages from message store for channel '{}'", messageCounter.get(), channelName);
             } catch (InterruptedException e) {
                 LOG.error(e.getMessage(), e);
             }
