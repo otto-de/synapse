@@ -55,7 +55,7 @@ public class DefaultEventSource extends AbstractEventSource {
 
         int numberOfDispatcherThreads = 1;
         if (messageStore.isCompacting()) {
-            numberOfDispatcherThreads = Runtime.getRuntime().availableProcessors()-1;
+            numberOfDispatcherThreads = Runtime.getRuntime().availableProcessors();
         }
 
         final ExecutorService executorService = Executors.newCachedThreadPool(new CustomizableThreadFactory("synapse-messagestore-dispatcher-"));
