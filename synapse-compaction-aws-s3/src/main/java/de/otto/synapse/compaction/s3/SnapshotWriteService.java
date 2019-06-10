@@ -11,6 +11,7 @@ import de.otto.synapse.helper.s3.S3Helper;
 import de.otto.synapse.logging.ProgressLogger;
 import de.otto.synapse.state.StateRepository;
 import org.slf4j.Logger;
+import org.slf4j.Marker;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.*;
@@ -48,11 +49,19 @@ public class SnapshotWriteService {
     private final S3Helper s3Helper;
     private final String snapshotBucketName;
     private final JsonFactory jsonFactory = new JsonFactory();
+    private final Marker marker;
 
     public SnapshotWriteService(final S3Client s3Client,
                                 final SnapshotProperties properties) {
+        this(s3Client, properties, null);
+    }
+
+    public SnapshotWriteService(final S3Client s3Client,
+                                final SnapshotProperties properties,
+                                final Marker marker) {
         this.s3Helper = new S3Helper(s3Client);
         this.snapshotBucketName = properties.getBucketName();
+        this.marker = marker;
     }
 
 
@@ -61,15 +70,15 @@ public class SnapshotWriteService {
                                 final StateRepository<String> stateRepository) throws IOException {
         File snapshotFile = null;
         try {
-            LOG.info("Start creating new snapshot");
+            LOG.info(marker, "Start creating new snapshot");
             snapshotFile = createSnapshot(channelName, position, stateRepository);
-            LOG.info("Finished creating snapshot file: {}", snapshotFile.getAbsolutePath());
+            LOG.info(marker, "Finished creating snapshot file: {}", snapshotFile.getAbsolutePath());
             uploadSnapshot(this.snapshotBucketName, snapshotFile);
-            LOG.info("Finished uploading snapshot file to s3");
+            LOG.info(marker, "Finished uploading snapshot file to s3");
             deleteOlderSnapshots(channelName);
         } finally {
             if (snapshotFile != null) {
-                LOG.info("delete file {}", snapshotFile.toPath().toString());
+                LOG.info(marker, "delete file {}", snapshotFile.toPath().toString());
                 deleteFile(snapshotFile);
             }
         }
@@ -95,7 +104,7 @@ public class SnapshotWriteService {
             // write to data file
             jGenerator.writeArrayFieldStart(DATA_FIELD_NAME);
 
-            ProgressLogger processedLogger = new ProgressLogger(LOG, stateRepository.size());
+            ProgressLogger processedLogger = new ProgressLogger(LOG, stateRepository.size(), marker);
             stateRepository.consumeAll((key, entry) -> {
                 try {
                     processedLogger.incrementAndLog();
@@ -114,7 +123,7 @@ public class SnapshotWriteService {
             jGenerator.flush();
             zipOutputStream.closeEntry();
         } catch (Exception e) {
-            LOG.info("delete file {}", snapshotFile.toPath().toString());
+            LOG.info(marker, "delete file {}", snapshotFile.toPath().toString());
             deleteFile(snapshotFile);
             throw e;
         } finally {
@@ -143,9 +152,9 @@ public class SnapshotWriteService {
     private void deleteSnapshotFile(File snapshotFile) {
         boolean success = snapshotFile.delete();
         if (success) {
-            LOG.info("deleted {}", snapshotFile.getName());
+            LOG.info(marker, "deleted {}", snapshotFile.getName());
         } else {
-            LOG.warn("deletion of {} failed", snapshotFile.getName());
+            LOG.warn(marker, "deletion of {} failed", snapshotFile.getName());
         }
     }
 
@@ -153,7 +162,7 @@ public class SnapshotWriteService {
         if (file != null) {
             boolean success = file.delete();
             if (!success) {
-                LOG.error("failed to delete snapshot {}", file.getName());
+                LOG.error(marker, "failed to delete snapshot {}", file.getName());
             }
         }
     }

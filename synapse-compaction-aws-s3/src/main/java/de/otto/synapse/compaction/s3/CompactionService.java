@@ -9,6 +9,7 @@ import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.translator.MessageFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 
 import java.time.Clock;
 
@@ -46,11 +47,10 @@ public class CompactionService {
         this.clock = clock;
     }
 
-    public String compact(final String channelName, final MessageFormat messageFormat) {
-        LOG.info("Start compacting channel {} with MessageFormat {}", channelName, messageFormat);
+    public String compact(final String channelName, final MessageFormat messageFormat, final Marker marker) {
+        LOG.info(marker, "Start compacting channel {} with MessageFormat {}", channelName, messageFormat);
         stateRepository.clear();
-
-        LOG.info("Start loading entries from snapshot");
+        LOG.info(marker, "Start loading entries from snapshot");
         final MessageLogReceiverEndpoint messageLog = messageLogReceiverEndpointFactory.create(channelName);
         final EventSource compactingKinesisEventSource = eventSourceBuilder.buildEventSource(messageLog);
         compactingKinesisEventSource.register(
@@ -68,7 +68,7 @@ public class CompactionService {
                     )
                     .get();
 
-            LOG.info("Finished updating snapshot data. StateRepository now holds {} entries.", stateRepository.size());
+            LOG.info(marker, "Finished updating snapshot data. StateRepository now holds {} entries.", stateRepository.size());
 
             return snapshotWriteService.writeSnapshot(channelName, currentPosition, stateRepository);
         } catch (Exception e) {
@@ -79,7 +79,11 @@ public class CompactionService {
     }
 
     public String compact(final String channelName) {
-        return compact(channelName, defaultMessageFormat());
+        return compact(channelName, defaultMessageFormat(), null);
+    }
+
+    public String compact(final String channelName, final Marker marker) {
+        return compact(channelName, defaultMessageFormat(), marker);
     }
 
 }

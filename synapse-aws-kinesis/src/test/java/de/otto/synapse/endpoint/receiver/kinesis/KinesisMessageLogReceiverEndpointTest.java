@@ -326,7 +326,7 @@ public class KinesisMessageLogReceiverEndpointTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", false);
 
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", new MessageInterceptorRegistry(), kinesisClient, executorService, null, clock, 1000);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", new MessageInterceptorRegistry(), kinesisClient, executorService, null, clock, 1000, null);
 
         kinesisMessageLog.register(messageConsumer);
 
@@ -349,7 +349,7 @@ public class KinesisMessageLogReceiverEndpointTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", false);
 
-        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", new MessageInterceptorRegistry(), kinesisClient, executorService, null, clock, 1000);
+        kinesisMessageLog = new KinesisMessageLogReceiverEndpoint("channelName", new MessageInterceptorRegistry(), kinesisClient, executorService, null, clock, 1000, null);
 
         kinesisMessageLog.register(messageConsumer);
 

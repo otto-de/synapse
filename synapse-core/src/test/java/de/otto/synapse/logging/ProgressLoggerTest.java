@@ -22,7 +22,7 @@ public class ProgressLoggerTest {
     public void shouldLogAllPercentageSteps() {
         // given
         final int expectedCount = 1000;
-        ProgressLogger progressLogger = new ProgressLogger(logger, expectedCount);
+        ProgressLogger progressLogger = new ProgressLogger(logger, expectedCount, null);
 
         // when
         for(int i = 0; i <= expectedCount; i++){
@@ -37,7 +37,7 @@ public class ProgressLoggerTest {
     public void shouldLogProcessedText(){
         // given
         final int expectedCount = 100;
-        ProgressLogger progressLogger = new ProgressLogger(logger, expectedCount);
+        ProgressLogger progressLogger = new ProgressLogger(logger, expectedCount, null);
 
         // when
         progressLogger.incrementAndLog();

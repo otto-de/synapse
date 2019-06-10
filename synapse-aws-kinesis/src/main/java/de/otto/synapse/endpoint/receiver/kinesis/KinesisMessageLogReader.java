@@ -6,6 +6,7 @@ import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.channel.ShardResponse;
 import org.slf4j.Logger;
+import org.slf4j.Marker;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
 import java.time.Clock;
@@ -30,6 +31,8 @@ public class KinesisMessageLogReader {
 
     private static final Logger LOG = getLogger(KinesisMessageLogReader.class);
 
+    public static final int DEFAULT_WAITING_TIME_ON_EMPTY_RECORDS = 10000;
+
     private final String channelName;
     private final KinesisAsyncClient kinesisClient;
     private final ExecutorService executorService;
@@ -39,24 +42,28 @@ public class KinesisMessageLogReader {
     public static final int SKIP_NEXT_PARTS = 8;
     private final int waitingTimeOnEmptyRecords;
 
+    private final Marker marker;
+
 
     public KinesisMessageLogReader(final String channelName,
                                    final KinesisAsyncClient kinesisClient,
                                    final ExecutorService executorService,
                                    final Clock clock) {
-        this(channelName, kinesisClient, executorService, clock, 10000);
+        this(channelName, kinesisClient, executorService, clock, DEFAULT_WAITING_TIME_ON_EMPTY_RECORDS, null);
     }
 
     public KinesisMessageLogReader(final String channelName,
                                    final KinesisAsyncClient kinesisClient,
                                    final ExecutorService executorService,
-                                   final Clock clock, final int waitingTimeOnEmptyRecords ) {
+                                   final Clock clock, final int waitingTimeOnEmptyRecords, final Marker marker) {
         this.channelName = channelName;
         this.kinesisClient = kinesisClient;
         this.executorService = executorService;
         this.clock = clock;
 
         this.waitingTimeOnEmptyRecords = waitingTimeOnEmptyRecords;
+
+        this.marker = marker;
     }
 
     public String getChannelName() {
@@ -171,7 +178,7 @@ public class KinesisMessageLogReader {
         final Set<String> openShards = retrieveAllOpenShards();
         this.kinesisShardReaders.set(openShards
                 .stream()
-                .map(shardName -> new KinesisShardReader(channelName, shardName, kinesisClient, executorService, clock, waitingTimeOnEmptyRecords))
+                .map(shardName -> new KinesisShardReader(channelName, shardName, kinesisClient, executorService, clock, waitingTimeOnEmptyRecords, marker))
                 .collect(toList()));
     }
 

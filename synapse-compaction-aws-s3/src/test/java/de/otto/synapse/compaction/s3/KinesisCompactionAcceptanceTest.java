@@ -207,7 +207,7 @@ public class KinesisCompactionAcceptanceTest {
         //given
         sendTestMessagesWithCompoundKey(Range.closed(10000, 10100), "first");
 
-        String filenameBefore = compactionService.compact(INTEGRATION_TEST_STREAM, MessageFormat.V2);
+        String filenameBefore = compactionService.compact(INTEGRATION_TEST_STREAM, MessageFormat.V2, null);
 
         LinkedHashMap<String, JSONArray> json1 = fetchAndParseSnapshotFileFromS3(filenameBefore);
 
@@ -215,7 +215,7 @@ public class KinesisCompactionAcceptanceTest {
         sendTestMessagesWithCompoundKey(Range.closed(10050, 10150), "second");
 
 
-        String fileName = compactionService.compact(INTEGRATION_TEST_STREAM, MessageFormat.V2);
+        String fileName = compactionService.compact(INTEGRATION_TEST_STREAM, MessageFormat.V2, null);
 
         //then
         LinkedHashMap<String, JSONArray> json2 = fetchAndParseSnapshotFileFromS3(fileName);

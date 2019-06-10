@@ -12,6 +12,7 @@ import de.otto.synapse.endpoint.receiver.AbstractMessageLogReceiverEndpoint;
 import de.otto.synapse.message.TextMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
@@ -34,7 +35,6 @@ import static de.otto.synapse.logging.LogHelper.info;
 public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceiverEndpoint {
 
     private static final Logger LOG = LoggerFactory.getLogger(KinesisMessageLogReceiverEndpoint.class);
-
 
     private static class KinesisShardResponseConsumer implements Consumer<ShardResponse> {
         private final AtomicReference<ChannelDurationBehind> channelDurationBehind = new AtomicReference<>();
@@ -118,10 +118,12 @@ public class KinesisMessageLogReceiverEndpoint extends AbstractMessageLogReceive
                                              final KinesisAsyncClient kinesisClient,
                                              final ExecutorService executorService,
                                              final ApplicationEventPublisher eventPublisher,
-                                             final Clock clock, final int waitingTimeOnEmptyRecords) {
+                                             final Clock clock,
+                                             final int waitingTimeOnEmptyRecords,
+                                             final Marker marker) {
         super(channelName, interceptorRegistry, eventPublisher);
         this.eventPublisher = eventPublisher;
-        this.kinesisMessageLogReader = new KinesisMessageLogReader(channelName, kinesisClient, executorService, clock, waitingTimeOnEmptyRecords);
+        this.kinesisMessageLogReader = new KinesisMessageLogReader(channelName, kinesisClient, executorService, clock, waitingTimeOnEmptyRecords, marker);
         this.interceptorRegistry = interceptorRegistry;
     }
 

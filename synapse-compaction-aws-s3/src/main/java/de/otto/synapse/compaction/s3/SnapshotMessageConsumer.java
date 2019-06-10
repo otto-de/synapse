@@ -6,6 +6,8 @@ import de.otto.synapse.message.Message;
 import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.TextEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.util.Optional;
@@ -18,6 +20,8 @@ import java.util.regex.Pattern;
  *
  */
 public class SnapshotMessageConsumer implements MessageConsumer<String> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SnapshotMessageConsumer.class);
 
     private final Pattern keyPattern = Pattern.compile(".*");
     private final StateRepository<String> stateRepository;

@@ -3,6 +3,7 @@ package de.otto.synapse.compaction.s3;
 import de.otto.synapse.configuration.aws.SnapshotProperties;
 import de.otto.synapse.helper.s3.S3Helper;
 import org.slf4j.Logger;
+import org.slf4j.Marker;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
@@ -22,13 +23,21 @@ public class SnapshotReadService {
 
     private final S3Helper s3Helper;
     private final String snapshotBucketName;
+    private final Marker marker;
 
     private File forcedSnapshotFile = null;
 
     public SnapshotReadService(final SnapshotProperties properties,
                                final S3Client s3Client) {
+        this(properties, s3Client, null);
+    }
+
+    public SnapshotReadService(final SnapshotProperties properties,
+                               final S3Client s3Client,
+                               final Marker marker) {
         this.s3Helper = new S3Helper(s3Client);
         this.snapshotBucketName = properties.getBucketName();
+        this.marker = marker;
     }
 
     /**
@@ -46,7 +55,7 @@ public class SnapshotReadService {
 
     public Optional<File> retrieveLatestSnapshot(String channelName) {
         if (forcedSnapshotFile != null) {
-            LOG.info("Use local Snapshot file: {}", forcedSnapshotFile);
+            LOG.info(marker, "Use local Snapshot file: {}", forcedSnapshotFile);
             return Optional.of(forcedSnapshotFile);
         }
 
@@ -55,10 +64,10 @@ public class SnapshotReadService {
 
         Optional<File> latestSnapshot = getLatestSnapshot(channelName);
         if (latestSnapshot.isPresent()) {
-            LOG.info("Finished downloading snapshot {}", latestSnapshot.get().getName());
+            LOG.info(marker, "Finished downloading snapshot {}", latestSnapshot.get().getName());
             logDiskUsage();
         } else {
-            LOG.warn("No snapshot found.");
+            LOG.warn(marker, "No snapshot found.");
         }
         return latestSnapshot;
     }
@@ -70,12 +79,12 @@ public class SnapshotReadService {
             Path snapshotFile = getTempFile(latestSnapshotKey);
 
             if (existsAndHasSize(snapshotFile, s3Object.get().size())) {
-                LOG.info("Locally available snapshot file is the same as in S3, skip download and use it: {}", snapshotFile.toAbsolutePath().toString());
+                LOG.info(marker, "Locally available snapshot file is the same as in S3, skip download and use it: {}", snapshotFile.toAbsolutePath().toString());
                 return Optional.of(snapshotFile.toFile());
             }
 
             removeTempFiles(String.format("*-%s-snapshot-*.json.zip", channelName));
-            LOG.info("Downloading snapshot file to {}", snapshotFile.getFileName().toAbsolutePath().toString());
+            LOG.info(marker, "Downloading snapshot file to {}", snapshotFile.getFileName().toAbsolutePath().toString());
             if (s3Helper.download(snapshotBucketName, latestSnapshotKey, snapshotFile)) {
                 return Optional.of(snapshotFile.toFile());
             }
