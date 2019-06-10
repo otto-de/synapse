@@ -1,5 +1,13 @@
 # Release Notes
 
+## 0.17.5
+*CompactionService*
+
+* Enable marker support to some classes that are used during compaction
+
+## 0.17.4
+* Some more info logging during snapshot message dispatching
+
 ## 0.17.3
 *StateRepository*
 
