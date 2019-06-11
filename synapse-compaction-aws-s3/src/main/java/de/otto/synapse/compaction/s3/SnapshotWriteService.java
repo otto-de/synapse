@@ -73,8 +73,9 @@ public class SnapshotWriteService {
             LOG.info(marker, "Start creating new snapshot");
             snapshotFile = createSnapshot(channelName, position, stateRepository);
             LOG.info(marker, "Finished creating snapshot file: {}", snapshotFile.getAbsolutePath());
+            LOG.info(marker, "Starting uploading snapshot file {} to s3 bucket {}", snapshotFile.getAbsolutePath(), this.snapshotBucketName);
             uploadSnapshot(this.snapshotBucketName, snapshotFile);
-            LOG.info(marker, "Finished uploading snapshot file to s3");
+            LOG.info(marker, "Finished uploading snapshot file {} to s3 bucket {}", snapshotFile.getAbsolutePath(), this.snapshotBucketName);
             deleteOlderSnapshots(channelName);
         } finally {
             if (snapshotFile != null) {

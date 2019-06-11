@@ -72,6 +72,7 @@ public class CompactionService {
 
             return snapshotWriteService.writeSnapshot(channelName, currentPosition, stateRepository);
         } catch (Exception e) {
+            LOG.error(marker, "Exception during compaction.", e);
             throw new RuntimeException(e);
         } finally {
             stateRepository.clear();
