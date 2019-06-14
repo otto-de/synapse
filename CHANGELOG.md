@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.17.6
+*Bugfix*
+* Fix counter of messages in KinesisShardReader
+
 ## 0.17.5
 *CompactionService*
 
