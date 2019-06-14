@@ -1,9 +1,9 @@
 package de.otto.synapse.logging;
 
-import de.otto.synapse.logging.ProgressLogger;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
+import org.slf4j.Marker;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -30,7 +30,7 @@ public class ProgressLoggerTest {
         }
 
         // then
-        verify(logger, times(100)).info(anyString(), anyLong());
+        verify(logger, times(100)).info((Marker)isNull(), anyString(), anyLong());
     }
 
     @Test
@@ -43,6 +43,6 @@ public class ProgressLoggerTest {
         progressLogger.incrementAndLog();
 
         // then
-        verify(logger, times(1)).info("processed {}% of entries", 1L);
+        verify(logger, times(1)).info((Marker)isNull(), eq("processed {}% of entries"), eq(1L));
     }
 }

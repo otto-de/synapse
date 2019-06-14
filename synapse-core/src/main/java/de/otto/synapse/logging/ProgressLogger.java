@@ -22,11 +22,17 @@ public class ProgressLogger {
     }
 
     public void incrementAndLog() {
+        this.incrementAndLog(1);
+    }
+
+    public void incrementAndLog(int logStepSize) {
         currentCount++;
         long percentage = currentCount * 100 / expectedCount;
         if (percentage > percentageCount) {
             percentageCount++;
-            logger.info(marker, "processed {}% of entries", percentage);
+            if (percentageCount % logStepSize == 0) {
+                logger.info(marker, "processed {}% of entries", percentage);
+            }
         }
     }
 

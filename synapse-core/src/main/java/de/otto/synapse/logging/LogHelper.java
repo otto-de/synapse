@@ -83,10 +83,9 @@ public class LogHelper {
         }
     }
 
-    public static double calculateMessagesPerSecond(AtomicLong lastMessageLogTime, long messagesSent) {
-        long logTime = System.currentTimeMillis();
-        long previousLogTime = lastMessageLogTime.getAndSet(logTime);
-        long durationInMillis = logTime - previousLogTime;
+    public static double calculateMessagesPerSecond(long previousTime, long messagesSent) {
+        long time = System.currentTimeMillis();
+        long durationInMillis = time - previousTime;
         return 1d * messagesSent / (durationInMillis / 1000d);
     }
 

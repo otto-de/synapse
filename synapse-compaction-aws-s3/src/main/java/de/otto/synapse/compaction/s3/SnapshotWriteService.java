@@ -108,7 +108,7 @@ public class SnapshotWriteService {
             ProgressLogger processedLogger = new ProgressLogger(LOG, stateRepository.size(), marker);
             stateRepository.consumeAll((key, entry) -> {
                 try {
-                    processedLogger.incrementAndLog();
+                    processedLogger.incrementAndLog(10);
                     if (!("".equals(entry))) {
                         jGenerator.writeStartObject();
                         jGenerator.writeStringField(key, entry);

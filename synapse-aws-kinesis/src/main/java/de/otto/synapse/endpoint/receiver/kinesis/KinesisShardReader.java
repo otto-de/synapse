@@ -25,7 +25,7 @@ import static de.otto.synapse.endpoint.receiver.kinesis.KinesisMessageLogReader.
 @ThreadSafe
 public class KinesisShardReader {
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShardReader.class);
-    public static final int LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE = 10_000;
+    public static final int LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE = 1_000;
 
     private final String shardName;
     private final String channelName;
@@ -73,14 +73,17 @@ public class KinesisShardReader {
                                                          final Consumer<ShardResponse> responseConsumer) {
         final Map<String, String> copyOfContextMap = MDC.getCopyOfContextMap();
         return CompletableFuture.supplyAsync(() -> {
-            MDC.setContextMap(copyOfContextMap);
+            if (copyOfContextMap != null) {
+                MDC.setContextMap(copyOfContextMap);
+            }
             MDC.put("channelName", channelName);
             MDC.put("shardName", shardName);
             LOG.info(marker, "Reading from channel={}, shard={}, position={}", channelName, shardName, startFrom);
             try {
+                final long firstMessageLogTime = System.currentTimeMillis();
                 final AtomicLong shardMessagesCounter = new AtomicLong(0);
-                final AtomicLong firstMessageLogTime = new AtomicLong(System.currentTimeMillis());
-                final AtomicLong lastMessageLogTime = new AtomicLong(System.currentTimeMillis());
+                final AtomicLong previousMessageLogTime = new AtomicLong(System.currentTimeMillis());
+                final AtomicLong previousLoggedMessageCounterMod = new AtomicLong(0), previousLoggedMessageCounter = new AtomicLong(0);
                 final KinesisShardIterator kinesisShardIterator = new KinesisShardIterator(kinesisClient, channelName, startFrom);
                 boolean stopRetrieval;
                 do {
@@ -95,23 +98,29 @@ public class KinesisShardReader {
 
                     final ShardResponse response = kinesisShardIterator.next();
                     responseConsumer.accept(response);
+
                     long counter = shardMessagesCounter.addAndGet(response.getMessages().size());
 
                     boolean stopConditionFulfilled = stopCondition.test(response);
                     stopRetrieval = stopConditionFulfilled || isStopping() || waitABit(response.getDurationBehind());
 
-                    if ((counter > 0 && counter % LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE == 0) || stopRetrieval) {
-                        double messagesPerSecond = LogHelper.calculateMessagesPerSecond(lastMessageLogTime, stopRetrieval ? counter % LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE : LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE);
-                        LOG.info(marker, "Read {} messages ({} per second) from channel={}, shard={}, durationBehind={}, ", counter, String.format( "%.2f", messagesPerSecond), channelName, shardName, response.getDurationBehind() );
+                    if ((counter > 0 && counter > previousLoggedMessageCounterMod.get() + LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE ) || stopRetrieval) {
+                        double messagesPerSecond = LogHelper.calculateMessagesPerSecond(previousMessageLogTime.getAndSet(System.currentTimeMillis()), counter - previousLoggedMessageCounter.get());
 
+                        LOG.info(marker, "Read {} messages ({} per second) from '{}:{}', durationBehind={}, ", counter, String.format( "%.2f", messagesPerSecond), channelName, shardName, response.getDurationBehind() );
                         if (stopRetrieval) {
-                            LOG.info(marker, "Stop reading of channel={}, shard={}, stopCondition={}, isStopping={}", channelName, shardName, stopConditionFulfilled, isStopping());
+                            LOG.info(marker, "Stop reading of channel={}, shard={}, stopCondition={}, stopSignal={}", channelName, shardName, stopConditionFulfilled, isStopping());
                         }
+
+                        previousLoggedMessageCounterMod.set(counter - ( counter % LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE ) );
+                        previousLoggedMessageCounter.set(counter);
                     }
 
                 } while (!stopRetrieval);
+
                 double totalMessagesPerSecond = LogHelper.calculateMessagesPerSecond(firstMessageLogTime, shardMessagesCounter.get());
-                LOG.info(marker, "Read a total of {} messages from channel={}, shard={}, totalMessagesPerSecond={}", shardMessagesCounter.get(), channelName, shardName, String.format( "%.2f", totalMessagesPerSecond) );
+                LOG.info(marker, "Read a total of {} messages from '{}:{}', totalMessagesPerSecond={}", shardMessagesCounter.get(), channelName, shardName, String.format( "%.2f", totalMessagesPerSecond) );
+
                 return kinesisShardIterator.getShardPosition();
 
             } catch (final RuntimeException e) {

@@ -80,13 +80,15 @@ public class DefaultEventSource extends AbstractEventSource {
         Instant startTime = Instant.now();
 
         final AtomicLong messageCounter = new AtomicLong();
-        final AtomicLong firstMessageLogTime = new AtomicLong(System.currentTimeMillis());
-        final AtomicLong lastMessageLogTime = new AtomicLong(System.currentTimeMillis());
+        final long firstMessageLogTime = System.currentTimeMillis();
+        final AtomicLong previousMessageLogTime = new AtomicLong(System.currentTimeMillis());
 
         final Map<String, String> copyOfContextMap = MDC.getCopyOfContextMap();
 
         return CompletableFuture.supplyAsync(() -> {
-            MDC.setContextMap(copyOfContextMap);
+            if (copyOfContextMap != null) {
+                MDC.setContextMap(copyOfContextMap);
+            }
             messageStore
                     .stream()
                     .filter(entry -> entry.getChannelName().equals(channelName))
@@ -100,13 +102,15 @@ public class DefaultEventSource extends AbstractEventSource {
                             LOG.error(marker, e.getMessage(), e);
                         }
                         executorService.execute(() -> {
-                            MDC.setContextMap(copyOfContextMap);
+                            if (copyOfContextMap != null) {
+                                MDC.setContextMap(copyOfContextMap);
+                            }
                             try {
                                 getMessageLogReceiverEndpoint().getMessageDispatcher().accept(message);
                             } finally {
                                 long counter = messageCounter.getAndIncrement();
                                 if (counter > 0 && counter % LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE == 0) {
-                                    double messagesPerSecond = LogHelper.calculateMessagesPerSecond(lastMessageLogTime, LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE);
+                                    double messagesPerSecond = LogHelper.calculateMessagesPerSecond(previousMessageLogTime.getAndSet(System.currentTimeMillis()), LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE);
                                     LOG.info(marker, "Consumed {} messages ({} per second) from message store for channel '{}'", counter, String.format( "%.2f", messagesPerSecond), channelName );
                                 }
                                 lock.release();
