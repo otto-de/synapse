@@ -95,13 +95,18 @@ public class KinesisShardReader {
 
                     final ShardResponse response = kinesisShardIterator.next();
                     responseConsumer.accept(response);
-                    long counter = shardMessagesCounter.incrementAndGet();
+                    long counter = shardMessagesCounter.addAndGet(response.getMessages().size());
 
-                    stopRetrieval = stopCondition.test(response) || isStopping() || waitABit(response.getDurationBehind());
+                    boolean stopConditionFulfilled = stopCondition.test(response);
+                    stopRetrieval = stopConditionFulfilled || isStopping() || waitABit(response.getDurationBehind());
 
                     if ((counter > 0 && counter % LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE == 0) || stopRetrieval) {
                         double messagesPerSecond = LogHelper.calculateMessagesPerSecond(lastMessageLogTime, stopRetrieval ? counter % LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE : LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE);
                         LOG.info(marker, "Read {} messages ({} per second) from channel={}, shard={}, durationBehind={}, ", counter, String.format( "%.2f", messagesPerSecond), channelName, shardName, response.getDurationBehind() );
+
+                        if (stopRetrieval) {
+                            LOG.info(marker, "Stop reading of channel={}, shard={}, stopCondition={}, isStopping={}", channelName, shardName, stopConditionFulfilled, isStopping());
+                        }
                     }
 
                 } while (!stopRetrieval);

@@ -115,6 +115,7 @@ public class SnapshotWriteService {
                         jGenerator.writeEndObject();
                     }
                 } catch (IOException e) {
+                    LOG.error(marker, "Error during snapshot file creation", e);
                     throw new UncheckedIOException(e);
                 }
             });
