@@ -58,7 +58,7 @@ public class CompactionService {
                         messageFormat,
                         stateRepository)
         );
-
+        LOG.info(marker, "Reading event source until either end of channel is reached or messages are younger than {}.", clock.instant());
         try {
             final ChannelPosition currentPosition = compactingKinesisEventSource
                     .consumeUntil(

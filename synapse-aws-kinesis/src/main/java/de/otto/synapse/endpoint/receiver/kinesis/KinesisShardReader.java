@@ -99,21 +99,22 @@ public class KinesisShardReader {
                     final ShardResponse response = kinesisShardIterator.next();
                     responseConsumer.accept(response);
 
-                    long counter = shardMessagesCounter.addAndGet(response.getMessages().size());
+                    int responseMessagesCounter = response.getMessages().size();
+                    long totalMessagesCounter = shardMessagesCounter.addAndGet(responseMessagesCounter);
 
                     boolean stopConditionFulfilled = stopCondition.test(response);
                     stopRetrieval = stopConditionFulfilled || isStopping() || waitABit(response.getDurationBehind());
 
-                    if ((counter > 0 && counter > previousLoggedMessageCounterMod.get() + LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE ) || stopRetrieval) {
-                        double messagesPerSecond = LogHelper.calculateMessagesPerSecond(previousMessageLogTime.getAndSet(System.currentTimeMillis()), counter - previousLoggedMessageCounter.get());
+                    if ((totalMessagesCounter > 0 && totalMessagesCounter > previousLoggedMessageCounterMod.get() + LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE ) || stopRetrieval) {
+                        double messagesPerSecond = LogHelper.calculateMessagesPerSecond(previousMessageLogTime.getAndSet(System.currentTimeMillis()), totalMessagesCounter - previousLoggedMessageCounter.get());
 
-                        LOG.info(marker, "Read {} messages ({} per second) from '{}:{}', durationBehind={}, ", counter, String.format( "%.2f", messagesPerSecond), channelName, shardName, response.getDurationBehind() );
+                        LOG.info(marker, "Read {} messages ({} per sec) from '{}:{}', durationBehind={}, totalMessages={}", responseMessagesCounter, String.format( "%.2f", messagesPerSecond), channelName, shardName, response.getDurationBehind(), totalMessagesCounter);
                         if (stopRetrieval) {
-                            LOG.info(marker, "Stop reading of channel={}, shard={}, stopCondition={}, stopSignal={}", channelName, shardName, stopConditionFulfilled, isStopping());
+                            LOG.info(marker, "Stop reading of channel={}, shard={}, stopCondition={}, stopSignal={}, durationBehind={}", channelName, shardName, stopConditionFulfilled, isStopping(), response.getDurationBehind());
                         }
 
-                        previousLoggedMessageCounterMod.set(counter - ( counter % LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE ) );
-                        previousLoggedMessageCounter.set(counter);
+                        previousLoggedMessageCounterMod.set(totalMessagesCounter - ( totalMessagesCounter % LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE ) );
+                        previousLoggedMessageCounter.set(totalMessagesCounter);
                     }
 
                 } while (!stopRetrieval);
