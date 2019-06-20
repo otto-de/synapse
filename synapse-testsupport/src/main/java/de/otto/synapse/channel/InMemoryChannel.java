@@ -87,7 +87,11 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
                     LOG.info("Received message from channel={} at position={}: message={}", getChannelName(), index, receivedMessage);
                     final TextMessage interceptedMessage = intercept(receivedMessage);
                     if (interceptedMessage != null) {
-                        getMessageDispatcher().accept(interceptedMessage);
+                        try {
+                            getMessageDispatcher().accept(interceptedMessage);
+                        } catch (final Exception e) {
+                            LOG.error("Error processing message: " + e.getMessage(), e);
+                        }
                     }
                 } else {
                     messages = ImmutableList.of();
@@ -147,7 +151,11 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
                             )
                     );
                     if (interceptedMessage != null) {
-                        getMessageDispatcher().accept(interceptedMessage);
+                        try {
+                            getMessageDispatcher().accept(interceptedMessage);
+                        } catch (final Exception e) {
+                            LOG.error("Error processing message: " + e.getMessage(), e);
+                        }
                     }
                 } else {
                     try {
