@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.17.7
+*Bugfix*
+* Improve exception handling in InMemoryChannel (to match other channels)
+
 ## 0.17.6
 *Bugfix*
 * Fix counter of messages in KinesisShardReader
