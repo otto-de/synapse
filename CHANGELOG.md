@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.17.8-SNAPSHOT
+*synapse-edison*
+* Log duration behind for every channel to micrometer when property `synapse.edison.metrics.enabled=true` 
+
 ## 0.17.7
 *Bugfix*
 * Improve exception handling in InMemoryChannel (to match other channels)
