@@ -25,4 +25,4 @@ check_configuration() {
 
 check_configuration
 
-${SCRIPT_DIR}/gradlew uploadArchives closeAndReleaseRepository
+${SCRIPT_DIR}/gradlew -Dorg.gradle.internal.http.socketTimeout=400000 -Dorg.gradle.internal.http.connectionTimeout=400000 uploadArchives closeAndReleaseRepository
