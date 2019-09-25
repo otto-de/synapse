@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.17.9
+*General*
+* Dependency updates
+
 ## 0.17.8
 *synapse-edison*
 * Log duration behind for every channel to micrometer when property `synapse.edison.metrics.enabled=true` 
