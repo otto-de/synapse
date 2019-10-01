@@ -1,5 +1,13 @@
 # Release Notes
 
+## 0.17.10
+*General*
+* Updates to AWS SDK 2.9.10
+* Updates to Mockito 3.1.0
+
+*synapse-core*
+* ObjectMapper is now @ConditionalOnMissingBean
+
 ## 0.17.9
 *General*
 * Dependency updates

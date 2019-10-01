@@ -68,14 +68,14 @@ public interface StateRepository<V> extends AutoCloseable {
      * Associates the specified value with the specified key in this repository.
      * If the repository previously contained a mapping for
      * the key, the old value is replaced by the specified value.  (A repository
-     * <tt>m</tt> is said to contain a mapping for a key <tt>k</tt> if and only
+     * m is said to contain a mapping for a key k if and only
      * if {@link #get(String) m.get(k)} would return
      * a non-empty value.)
      *
      * @param key   key with which the specified value is to be associated
      * @param value value to be associated with the specified key
-     * @return the previous value associated with <tt>key</tt>, or
-     * <tt>Optional.empty()</tt> if there was no mapping for <tt>key</tt>.
+     * @return the previous value associated with 'key', or
+     * 'Optional.empty()' if there was no mapping for 'key'
      * @throws ClassCastException       if the class of the specified value
      *                                  prevents it from being stored in this repository
      * @throws NullPointerException     if the specified key or value is null
@@ -131,19 +131,19 @@ public interface StateRepository<V> extends AutoCloseable {
     /**
      * Removes the mapping for a key from this repository if it is present.
      * More formally, if this repository contains a mapping
-     * from key <tt>k</tt> to value <tt>v</tt> such that
+     * from key 'k' to value 'v' such that
      * <code>(key==null ?  k==null : key.equals(k))</code>, that mapping
      * is removed.  (The repository can contain at most one such mapping.)
      *
      * <p>Returns the optional value to which this repository previously associated the key,
-     * or <tt>Optional.empty()</tt> if the repository contained no mapping for the key.
+     * or 'Optional.empty()' if the repository contained no mapping for the key.
      *
      * <p>The repository will not contain a mapping for the specified key once the
      * call returns.
      *
      * @param key key whose mapping is to be removed from the repository
-     * @return the optional previous value associated with <tt>key</tt>, or
-     * <tt>Optional.empty()</tt> if there was no mapping for <tt>key</tt>.
+     * @return the optional previous value associated with 'key', or
+     * 'Optional.empty()' if there was no mapping for 'key'.
      * @throws NullPointerException if the specified key is null
      */
     Optional<V> remove(String key);
@@ -152,15 +152,15 @@ public interface StateRepository<V> extends AutoCloseable {
      * Removes all of the mappings from this repository (optional operation).
      * The repository will be empty after this call returns.
      *
-     * @throws UnsupportedOperationException if the <tt>clear</tt> operation
+     * @throws UnsupportedOperationException if the 'clear' operation
      *                                       is not supported by this repository
      */
     void clear();
 
     /**
      * Returns the number of key-value mappings in this repository.  If the
-     * repository contains more than <tt>Integer.MAX_VALUE</tt> elements, returns
-     * <tt>Integer.MAX_VALUE</tt>.
+     * repository contains more than 'Integer.MAX_VALUE' elements, returns
+     * 'Integer.MAX_VALUE'.
      *
      * @return the number of key-value mappings in this repository
      */

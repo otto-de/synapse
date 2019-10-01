@@ -88,7 +88,7 @@ public interface MessageStore extends AutoCloseable {
      * @param value the value identifying the requested messages in the specified index
      * @return stream of message-store entries matching the index or emptyStream, if the
      *         index is not known, or if there are no entries
-     * @throws UnsupportedOperationException if the <tt>stream(Index,String)</tt> operation
+     * @throws UnsupportedOperationException if the 'stream(Index,String)' operation
      *         is not supported by this store
      */
     @Beta
@@ -106,7 +106,7 @@ public interface MessageStore extends AutoCloseable {
      * on what elements may be added.
      *
      * @param entry element to be appended to this message store
-     * @throws UnsupportedOperationException if the <tt>add</tt> operation
+     * @throws UnsupportedOperationException if the 'add' operation
      *         is not supported by this store
      * @throws NullPointerException if the specified element is null
      * @throws IllegalArgumentException if some property of this element

@@ -175,29 +175,20 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
 
     @Test
     public void shouldStopMessageLog() throws InterruptedException, ExecutionException, TimeoutException {
-        try {
-            // given
-            final ChannelPosition startFrom = findCurrentPosition();
-            sendTestMessages(Range.closed(1, 10), "some payload");
+        // given
+        final ChannelPosition startFrom = findCurrentPosition();
+        sendTestMessages(Range.closed(1, 10), "some payload");
 
-            // only fetch 2 records per iterator to be able to check against stop condition which is only evaluated after
-            // retrieving new iterator
-            setStaticFinalField(KinesisShardIterator.class, "FETCH_RECORDS_LIMIT", 2);
+        final CompletableFuture<ChannelPosition> completableFuture = kinesisMessageLog.consume(startFrom);
 
-            final CompletableFuture<ChannelPosition> completableFuture = kinesisMessageLog.consume(startFrom);
+        await().atMost(20, SECONDS).until(() -> messages.size() > 0);
 
-            await().atMost(20, SECONDS).until(() -> messages.size() > 0);
+        // when
+        kinesisMessageLog.stop();
 
-            // when
-            kinesisMessageLog.stop();
-
-            // then
-            assertThat(completableFuture.get(20L, SECONDS), is(notNullValue()));
-            assertThat(completableFuture.isDone(), is(true));
-            assertThat(messages.size(), lessThan(10));
-        } finally {
-            setStaticFinalField(KinesisShardIterator.class, "FETCH_RECORDS_LIMIT", 10000);
-        }
+        // then
+        assertThat(completableFuture.get(20L, SECONDS), is(notNullValue()));
+        assertThat(completableFuture.isDone(), is(true));
     }
 
     @Test
@@ -252,16 +243,4 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
         sleep(20);
     }
 
-    private void setStaticFinalField(Class<?> clazz, String fieldName, Object value) {
-        try {
-            Field field = clazz.getDeclaredField(fieldName);
-            field.setAccessible(true);
-            Field modifiers = Field.class.getDeclaredField("modifiers");
-            modifiers.setAccessible(true);
-            modifiers.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-            field.set(null, value);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }
