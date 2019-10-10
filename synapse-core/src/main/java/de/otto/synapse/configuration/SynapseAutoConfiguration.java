@@ -34,6 +34,7 @@ public class SynapseAutoConfiguration {
     private MessageInterceptorRegistry registry;
 
     @Bean
+    @ConditionalOnMissingBean
     public ObjectMapper objectMapper() {
         return currentObjectMapper();
     }
