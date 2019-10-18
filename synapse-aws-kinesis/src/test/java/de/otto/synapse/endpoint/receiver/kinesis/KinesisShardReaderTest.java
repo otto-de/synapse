@@ -2,6 +2,7 @@ package de.otto.synapse.endpoint.receiver.kinesis;
 
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.channel.ShardResponse;
+import de.otto.synapse.channel.StopCondition;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.testsupport.TestClock;
 import org.junit.Before;
@@ -9,6 +10,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.hamcrest.MockitoHamcrest;
 import org.mockito.junit.MockitoJUnitRunner;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.*;
@@ -34,9 +36,11 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.hamcrest.MockitoHamcrest.argThat;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KinesisShardReaderTest {
@@ -253,5 +257,54 @@ public class KinesisShardReaderTest {
 
         // then
         // exception is thrown
+    }
+
+    @Test
+    public void shouldFallBackToHorizonIfChannelPositionDoesNotExist() throws ExecutionException, InterruptedException {
+        // given
+        GetRecordsResponse response = GetRecordsResponse.builder()
+                .records(emptyList())
+                .nextShardIterator("someShardIterator")
+                .millisBehindLatest(1234L)
+                .build();
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
+        when(kinesisClient.getShardIterator(any(GetShardIteratorRequest.class)))
+                .thenThrow(new RuntimeException("StartingSequenceNumber abc used in GetShardIterator on shard shardId-abc in stream some-stream under account abc is invalid."))
+                .thenReturn(CompletableFuture.completedFuture(GetShardIteratorResponse.builder().shardIterator("someIterator").build()));
+
+        // when
+        kinesisShardReader.consumeUntil(ShardPosition.fromPosition("shardname","unknown-position"), StopCondition.emptyResponse(), consumer).get();
+
+        // then
+        ArgumentCaptor<GetShardIteratorRequest> argumentCaptor = ArgumentCaptor.forClass(GetShardIteratorRequest.class);
+        verify(kinesisClient, times(2)).getShardIterator(argumentCaptor.capture());
+
+        List<GetShardIteratorRequest> allValues = argumentCaptor.getAllValues();
+
+        assertThat(allValues, hasSize(2));
+        assertEquals(allValues.get(0).shardIteratorType(), ShardIteratorType.AFTER_SEQUENCE_NUMBER);
+        assertEquals(allValues.get(1).shardIteratorType(), ShardIteratorType.TRIM_HORIZON);
+    }
+
+    @Test
+    public void shouldNotCheckPositionOnNonPositionedShardIteratorTypes() throws ExecutionException, InterruptedException {
+        // given
+        GetRecordsResponse response = GetRecordsResponse.builder()
+                .records(emptyList())
+                .nextShardIterator("someShardIterator")
+                .millisBehindLatest(1234L)
+                .build();
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
+        when(kinesisClient.getShardIterator(any(GetShardIteratorRequest.class)))
+                .thenReturn(CompletableFuture.completedFuture(GetShardIteratorResponse.builder().shardIterator("someIterator").build()));
+
+        // when
+        kinesisShardReader.consumeUntil(ShardPosition.fromTimestamp("shardname",Instant.now()), StopCondition.emptyResponse(), consumer).get();
+
+        // then
+        ArgumentCaptor<GetShardIteratorRequest> argumentCaptor = ArgumentCaptor.forClass(GetShardIteratorRequest.class);
+        verify(kinesisClient).getShardIterator(argumentCaptor.capture());
+
+        assertEquals(argumentCaptor.getValue().shardIteratorType(), ShardIteratorType.AT_TIMESTAMP);
     }
 }

@@ -4,6 +4,9 @@
 *General*
 * Updates to Gradle 5.6.3
 
+*synapse-aws-kinesis*
+* Bugfix: Fallback to reading from horizon in case the initial shard iterator request leads to an exception
+
 ## 0.17.10
 *General*
 * Updates to AWS SDK 2.9.10

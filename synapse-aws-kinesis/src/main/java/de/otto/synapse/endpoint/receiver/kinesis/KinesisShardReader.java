@@ -2,18 +2,22 @@ package de.otto.synapse.endpoint.receiver.kinesis;
 
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.channel.ShardResponse;
+import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.logging.LogHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.slf4j.Marker;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
+import software.amazon.awssdk.services.kinesis.model.GetShardIteratorRequest;
+import software.amazon.awssdk.services.kinesis.model.ShardIteratorType;
 
 import javax.annotation.concurrent.ThreadSafe;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -84,7 +88,9 @@ public class KinesisShardReader {
                 final AtomicLong shardMessagesCounter = new AtomicLong(0);
                 final AtomicLong previousMessageLogTime = new AtomicLong(System.currentTimeMillis());
                 final AtomicLong previousLoggedMessageCounterMod = new AtomicLong(0), previousLoggedMessageCounter = new AtomicLong(0);
-                final KinesisShardIterator kinesisShardIterator = new KinesisShardIterator(kinesisClient, channelName, startFrom);
+                final ShardPosition sanitizedShardPosition = sanitizePositionedShardPosition(startFrom);
+                final KinesisShardIterator kinesisShardIterator = new KinesisShardIterator(kinesisClient, channelName, sanitizedShardPosition);
+
                 boolean stopRetrieval;
                 do {
                     /*
@@ -105,22 +111,22 @@ public class KinesisShardReader {
                     boolean stopConditionFulfilled = stopCondition.test(response);
                     stopRetrieval = stopConditionFulfilled || isStopping() || waitABit(response.getDurationBehind());
 
-                    if ((totalMessagesCounter > 0 && totalMessagesCounter > previousLoggedMessageCounterMod.get() + LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE ) || stopRetrieval) {
+                    if ((totalMessagesCounter > 0 && totalMessagesCounter > previousLoggedMessageCounterMod.get() + LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE) || stopRetrieval) {
                         double messagesPerSecond = LogHelper.calculateMessagesPerSecond(previousMessageLogTime.getAndSet(System.currentTimeMillis()), totalMessagesCounter - previousLoggedMessageCounter.get());
 
-                        LOG.info(marker, "Read {} messages ({} per sec) from '{}:{}', durationBehind={}, totalMessages={}", responseMessagesCounter, String.format( "%.2f", messagesPerSecond), channelName, shardName, response.getDurationBehind(), totalMessagesCounter);
+                        LOG.info(marker, "Read {} messages ({} per sec) from '{}:{}', durationBehind={}, totalMessages={}", responseMessagesCounter, String.format("%.2f", messagesPerSecond), channelName, shardName, response.getDurationBehind(), totalMessagesCounter);
                         if (stopRetrieval) {
                             LOG.info(marker, "Stop reading of channel={}, shard={}, stopCondition={}, stopSignal={}, durationBehind={}", channelName, shardName, stopConditionFulfilled, isStopping(), response.getDurationBehind());
                         }
 
-                        previousLoggedMessageCounterMod.set(totalMessagesCounter - ( totalMessagesCounter % LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE ) );
+                        previousLoggedMessageCounterMod.set(totalMessagesCounter - (totalMessagesCounter % LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE));
                         previousLoggedMessageCounter.set(totalMessagesCounter);
                     }
 
                 } while (!stopRetrieval);
 
                 double totalMessagesPerSecond = LogHelper.calculateMessagesPerSecond(firstMessageLogTime, shardMessagesCounter.get());
-                LOG.info(marker, "Read a total of {} messages from '{}:{}', totalMessagesPerSecond={}", shardMessagesCounter.get(), channelName, shardName, String.format( "%.2f", totalMessagesPerSecond) );
+                LOG.info(marker, "Read a total of {} messages from '{}:{}', totalMessagesPerSecond={}", shardMessagesCounter.get(), channelName, shardName, String.format("%.2f", totalMessagesPerSecond));
 
                 return kinesisShardIterator.getShardPosition();
 
@@ -134,6 +140,30 @@ public class KinesisShardReader {
                 MDC.remove("shardName");
             }
         }, executorService);
+    }
+
+    private ShardPosition sanitizePositionedShardPosition(ShardPosition shardPosition) {
+        try {
+            StartFrom startFrom = shardPosition.startFrom();
+
+            if (startFrom == StartFrom.AT_POSITION || startFrom == StartFrom.POSITION) {
+                ShardIteratorType type = startFrom == StartFrom.POSITION
+                        ? ShardIteratorType.AFTER_SEQUENCE_NUMBER
+                        : ShardIteratorType.AT_SEQUENCE_NUMBER;
+                kinesisClient.getShardIterator(GetShardIteratorRequest.builder()
+                        .shardId(shardName)
+                        .streamName(channelName)
+                        .shardIteratorType(type)
+                        .startingSequenceNumber(shardPosition.position())
+                        .build())
+                        .get();
+            }
+
+            return shardPosition;
+        } catch (ExecutionException | InterruptedException | RuntimeException e) {
+            LOG.warn(marker, "given shardposition {} / {} not accessible, falling back to horizon", shardPosition.shardName(), shardPosition.position());
+        }
+        return ShardPosition.fromHorizon(shardPosition.shardName());
     }
 
     private boolean waitABit(Duration durationBehind) {
