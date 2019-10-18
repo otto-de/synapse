@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.18.0
+*General*
+* Updates to Gradle 5.6.3
+
 ## 0.17.10
 *General*
 * Updates to AWS SDK 2.9.10
