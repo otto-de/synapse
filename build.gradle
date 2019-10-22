@@ -41,13 +41,16 @@ subprojects {
     apply plugin: 'eclipse'
     apply from: "${rootDir}/jacoco.gradle"
 
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+
     dependencies {
         annotationProcessor "org.springframework.boot:spring-boot-configuration-processor:${springBootVersion}"
     }
 
     compileJava.dependsOn(processResources)
 
-    version = '0.18.1-SNAPSHOT'
+    version = '0.18.1'
     group = 'de.otto.synapse'
 
     repositories {
@@ -58,5 +61,3 @@ subprojects {
     }
 
 }
-
-

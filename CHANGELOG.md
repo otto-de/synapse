@@ -1,6 +1,12 @@
 # Release Notes
 
+## 0.18.1
+*General*
+* Set compile target compatibility to Java 8
+
 ## 0.18.0
+*Release accidentally built with Java 12. Please use version 0.18.1 instead.*
+
 *General*
 * Updates to Gradle 5.6.3
 
