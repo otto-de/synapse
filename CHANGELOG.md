@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.19.0
+*General*
+* Update to Edison 2.2.0, Spring Boot 2.2 and Spring 5.2
+
 ## 0.18.1
 *General*
 * Set compile target compatibility to Java 8
