@@ -8,7 +8,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.0.4.RELEASE")
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
     }
 }
 
@@ -16,12 +16,12 @@ repositories {
     mavenCentral()
 }
 
-ext['jackson.version'] = "2.9.6"
+ext['jackson.version'] = "2.10.0"
 
 dependencies {
     implementation project(':synapse-core:')
     implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
-    implementation 'org.springframework.security:spring-security-core:4.2.3.RELEASE'
+    implementation "org.springframework.security:spring-security-core:${springVersion}"
     implementation("org.springframework.boot:spring-boot-starter-web:${springBootVersion}") {
         exclude module: "spring-boot-starter-tomcat:${springBootVersion}"
     }

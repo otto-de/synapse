@@ -10,10 +10,10 @@ dependencies {
     implementation "org.springframework:spring-aop:${springVersion}"
     implementation "org.aspectj:aspectjweaver:1.8.13"
 
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.6"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.6"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.10.0"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.10.0"
 
-    implementation("net.openhft:chronicle-map:3.17.5") {
+    implementation("net.openhft:chronicle-map:3.17.6") {
         exclude group: "com.intellij", module: "annotations"
     }
 

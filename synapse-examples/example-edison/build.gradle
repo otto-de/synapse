@@ -8,7 +8,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.0.4.RELEASE")
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
     }
 }
 
@@ -16,7 +16,7 @@ repositories {
     mavenCentral()
 }
 
-ext['jackson.version'] = "2.9.6"
+ext['jackson.version'] = "2.10.0"
 
 dependencies {
     compile project(':synapse-core:')
