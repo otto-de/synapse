@@ -1,5 +1,10 @@
 # Release Notes
 
+## 0.19.1
+*General*
+* Latest AWS SDK 2.10.4 (which brings Jackson 2.10.0 and Netty 4.1.42.Final)
+* Fix some degraded tests which broke through spring boot update
+
 ## 0.19.0
 *General*
 * Update to Edison 2.2.0, Spring Boot 2.2 and Spring 5.2
