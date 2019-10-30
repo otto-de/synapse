@@ -12,6 +12,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.util.MultiValueMap;
 
+import java.util.LinkedHashMap;
 import java.util.Objects;
 
 import static com.google.common.base.Strings.emptyToNull;
@@ -54,7 +55,15 @@ public class MessageSenderEndpointBeanRegistrar implements ImportBeanDefinitionR
         final MultiValueMap<String, Object> messageQueuesAttr = metadata.getAllAnnotationAttributes(EnableMessageSenderEndpoints.class.getName(), false);
         if (messageQueuesAttr != null) {
             final Object value = messageQueuesAttr.getFirst("value");
-            registerMultipleMessageQueueSenderEndpoints(registry, (AnnotationAttributes[]) value);
+            if (value == null) {
+                return;
+            }
+            LinkedHashMap[] castedValue = (LinkedHashMap[])value;
+            AnnotationAttributes[] attributes = new AnnotationAttributes[castedValue.length];
+            for(int i=0; i<castedValue.length; i++) {
+                attributes[i] = new AnnotationAttributes(castedValue[i]);
+            }
+            registerMultipleMessageQueueSenderEndpoints(registry, attributes);
         } else {
             final MultiValueMap<String, Object> messageQueueAttr = metadata.getAllAnnotationAttributes(EnableMessageSenderEndpoint.class.getName(), false);
             registerSingleMessageQueueSenderEndpoint(registry, messageQueueAttr);

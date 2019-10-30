@@ -1,6 +1,5 @@
 package de.otto.synapse.annotation;
 
-import de.otto.synapse.configuration.EventSourcingAutoConfiguration;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
