@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 @RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @ContextConfiguration(classes = {MessageTraceController.class})
-@WebMvcTest(controllers = MessageTraceController.class, secure = false)
+@WebMvcTest(controllers = MessageTraceController.class)
 @EnableAutoConfiguration
 @ComponentScan(
         basePackages = {"de.otto.synapse"})

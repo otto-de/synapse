@@ -35,8 +35,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 @ContextConfiguration(
         classes = JournalUiController.class)
 @WebMvcTest(
-        controllers = JournalUiController.class,
-        secure = false)
+        controllers = JournalUiController.class)
 @EnableAutoConfiguration
 @ComponentScan(
         basePackages = {"de.otto.synapse.edison.state","de.otto.synapse.edison.journal"})

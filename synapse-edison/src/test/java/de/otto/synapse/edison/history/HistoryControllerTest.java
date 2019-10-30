@@ -33,8 +33,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
         classes = {HistoryController.class})
 @WebMvcTest(
         controllers = HistoryController.class,
-        properties = "synapse.edison.history.enabled=true",
-        secure = false)
+        properties = "synapse.edison.history.enabled=true")
 public class HistoryControllerTest {
 
     @Autowired

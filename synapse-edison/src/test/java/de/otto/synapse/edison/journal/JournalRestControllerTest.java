@@ -37,8 +37,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 @ContextConfiguration(
         classes = StateRepositoryUiController.class)
 @WebMvcTest(
-        controllers = StateRepositoryUiController.class,
-        secure = false)
+        controllers = StateRepositoryUiController.class)
 @EnableAutoConfiguration
 @ComponentScan(
         basePackages = {"de.otto.synapse.edison.state","de.otto.synapse.edison.journal"})
