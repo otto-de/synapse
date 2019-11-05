@@ -11,7 +11,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class MessageQueueConsumerProcess implements SmartLifecycle {
 
     private static final Logger LOG = getLogger(MessageQueueConsumerProcess.class);
-    private static final String THREAD_NAME_PREFIX = "synapse-consumer-";
 
     private final List<MessageQueueReceiverEndpoint> messageQueueReceiverEndpoints;
 
@@ -41,7 +40,7 @@ public class MessageQueueConsumerProcess implements SmartLifecycle {
     public void start() {
         final int receiverCount = messageQueueReceiverEndpoints != null ? messageQueueReceiverEndpoints.size() : 0;
         if (receiverCount > 0) {
-            LOG.info("Initializing MessageQueueConsumerProcess with {} MessageQueues", receiverCount);
+            LOG.info("Initializing MessageQueueConsumerProcess with {} message queues", receiverCount);
             running = true;
             messageQueueReceiverEndpoints.forEach(endpoint -> {
                 try {
@@ -53,7 +52,7 @@ public class MessageQueueConsumerProcess implements SmartLifecycle {
                 }
             });
         } else {
-            LOG.warn("Did not find any MessageQueue instances to execute");
+            LOG.warn("Did not find any MessageQueueReceiverEndpoint instance to execute");
             running = false;
         }
     }

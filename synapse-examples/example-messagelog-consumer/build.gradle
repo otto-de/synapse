@@ -1,0 +1,44 @@
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'org.springframework.boot'
+
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext['jackson.version'] = "2.10.0"
+
+dependencies {
+    compile project(':synapse-core:')
+    compile "software.amazon.awssdk:kinesis:${awsSdkVersion}"
+
+    compile("org.springframework.boot:spring-boot-starter-web:${springBootVersion}") {
+        exclude module: "spring-boot-starter-tomcat:${springBootVersion}"
+    }
+    compile("org.springframework.boot:spring-boot-starter-jetty:${springBootVersion}")
+
+    compile "ch.qos.logback:logback-core:1.2.3"
+    compile "ch.qos.logback:logback-classic:1.2.3"
+
+    implementation project(':synapse-testsupport:')
+
+    testCompile 'junit:junit:4.12'
+
+    testImplementation "org.springframework.boot:spring-boot-test:${springBootVersion}"
+    testImplementation "org.springframework:spring-test:${springVersion}"
+    testImplementation "org.awaitility:awaitility:3.1.1"
+}
+
+// Define the main class for the application
+mainClassName = 'Server'
+

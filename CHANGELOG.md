@@ -8,7 +8,7 @@
 ## 0.20.0
 *synapse-core*
 * add messageFormat attribute in @EnableMessageSenderEndpoint to be able to send meta data (e.g. versions)
-  
+
 ## 0.19.1
 *General*
 * Latest AWS SDK 2.10.4 (which brings Jackson 2.10.0 and Netty 4.1.42.Final)

@@ -8,6 +8,7 @@ include "synapse-redis"
 include "synapse-testsupport"
 include "synapse-examples:example-edison"
 include "synapse-examples:example-eventsource-consumer"
+include "synapse-examples:example-messagelog-consumer"
 include "synapse-examples:example-messagequeue-consumer"
 include "synapse-examples:example-producer"
 

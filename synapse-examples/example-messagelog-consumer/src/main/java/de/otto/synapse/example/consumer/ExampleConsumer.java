@@ -1,6 +1,5 @@
 package de.otto.synapse.example.consumer;
 
-import de.otto.synapse.annotation.EventSourceConsumer;
 import de.otto.synapse.annotation.MessageLogConsumer;
 import de.otto.synapse.example.consumer.payload.BananaPayload;
 import de.otto.synapse.example.consumer.payload.ProductPayload;
@@ -26,8 +25,8 @@ public class ExampleConsumer {
         this.stateRepository = stateRepository;
     }
 
-    @EventSourceConsumer(
-            eventSource = "bananaSource",
+    @MessageLogConsumer(
+            endpointName = "bananaSource",
             payloadType = BananaPayload.class
     )
     public void consumeBananas(final Message<BananaPayload> message) {
@@ -44,8 +43,8 @@ public class ExampleConsumer {
         LOG.info("Updated StateRepository using BananaPayload: {}", stateRepository.get(entityId).orElse(null));
     }
 
-    @EventSourceConsumer(
-            eventSource = "productSource",
+    @MessageLogConsumer(
+            endpointName = "productSource",
             payloadType = ProductPayload.class
     )
     public void consumeProducts(final Message<ProductPayload> message) {
@@ -60,14 +59,6 @@ public class ExampleConsumer {
                     .build();
         });
         LOG.info("Updated StateRepository using ProductPayload: {}", stateRepository.get(entityId).orElse(null));
-    }
-
-    @MessageLogConsumer(
-            endpointName = "productLog",
-            payloadType = ProductPayload.class
-    )
-    public void consumeProductsFromLog(final Message<ProductPayload> message) {
-        LOG.info("Received product message from MessageLog: {}", message.getPayload());
     }
 
     private String entityIdFrom(final Message<?> message) {

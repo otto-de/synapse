@@ -11,7 +11,6 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class EventSourceConsumerProcess implements SmartLifecycle {
 
     private static final Logger LOG = getLogger(EventSourceConsumerProcess.class);
-    private static final String THREAD_NAME_PREFIX = "synapse-consumer-";
 
     private final List<EventSource> eventSources;
 
