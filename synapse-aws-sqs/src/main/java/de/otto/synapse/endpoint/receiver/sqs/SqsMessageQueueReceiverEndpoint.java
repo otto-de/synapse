@@ -134,7 +134,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
             }
             deleteMessage(sqsMessage);
         } catch (final Exception e) {
-            LOG.error("Failed to process SQS message " + sqsMessage);
+            LOG.error("Failed to process SQS message " + sqsMessage, e);
         }
     }
 
