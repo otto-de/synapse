@@ -5,18 +5,13 @@ import de.otto.synapse.eventsource.DelegateEventSource;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.annotation.AnnotationAttributes;
-import org.springframework.core.env.Environment;
-import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.util.MultiValueMap;
 
-import java.util.LinkedHashMap;
+import java.lang.annotation.Annotation;
 import java.util.Objects;
 
 import static com.google.common.base.Strings.emptyToNull;
-import static de.otto.synapse.annotation.BeanNameHelper.beanNameForEventSource;
 import static de.otto.synapse.annotation.BeanNameHelper.beanNameForMessageLogReceiverEndpoint;
 import static java.lang.String.format;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -28,101 +23,39 @@ import static org.springframework.beans.factory.support.BeanDefinitionBuilder.ge
  *
  * @see EnableEventSource
  */
-public class EventSourceBeanRegistrar implements ImportBeanDefinitionRegistrar, EnvironmentAware {
+public class EventSourceBeanRegistrar extends AbstractAnnotationBasedBeanRegistrar {
 
     private static final Logger LOG = getLogger(EventSourceBeanRegistrar.class);
 
-    private Environment environment;
-
-    /**
-     * Set the {@code Environment} that this component runs in.
-     *
-     * @param environment the current Spring environment
-     */
     @Override
-    public void setEnvironment(final Environment environment) {
-        this.environment = environment;
+    protected Class<? extends Annotation> getAnnotationType() {
+        return EnableEventSource.class;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public void registerBeanDefinitions(final AnnotationMetadata metadata,
-                                        final BeanDefinitionRegistry registry) {
-        /*
-        @EnableEventSource is a @Repeatable annotation. If there are multiple annotations present,
-        there is an automagically added @EnableEventsources annotation, containing the @EnableEventSource
-        annotations as value.
-         */
-        final MultiValueMap<String, Object> eventSourcesAttr = metadata.getAllAnnotationAttributes(EnableEventSources.class.getName(), false);
-        if (eventSourcesAttr != null) {
-            final Object value = eventSourcesAttr.getFirst("value");
-            if (value == null) {
-                return;
-            }
-            LinkedHashMap[] castedValue = (LinkedHashMap[])value;
-            AnnotationAttributes[] attributes = new AnnotationAttributes[castedValue.length];
-            for(int i=0; i<castedValue.length; i++) {
-                attributes[i] = new AnnotationAttributes(castedValue[i]);
-            }
-            registerMultipleEventSources(registry, attributes);
-        } else {
-            final MultiValueMap<String, Object> eventSourceAttr = metadata.getAllAnnotationAttributes(EnableEventSource.class.getName(), false);
-            registerSingleEventSource(registry, eventSourceAttr);
-        }
+    protected void registerBeanDefinitions(final String channelName,
+                                           final String beanName,
+                                           final AnnotationAttributes annotationAttributes,
+                                           final BeanDefinitionRegistry registry) {
+        final String messageLogBeanName = Objects.toString(
+                emptyToNull(annotationAttributes.getString("messageLogReceiverEndpoint")),
+                beanNameForMessageLogReceiverEndpoint(channelName));
 
-    }
-
-    private void registerMultipleEventSources(final BeanDefinitionRegistry registry,
-                                              final AnnotationAttributes[] annotationAttributesArr) {
-        for (final AnnotationAttributes annotationAttributes : annotationAttributesArr) {
-            final String channelName = environment.resolvePlaceholders(annotationAttributes.getString("channelName"));
-            final String eventSourceBeanName = Objects.toString(
-                    emptyToNull(annotationAttributes.getString("name")),
-                    beanNameForEventSource(channelName));
-            final String messageLogBeanName = Objects.toString(
-                    emptyToNull(annotationAttributes.getString("messageLogReceiverEndpoint")),
-                    beanNameForMessageLogReceiverEndpoint(channelName));
-            registerBeans(registry, channelName, eventSourceBeanName, messageLogBeanName);
-        }
-    }
-
-    private void registerSingleEventSource(final BeanDefinitionRegistry registry,
-                                           final MultiValueMap<String, Object> eventSourceAttr) {
-        if (eventSourceAttr != null) {
-
-            final String channelName = environment.resolvePlaceholders(
-                    eventSourceAttr.getFirst("channelName").toString());
-
-            final String eventSourceBeanName = Objects.toString(
-                    emptyToNull(eventSourceAttr.getFirst("name").toString()),
-                    beanNameForEventSource(channelName));
-
-            final String messageLogBeanName = Objects.toString(
-                    emptyToNull(eventSourceAttr.getFirst("messageLogReceiverEndpoint").toString()),
-                    beanNameForMessageLogReceiverEndpoint(channelName));
-
-            registerBeans(registry, channelName, eventSourceBeanName, messageLogBeanName);
-        }
-    }
-
-    private void registerBeans(BeanDefinitionRegistry registry, String channelName, String eventSourceBeanName, String messageLogBeanName) {
         if (!registry.containsBeanDefinition(messageLogBeanName)) {
             registerMessageLogBeanDefinition(registry, messageLogBeanName, channelName);
         } else {
             throw new BeanCreationException(messageLogBeanName, format("MessageLogReceiverEndpoint %s is already registered.", messageLogBeanName));
         }
-        if (!registry.containsBeanDefinition(eventSourceBeanName)) {
-            registerEventSourceBeanDefinition(registry, eventSourceBeanName, messageLogBeanName, channelName);
+        if (!registry.containsBeanDefinition(beanName)) {
+            registerEventSourceBeanDefinition(registry, beanName, messageLogBeanName, channelName);
         } else {
-            throw new BeanCreationException(eventSourceBeanName, format("EventSource %s is already registered.", eventSourceBeanName));
+            throw new BeanCreationException(beanName, format("EventSource %s is already registered.", beanName));
         }
     }
 
     private void registerMessageLogBeanDefinition(final BeanDefinitionRegistry registry,
                                                   final String beanName,
                                                   final String channelName) {
-
-
         registry.registerBeanDefinition(
                 beanName,
                 genericBeanDefinition(DelegateMessageLogReceiverEndpoint.class)
