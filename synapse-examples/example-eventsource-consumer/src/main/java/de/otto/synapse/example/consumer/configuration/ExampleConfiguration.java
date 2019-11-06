@@ -8,6 +8,7 @@ import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.example.consumer.state.BananaProduct;
 import de.otto.synapse.state.ChronicleMapStateRepository;
 import de.otto.synapse.state.StateRepository;
+import de.otto.synapse.translator.MessageFormat;
 import org.slf4j.Logger;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -34,13 +35,13 @@ public class ExampleConfiguration implements MessageEndpointConfigurer {
     @Bean
     public MessageSenderEndpoint bananaMessageSender(final MessageSenderEndpointFactory messageLogSenderEndpointFactory,
                                                      final MyServiceProperties properties) {
-        return messageLogSenderEndpointFactory.create(properties.getBananaChannel());
+        return messageLogSenderEndpointFactory.create(properties.getBananaChannel(), MessageFormat.V1);
     }
 
     @Bean
     public MessageSenderEndpoint productMessageSender(final MessageSenderEndpointFactory messageLogSenderEndpointFactory,
                                                       final MyServiceProperties properties) {
-        return messageLogSenderEndpointFactory.create(properties.getProductChannel());
+        return messageLogSenderEndpointFactory.create(properties.getProductChannel(), MessageFormat.V1);
     }
 
 }

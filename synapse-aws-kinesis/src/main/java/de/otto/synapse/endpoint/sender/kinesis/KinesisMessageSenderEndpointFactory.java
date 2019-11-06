@@ -6,6 +6,7 @@ import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.message.TextMessage;
+import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.MessageTranslator;
 import de.otto.synapse.translator.TextMessageTranslator;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
@@ -26,8 +27,8 @@ public class KinesisMessageSenderEndpointFactory implements MessageSenderEndpoin
     }
 
     @Override
-    public MessageSenderEndpoint create(final @Nonnull String channelName) {
-        return new KinesisMessageSender(channelName, registry, messageTranslator, kinesisClient);
+    public MessageSenderEndpoint create(final @Nonnull String channelName, MessageFormat messageFormat) {
+        return new KinesisMessageSender(channelName, registry, messageTranslator, kinesisClient, messageFormat);
     }
 
     @Override

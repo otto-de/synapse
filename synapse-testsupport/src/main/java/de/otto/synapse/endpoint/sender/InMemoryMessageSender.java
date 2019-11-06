@@ -3,6 +3,7 @@ package de.otto.synapse.endpoint.sender;
 import de.otto.synapse.channel.InMemoryChannel;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.TextMessage;
+import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.MessageTranslator;
 
 import javax.annotation.Nonnull;
@@ -26,5 +27,4 @@ public class InMemoryMessageSender extends AbstractMessageSenderEndpoint {
         channel.send(message);
         return completedFuture(null);
     }
-
 }

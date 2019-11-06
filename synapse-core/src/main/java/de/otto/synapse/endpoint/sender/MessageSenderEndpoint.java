@@ -2,6 +2,7 @@ package de.otto.synapse.endpoint.sender;
 
 import de.otto.synapse.endpoint.MessageEndpoint;
 import de.otto.synapse.message.Message;
+import de.otto.synapse.translator.MessageFormat;
 
 import javax.annotation.Nonnull;
 import java.util.concurrent.CompletableFuture;
@@ -36,4 +37,10 @@ public interface MessageSenderEndpoint extends MessageEndpoint {
      * @return a CompletableFuture that can be used for logging, error handling, waiting for completion, etc.
      */
     <T> CompletableFuture<Void> sendBatch(@Nonnull Stream<Message<T>> batch);
+
+    /**
+     * Returns the message format of the sender
+     * @return messageFormat the message format
+     */
+    MessageFormat getMessageFormat();
 }

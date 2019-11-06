@@ -7,6 +7,7 @@ import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistration;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
+import de.otto.synapse.translator.MessageFormat;
 import org.junit.Test;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
@@ -28,7 +29,7 @@ public class SqsMessageSenderEndpointFactoryTest {
 
         final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(new MessageInterceptorRegistry(), sqsAsyncClient);
 
-        final MessageSenderEndpoint sender = factory.create("foo-stream");
+        final MessageSenderEndpoint sender = factory.create("foo-stream", MessageFormat.V1);
         assertThat(sender.getChannelName(), is("foo-stream"));
         assertThat(sender, is(instanceOf(SqsMessageSender.class)));
     }
@@ -65,7 +66,7 @@ public class SqsMessageSenderEndpointFactoryTest {
 
         final SqsMessageSenderEndpointFactory factory = new SqsMessageSenderEndpointFactory(registry, sqsAsyncClient);
 
-        final MessageSenderEndpoint sender = factory.create("foo-stream");
+        final MessageSenderEndpoint sender = factory.create("foo-stream", MessageFormat.V1);
 
         assertThat(sender.getInterceptorChain().getInterceptors(), contains(interceptor));
     }

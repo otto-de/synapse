@@ -6,6 +6,7 @@ import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
 import de.otto.synapse.configuration.InMemoryMessageQueueTestConfiguration;
 import de.otto.synapse.endpoint.sender.DelegateMessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
+import de.otto.synapse.translator.MessageFormat;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.BeanCreationException;
@@ -54,6 +55,15 @@ public class MessageSenderEndpointBeanRegistrarTest {
 
     @EnableMessageSenderEndpoint(channelName = "test-channel", selector = MessageLog.class)
     private static class SingleUnnamedLogSenderConfig {
+    }
+
+    @EnableMessageSenderEndpoint(name = "test-message-format", channelName = "test-message-format-channel", selector = MessageLog.class, messageFormat = MessageFormat.V2)
+    private static class MessageFormatLogSenderConfig {
+    }
+
+    @EnableMessageSenderEndpoint(name = "repeatable-test-message-format-1", channelName = "test-message-format-channel", selector = MessageLog.class, messageFormat = MessageFormat.V1)
+    @EnableMessageSenderEndpoint(name = "repeatable-test-message-format-2", channelName = "test-message-format-channel", selector = MessageLog.class, messageFormat = MessageFormat.V2)
+    private static class RepeatableMessageFormatLogSenderConfig {
     }
 
     @EnableMessageSenderEndpoint(name = "broken", channelName = "some-channel", selector = MessageLog.class)
@@ -138,6 +148,39 @@ public class MessageSenderEndpointBeanRegistrarTest {
 
         assertThat(context.containsBean("testLog")).isTrue();
         assertThat(context.getBean("testLog", MessageSenderEndpoint.class)).isInstanceOf(DelegateMessageSenderEndpoint.class);
+    }
+
+    @Test
+    public void shouldRegisterMessageLogSenderEndpointBeanWithMessageFormat() {
+        context.register(MessageFormatLogSenderConfig.class);
+        context.register(InMemoryMessageLogTestConfiguration.class);
+        context.refresh();
+
+        assertThat(context.containsBean("test-message-format")).isTrue();
+        assertThat(context.getBean("test-message-format", MessageSenderEndpoint.class)).isInstanceOf(DelegateMessageSenderEndpoint.class);
+
+        DelegateMessageSenderEndpoint bean = context.getBean("test-message-format", DelegateMessageSenderEndpoint.class);
+        assertThat(bean.getMessageFormat()).isEqualTo(MessageFormat.V2);
+    }
+
+
+    @Test
+    public void shouldRegisterMessageLogSenderEndpointBeansWithMessageFormat() {
+        context.register(RepeatableMessageFormatLogSenderConfig.class);
+        context.register(InMemoryMessageLogTestConfiguration.class);
+        context.refresh();
+
+        assertThat(context.containsBean("repeatable-test-message-format-1")).isTrue();
+        assertThat(context.containsBean("repeatable-test-message-format-2")).isTrue();
+
+        assertThat(context.getBean("repeatable-test-message-format-1", MessageSenderEndpoint.class)).isInstanceOf(DelegateMessageSenderEndpoint.class);
+        assertThat(context.getBean("repeatable-test-message-format-2", MessageSenderEndpoint.class)).isInstanceOf(DelegateMessageSenderEndpoint.class);
+
+        DelegateMessageSenderEndpoint endpoint1 = context.getBean("repeatable-test-message-format-1", DelegateMessageSenderEndpoint.class);
+        assertThat(endpoint1.getMessageFormat()).isEqualTo(MessageFormat.V1);
+
+        DelegateMessageSenderEndpoint endpoint2 = context.getBean("repeatable-test-message-format-2", DelegateMessageSenderEndpoint.class);
+        assertThat(endpoint2.getMessageFormat()).isEqualTo(MessageFormat.V2);
     }
 
     @Test

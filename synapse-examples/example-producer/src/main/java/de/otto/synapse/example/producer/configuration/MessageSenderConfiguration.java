@@ -5,6 +5,7 @@ import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
+import de.otto.synapse.translator.MessageFormat;
 import org.slf4j.Logger;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -34,7 +35,7 @@ public class MessageSenderConfiguration implements MessageEndpointConfigurer {
     @Bean
     public MessageSenderEndpoint productMessageSender(final MessageSenderEndpointFactory messageLogSenderEndpointFactory,
                                                       final MyServiceProperties properties) {
-        return messageLogSenderEndpointFactory.create(properties.getProductChannelName());
+        return messageLogSenderEndpointFactory.create(properties.getProductChannelName(), MessageFormat.V1);
 
     }
 }

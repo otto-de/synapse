@@ -3,6 +3,7 @@ package de.otto.synapse.endpoint.sender;
 import de.otto.synapse.channel.InMemoryChannels;
 import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.TextMessageTranslator;
 
 import javax.annotation.Nonnull;
@@ -29,7 +30,7 @@ public class InMemoryMessageSenderFactory implements MessageSenderEndpointFactor
     }
 
     @Override
-    public InMemoryMessageSender create(@Nonnull final String channelName) {
+    public InMemoryMessageSender create(@Nonnull final String channelName, MessageFormat messageFormat) {
         final InMemoryMessageSender messageSender = new InMemoryMessageSender(
                 registry,
                 new TextMessageTranslator(),

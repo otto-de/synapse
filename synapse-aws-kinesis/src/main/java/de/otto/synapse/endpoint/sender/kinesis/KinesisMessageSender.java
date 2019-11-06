@@ -32,6 +32,7 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
 
     private final KinesisAsyncClient kinesisAsyncClient;
     private final KinesisEncoder encoder;
+    private final MessageFormat messageFormat;
 
     public KinesisMessageSender(final String channelName,
                                 final MessageInterceptorRegistry interceptorRegistry,
@@ -48,6 +49,7 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
         super(channelName, interceptorRegistry, messageTranslator);
         this.kinesisAsyncClient = kinesisClient;
         this.encoder = new KinesisEncoder(messageFormat);
+        this.messageFormat = messageFormat;
     }
 
     @Override
@@ -67,6 +69,11 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
                     .forEach(this::blockingSendBatchWithRetries);
         }
         return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public MessageFormat getMessageFormat() {
+        return messageFormat;
     }
 
     private void blockingSendBatchWithRetries(List<PutRecordsRequestEntry> batch) {

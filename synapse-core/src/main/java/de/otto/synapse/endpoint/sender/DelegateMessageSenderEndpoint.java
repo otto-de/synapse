@@ -5,6 +5,7 @@ import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.message.TextMessage;
+import de.otto.synapse.translator.MessageFormat;
 import org.slf4j.Logger;
 
 import javax.annotation.Nonnull;
@@ -20,16 +21,20 @@ public class DelegateMessageSenderEndpoint implements MessageSenderEndpoint{
 
     private static final Logger LOG = getLogger(DelegateMessageSenderEndpoint.class);
     private final MessageSenderEndpoint delegate;
+    @Nonnull
+    private final MessageFormat messageFormat;
 
     public DelegateMessageSenderEndpoint(final @Nonnull String channelName,
                                          final @Nullable Class<? extends Selector> selector,
+                                         final @Nonnull MessageFormat messageFormat,
                                          final List<MessageSenderEndpointFactory> factories) {
+        this.messageFormat = messageFormat;
         final MessageSenderEndpointFactory messageSenderEndpointFactory = factories
                 .stream()
                 .filter(factory -> factory.matches(selector))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException(format("Unable to create MessageSenderEndpoint for channelName=%s: no matching MessageSenderEndpointFactory found in the ApplicationContext.", channelName)));
-        this.delegate = messageSenderEndpointFactory.create(channelName);
+        this.delegate = messageSenderEndpointFactory.create(channelName, messageFormat);
         LOG.info("Created MessageSenderEndpoint for channelName={}", channelName);
     }
 
@@ -37,6 +42,11 @@ public class DelegateMessageSenderEndpoint implements MessageSenderEndpoint{
     @Override
     public String getChannelName() {
         return delegate.getChannelName();
+    }
+
+    @Nonnull
+    public MessageFormat getMessageFormat() {
+        return messageFormat;
     }
 
     @Nonnull

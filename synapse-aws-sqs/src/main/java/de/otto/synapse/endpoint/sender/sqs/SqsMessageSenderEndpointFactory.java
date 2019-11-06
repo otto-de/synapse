@@ -6,6 +6,7 @@ import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.message.TextMessage;
+import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.MessageTranslator;
 import de.otto.synapse.translator.TextMessageTranslator;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
@@ -27,7 +28,7 @@ public class SqsMessageSenderEndpointFactory implements MessageSenderEndpointFac
     }
 
     @Override
-    public MessageSenderEndpoint create(final @Nonnull String channelName) {
+    public MessageSenderEndpoint create(final @Nonnull String channelName, MessageFormat messageFormat) {
         try {
             return new SqsMessageSender(channelName, urlOf(channelName), registry, messageTranslator, sqsAsyncClient);
         } catch (Exception e) {

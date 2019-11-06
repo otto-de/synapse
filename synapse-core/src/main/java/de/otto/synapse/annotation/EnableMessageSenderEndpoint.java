@@ -3,6 +3,7 @@ package de.otto.synapse.annotation;
 import de.otto.synapse.channel.selector.MessageQueue;
 import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.configuration.SynapseAutoConfiguration;
+import de.otto.synapse.translator.MessageFormat;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
@@ -40,13 +41,21 @@ public @interface EnableMessageSenderEndpoint {
     String name() default "";
 
     /**
+     * The {@link MessageFormat} for the message to be sent.
+     * Default: V1
+     *
+     * @return message format
+     */
+    MessageFormat messageFormat() default MessageFormat.V1;
+
+    /**
      * Selector used to select one of possibly multiple available
      * {@link de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory} instances.
      *
      * <p>
-     *     Example: the SqsMessageSenderEndpointFactory matches both {@link MessageQueue MessageQueue.class}
-     *     and Sqs.class. The following usage of the annotation is selecting the SqsMessageSenderEndpointFactory
-     *     using the more specific SQS selector class:
+     * Example: the SqsMessageSenderEndpointFactory matches both {@link MessageQueue MessageQueue.class}
+     * and Sqs.class. The following usage of the annotation is selecting the SqsMessageSenderEndpointFactory
+     * using the more specific SQS selector class:
      * </p>
      * <pre><code>
      * {@literal @}Configuration
@@ -56,6 +65,7 @@ public @interface EnableMessageSenderEndpoint {
      * class MyExampleConfiguration {
      * }
      * </code></pre>
+     *
      * @return Selector class
      */
     Class<? extends Selector> selector();

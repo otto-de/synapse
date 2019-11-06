@@ -7,6 +7,7 @@ import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistration;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
+import de.otto.synapse.translator.MessageFormat;
 import org.junit.Test;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.ListStreamsResponse;
@@ -26,8 +27,9 @@ public class KinesisMessageSenderEndpointFactoryTest {
 
         final KinesisMessageSenderEndpointFactory factory = new KinesisMessageSenderEndpointFactory(new MessageInterceptorRegistry(), kinesisClient);
 
-        final MessageSenderEndpoint sender = factory.create("foo-stream");
+        final KinesisMessageSender sender = (KinesisMessageSender) factory.create("foo-stream", MessageFormat.V2);
         assertThat(sender.getChannelName(), is("foo-stream"));
+        assertThat(sender.getMessageFormat(), is(MessageFormat.V2));
         assertThat(sender, is(instanceOf(KinesisMessageSender.class)));
     }
 
@@ -62,7 +64,7 @@ public class KinesisMessageSenderEndpointFactoryTest {
 
         final KinesisMessageSenderEndpointFactory factory = new KinesisMessageSenderEndpointFactory(registry, kinesisClient);
 
-        final MessageSenderEndpoint sender = factory.create("foo-stream");
+        final MessageSenderEndpoint sender = factory.create("foo-stream", MessageFormat.V1);
 
         assertThat(sender.getInterceptorChain().getInterceptors(), contains(interceptor));
     }

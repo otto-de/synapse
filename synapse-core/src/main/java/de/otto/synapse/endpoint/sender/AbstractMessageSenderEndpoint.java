@@ -6,6 +6,7 @@ import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.message.TextMessage;
+import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.MessageTranslator;
 
 import javax.annotation.Nonnull;
@@ -92,4 +93,8 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
 
     protected abstract CompletableFuture<Void> doSend(final @Nonnull TextMessage message);
 
+    @Override
+    public MessageFormat getMessageFormat() {
+        return MessageFormat.defaultMessageFormat();
+    }
 }

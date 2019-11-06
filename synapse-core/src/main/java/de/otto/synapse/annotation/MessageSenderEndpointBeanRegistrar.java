@@ -2,6 +2,7 @@ package de.otto.synapse.annotation;
 
 import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.endpoint.sender.DelegateMessageSenderEndpoint;
+import de.otto.synapse.translator.MessageFormat;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -79,8 +80,10 @@ public class MessageSenderEndpointBeanRegistrar implements ImportBeanDefinitionR
             final String messageQueueSenderEndpointBeanName = Objects.toString(
                     emptyToNull(annotationAttributes.getString("name")),
                     beanNameForMessageSenderEndpoint(channelName));
+            final MessageFormat messageFormat = annotationAttributes.getEnum("messageFormat");
+
             if (!registry.containsBeanDefinition(messageQueueSenderEndpointBeanName)) {
-                registerMessageQueueSenderEndpointBeanDefinition(registry, messageQueueSenderEndpointBeanName, channelName, selector);
+                registerMessageQueueSenderEndpointBeanDefinition(registry, messageQueueSenderEndpointBeanName, channelName, messageFormat, selector);
             } else {
                 throw new BeanCreationException(messageQueueSenderEndpointBeanName, format("messageQueueSenderEndpoint %s is already registered.", messageQueueSenderEndpointBeanName));
             }
@@ -95,6 +98,8 @@ public class MessageSenderEndpointBeanRegistrar implements ImportBeanDefinitionR
             final String channelName = environment.resolvePlaceholders(
                     messageQueueAttr.getFirst("channelName").toString());
 
+            final MessageFormat messageFormat = MessageFormat.valueOf(messageQueueAttr.getFirst("messageFormat").toString());
+
             final String messageSenderEndpointBeanName = Objects.toString(
                     emptyToNull(messageQueueAttr.getFirst("name").toString()),
                     beanNameForMessageSenderEndpoint(channelName));
@@ -106,6 +111,7 @@ public class MessageSenderEndpointBeanRegistrar implements ImportBeanDefinitionR
                         registry,
                         messageSenderEndpointBeanName,
                         channelName,
+                        messageFormat,
                         channelSelector
                 );
             } else {
@@ -120,6 +126,7 @@ public class MessageSenderEndpointBeanRegistrar implements ImportBeanDefinitionR
     private void registerMessageQueueSenderEndpointBeanDefinition(final BeanDefinitionRegistry registry,
                                                                   final String beanName,
                                                                   final String channelName,
+                                                                  final MessageFormat messageFormat,
                                                                   final Class<? extends Selector> channelSelector) {
 
 
@@ -128,10 +135,11 @@ public class MessageSenderEndpointBeanRegistrar implements ImportBeanDefinitionR
                 genericBeanDefinition(DelegateMessageSenderEndpoint.class)
                         .addConstructorArgValue(channelName)
                         .addConstructorArgValue(channelSelector)
+                        .addConstructorArgValue(messageFormat)
                         .setDependencyCheck(DEPENDENCY_CHECK_ALL)
                         .getBeanDefinition()
         );
 
-        LOG.info("Registered MessageQueueSenderEndpoint {} with for channelName {}", beanName, channelName);
+        LOG.info("Registered MessageQueueSenderEndpoint {} with for channelName {}, messageFormat {}", beanName, channelName, messageFormat);
     }
 }
