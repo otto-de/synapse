@@ -19,6 +19,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
+import static de.otto.synapse.translator.MessageFormat.defaultMessageFormat;
 import static java.util.stream.Collectors.toCollection;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -38,7 +39,7 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
                                 final MessageInterceptorRegistry interceptorRegistry,
                                 final MessageTranslator<TextMessage> messageTranslator,
                                 final KinesisAsyncClient kinesisClient) {
-        this(channelName, interceptorRegistry, messageTranslator, kinesisClient, MessageFormat.V1);
+        this(channelName, interceptorRegistry, messageTranslator, kinesisClient, defaultMessageFormat());
     }
 
     public KinesisMessageSender(final String channelName,

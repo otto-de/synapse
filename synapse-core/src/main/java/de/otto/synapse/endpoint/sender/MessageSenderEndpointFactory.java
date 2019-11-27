@@ -5,11 +5,23 @@ import de.otto.synapse.translator.MessageFormat;
 
 import javax.annotation.Nonnull;
 
+import static de.otto.synapse.translator.MessageFormat.defaultMessageFormat;
+
 /*
  * A factory used to create {@link MessageSenderEndpoint} instances.
  *
  */
 public interface MessageSenderEndpointFactory {
+
+    /**
+     * Creates and returns a {@link AbstractMessageSenderEndpoint} for a messaging channel.
+     *
+     * @param channelName the name of the channel of the created {@code MessageSenderEndpoint}
+     * @return MessagerSenderEndpoint
+     */
+    default MessageSenderEndpoint create(@Nonnull String channelName) {
+        return create(channelName, defaultMessageFormat());
+    }
 
     /**
      * Creates and returns a {@link AbstractMessageSenderEndpoint} for a messaging channel.
