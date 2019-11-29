@@ -2,6 +2,8 @@
 
 ## 0.21.0
 *synapse-core*
+* Fixes configuration of default ObjectMapper in that unknown properties are ignored during
+  deserialization of messages.
 * Adds new annotation @EnableMessageLogReceiverEndpoint to support annotation-driven configuration
   of MessageLogReceiverEndpoints.
 

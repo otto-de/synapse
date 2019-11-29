@@ -22,6 +22,7 @@ public final class ObjectMappers {
         DEFAULT_OBJECT_MAPPER = new ObjectMapper();
         DEFAULT_OBJECT_MAPPER.findAndRegisterModules();
         DEFAULT_OBJECT_MAPPER.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        DEFAULT_OBJECT_MAPPER.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         DEFAULT_OBJECT_MAPPER.disable(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE);
         SYNAPSE_OBJECT_MAPPER = new AtomicReference<>(DEFAULT_OBJECT_MAPPER);
     }
