@@ -1,13 +1,9 @@
 package de.otto.synapse.state;
 
-import com.google.common.collect.ImmutableSet;
-import de.otto.synapse.messagestore.Index;
-
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.stream.Stream;
 
 /**
  * A {@code StateRepository} is used to store the aggregated state of event-sourced entities.
@@ -23,16 +19,6 @@ public interface StateRepository<V> extends AutoCloseable {
      * @return name
      */
     String getName();
-
-    /**
-     * Returns the set of {@link Index indexes} for entities stored in the {@code StateRepository},
-     * or an empty set, if no indexers will be created.
-     *
-     * @return set of indexes
-     */
-    default ImmutableSet<Index> getIndexes() {
-        return ImmutableSet.of();
-    }
 
     /**
      * Returns an immutable set of the keys in this repository.

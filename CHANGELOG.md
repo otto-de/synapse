@@ -6,6 +6,7 @@
   deserialization of messages.
 * Adds new annotation @EnableMessageLogReceiverEndpoint to support annotation-driven configuration
   of MessageLogReceiverEndpoints.
+* Adds new NitriteStateRepository, including support for secondary indexes.
 
 ## 0.20.0
 *synapse-core*
