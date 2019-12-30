@@ -29,6 +29,14 @@ import static org.dizitart.no2.IndexType.Unique;
 import static org.dizitart.no2.filters.Filters.ALL;
 import static org.dizitart.no2.filters.Filters.eq;
 
+/**
+ * A StateRepository with extra functionality for secondary indexes, queries, sorting and paging of
+ * results.
+ *
+ * <p>This implementation is using a <a href="https://www.dizitart.org/nitrite-database.html">Nitrite Database</a>
+ * to store the entities either on heap, off heap or in a file system.</p>
+ * @param <V>
+ */
 public class NitriteStateRepository<V> implements StateRepository<V>, Closeable {
 
     private static final String IDX_ID = "_idx_id";

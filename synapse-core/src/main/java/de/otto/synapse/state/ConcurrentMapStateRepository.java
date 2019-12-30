@@ -14,6 +14,11 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static org.slf4j.LoggerFactory.getLogger;
 
+/**
+ * High performance in-memory StateRepository implemented using a ConcurrentMap.
+ *
+ * @param <V>
+ */
 public class ConcurrentMapStateRepository<V> implements StateRepository<V> {
 
     private static final Logger LOG = getLogger(ConcurrentMapStateRepository.class);
