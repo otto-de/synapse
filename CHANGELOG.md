@@ -7,6 +7,8 @@
 * Adds new annotation @EnableMessageLogReceiverEndpoint to support annotation-driven configuration
   of MessageLogReceiverEndpoints.
 * Adds new NitriteStateRepository, including support for secondary indexes.
+* Introduces MessageSender interface
+* Adds a simple TeeMessageSender that is sending messages to multiple delegate MessageSenders.
 
 ## 0.20.0
 *synapse-core*

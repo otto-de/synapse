@@ -1,6 +1,6 @@
 package de.otto.synapse.example.producer;
 
-import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
+import de.otto.synapse.endpoint.sender.MessageSender;
 import de.otto.synapse.example.producer.configuration.MyServiceProperties;
 import de.otto.synapse.example.producer.payload.ProductPayload;
 import org.slf4j.Logger;
@@ -21,11 +21,11 @@ public class ExampleProducer {
 
     private final static Logger LOG = LoggerFactory.getLogger(ExampleProducer.class);
 
-    private final MessageSenderEndpoint messageSender;
+    private final MessageSender messageSender;
     private final AtomicInteger counter = new AtomicInteger();
 
     @Autowired
-    public ExampleProducer(final MessageSenderEndpoint productMessageSender) {
+    public ExampleProducer(final MessageSender productMessageSender) {
         this.messageSender = productMessageSender;
     }
 

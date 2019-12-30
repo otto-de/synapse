@@ -93,7 +93,6 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
 
     protected abstract CompletableFuture<Void> doSend(final @Nonnull TextMessage message);
 
-    @Override
     public MessageFormat getMessageFormat() {
         return MessageFormat.defaultMessageFormat();
     }

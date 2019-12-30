@@ -1,6 +1,6 @@
 package de.otto.synapse.example.edison;
 
-import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
+import de.otto.synapse.endpoint.sender.MessageSender;
 import de.otto.synapse.example.edison.configuration.MyServiceProperties;
 import de.otto.synapse.example.edison.payload.BananaPayload;
 import de.otto.synapse.example.edison.payload.ProductPayload;
@@ -21,9 +21,9 @@ import static java.util.Arrays.asList;
 public class SampleProducer {
 
     @Autowired
-    private MessageSenderEndpoint bananaMessageSender;
+    private MessageSender bananaMessageSender;
     @Autowired
-    private MessageSenderEndpoint productMessageSender;
+    private MessageSender productMessageSender;
 
     @Scheduled(initialDelay = 1000L, fixedRate = 1000L)
     protected void produceBananaSampleData() {
