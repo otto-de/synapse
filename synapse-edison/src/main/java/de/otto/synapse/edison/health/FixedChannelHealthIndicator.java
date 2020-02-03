@@ -17,8 +17,8 @@ import java.util.Set;
 @ConditionalOnProperty(
         prefix = "synapse.edison.health",
         name = "fixedChannel.enabled",
-        havingValue = "true",
-        matchIfMissing = true)
+        havingValue = "true"
+)
 @ConditionalOnBean(EventSource.class)
 public class FixedChannelHealthIndicator extends AbstractChannelHealthIndicator {
 

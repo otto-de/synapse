@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.21.1
+* Introduces FixedChannelHealthIndicator to measure health of asynchronously added eventsources 
+
 ## 0.21.0
 *synapse-core*
 * Fixes configuration of default ObjectMapper in that unknown properties are ignored during
@@ -9,7 +12,6 @@
 * Adds new NitriteStateRepository, including support for secondary indexes.
 * Introduces MessageSender interface
 * Adds a simple TeeMessageSender that is sending messages to multiple delegate MessageSenders.
-* Introduces FixedChannelHealthIndicator to measure health of asynchronously added eventsources 
 
 ## 0.20.0
 *synapse-core*
