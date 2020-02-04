@@ -1,5 +1,8 @@
 # Release Notes
 
+## 0.21.2
+* Latest AWS SDK 2.10.56 as advised by AWS due to bugfixes
+
 ## 0.21.1
 * Introduces FixedChannelHealthIndicator to measure health of asynchronously added eventsources 
 

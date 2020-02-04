@@ -10,7 +10,7 @@ buildscript {
 }
 
 ext {
-    awsSdkVersion = "2.10.4"
+    awsSdkVersion = "2.10.56"
     springVersion = "5.2.0.RELEASE"
     springBootVersion = "2.2.0.RELEASE"
     edisonVersion = "2.2.0"
@@ -52,7 +52,7 @@ subprojects {
 
     compileJava.dependsOn(processResources)
 
-    version = '0.21.1'
+    version = '0.21.2'
     group = 'de.otto.synapse'
 
     repositories {
