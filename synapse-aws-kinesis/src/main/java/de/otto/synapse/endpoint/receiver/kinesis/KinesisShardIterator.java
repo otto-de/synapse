@@ -33,6 +33,7 @@ public class KinesisShardIterator {
 
     public static final String POISON_SHARD_ITER = "__synapse__poison__iter";
     public static final Integer FETCH_RECORDS_LIMIT = 10000;
+    private static final int MAX_RETRIES = 3;
 
     private final KinesisAsyncClient kinesisClient;
     private final String channelName;
@@ -100,20 +101,8 @@ public class KinesisShardIterator {
 
     public ShardResponse next() {
         if (!stopSignal.get()) {
-            int maxRetries = 3;
-            while (maxRetries-- > 0) {
-                try {
-                    GetRecordsResponse recordsResponse = tryNext();
-                    return KinesisShardResponse.kinesisShardResponse(shardPosition, recordsResponse);
-                } catch (RuntimeException e) {
-                    LOG.warn("failed to iterate on kinesis shard. Try to reset iterator on retry.");
-                    id = createShardIteratorId();
-                    if (maxRetries == 0) {
-                        throw e;
-                    }
-                }
-            }
-            throw new IllegalStateException(format("Cannot iterate on shard '%s' after max retries", shardPosition.shardName()));
+            GetRecordsResponse recordsResponse = tryNextWithRetry();
+            return KinesisShardResponse.kinesisShardResponse(shardPosition, recordsResponse);
         } else {
             throw new IllegalStateException(format("Cannot iterate on shard '%s' after stop signal was received", shardPosition.shardName()));
         }
@@ -144,6 +133,21 @@ public class KinesisShardIterator {
                 break;
         }
         return shardRequestBuilder.build();
+    }
+
+    private GetRecordsResponse tryNextWithRetry() {
+        RuntimeException exception = null;
+        int retry = 0;
+        while (retry++ < MAX_RETRIES) {
+            try {
+                return tryNext();
+            } catch (RuntimeException e) {
+                exception = e;
+                LOG.warn("Failed to iterate on kinesis shard. Try to reset iterator and retry ({}/{}).", retry, MAX_RETRIES);
+                id = createShardIteratorId();
+            }
+        }
+        throw exception;
     }
 
     private GetRecordsResponse tryNext() {

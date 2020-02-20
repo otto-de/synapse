@@ -249,6 +249,27 @@ public class KinesisShardIteratorTest {
         assertThat(shardIterator.getId(), is("nextIteratorId"));
     }
 
+    @Test
+    public void shouldIterateToNextIdWithRetryAfterException() {
+        // given
+        GetRecordsResponse response = GetRecordsResponse.builder()
+                .records(emptyList())
+                .nextShardIterator("nextIteratorId")
+                .millisBehindLatest(42L)
+                .build();
+        KinesisAsyncClient kinesisClient = someKinesisClient();
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class)))
+                .thenThrow(new CompletionException(ExpiredIteratorException.builder().message("forced test exception").build()))
+                .thenReturn(completedFuture(response));
+        final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromHorizon("someShard"));
+
+        // when
+        shardIterator.next();
+
+        // then
+        assertThat(shardIterator.getId(), is("nextIteratorId"));
+    }
+
     @Test(expected = RuntimeException.class)
     public void shouldThrowExceptionWhenStoppingInRetry() {
         // given
