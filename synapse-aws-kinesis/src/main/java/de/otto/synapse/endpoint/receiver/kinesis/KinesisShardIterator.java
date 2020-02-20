@@ -55,7 +55,11 @@ public class KinesisShardIterator {
         this.fetchRecordLimit = fetchRecordLimit;
         this.channelName = channelName;
         this.shardPosition = shardPosition;
-        this.id = kinesisClient
+        this.id = createShardIteratorId();
+    }
+
+    private String createShardIteratorId() {
+        return kinesisClient
                 .getShardIterator(buildIteratorShardRequest(shardPosition))
                 .join()
                 .shardIterator();
@@ -96,8 +100,20 @@ public class KinesisShardIterator {
 
     public ShardResponse next() {
         if (!stopSignal.get()) {
-            GetRecordsResponse recordsResponse = tryNext();
-            return KinesisShardResponse.kinesisShardResponse(shardPosition, recordsResponse);
+            int maxRetries = 3;
+            while (maxRetries-- > 0) {
+                try {
+                    GetRecordsResponse recordsResponse = tryNext();
+                    return KinesisShardResponse.kinesisShardResponse(shardPosition, recordsResponse);
+                } catch (RuntimeException e) {
+                    LOG.warn("failed to iterate on kinesis shard. Try to reset iterator on retry.");
+                    id = createShardIteratorId();
+                    if (maxRetries == 0) {
+                        throw e;
+                    }
+                }
+            }
+            throw new IllegalStateException(format("Cannot iterate on shard '%s' after max retries", shardPosition.shardName()));
         } else {
             throw new IllegalStateException(format("Cannot iterate on shard '%s' after stop signal was received", shardPosition.shardName()));
         }
