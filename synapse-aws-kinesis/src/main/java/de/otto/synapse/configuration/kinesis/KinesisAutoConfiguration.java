@@ -19,20 +19,22 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.internal.retry.SdkDefaultRetrySetting;
 import software.amazon.awssdk.core.retry.RetryPolicy;
 import software.amazon.awssdk.core.retry.RetryPolicyContext;
 import software.amazon.awssdk.core.retry.backoff.FullJitterBackoffStrategy;
+import software.amazon.awssdk.core.retry.conditions.AndRetryCondition;
+import software.amazon.awssdk.core.retry.conditions.OrRetryCondition;
 import software.amazon.awssdk.core.retry.conditions.RetryCondition;
+import software.amazon.awssdk.core.retry.conditions.RetryOnExceptionsCondition;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static java.util.concurrent.Executors.newCachedThreadPool;
-import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.slf4j.LoggerFactory.getLogger;
 import static software.amazon.awssdk.core.interceptor.SdkExecutionAttribute.OPERATION_NAME;
 import static software.amazon.awssdk.core.interceptor.SdkExecutionAttribute.SERVICE_NAME;
@@ -110,7 +112,8 @@ public class KinesisAutoConfiguration {
         @Override
         public boolean shouldRetry(RetryPolicyContext context) {
             logRetryAttempt(context);
-            return RetryCondition.defaultRetryCondition().shouldRetry(context);
+            //noinspection unchecked
+            return OrRetryCondition.create(RetryCondition.defaultRetryCondition(), RetryOnExceptionsCondition.create(SdkClientException.class)).shouldRetry(context);
         }
 
         private void logRetryAttempt(RetryPolicyContext c) {
