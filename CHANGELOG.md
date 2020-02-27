@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.21.4
+*synapse-aws-kinesis*
+* Enable retry if SDKClientExceptions occur
+
 ## 0.21.3
 *synapse-aws-kinesis*
 * Add retry mechanism for expired Kinesis shard iterators
