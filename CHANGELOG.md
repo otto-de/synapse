@@ -1,6 +1,6 @@
 # Release Notes
 
-## 0.21.5-SNAPSHOT
+## 0.21.5
 *synapse-edison*
 * Add StateRepositoryMetricsReporter to log the size of state repositories
 
