@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.21.5-SNAPSHOT
+*synapse-edison*
+* Add StateRepositoryMetricsReporter to log the size of state repositories
+
 ## 0.21.4
 *synapse-aws-kinesis*
 * Enable retry if SDKClientExceptions occur
