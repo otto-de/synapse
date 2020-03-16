@@ -50,6 +50,27 @@ class ChannelMetricsReporterTest {
     }
 
     @Test
+    void shouldRegisterGaugeIfReceivedMessageContainsAnUnknownChannel() {
+
+        //given
+        ChannelMetricsReporter metricsReporter = new ChannelMetricsReporter(meterRegistry, Optional.of(ImmutableList.of(eventSource1)), Optional.empty());
+
+        //when
+        metricsReporter.messageReceived(
+                MessageReceiverNotification.builder()
+                        .withChannelName("unknownChannel")
+                        .withChannelDurationBehind(channelDurationBehind()
+                                .with("shard1", Duration.ofSeconds(10))
+                                .build())
+                        .withStatus(MessageReceiverStatus.RUNNING)
+                        .withMessage("message")
+                        .build());
+
+        //then
+        assertThat(meterRegistry.get(GAUGE_NAME).tag("channel", "unknownChannel").gauge().measure().iterator().next().getValue(), is(10000.0));
+    }
+
+    @Test
     void shouldSendDurationBehindMetricWhenHealthy() {
         StartupHealthIndicator startupHealthIndicator = mock(StartupHealthIndicator.class);
         when(startupHealthIndicator.health()).thenReturn(Health.up().build());
