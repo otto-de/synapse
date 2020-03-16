@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.21.6
+*synapse-edison*
+* Fixes the StateRepositoryMetricsReporter in case the received message references a channel that is not created on startup
+
 ## 0.21.5
 *synapse-edison*
 * Add StateRepositoryMetricsReporter to log the size of state repositories
