@@ -28,6 +28,10 @@ public final class CompoundKey implements Key {
         return compactionKey;
     }
 
+    @Override
+    public boolean isCompoundKey() {
+        return true;
+    }
 
     @Override
     public boolean equals(Object o) {

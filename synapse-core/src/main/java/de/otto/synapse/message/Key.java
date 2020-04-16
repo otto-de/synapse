@@ -149,4 +149,6 @@ public interface Key extends Serializable {
      */
     @Nonnull String compactionKey();
 
+    boolean isCompoundKey();
+
 }

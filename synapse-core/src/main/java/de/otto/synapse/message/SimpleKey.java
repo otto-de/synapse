@@ -25,6 +25,11 @@ public final class SimpleKey implements Key {
         return key;
     }
 
+    @Override
+    public boolean isCompoundKey() {
+        return false;
+    }
+
 
     @Override
     public boolean equals(Object o) {
