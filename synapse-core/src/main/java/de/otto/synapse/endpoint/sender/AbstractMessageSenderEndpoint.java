@@ -31,6 +31,7 @@ import static java.util.concurrent.CompletableFuture.completedFuture;
  */
 public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpoint implements MessageSenderEndpoint {
 
+    public static final int BATCH_SENDER_TIMEOUT = 500;
     private final MessageTranslator<TextMessage> messageTranslator;
 
     /**
