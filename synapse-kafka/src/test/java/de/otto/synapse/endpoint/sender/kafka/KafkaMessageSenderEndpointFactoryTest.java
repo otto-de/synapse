@@ -1,4 +1,4 @@
-package de.otto.synapse.kafka;
+package de.otto.synapse.endpoint.sender.kafka;
 
 import de.otto.synapse.channel.selector.Kafka;
 import de.otto.synapse.channel.selector.MessageLog;
@@ -7,8 +7,6 @@ import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistration;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
-import de.otto.synapse.endpoint.sender.kafka.KafkaMessageSender;
-import de.otto.synapse.endpoint.sender.kafka.KafkaMessageSenderEndpointFactory;
 import de.otto.synapse.translator.MessageFormat;
 import org.junit.Test;
 import org.springframework.kafka.core.KafkaTemplate;

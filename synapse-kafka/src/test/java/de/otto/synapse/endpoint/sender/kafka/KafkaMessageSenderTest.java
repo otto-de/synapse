@@ -1,8 +1,7 @@
-package de.otto.synapse.kafka;
+package de.otto.synapse.endpoint.sender.kafka;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.endpoint.sender.kafka.KafkaMessageSender;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.message.TextMessage;
