@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.21.7
+*synapse-aws-kinesis*
+* Log exception type and whether a failed operation will be retried in retryCondition
+
 ## 0.21.6
 *synapse-edison*
 * Fixes the StateRepositoryMetricsReporter in case the received message references a channel that is not created on startup
