@@ -29,7 +29,12 @@ public class KafkaMessageSenderEndpointFactory implements MessageSenderEndpointF
 
     @Override
     public boolean matches(final Class<? extends Selector> channelSelector) {
-        return channelSelector.isAssignableFrom(Kafka.class);
+        return channelSelector.isAssignableFrom(selector());
+    }
+
+    @Override
+    public Class<? extends Selector> selector() {
+        return Kafka.class;
     }
 
 }

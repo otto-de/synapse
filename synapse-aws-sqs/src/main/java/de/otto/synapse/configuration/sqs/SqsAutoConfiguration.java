@@ -66,10 +66,10 @@ public class SqsAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(name = "messageQueueSenderEndpointFactory")
-    public MessageSenderEndpointFactory messageQueueSenderEndpointFactory(final MessageInterceptorRegistry registry,
-                                                                          final SqsAsyncClient sqsAsyncClient,
-                                                                          final @Value("${spring.application.name:Synapse Service}") String messageSenderName) {
+    @ConditionalOnMissingBean(name = "sqsMessageQueueSenderEndpointFactory")
+    public MessageSenderEndpointFactory sqsMessageQueueSenderEndpointFactory(final MessageInterceptorRegistry registry,
+                                                                             final SqsAsyncClient sqsAsyncClient,
+                                                                             final @Value("${spring.application.name:Synapse Service}") String messageSenderName) {
         return new SqsMessageSenderEndpointFactory(registry, sqsAsyncClient);
     }
 

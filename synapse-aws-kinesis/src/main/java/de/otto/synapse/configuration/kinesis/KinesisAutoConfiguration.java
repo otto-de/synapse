@@ -24,7 +24,6 @@ import software.amazon.awssdk.core.internal.retry.SdkDefaultRetrySetting;
 import software.amazon.awssdk.core.retry.RetryPolicy;
 import software.amazon.awssdk.core.retry.RetryPolicyContext;
 import software.amazon.awssdk.core.retry.backoff.FullJitterBackoffStrategy;
-import software.amazon.awssdk.core.retry.conditions.AndRetryCondition;
 import software.amazon.awssdk.core.retry.conditions.OrRetryCondition;
 import software.amazon.awssdk.core.retry.conditions.RetryCondition;
 import software.amazon.awssdk.core.retry.conditions.RetryOnExceptionsCondition;
@@ -78,9 +77,9 @@ public class KinesisAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(name = "messageLogSenderEndpointFactory")
-    public MessageSenderEndpointFactory messageLogSenderEndpointFactory(final MessageInterceptorRegistry registry,
-                                                                        final KinesisAsyncClient kinesisClient) {
+    @ConditionalOnMissingBean(name = "kinesisMessageLogSenderEndpointFactory")
+    public MessageSenderEndpointFactory kinesisMessageLogSenderEndpointFactory(final MessageInterceptorRegistry registry,
+                                                                               final KinesisAsyncClient kinesisClient) {
         LOG.info("Auto-configuring Kinesis MessageSenderEndpointFactory");
         return new KinesisMessageSenderEndpointFactory(registry, kinesisClient);
     }
