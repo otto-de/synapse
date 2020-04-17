@@ -111,20 +111,21 @@ public class KinesisAutoConfiguration {
 
         @Override
         public boolean shouldRetry(RetryPolicyContext context) {
-            logRetryAttempt(context);
             //noinspection unchecked
-            return OrRetryCondition.create(RetryCondition.defaultRetryCondition(), RetryOnExceptionsCondition.create(SdkClientException.class)).shouldRetry(context);
+            boolean shouldRetry = OrRetryCondition.create(RetryCondition.defaultRetryCondition(), RetryOnExceptionsCondition.create(SdkClientException.class)).shouldRetry(context);
+            logRetryAttempt(context, shouldRetry);
+            return shouldRetry;
         }
 
-        private void logRetryAttempt(RetryPolicyContext c) {
+        private void logRetryAttempt(RetryPolicyContext c, boolean shouldRetry) {
             final String operationName = c.executionAttributes().getAttribute(OPERATION_NAME);
             final String serviceName = c.executionAttributes().getAttribute(SERVICE_NAME);
 
             String message;
             if (c.exception() != null) {
-                message = String.format("'%s' request to '%s' failed with exception on try %s: %s", operationName, serviceName, c.retriesAttempted(), findExceptionMessage(c.exception()));
+                message = String.format("'%s' request to '%s' failed with exception on try %s: %s - %s - will retry: %s", operationName, serviceName, c.retriesAttempted(), c.exception().toString(), findExceptionMessage(c.exception()), shouldRetry);
             } else {
-                message = String.format("'%s' request to '%s' failed without exception on try %s:", operationName, serviceName, c.retriesAttempted());
+                message = String.format("'%s' request to '%s' failed without exception on try %s  - will retry: %s", operationName, serviceName, c.retriesAttempted(), shouldRetry);
             }
 
             if (c.retriesAttempted() >= errorCount) {
