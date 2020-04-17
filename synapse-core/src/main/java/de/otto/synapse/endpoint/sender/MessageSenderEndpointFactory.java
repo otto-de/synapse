@@ -41,4 +41,5 @@ public interface MessageSenderEndpointFactory {
      */
     boolean matches(final Class<? extends Selector> channelSelector);
 
+    Class<? extends Selector> selector();
 }

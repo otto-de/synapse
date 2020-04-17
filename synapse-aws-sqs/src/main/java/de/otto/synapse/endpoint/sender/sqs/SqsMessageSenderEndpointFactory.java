@@ -38,7 +38,12 @@ public class SqsMessageSenderEndpointFactory implements MessageSenderEndpointFac
 
     @Override
     public boolean matches(Class<? extends Selector> channelSelector) {
-        return channelSelector.isAssignableFrom(Sqs.class);
+        return channelSelector.isAssignableFrom(selector());
+    }
+
+    @Override
+    public Class<? extends Selector> selector() {
+        return Sqs.class;
     }
 
     private String urlOf(final @Nonnull String channelName) {

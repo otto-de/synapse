@@ -19,7 +19,7 @@ import static org.springframework.beans.factory.support.BeanDefinitionBuilder.ge
 /**
  * {@link ImportBeanDefinitionRegistrar} for message log support.
  *
- * @see EnableMessageQueueReceiverEndpoint
+ * @see EnableMessageSenderEndpoint
  */
 public class MessageSenderEndpointBeanRegistrar extends AbstractAnnotationBasedBeanRegistrar {
 

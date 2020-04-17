@@ -33,7 +33,12 @@ public class KinesisMessageSenderEndpointFactory implements MessageSenderEndpoin
 
     @Override
     public boolean matches(final Class<? extends Selector> channelSelector) {
-        return channelSelector.isAssignableFrom(Kinesis.class);
+        return channelSelector.isAssignableFrom(selector());
+    }
+
+    @Override
+    public Class<? extends Selector> selector() {
+        return Kinesis.class;
     }
 
 }

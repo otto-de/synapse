@@ -12,21 +12,14 @@ public class InMemoryMessageSenderFactory implements MessageSenderEndpointFactor
 
     private final MessageInterceptorRegistry registry;
     private final InMemoryChannels inMemoryChannels;
-    private final Class<? extends Selector> matching;
-
-    public InMemoryMessageSenderFactory(final MessageInterceptorRegistry registry,
-                                        final InMemoryChannels inMemoryChannels) {
-        this.registry = registry;
-        this.inMemoryChannels = inMemoryChannels;
-        this.matching = null;
-    }
+    private final Class<? extends Selector> selector;
 
     public InMemoryMessageSenderFactory(final MessageInterceptorRegistry registry,
                                         final InMemoryChannels inMemoryChannels,
-                                        final Class<? extends Selector> matching) {
+                                        final Class<? extends Selector> selector) {
         this.registry = registry;
         this.inMemoryChannels = inMemoryChannels;
-        this.matching = matching;
+        this.selector = selector;
     }
 
     @Override
@@ -40,7 +33,11 @@ public class InMemoryMessageSenderFactory implements MessageSenderEndpointFactor
 
     @Override
     public boolean matches(Class<? extends Selector> channelSelector) {
-        return matching == null || matching.isAssignableFrom(channelSelector);
+        return selector == null || selector.isAssignableFrom(channelSelector);
     }
 
+    @Override
+    public Class<? extends Selector> selector() {
+        return selector;
+    }
 }
