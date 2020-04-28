@@ -6,19 +6,22 @@ import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.endpoint.sender.kafka.KafkaMessageSenderEndpointFactory;
 import org.slf4j.Logger;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.annotation.EnableKafka;
-import org.springframework.kafka.annotation.EnableKafkaStreams;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Configuration
 @Import(SynapseAutoConfiguration.class)
+@EnableScheduling
 @EnableKafka
-@EnableKafkaStreams
+@EnableConfigurationProperties(KafkaProperties.class)
 public class KafkaAutoConfiguration {
 
     private static final Logger LOG = getLogger(KafkaAutoConfiguration.class);

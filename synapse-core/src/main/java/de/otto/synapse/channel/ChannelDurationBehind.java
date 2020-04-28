@@ -6,10 +6,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.concurrent.ThreadSafe;
 import java.io.Serializable;
 import java.time.Duration;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 import static com.google.common.base.Functions.constant;
 import static java.util.function.Function.identity;
@@ -35,7 +32,7 @@ public final class ChannelDurationBehind implements Serializable {
         return new ChannelDurationBehind();
     }
 
-    public static ChannelDurationBehind unknown(final @Nonnull List<String> shardNames) {
+    public static ChannelDurationBehind unknown(final @Nonnull Collection<String> shardNames) {
         return channelDurationBehind()
                 .withAll(shardNames.stream().collect(toMap(identity(), constant(UNKNOWN_DURATION_BEHIND))))
                 .build();
@@ -93,8 +90,23 @@ public final class ChannelDurationBehind implements Serializable {
             return this;
         }
 
+        public Builder withUnknown(final @Nonnull String shardName) {
+            shards.put(shardName, UNKNOWN_DURATION_BEHIND);
+            return this;
+        }
+
         public Builder withAll(final Map<String, Duration> shards) {
             this.shards.putAll(shards);
+            return this;
+        }
+
+        public Builder withAllUnknown(final Set<String> shardNames) {
+            shardNames.forEach(this::withUnknown);
+            return this;
+        }
+
+        public Builder without(final @Nonnull String shardName) {
+            shards.remove(shardName);
             return this;
         }
 
