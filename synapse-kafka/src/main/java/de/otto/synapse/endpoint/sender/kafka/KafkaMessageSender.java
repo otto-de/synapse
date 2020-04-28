@@ -1,32 +1,30 @@
 package de.otto.synapse.endpoint.sender.kafka;
 
-import com.google.common.collect.ImmutableList;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.MessageTranslator;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.header.internals.RecordHeader;
 import org.slf4j.Logger;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import javax.annotation.Nonnull;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.CompletableFuture.allOf;
-import static org.apache.kafka.common.utils.Utils.murmur2;
-import static org.apache.kafka.common.utils.Utils.toPositive;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class KafkaMessageSender extends AbstractMessageSenderEndpoint {
 
     private static final Logger LOG = getLogger(KafkaMessageSender.class);
+    public static final long UPDATE_PARTITION_DELAY = 10_000L;
 
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final AtomicReference<KafkaEncoder> encoder;
 
     public KafkaMessageSender(final String channelName,
                               final MessageInterceptorRegistry interceptorRegistry,
@@ -34,44 +32,22 @@ public class KafkaMessageSender extends AbstractMessageSenderEndpoint {
                               final KafkaTemplate<String, String> kafkaTemplate) {
         super(channelName, interceptorRegistry, messageTranslator);
         this.kafkaTemplate = kafkaTemplate;
+        this.encoder = new AtomicReference<>(encoder());
+    }
+
+    @Scheduled(initialDelay = UPDATE_PARTITION_DELAY, fixedDelay = UPDATE_PARTITION_DELAY)
+    public void updatePartitions() {
+        encoder.set(encoder());
     }
 
     @Override
     protected CompletableFuture<Void> doSend(@Nonnull TextMessage message) {
         // TODO: Introduce a response object and return it instead of Void
-
-        if (message.getKey().isCompoundKey()) {
-            final String partitionKey = message.getKey().partitionKey();
-            final int partition = kafkaPartitionFrom(partitionKey);
-            // Just because we need a CompletableFuture<Void>, no CompletableFuture<SendMessageBatchResponse>:
-            return allOf(kafkaTemplate
-                    .send(new ProducerRecord<>(
-                            getChannelName(),
-                            partition,
-                            message.getKey().compactionKey(),
-                            message.getPayload(),
-                            headersOf(message)
-                    ))
-                    .completable());
-        } else {
-            return allOf(kafkaTemplate
-                    .send(new ProducerRecord<>(
-                            getChannelName(),
-                            null,
-                            message.getKey().compactionKey(),
-                            message.getPayload(),
-                            headersOf(message)))
-                    .completable());
-        }
-
-    }
-
-    private List<org.apache.kafka.common.header.Header> headersOf(final TextMessage message) {
-        final ImmutableList.Builder<org.apache.kafka.common.header.Header> messageAttributes = ImmutableList.builder();
-        message.getHeader().getAll().entrySet().forEach(entry -> {
-            messageAttributes.add(new RecordHeader(entry.getKey(), entry.getValue().getBytes(UTF_8)));
-        });
-        return messageAttributes.build();
+        final ProducerRecord<String, String> record = encoder.get().apply(message);
+        // Just because we need a CompletableFuture<Void>, no CompletableFuture<SendMessageBatchResponse>:
+        return allOf(kafkaTemplate
+                .send(record)
+                .completable());
     }
 
     @Override
@@ -79,14 +55,13 @@ public class KafkaMessageSender extends AbstractMessageSenderEndpoint {
         return allOf(messageStream.map(this::doSend).toArray(CompletableFuture[]::new));
     }
 
-    private int kafkaPartitionFrom(String partitionKey) {
-        final int numPartitions = kafkaTemplate.partitionsFor(getChannelName()).size();
-        return toPositive(murmur2(partitionKey.getBytes())) % numPartitions;
-    }
-
     @Override
     public MessageFormat getMessageFormat() {
         return MessageFormat.V1;
     }
 
+    private KafkaEncoder encoder() {
+        final int numPartitions = kafkaTemplate.partitionsFor(getChannelName()).size();
+        return new KafkaEncoder(getChannelName(), numPartitions);
+    }
 }

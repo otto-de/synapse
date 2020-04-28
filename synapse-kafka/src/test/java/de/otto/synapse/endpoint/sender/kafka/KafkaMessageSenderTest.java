@@ -3,6 +3,7 @@ package de.otto.synapse.endpoint.sender.kafka;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Header;
+import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.translator.MessageTranslator;
@@ -218,6 +219,28 @@ public class KafkaMessageSenderTest {
             final ConsumerRecord<String, String> record = getSingleRecord(consumer, KAFKA_TOPIC, 250L);
             assertThat(record.key(), is("someKey"));
             assertThat(record.value(), is(nullValue()));
+        }
+    }
+
+    @Test
+    public void shouldSendCompoundKeysWithDefaultMessageHeaders() {
+        // given
+        final Message<ExampleJsonObject> message = message(
+                Key.of("somePartitionKey", "someCompactionKey"),
+                new ExampleJsonObject("banana"));
+        // given
+
+        try (final Consumer<String, String> consumer = getKafkaConsumer("someTestGroup")) {
+            embeddedKafka.consumeFromAnEmbeddedTopic(consumer, KAFKA_TOPIC);
+
+            // when
+            messageSender.send(message).join();
+
+            // then
+            final ConsumerRecord<String, String> record = getSingleRecord(consumer, KAFKA_TOPIC, 250L);
+            assertThat(record.key(), is("someCompactionKey"));
+            assertThat(record.headers().lastHeader("_synapse_msg_partitionKey"), is("somePartitionKey".getBytes()));
+            assertThat(record.headers().lastHeader("_synapse_msg_compactionKey"), is("someCompactionKey".getBytes()));
         }
     }
 
