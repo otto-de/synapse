@@ -1,0 +1,246 @@
+package de.otto.synapse.endpoint.receiver.kafka;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.ShardPosition;
+import de.otto.synapse.channel.ShardResponse;
+import de.otto.synapse.channel.StartFrom;
+import de.otto.synapse.consumer.MessageConsumer;
+import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.test.EmbeddedKafkaBroker;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.function.Predicate;
+
+import static com.google.common.collect.Sets.newConcurrentHashSet;
+import static de.otto.synapse.channel.ChannelPosition.channelPosition;
+import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
+import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.channel.StopCondition.emptyResponse;
+import static java.util.concurrent.Executors.newFixedThreadPool;
+import static org.awaitility.Awaitility.waitAtMost;
+import static org.awaitility.Duration.TEN_SECONDS;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.slf4j.LoggerFactory.getLogger;
+import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
+import static org.springframework.kafka.test.utils.KafkaTestUtils.producerProps;
+
+@RunWith(SpringRunner.class)
+@DirtiesContext
+@EmbeddedKafka(
+        partitions = 1,
+        topics = KafkaMessageLogReceiverEndpointIntegrationTest.KAFKA_TOPIC)
+    public class KafkaMessageLogReceiverEndpointIntegrationTest {
+    private static final Logger LOG = getLogger(KafkaMessageLogReceiverEndpointIntegrationTest.class);
+    public static final String KAFKA_TOPIC = "test-stream";
+
+    @Autowired
+    private KafkaTemplate<String, String> template;
+    @Autowired
+    ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    private EmbeddedKafkaBroker embeddedKafkaBroker;
+
+    private KafkaConsumer<String, String> kafkaConsumer;
+    private MessageInterceptorRegistry interceptorRegistry;
+    private KafkaMessageLogReceiverEndpoint endpoint;
+    private ExecutorService executorService = newFixedThreadPool(2);
+
+    @Before
+    public void setUp() {
+        final String groupId = "KafkaMessageLogReceiverEndpointTest";
+        final Map<String, Object> configs = new HashMap<>(consumerProps(
+                groupId,
+                "true",
+                embeddedKafkaBroker));
+        kafkaConsumer = new KafkaConsumer<>(configs, new StringDeserializer(), new StringDeserializer());
+
+        interceptorRegistry = new MessageInterceptorRegistry();
+        endpoint = new KafkaMessageLogReceiverEndpoint(
+                KAFKA_TOPIC,
+                interceptorRegistry,
+                kafkaConsumer,
+                executorService,
+                eventPublisher);
+    }
+
+    @After
+    public void tearDown() {
+        endpoint.stop();
+        kafkaConsumer.close();
+    }
+
+    @Test
+    public void shouldAssignPartitions() throws Exception {
+        // given
+        template.send(new ProducerRecord<>(KAFKA_TOPIC, "my-aggregate-id", "{\"event\":\"Test Event\"}"));
+
+        // when
+        final CompletableFuture<ChannelPosition> channelPosition = endpoint.consumeUntil(fromHorizon(), messagesReceived());
+
+        // then
+        waitAtMost(TEN_SECONDS).until(channelPosition::isDone);
+        assertThat(channelPosition.get().shards().isEmpty(), is(false));
+    }
+
+    @Test
+    public void shouldSubscribeToStream() {
+        // given
+        template.send(new ProducerRecord<>(KAFKA_TOPIC, "my-aggregate-id", "{\"event\":\"Test Event\"}"));
+
+        // when
+        final CompletableFuture<ChannelPosition> channelPosition = endpoint.consumeUntil(fromHorizon(), messagesReceived());
+
+        // then
+        waitAtMost(TEN_SECONDS).until(channelPosition::isDone);
+        assertThat(kafkaConsumer.subscription(), contains("test-stream"));
+    }
+
+    @Test
+    public void shouldProcessRecords() throws ExecutionException, InterruptedException {
+        // given
+        template.send(new ProducerRecord<>(KAFKA_TOPIC, "test-key", "{\"event\":\"Test Event\"}"));
+
+        // when
+        final Set<String> receivedMessageKeys = newConcurrentHashSet();
+        endpoint.getMessageDispatcher().add(MessageConsumer.of(".*", String.class, m -> receivedMessageKeys.add(m.getKey().compactionKey())));
+        final CompletableFuture<ChannelPosition> channelPosition = endpoint.consumeUntil(fromHorizon(), messagesReceived());
+
+        // then
+        waitAtMost(TEN_SECONDS).until(channelPosition::isDone);
+        final ShardPosition shard = channelPosition.get().shard("0");
+        assertThat(shard.startFrom(), is(StartFrom.POSITION));
+        assertThat(receivedMessageKeys, is(not(empty())));
+        assertThat(receivedMessageKeys.contains("test-key"), is(true));
+    }
+
+    @Test
+    public void shouldStartFromHorizon() {
+        // given
+        for (int i = 0; i < 10; i++) {
+            template.send(new ProducerRecord<>(KAFKA_TOPIC, "shouldStartFromHorizon" + i, "{\"event\":\"Test Event\"}"));
+        }
+
+        endpoint.consumeUntil(fromHorizon(), emptyResponse()).join();
+
+        // when
+        final List<String> receivedMessageKeys = new ArrayList<>();
+        endpoint.getMessageDispatcher().add(MessageConsumer.of("shouldStartFromHorizon.*", String.class, m -> receivedMessageKeys.add(m.getKey().compactionKey())));
+        final CompletableFuture<ChannelPosition> channelPosition = endpoint.consumeUntil(fromHorizon(), messagesReceived());
+
+        // then
+        waitAtMost(TEN_SECONDS).until(channelPosition::isDone);
+        assertThat(receivedMessageKeys.subList(receivedMessageKeys.size()-10, receivedMessageKeys.size()), contains("shouldStartFromHorizon0", "shouldStartFromHorizon1", "shouldStartFromHorizon2", "shouldStartFromHorizon3", "shouldStartFromHorizon4", "shouldStartFromHorizon5", "shouldStartFromHorizon6", "shouldStartFromHorizon7", "shouldStartFromHorizon8", "shouldStartFromHorizon9"));
+    }
+
+    @Test
+    public void shouldStartFromPosition() {
+        // given
+        for (int i = 0; i < 100; i++) {
+            template.send(new ProducerRecord<>(KAFKA_TOPIC, "" + i, "{\"event\":\"Test Event\"}"));
+        }
+
+        endpoint.consumeUntil(fromHorizon(), emptyResponse()).join();
+
+        // when
+        final Set<String> receivedMessageKeys = newConcurrentHashSet();
+        endpoint.getMessageDispatcher().add(MessageConsumer.of(".*", String.class, m -> receivedMessageKeys.add(m.getKey().compactionKey())));
+
+        final ChannelPosition startFrom = channelPosition(fromPosition("0", "25"), fromPosition("1", "25"));
+        final CompletableFuture<ChannelPosition> channelPosition = endpoint.consumeUntil(startFrom, messagesReceived());
+
+        // then
+        waitAtMost(TEN_SECONDS).until(channelPosition::isDone);
+        assertThat(receivedMessageKeys.size(), is(greaterThan(40)));
+    }
+
+    @Test
+    public void shouldContinueFromPosition() throws ExecutionException, InterruptedException {
+        // given
+        for (int i = 0; i < 10; i++) {
+            template.send(new ProducerRecord<>(KAFKA_TOPIC, "" + i, "{\"event\":\"Test Event\"}")).get();
+        }
+
+        ChannelPosition startFrom = endpoint.consumeUntil(fromHorizon(), emptyResponse()).join();
+
+        // when
+        for (int j = 0; j < 10; j++) {
+            final List<String> receivedMessageKeys = new ArrayList<>();
+            endpoint.getMessageDispatcher().add(MessageConsumer.of(".*", String.class, m -> receivedMessageKeys.add(m.getKey().compactionKey())));
+
+            final CompletableFuture<ChannelPosition> channelPosition = endpoint.consumeUntil(startFrom, (_x) -> receivedMessageKeys.size() == 10);
+            for (int i = 0; i < 10; i++) {
+                final ProducerRecord<String, String> record = new ProducerRecord<>(KAFKA_TOPIC, "continued-" + j + "/" + i, "{\"event\":\"Test Event\"}");
+                template.send(record).get();
+            }
+
+            // then
+            waitAtMost(TEN_SECONDS).until(channelPosition::isDone);
+            assertThat(receivedMessageKeys.size(), is(10));
+            assertThat(receivedMessageKeys, contains("continued-"+j + "/0", "continued-"+j + "/1", "continued-"+j + "/2", "continued-"+j + "/3", "continued-"+j + "/4", "continued-"+j + "/5", "continued-"+j + "/6", "continued-"+j + "/7", "continued-"+j + "/8", "continued-"+j + "/9"));
+            startFrom = channelPosition.get();
+        }
+    }
+
+    private Predicate<ShardResponse> messagesReceived() {
+        return shardResponse -> !shardResponse.getMessages().isEmpty();
+    }
+
+    @Configuration
+    @EnableKafka
+    public static class TestConfiguration {
+
+
+        @Bean
+        public ProducerFactory<String, String> producerFactory(final EmbeddedKafkaBroker embeddedKafkaBroker) {
+            final Map<String, Object> configs = producerProps(embeddedKafkaBroker);
+            configs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+            configs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+            return new DefaultKafkaProducerFactory<>(configs);
+        }
+
+        @Bean
+        public KafkaTemplate<String, String> kafkaTemplate(final ProducerFactory<String, String> producerFactory) {
+            return new KafkaTemplate<>(producerFactory);
+        }
+    }
+
+    private static class ExampleJsonObject {
+        @JsonProperty
+        private String value;
+
+        public ExampleJsonObject() {
+        }
+
+        ExampleJsonObject(String value) {
+            this.value = value;
+        }
+
+    }
+}

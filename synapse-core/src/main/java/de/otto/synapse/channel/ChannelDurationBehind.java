@@ -16,7 +16,7 @@ import static java.util.stream.Collectors.toMap;
 public final class ChannelDurationBehind implements Serializable {
 
     private static final Duration MAX_DURATION = Duration.ofMillis(Long.MAX_VALUE);
-    public static final Duration UNKNOWN_DURATION_BEHIND = Duration.ofMillis(Long.MAX_VALUE);
+    private static final Duration UNKNOWN_DURATION_BEHIND = Duration.ofMillis(Long.MAX_VALUE);
 
     private final ImmutableMap<String, Duration> shardDurationBehind;
 

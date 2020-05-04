@@ -55,7 +55,7 @@ public class KafkaDecoderTest {
         TextMessage decodedMessage = decoder.apply(record);
 
         // then
-        final ShardPosition expectedShardPosition = fromPosition("0", "43");
+        final ShardPosition expectedShardPosition = fromPosition("0", "42");
         final ShardPosition decodedShardPosition = decodedMessage.getHeader().getShardPosition().orElse(null);
 
         assertThat(decodedShardPosition, is(expectedShardPosition));

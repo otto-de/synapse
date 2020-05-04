@@ -10,10 +10,8 @@ import org.junit.Test;
 import java.time.Instant;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.emptyIterable;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 
 public class KafkaEncoderTest {
 
@@ -30,9 +28,12 @@ public class KafkaEncoderTest {
         // then
         assertThat(record.key(), is("someKey"));
         assertThat(record.value(), is("payload"));
-        assertThat(record.headers(), is(emptyIterable()));
+        assertThat(record.headers(), containsInAnyOrder(
+                new RecordHeader("_synapse_msg_partitionKey", "someKey".getBytes(UTF_8)),
+                new RecordHeader("_synapse_msg_compactionKey", "someKey".getBytes(UTF_8))
+        ));
         assertThat(record.topic(), is("test"));
-        assertThat(record.partition(), is(0));
+        assertThat(record.partition(), is(nullValue()));
     }
 
     @Test
@@ -51,10 +52,12 @@ public class KafkaEncoderTest {
         final ProducerRecord<String, String> record = encoder.apply(message);
 
         // then
-        assertThat(record.headers(), is(asList(
+        assertThat(record.headers(), containsInAnyOrder(
+                new RecordHeader("_synapse_msg_partitionKey", "someKey".getBytes(UTF_8)),
+                new RecordHeader("_synapse_msg_compactionKey", "someKey".getBytes(UTF_8)),
                 new RecordHeader("foo", "bar".getBytes(UTF_8)),
-                new RecordHeader("foobar", "42".getBytes(UTF_8))
-        )));
+                new RecordHeader("foobar", "1970-01-01T00:00:00.042Z".getBytes(UTF_8))
+        ));
     }
 
     @Test
@@ -70,17 +73,17 @@ public class KafkaEncoderTest {
 
         // then
         assertThat(firstRecord.key(), is("someKeyForPartition0"));
-        assertThat(firstRecord.headers(), is(asList(
+        assertThat(firstRecord.headers(), containsInAnyOrder(
                 new RecordHeader("_synapse_msg_partitionKey", "0".getBytes(UTF_8)),
                 new RecordHeader("_synapse_msg_compactionKey", "someKeyForPartition0".getBytes(UTF_8))
-        )));
+        ));
         assertThat(firstRecord.partition(), is(0));
         // and
         assertThat(secondRecord.key(), is("someKeyForPartition1"));
-        assertThat(secondRecord.headers(), is(asList(
+        assertThat(secondRecord.headers(), containsInAnyOrder(
                 new RecordHeader("_synapse_msg_partitionKey", "1".getBytes(UTF_8)),
                 new RecordHeader("_synapse_msg_compactionKey", "someKeyForPartition1".getBytes(UTF_8))
-        )));
+        ));
         assertThat(secondRecord.partition(), is(1));
     }
 

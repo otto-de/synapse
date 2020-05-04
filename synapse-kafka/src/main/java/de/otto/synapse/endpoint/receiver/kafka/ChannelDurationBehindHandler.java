@@ -77,7 +77,7 @@ class ChannelDurationBehindHandler implements ConsumerRebalanceListener {
         }
     }
 
-    AtomicReference<ChannelDurationBehind> getChannelDurationBehind() {
-        return channelDurationBehind;
+    ChannelDurationBehind getChannelDurationBehind() {
+        return channelDurationBehind.get();
     }
 }

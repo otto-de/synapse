@@ -31,7 +31,7 @@ public class ChannelDurationBehindHandlerTest {
         ));
 
         // then
-        final ChannelDurationBehind durationBehind = handler.getChannelDurationBehind().get();
+        final ChannelDurationBehind durationBehind = handler.getChannelDurationBehind();
         assertThat(durationBehind.getDurationBehind(), is(ofMillis(Long.MAX_VALUE)));
         assertThat(durationBehind.getShardDurationsBehind(), is(ImmutableMap.of(
                 "0", ofMillis(Long.MAX_VALUE),
@@ -55,7 +55,7 @@ public class ChannelDurationBehindHandlerTest {
         ));
 
         // then
-        final ChannelDurationBehind durationBehind = handler.getChannelDurationBehind().get();
+        final ChannelDurationBehind durationBehind = handler.getChannelDurationBehind();
         assertThat(durationBehind.getDurationBehind(), is(ofMillis(Long.MAX_VALUE)));
         assertThat(durationBehind.getShardDurationsBehind(), is(ImmutableMap.of(
                 "0", ofMillis(Long.MAX_VALUE)
@@ -76,7 +76,7 @@ public class ChannelDurationBehindHandlerTest {
         handler.update("1", ofMillis(42));
 
         // then
-        final ChannelDurationBehind durationBehind = handler.getChannelDurationBehind().get();
+        final ChannelDurationBehind durationBehind = handler.getChannelDurationBehind();
         assertThat(durationBehind.getDurationBehind(), is(ofMillis(Long.MAX_VALUE)));
         assertThat(durationBehind.getShardDurationsBehind(), is(ImmutableMap.of(
                 "0", ofMillis(Long.MAX_VALUE),

@@ -13,6 +13,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.streams.StreamsConfig;
@@ -40,6 +41,7 @@ import static com.google.common.collect.Iterables.getFirst;
 import static com.google.common.collect.Iterables.getLast;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingSenderChannelsWith;
 import static de.otto.synapse.message.Message.message;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.kafka.annotation.KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME;
@@ -87,7 +89,10 @@ public class KafkaMessageSenderTest {
             final ConsumerRecord<String, String> record = getSingleRecord(consumer, KAFKA_TOPIC, 250L);
             assertThat(record.key(), is("someKey"));
             assertThat(record.value(), is("{\"value\":\"banana\"}"));
-            assertThat(record.headers(), is(emptyIterable()));
+            assertThat(record.headers(), containsInAnyOrder(
+                    new RecordHeader("_synapse_msg_partitionKey", "someKey".getBytes(UTF_8)),
+                    new RecordHeader("_synapse_msg_compactionKey", "someKey".getBytes(UTF_8))
+            ));
             assertThat(record.topic(), is(KAFKA_TOPIC));
             assertThat(record.partition(), is(0));
         }
@@ -239,8 +244,8 @@ public class KafkaMessageSenderTest {
             // then
             final ConsumerRecord<String, String> record = getSingleRecord(consumer, KAFKA_TOPIC, 250L);
             assertThat(record.key(), is("someCompactionKey"));
-            assertThat(record.headers().lastHeader("_synapse_msg_partitionKey"), is("somePartitionKey".getBytes()));
-            assertThat(record.headers().lastHeader("_synapse_msg_compactionKey"), is("someCompactionKey".getBytes()));
+            assertThat(record.headers().lastHeader("_synapse_msg_partitionKey").value(), is("somePartitionKey".getBytes()));
+            assertThat(record.headers().lastHeader("_synapse_msg_compactionKey").value(), is("someCompactionKey".getBytes()));
         }
     }
 

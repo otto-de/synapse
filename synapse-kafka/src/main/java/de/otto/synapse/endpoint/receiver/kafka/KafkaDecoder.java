@@ -44,7 +44,7 @@ public class KafkaDecoder implements Decoder<ConsumerRecord<String, String>> {
 
     private de.otto.synapse.message.Header toHeader(final ConsumerRecord<String, String> record) {
         de.otto.synapse.message.Header.Builder builder = de.otto.synapse.message.Header.builder()
-                .withShardPosition(fromPosition("" + record.partition(), "" + (record.offset() + 1)));
+                .withShardPosition(fromPosition("" + record.partition(), "" + (record.offset())));
         record.headers().forEach(header -> {
             builder.withAttribute(header.key(), toString(header.value()));
         });
