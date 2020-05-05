@@ -1,6 +1,8 @@
 package de.otto.synapse.configuration.kafka;
 
 
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
+import de.otto.synapse.endpoint.receiver.kafka.KafkaMessageLogReceiverEndpointFactory;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.endpoint.sender.kafka.KafkaMessageSenderEndpointFactory;
 import org.junit.Test;
@@ -24,35 +26,28 @@ import static org.junit.Assert.assertThat;
 @DirtiesContext
 @EmbeddedKafka(
         partitions = 1,
-        topics = KafkaAutoConfigurationIntegrationTest.KAFKA_TOPIC)
+        topics = SynapseKafkaAutoConfigurationIntegrationTest.KAFKA_TOPIC)
 @SpringBootTest(
         properties = {
                 "spring.main.allow-bean-definition-overriding=true"
         },
-        classes = KafkaAutoConfigurationIntegrationTest.class
+        classes = SynapseKafkaAutoConfigurationIntegrationTest.class
 )
-public class KafkaAutoConfigurationIntegrationTest {
+public class SynapseKafkaAutoConfigurationIntegrationTest {
 
     public static final String KAFKA_TOPIC = "test-stream";
 
     @Autowired
     private MessageSenderEndpointFactory messageSenderEndpointFactory;
 
-    /*
-    TODO: not yet implemented
-
     @Autowired
     private MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory;
-    */
 
     @Test
     public void shouldInjectQualifiedMessageSenderEndpointFactories() {
         assertThat(messageSenderEndpointFactory, is(notNullValue()));
         assertThat(messageSenderEndpointFactory, instanceOf(KafkaMessageSenderEndpointFactory.class));
-        /*
-        TODO: not yet implemented
         assertThat(messageLogReceiverEndpointFactory, is(notNullValue()));
-        assertThat(messageLogReceiverEndpointFactory, instanceOf(MessageLogReceiverEndpointFactory.class));
-         */
+        assertThat(messageLogReceiverEndpointFactory, instanceOf(KafkaMessageLogReceiverEndpointFactory.class));
     }
 }

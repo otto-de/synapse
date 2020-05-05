@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.receiver.kafka;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import de.otto.synapse.channel.ShardResponse;
@@ -231,16 +230,4 @@ import static org.springframework.kafka.test.utils.KafkaTestUtils.producerProps;
         }
     }
 
-    private static class ExampleJsonObject {
-        @JsonProperty
-        private String value;
-
-        public ExampleJsonObject() {
-        }
-
-        ExampleJsonObject(String value) {
-            this.value = value;
-        }
-
-    }
 }
