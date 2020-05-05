@@ -79,4 +79,8 @@ public class DelegateMessageLogReceiverEndpoint implements MessageLogReceiverEnd
     public TextMessage intercept(final @Nonnull TextMessage message) {
         return delegate.intercept(message);
     }
+
+    public MessageLogReceiverEndpoint getDelegate() {
+        return delegate;
+    }
 }
