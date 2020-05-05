@@ -1,8 +1,10 @@
-package de.otto.synapse.endpoint.sender;
+package de.otto.synapse.endpoint;
 
 import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.channel.selector.MessageQueue;
 import de.otto.synapse.channel.selector.Selector;
+import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
+import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.translator.MessageFormat;
 import org.junit.Test;
 
@@ -16,7 +18,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class SpecifigMessageLog implements MessageLog {}
+class SpecificMessageLog implements MessageLog {}
 
 public class BestMatchingFactoryComparatorTest {
 
@@ -38,16 +40,16 @@ public class BestMatchingFactoryComparatorTest {
         final MessageSenderEndpointFactory first = mock(MessageSenderEndpointFactory.class);
         when(first.selector()).thenAnswer((_x) -> MessageLog.class);
         final MessageSenderEndpointFactory second = mock(MessageSenderEndpointFactory.class);
-        when(second.selector()).thenAnswer((_x) -> SpecifigMessageLog.class);
+        when(second.selector()).thenAnswer((_x) -> SpecificMessageLog.class);
 
-        final BestMatchingFactoryComparator comparator = new BestMatchingFactoryComparator(SpecifigMessageLog.class);
+        final BestMatchingFactoryComparator comparator = new BestMatchingFactoryComparator(SpecificMessageLog.class);
         assertThat(comparator.compare(first, second), is(+1));
         assertThat(comparator.compare(second, first), is(-1));
     }
 
     @Test
     public void shouldSortFactories() {
-        final MessageSenderEndpointFactory first = someFactoryFor(SpecifigMessageLog.class);
+        final MessageSenderEndpointFactory first = someFactoryFor(SpecificMessageLog.class);
         final MessageSenderEndpointFactory second = someFactoryFor(MessageLog.class);
         final MessageSenderEndpointFactory third = someFactoryFor(MessageQueue.class);
 
@@ -58,7 +60,7 @@ public class BestMatchingFactoryComparatorTest {
                 first,
                 second,
                 third);
-        factories.sort(new BestMatchingFactoryComparator(SpecifigMessageLog.class));
+        factories.sort(new BestMatchingFactoryComparator(SpecificMessageLog.class));
         assertThat(factories, contains(first, first, second, second, third, third));
     }
 

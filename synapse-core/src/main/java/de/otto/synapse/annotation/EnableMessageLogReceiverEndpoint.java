@@ -1,7 +1,9 @@
 package de.otto.synapse.annotation;
 
-import de.otto.synapse.channel.StartFrom;
+import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.configuration.MessageLogReceiverEndpointAutoConfiguration;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
@@ -49,5 +51,29 @@ public @interface EnableMessageLogReceiverEndpoint {
      * @return LATEST or HORIZON
      */
     String startFrom() default "HORIZON";
+
+    /**
+     * Selector used to select one of possibly multiple available
+     * {@link MessageLogReceiverEndpointFactory} instances used to
+     * create the {@link MessageLogReceiverEndpoint}.
+     *
+     * <p>
+     * Example: the KafkaMessageLogReceiverEndpointFactory matches both {@link MessageLog MessageLog.class}
+     * and Kafka.class. The following usage of the annotation is selecting the KafkaMessageLogReceiverEndpointFactory
+     * using the more specific Kafka selector:
+     * </p>
+     * <pre><code>
+     * {@literal @}Configuration
+     * {@literal @}EnableMessageLogReceiverEndpoint(
+     *      channelName = "some-log",
+     *      selector = Kafka.class)
+     * class MyExampleConfiguration {
+     * }
+     * </code></pre>
+     *
+     * @return MessageLog selector class
+     */
+    Class<? extends MessageLog> selector() default MessageLog.class;
+
 }
 

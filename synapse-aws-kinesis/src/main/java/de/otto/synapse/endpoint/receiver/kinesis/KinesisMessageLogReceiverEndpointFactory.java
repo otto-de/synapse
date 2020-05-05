@@ -1,5 +1,7 @@
 package de.otto.synapse.endpoint.receiver.kinesis;
 
+import de.otto.synapse.channel.selector.Kinesis;
+import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
@@ -57,6 +59,16 @@ public class KinesisMessageLogReceiverEndpointFactory implements MessageLogRecei
     @Override
     public MessageLogReceiverEndpoint create(@Nonnull String channelName) {
         return new KinesisMessageLogReceiverEndpoint(channelName, interceptorRegistry, kinesisClient, executorService, eventPublisher, clock, DEFAULT_WAITING_TIME_ON_EMPTY_RECORDS, marker);
+    }
+
+    @Override
+    public boolean matches(Class<? extends Selector> channelSelector) {
+        return channelSelector.isAssignableFrom(selector());
+    }
+
+    @Override
+    public Class<? extends Selector> selector() {
+        return Kinesis.class;
     }
 
 }

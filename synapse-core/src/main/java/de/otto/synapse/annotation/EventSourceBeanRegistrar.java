@@ -1,5 +1,6 @@
 package de.otto.synapse.annotation;
 
+import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.endpoint.receiver.DelegateMessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.DelegateEventSource;
 import org.slf4j.Logger;
@@ -37,12 +38,13 @@ public class EventSourceBeanRegistrar extends AbstractAnnotationBasedBeanRegistr
                                            final String beanName,
                                            final AnnotationAttributes annotationAttributes,
                                            final BeanDefinitionRegistry registry) {
+        final Class<? extends MessageLog> channelSelector = annotationAttributes.getClass("selector");
         final String messageLogBeanName = Objects.toString(
                 emptyToNull(annotationAttributes.getString("messageLogReceiverEndpoint")),
                 beanNameForMessageLogReceiverEndpoint(channelName));
 
         if (!registry.containsBeanDefinition(messageLogBeanName)) {
-            registerMessageLogBeanDefinition(registry, messageLogBeanName, channelName);
+            registerMessageLogBeanDefinition(registry, messageLogBeanName, channelName, channelSelector);
         } else {
             throw new BeanCreationException(messageLogBeanName, format("MessageLogReceiverEndpoint %s is already registered.", messageLogBeanName));
         }
@@ -55,11 +57,13 @@ public class EventSourceBeanRegistrar extends AbstractAnnotationBasedBeanRegistr
 
     private void registerMessageLogBeanDefinition(final BeanDefinitionRegistry registry,
                                                   final String beanName,
-                                                  final String channelName) {
+                                                  final String channelName,
+                                                  final Class<? extends MessageLog> channelSelector) {
         registry.registerBeanDefinition(
                 beanName,
                 genericBeanDefinition(DelegateMessageLogReceiverEndpoint.class)
                         .addConstructorArgValue(channelName)
+                        .addConstructorArgValue(channelSelector)
                         .setDependencyCheck(DEPENDENCY_CHECK_ALL)
                         .getBeanDefinition()
         );

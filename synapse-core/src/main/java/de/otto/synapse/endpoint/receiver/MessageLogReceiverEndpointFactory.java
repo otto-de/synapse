@@ -1,13 +1,14 @@
 package de.otto.synapse.endpoint.receiver;
 
+import de.otto.synapse.endpoint.MessageEndpointFactory;
+
 import javax.annotation.Nonnull;
 
 /*
  * A factory used to create {@link MessageLogReceiverEndpoint} instances.
  *
  */
-@FunctionalInterface
-public interface MessageLogReceiverEndpointFactory {
+public interface MessageLogReceiverEndpointFactory extends MessageEndpointFactory<MessageLogReceiverEndpoint> {
 
     /**
      * Creates and returns a {@link MessageLogReceiverEndpoint} for a messaging channel.

@@ -1,6 +1,7 @@
 package de.otto.synapse.endpoint.sender;
 
 import de.otto.synapse.channel.selector.Selector;
+import de.otto.synapse.endpoint.MessageEndpointFactory;
 import de.otto.synapse.translator.MessageFormat;
 
 import javax.annotation.Nonnull;
@@ -11,7 +12,7 @@ import static de.otto.synapse.translator.MessageFormat.defaultMessageFormat;
  * A factory used to create {@link MessageSenderEndpoint} instances.
  *
  */
-public interface MessageSenderEndpointFactory {
+public interface MessageSenderEndpointFactory extends MessageEndpointFactory<MessageSenderEndpoint> {
 
     /**
      * Creates and returns a {@link AbstractMessageSenderEndpoint} for a messaging channel.
@@ -34,9 +35,9 @@ public interface MessageSenderEndpointFactory {
 
     /**
      * Returns true if the factory is capable to create a {@link MessageSenderEndpoint} matching the given
-     * selectors, false otherwise.
+     * selector, false otherwise.
      *
-     * @param channelSelector Set of channel selectors
+     * @param channelSelector channel selector
      * @return boolean
      */
     boolean matches(final Class<? extends Selector> channelSelector);

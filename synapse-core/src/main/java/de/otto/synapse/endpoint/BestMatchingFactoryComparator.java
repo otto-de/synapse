@@ -1,10 +1,10 @@
-package de.otto.synapse.endpoint.sender;
+package de.otto.synapse.endpoint;
 
 import de.otto.synapse.channel.selector.Selector;
 
 import java.util.Comparator;
 
-public class BestMatchingFactoryComparator implements Comparator<MessageSenderEndpointFactory> {
+public class BestMatchingFactoryComparator implements Comparator<MessageEndpointFactory> {
 
     private final Class<? extends Selector> selector;
 
@@ -13,8 +13,8 @@ public class BestMatchingFactoryComparator implements Comparator<MessageSenderEn
     }
 
     @Override
-    public int compare(final MessageSenderEndpointFactory firstCandidate,
-                       final MessageSenderEndpointFactory secondCandidate) {
+    public int compare(final MessageEndpointFactory firstCandidate,
+                       final MessageEndpointFactory secondCandidate) {
         if (firstCandidate.selector().equals(secondCandidate.selector())) {
             return 0;
         }

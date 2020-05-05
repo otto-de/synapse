@@ -1,6 +1,8 @@
 package de.otto.synapse.annotation;
 
+import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
+import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
 import org.springframework.beans.factory.BeanCreationException;
@@ -80,4 +82,26 @@ public @interface EnableEventSource {
      */
     String messageLogReceiverEndpoint() default "";
 
+    /**
+     * Selector used to select one of possibly multiple available
+     * {@link MessageLogReceiverEndpointFactory} instances used to
+     * create the {@link MessageLogReceiverEndpoint} of the EventSource.
+     *
+     * <p>
+     * Example: the KafkaMessageLogReceiverEndpointFactory matches both {@link MessageLog MessageLog.class}
+     * and Kafka.class. The following usage of the annotation is selecting the KafkaMessageLogReceiverEndpointFactory
+     * using the more specific Kafka selector:
+     * </p>
+     * <pre><code>
+     * {@literal @}Configuration
+     * {@literal @}EnableEventSource(
+     *      channelName = "some-log",
+     *      selector = Kafka.class)
+     * class MyExampleConfiguration {
+     * }
+     * </code></pre>
+     *
+     * @return MessageLog selector class
+     */
+    Class<? extends MessageLog> selector() default MessageLog.class;
 }

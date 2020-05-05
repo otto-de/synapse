@@ -1,6 +1,7 @@
 package de.otto.synapse.annotation;
 
 import de.otto.synapse.channel.ChannelPosition;
+import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.endpoint.receiver.DelegateMessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogConsumerContainer;
 import org.slf4j.Logger;
@@ -37,8 +38,10 @@ public class MessageLogReceiverEndpointBeanRegistrar extends AbstractAnnotationB
                                            final BeanDefinitionRegistry registry) {
         final String processorBeanName = beanName + "Processor";
 
+        final Class<? extends MessageLog> channelSelector = annotationAttributes.getClass("selector");
+
         if (!registry.containsBeanDefinition(beanName)) {
-            registerMessageLogReceiverEndpointBeanDefinition(registry, beanName, channelName);
+            registerMessageLogReceiverEndpointBeanDefinition(registry, beanName, channelName, channelSelector);
         } else {
             throw new BeanCreationException(beanName, format("MessageLogReceiverEndpoint %s is already registered.", beanName));
         }
@@ -51,13 +54,15 @@ public class MessageLogReceiverEndpointBeanRegistrar extends AbstractAnnotationB
 
     private void registerMessageLogReceiverEndpointBeanDefinition(final BeanDefinitionRegistry registry,
                                                                   final String beanName,
-                                                                  final String channelName) {
+                                                                  final String channelName,
+                                                                  final Class<? extends MessageLog> channelSelector) {
 
 
         registry.registerBeanDefinition(
                 beanName,
                 genericBeanDefinition(DelegateMessageLogReceiverEndpoint.class)
                         .addConstructorArgValue(channelName)
+                        .addConstructorArgValue(channelSelector)
                         .setDependencyCheck(DEPENDENCY_CHECK_ALL)
                         .getBeanDefinition()
         );

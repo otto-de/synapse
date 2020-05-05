@@ -54,7 +54,7 @@ public class InMemoryMessageLogTestConfiguration {
     @Bean
     public MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory(final InMemoryChannels inMemoryChannels) {
         LOG.warn("Creating InMemoryMessageLogReceiverEndpointFactory. This should only be used in tests");
-        return new InMemoryMessageLogReceiverEndpointFactory(inMemoryChannels);
+        return new InMemoryMessageLogReceiverEndpointFactory(inMemoryChannels, MessageLog.class);
     }
 
 }

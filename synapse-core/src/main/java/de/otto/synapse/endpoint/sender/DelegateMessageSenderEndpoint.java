@@ -1,6 +1,7 @@
 package de.otto.synapse.endpoint.sender;
 
 import de.otto.synapse.channel.selector.Selector;
+import de.otto.synapse.endpoint.BestMatchingFactoryComparator;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.message.Message;
