@@ -49,7 +49,7 @@ public class EventSourceBeanRegistrar extends AbstractAnnotationBasedBeanRegistr
             throw new BeanCreationException(messageLogBeanName, format("MessageLogReceiverEndpoint %s is already registered.", messageLogBeanName));
         }
         if (!registry.containsBeanDefinition(beanName)) {
-            registerEventSourceBeanDefinition(registry, beanName, messageLogBeanName, channelName);
+            registerEventSourceBeanDefinition(registry, beanName, messageLogBeanName, channelName, channelSelector);
         } else {
             throw new BeanCreationException(beanName, format("EventSource %s is already registered.", beanName));
         }
@@ -74,11 +74,13 @@ public class EventSourceBeanRegistrar extends AbstractAnnotationBasedBeanRegistr
     private void registerEventSourceBeanDefinition(final BeanDefinitionRegistry registry,
                                                    final String beanName,
                                                    final String messageLogBeanName,
-                                                   final String channelName) {
+                                                   final String channelName,
+                                                   final Class<? extends MessageLog> channelSelector) {
         registry.registerBeanDefinition(
                 beanName,
                 genericBeanDefinition(DelegateEventSource.class)
                         .addConstructorArgValue(messageLogBeanName)
+                        .addConstructorArgValue(channelSelector)
                         .setDependencyCheck(DEPENDENCY_CHECK_ALL)
                         .getBeanDefinition()
         );

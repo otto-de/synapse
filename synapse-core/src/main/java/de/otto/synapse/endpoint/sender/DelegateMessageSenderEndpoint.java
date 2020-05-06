@@ -1,7 +1,7 @@
 package de.otto.synapse.endpoint.sender;
 
 import de.otto.synapse.channel.selector.Selector;
-import de.otto.synapse.endpoint.BestMatchingFactoryComparator;
+import de.otto.synapse.endpoint.BestMatchingSelectableComparator;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.message.Message;
@@ -33,7 +33,7 @@ public class DelegateMessageSenderEndpoint implements MessageSenderEndpoint{
         final MessageSenderEndpointFactory messageSenderEndpointFactory = factories
                 .stream()
                 .filter(factory -> factory.matches(selector))
-                .min(new BestMatchingFactoryComparator(selector))
+                .min(new BestMatchingSelectableComparator(selector))
                 .orElseThrow(() -> new IllegalStateException(format("Unable to create MessageSenderEndpoint for channelName=%s: no matching MessageSenderEndpointFactory found in the ApplicationContext.", channelName)));
         this.delegate = messageSenderEndpointFactory.create(channelName, messageFormat);
         LOG.info("Created MessageSenderEndpoint for channelName={}", channelName);

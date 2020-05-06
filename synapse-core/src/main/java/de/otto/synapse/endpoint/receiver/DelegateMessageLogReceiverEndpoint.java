@@ -5,7 +5,7 @@ import de.otto.synapse.channel.ShardResponse;
 import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
-import de.otto.synapse.endpoint.BestMatchingFactoryComparator;
+import de.otto.synapse.endpoint.BestMatchingSelectableComparator;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.InterceptorChain;
 import de.otto.synapse.message.TextMessage;
@@ -28,7 +28,7 @@ public class DelegateMessageLogReceiverEndpoint implements MessageLogReceiverEnd
         final MessageLogReceiverEndpointFactory selectedEndpointFactory = factories
                 .stream()
                 .filter(factory -> factory.matches(selector))
-                .min(new BestMatchingFactoryComparator(selector))
+                .min(new BestMatchingSelectableComparator(selector))
                 .orElseThrow(() -> new IllegalStateException(format("Unable to create MessageLogReceiverEndpoint for channelName=%s: no matching MessageLogReceiverEndpointFactory found in the ApplicationContext.", channelName)));
         this.delegate = selectedEndpointFactory.create(channelName);
     }

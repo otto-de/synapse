@@ -1,18 +1,23 @@
 package de.otto.synapse.annotation;
 
+import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
-import de.otto.synapse.configuration.SynapseAutoConfiguration;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.eventsource.DefaultEventSource;
 import de.otto.synapse.eventsource.DelegateEventSource;
 import de.otto.synapse.eventsource.EventSource;
+import de.otto.synapse.eventsource.EventSourceBuilder;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
 
+import static de.otto.synapse.messagestore.MessageStores.emptyMessageStore;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 public class EventSourceBeanRegistrarTest {
 
@@ -25,6 +30,19 @@ public class EventSourceBeanRegistrarTest {
         }
     }
 
+    interface CustomSelector extends MessageLog {}
+    static final EventSourceBuilder customEventSourceBuilder = mock(EventSourceBuilder.class);
+    @EnableEventSource(name = "testEventSource", channelName = "test-stream", selector = CustomSelector.class)
+    static class CustomEventSourceTestConfig {
+        @Bean
+        EventSourceBuilder customEventSourceBuilder() {
+            when(customEventSourceBuilder.selector()).thenAnswer(invocationOnMock -> CustomSelector.class);
+            when(customEventSourceBuilder.matches(any())).thenCallRealMethod();
+            when(customEventSourceBuilder.buildEventSource(any(MessageLogReceiverEndpoint.class)))
+                    .thenAnswer(invocationOnMock -> new DefaultEventSource(emptyMessageStore(), invocationOnMock.getArgument(0)));
+            return customEventSourceBuilder;
+        }
+    }
     @EnableEventSource(name = "testEventSource", channelName = "test-stream")
     static class SingleEventSourceTestConfig {
     }
@@ -69,6 +87,17 @@ public class EventSourceBeanRegistrarTest {
         context.refresh();
 
         assertThat(context.containsBean("testEventSource")).isTrue();
+    }
+
+    @Test
+    public void shouldRegisterEventSourceWithSelectedEventSourceBuilder() {
+        context.register(CustomEventSourceTestConfig.class);
+        context.register(InMemoryMessageLogTestConfiguration.class);
+        context.refresh();
+
+        assertThat(context.containsBean("testEventSource")).isTrue();
+        assertThat(context.containsBean("customEventSourceBuilder")).isTrue();
+        verify(customEventSourceBuilder).buildEventSource(any(MessageLogReceiverEndpoint.class));
     }
 
     @Test

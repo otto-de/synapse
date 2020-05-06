@@ -1,12 +1,17 @@
 package de.otto.synapse.configuration.kafka;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import de.otto.synapse.configuration.SynapseAutoConfiguration;
+import de.otto.synapse.channel.selector.Kafka;
+import de.otto.synapse.configuration.EventSourcingAutoConfiguration;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import de.otto.synapse.endpoint.receiver.kafka.KafkaMessageLogReceiverEndpointFactory;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.endpoint.sender.kafka.KafkaMessageSenderEndpointFactory;
+import de.otto.synapse.eventsource.DefaultEventSourceBuilder;
+import de.otto.synapse.eventsource.EventSourceBuilder;
+import de.otto.synapse.messagestore.MessageStore;
+import de.otto.synapse.messagestore.MessageStoreFactory;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
@@ -26,12 +31,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.concurrent.ExecutorService;
 
+import static de.otto.synapse.messagestore.MessageStores.emptyMessageStore;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Configuration
 @Import({
-        SynapseAutoConfiguration.class,
+        EventSourcingAutoConfiguration.class,
         KafkaAutoConfiguration.class})
 @EnableScheduling
 @EnableKafka
@@ -39,6 +45,17 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class SynapseKafkaAutoConfiguration {
 
     private static final Logger LOG = getLogger(SynapseKafkaAutoConfiguration.class);
+
+    @Bean
+    public EventSourceBuilder kafkaEventSourceBuilder() {
+        return new DefaultEventSourceBuilder((_x) -> emptyMessageStore(), Kafka.class);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public MessageStoreFactory<? extends MessageStore> messageStoreFactory() {
+        return (_x) -> emptyMessageStore();
+    }
 
     @Bean
     @ConditionalOnMissingBean(name = "kafkaMessageLogSenderEndpointFactory")

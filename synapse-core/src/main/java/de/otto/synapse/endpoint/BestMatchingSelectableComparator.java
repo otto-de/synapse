@@ -4,17 +4,17 @@ import de.otto.synapse.channel.selector.Selector;
 
 import java.util.Comparator;
 
-public class BestMatchingFactoryComparator implements Comparator<MessageEndpointFactory> {
+public class BestMatchingSelectableComparator implements Comparator<Selectable> {
 
     private final Class<? extends Selector> selector;
 
-    public BestMatchingFactoryComparator(Class<? extends Selector> selector) {
+    public BestMatchingSelectableComparator(Class<? extends Selector> selector) {
         this.selector = selector;
     }
 
     @Override
-    public int compare(final MessageEndpointFactory firstCandidate,
-                       final MessageEndpointFactory secondCandidate) {
+    public int compare(final Selectable firstCandidate,
+                       final Selectable secondCandidate) {
         if (firstCandidate.selector().equals(secondCandidate.selector())) {
             return 0;
         }

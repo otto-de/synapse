@@ -20,7 +20,7 @@ import static org.mockito.Mockito.when;
 
 class SpecificMessageLog implements MessageLog {}
 
-public class BestMatchingFactoryComparatorTest {
+public class BestMatchingSelectableComparatorTest {
 
     @Test
     public void shouldSortSingleMatchingFactoryFirst() {
@@ -29,7 +29,7 @@ public class BestMatchingFactoryComparatorTest {
         final MessageSenderEndpointFactory second = mock(MessageSenderEndpointFactory.class);
         when(second.selector()).thenAnswer((_x) -> MessageQueue.class);
 
-        final BestMatchingFactoryComparator comparator = new BestMatchingFactoryComparator(MessageLog.class);
+        final BestMatchingSelectableComparator comparator = new BestMatchingSelectableComparator(MessageLog.class);
         assertThat(comparator.compare(first, second), is(-1));
         assertThat(comparator.compare(first, first), is(0));
         assertThat(comparator.compare(second, first), is(+1));
@@ -42,7 +42,7 @@ public class BestMatchingFactoryComparatorTest {
         final MessageSenderEndpointFactory second = mock(MessageSenderEndpointFactory.class);
         when(second.selector()).thenAnswer((_x) -> SpecificMessageLog.class);
 
-        final BestMatchingFactoryComparator comparator = new BestMatchingFactoryComparator(SpecificMessageLog.class);
+        final BestMatchingSelectableComparator comparator = new BestMatchingSelectableComparator(SpecificMessageLog.class);
         assertThat(comparator.compare(first, second), is(+1));
         assertThat(comparator.compare(second, first), is(-1));
     }
@@ -60,7 +60,7 @@ public class BestMatchingFactoryComparatorTest {
                 first,
                 second,
                 third);
-        factories.sort(new BestMatchingFactoryComparator(SpecificMessageLog.class));
+        factories.sort(new BestMatchingSelectableComparator(SpecificMessageLog.class));
         assertThat(factories, contains(first, first, second, second, third, third));
     }
 

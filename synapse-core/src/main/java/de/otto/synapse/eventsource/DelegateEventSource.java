@@ -2,25 +2,35 @@ package de.otto.synapse.eventsource;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardResponse;
+import de.otto.synapse.channel.selector.MessageLog;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
+import de.otto.synapse.endpoint.BestMatchingSelectableComparator;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.Nonnull;
-import java.time.Instant;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
+
+import static java.lang.String.format;
 
 public class DelegateEventSource implements EventSource {
 
     private final EventSource delegate;
 
     public DelegateEventSource(final String messageLogBeanName,
-                               final EventSourceBuilder eventSourceBuilder,
+                               final Class<? extends MessageLog> selector,
+                               final List<EventSourceBuilder> eventSourceBuilder,
                                final ApplicationContext applicationContext) {
         final MessageLogReceiverEndpoint messageLogReceiverEndpoint = applicationContext.getBean(messageLogBeanName, MessageLogReceiverEndpoint.class);
-        this.delegate = eventSourceBuilder.buildEventSource(messageLogReceiverEndpoint);
+        final EventSourceBuilder builder = eventSourceBuilder
+                .stream()
+                .filter(b -> b.matches(selector))
+                .min(new BestMatchingSelectableComparator(selector))
+                .orElseThrow(() -> new IllegalStateException(format("Unable to create EventSource for channelName=%s: no matching EventSourceBuilder found in the ApplicationContext.", messageLogReceiverEndpoint.getChannelName())));
+        this.delegate = builder.buildEventSource(messageLogReceiverEndpoint);
     }
 
     public EventSource getDelegate() {

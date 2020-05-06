@@ -1,12 +1,12 @@
 package de.otto.synapse.configuration.kinesis;
 
+import de.otto.synapse.channel.selector.Kinesis;
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.kinesis.KinesisMessageSender;
-import de.otto.synapse.eventsource.DefaultEventSource;
+import de.otto.synapse.eventsource.DefaultEventSourceBuilder;
 import de.otto.synapse.eventsource.EventSourceBuilder;
-import de.otto.synapse.messagestore.MessageStore;
 import de.otto.synapse.messagestore.OnHeapIndexingMessageStore;
 import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.TextMessageTranslator;
@@ -45,11 +45,8 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
     }
 
     @Bean
-    public EventSourceBuilder eventSourceBuilder() {
-        return (messageLog) -> {
-            final MessageStore messageStore = new OnHeapIndexingMessageStore();
-            return new DefaultEventSource(messageStore, messageLog);
-        };
+    public EventSourceBuilder defaultEventSourceBuilder() {
+        return new DefaultEventSourceBuilder((_x) -> new OnHeapIndexingMessageStore(), Kinesis.class);
     }
 
     @Bean
