@@ -8,6 +8,8 @@ import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.Headers;
 import org.slf4j.Logger;
 
+import java.util.UUID;
+
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -36,6 +38,8 @@ public class KafkaDecoder implements Decoder<ConsumerRecord<String, String>> {
 
         if (partitionKey != null && compactionKey != null && compactionKey.equals(record.key())) {
             key = Key.of(partitionKey, compactionKey);
+        } else if (record.key() == null) {
+            key = Key.of(UUID.randomUUID().toString());
         } else {
             key = Key.of(record.key());
         }

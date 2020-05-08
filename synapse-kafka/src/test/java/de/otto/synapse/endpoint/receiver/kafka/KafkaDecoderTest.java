@@ -15,7 +15,7 @@ import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 
 public class KafkaDecoderTest {
 
@@ -36,6 +36,26 @@ public class KafkaDecoderTest {
 
         // then
         assertThat(decodedMessage.getKey().compactionKey(), is("key"));
+        assertThat(decodedMessage.getPayload(), is("payload"));
+    }
+
+    @Test
+    public void shouldDecodeMessageWithNullKey() {
+        // given
+        final KafkaDecoder decoder = new KafkaDecoder();
+        final ConsumerRecord<String,String> record = new ConsumerRecord<>(
+                "ch01",
+                0,
+                42L,
+                null,
+                "payload"
+        );
+
+        // when
+        TextMessage decodedMessage = decoder.apply(record);
+
+        // then
+        assertThat(decodedMessage.getKey().compactionKey(), notNullValue());
         assertThat(decodedMessage.getPayload(), is("payload"));
     }
 
