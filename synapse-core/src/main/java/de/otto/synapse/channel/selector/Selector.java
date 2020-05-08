@@ -1,22 +1,16 @@
 package de.otto.synapse.channel.selector;
 
 /**
- * Specifies the implementation used for {@link de.otto.synapse.endpoint.sender.MessageSenderEndpoint message senders}
- * in case of annotation-driven configuration using {@link de.otto.synapse.annotation.EnableMessageSenderEndpoint}.
+ * Selector used to select one of possibly multiple available {@link de.otto.synapse.endpoint.MessageEndpoint message endpoints}
+ * in case of annotation-driven configuration of {@link de.otto.synapse.endpoint.sender.MessageSenderEndpoint message senders},
+ * or {@link de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint message-log receivers}.
  *
- * <p>
- *     In some cases, multiple implementations of the MessageSenderEndpoint like, for example SQS and Kinesis senders,
- *     are available in any Synapse service. If the {@code EnableMessageSenderEndpoint}
- *     annotation is used, the
- * </p>
- * <p>
- *     TODO: support selectors for message receiver annotations
- *
- *     As soon as there are multiple implementations of {@link de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint}
- *     and/or {@link de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint} available in Synapse, selectors
- *     must also supported by {@link de.otto.synapse.annotation.EnableMessageQueueReceiverEndpoint}, {@link de.otto.synapse.annotation.EnableEventSource}
- *     and the (not yet available) {@code EnableMessageLogReceiverEndpoint} annotations.
- * </p>
+ * Selectors are supported by several Synapse annotations:
+ * <ul>
+ *     <li>{@link de.otto.synapse.annotation.EnableEventSource}</li>
+ *     <li>{@link de.otto.synapse.annotation.EnableMessageLogReceiverEndpoint}</li>
+ *     <li>{@link de.otto.synapse.annotation.EnableMessageSenderEndpoint}</li>
+ * </ul>
  * <p>
  *     <strong>Example:</strong>
  * </p>
@@ -25,9 +19,6 @@ package de.otto.synapse.channel.selector;
  * {@literal @}EnableMessageSenderEndpoint channelName="my-channel", selector={@link MessageQueue MessageQueue.class}
  *
  * </code></pre>
- * @see MessageLog
- * @see MessageQueue
- * @see de.otto.synapse.annotation.EnableMessageSenderEndpoint
  */
 public interface Selector {
 }
