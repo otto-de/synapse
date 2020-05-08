@@ -1,5 +1,13 @@
+spring:
+  application:
+    name: example-messagelog-consumer
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: example-consumer-group
+
 management:
-    context-path: /internal
+  context-path: /internal
 
 synapse:
   consumer-process:

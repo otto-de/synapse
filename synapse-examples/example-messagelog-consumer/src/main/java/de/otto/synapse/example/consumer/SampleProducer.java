@@ -26,6 +26,8 @@ public class SampleProducer {
     private MessageSender bananaMessageSender;
     @Autowired
     private MessageSender productMessageSender;
+    @Autowired
+    private MessageSender kafkaSender;
 
     @Scheduled(initialDelay = 1000L, fixedRate = 10000L)
     protected void produceBananaSampleData() {
@@ -38,6 +40,7 @@ public class SampleProducer {
                 sampleBananaMessage("6")
         );
         bananaMessageSender.sendBatch(bananaMessages.stream());
+        kafkaSender.sendBatch(bananaMessages.stream());
     }
 
     @Scheduled(initialDelay = 1000L, fixedRate = 10000L)

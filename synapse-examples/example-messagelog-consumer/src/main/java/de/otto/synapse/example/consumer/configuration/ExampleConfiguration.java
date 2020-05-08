@@ -1,6 +1,8 @@
 package de.otto.synapse.example.consumer.configuration;
 
 import de.otto.synapse.annotation.EnableMessageLogReceiverEndpoint;
+import de.otto.synapse.annotation.EnableMessageSenderEndpoint;
+import de.otto.synapse.channel.selector.Kafka;
 import de.otto.synapse.configuration.InMemoryMessageLogTestConfiguration;
 import de.otto.synapse.configuration.MessageEndpointConfigurer;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
@@ -22,9 +24,13 @@ import static org.slf4j.LoggerFactory.getLogger;
 @EnableConfigurationProperties({MyServiceProperties.class})
 @EnableMessageLogReceiverEndpoint(name = "bananaSource", channelName = "${exampleservice.banana-channel}")
 @EnableMessageLogReceiverEndpoint(name = "productSource", channelName = "${exampleservice.product-channel}")
+@EnableMessageLogReceiverEndpoint(name = "kafkaReceiver", channelName = ExampleConfiguration.KAFKA_TOPIC, selector = Kafka.class)
+@EnableMessageSenderEndpoint(name = "kafkaSender", channelName = ExampleConfiguration.KAFKA_TOPIC, selector = Kafka.class)
 public class ExampleConfiguration implements MessageEndpointConfigurer {
 
     private static final Logger LOG = getLogger(ExampleConfiguration.class);
+
+    public static final String KAFKA_TOPIC = "kafka-example-topic";
 
     @Bean
     public StateRepository<BananaProduct> bananaProductStateRepository() {
