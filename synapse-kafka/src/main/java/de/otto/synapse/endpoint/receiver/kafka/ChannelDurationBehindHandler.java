@@ -66,6 +66,7 @@ class ChannelDurationBehindHandler implements ConsumerRebalanceListener {
         channelDurationBehind.updateAndGet(behind -> copyOf(behind)
                 .with(shardName, durationBehind)
                 .build());
+        LOG.info("Read from '{}:{}', durationBehind={}",  channelName, shardName, durationBehind);
 
         if (eventPublisher != null) {
             eventPublisher.publishEvent(builder()
