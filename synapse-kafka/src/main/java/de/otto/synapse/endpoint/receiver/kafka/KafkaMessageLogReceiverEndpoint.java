@@ -1,11 +1,11 @@
 package de.otto.synapse.endpoint.receiver.kafka;
 
-import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ChannelResponse;
 import de.otto.synapse.channel.ShardResponse;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.AbstractMessageLogReceiverEndpoint;
+import de.otto.synapse.logging.LogHelper;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.errors.WakeupException;
@@ -17,10 +17,11 @@ import javax.annotation.Nonnull;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 import static de.otto.synapse.info.MessageReceiverStatus.*;
-import static de.otto.synapse.logging.LogHelper.info;
 import static java.time.Duration.ofMillis;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -30,11 +31,13 @@ public class KafkaMessageLogReceiverEndpoint extends AbstractMessageLogReceiverE
     private static final Logger LOG = LoggerFactory.getLogger(KafkaMessageLogReceiverEndpoint.class);
 
     private static final long KAFKA_CONSUMER_POLLING_DURATION = 1000L;
+    private static final int LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE = 1_000;
 
     private final KafkaConsumer<String, String> kafkaConsumer;
     private final ExecutorService executorService;
     private final ApplicationEventPublisher eventPublisher;
     private final MessageInterceptorRegistry interceptorRegistry;
+    final AtomicBoolean stopSignal = new AtomicBoolean(false);
 
     public KafkaMessageLogReceiverEndpoint(final String channelName,
                                            final MessageInterceptorRegistry interceptorRegistry,
@@ -74,7 +77,6 @@ public class KafkaMessageLogReceiverEndpoint extends AbstractMessageLogReceiverE
                 new KafkaDecoder()
         );
 
-        final long t1 = System.currentTimeMillis();
         final Set<String> subscription = kafkaConsumer.subscription();
         if (!subscription.isEmpty()) {
             if (!subscription.contains(getChannelName())) {
@@ -87,8 +89,6 @@ public class KafkaMessageLogReceiverEndpoint extends AbstractMessageLogReceiverE
 
         return supplyAsync(() -> processMessages(startFrom, stopCondition, rebalanceHandler, recordsConsumer), executorService)
                 .thenApply((channelPosition -> {
-                    final long t2 = System.currentTimeMillis();
-                    info(LOG, ImmutableMap.of("runtime", (t2 - t1)), "Consume events from Kafka", null);
                     publishEvent(FINISHED, "Finished consuming messages from Kafka", null);
                     return channelPosition;
                 }))
@@ -106,28 +106,53 @@ public class KafkaMessageLogReceiverEndpoint extends AbstractMessageLogReceiverE
                                             final Predicate<ShardResponse> stopCondition,
                                             final ConsumerRebalanceHandler rebalanceHandler,
                                             final KafkaRecordsConsumer recordsConsumer) {
+        final long firstMessageLogTime = System.currentTimeMillis();
+        final AtomicLong shardMessagesCounter = new AtomicLong(0);
+        final AtomicLong previousMessageLogTime = new AtomicLong(System.currentTimeMillis());
+        final AtomicLong previousLoggedMessageCounterMod = new AtomicLong(0), previousLoggedMessageCounter = new AtomicLong(0);
+        final AtomicBoolean stopConditionMet = new AtomicBoolean(false);
         ChannelPosition channelPosition = startFrom;
-        boolean stopConditionMet = false;
+
         try {
             do {
                 final ConsumerRecords<String, String> records = kafkaConsumer.poll(ofMillis(KAFKA_CONSUMER_POLLING_DURATION));
                 if (rebalanceHandler.shardsAssignedAndPositioned()) {
                     final ChannelResponse channelResponse = recordsConsumer.apply(records);
                     channelPosition = channelResponse.getChannelPosition();
-                    stopConditionMet = channelResponse.getShardResponses().stream().anyMatch(stopCondition);
+                    stopConditionMet.set(channelResponse.getShardResponses().stream().anyMatch(stopCondition));
                     kafkaConsumer.commitAsync();
+
+                    int responseMessagesCounter = records.count();
+                    long totalMessagesCounter = shardMessagesCounter.addAndGet(responseMessagesCounter);
+
+                    if ((totalMessagesCounter > 0 && totalMessagesCounter > previousLoggedMessageCounterMod.get() + LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE) || stopConditionMet.get()) {
+                        double messagesPerSecond = LogHelper.calculateMessagesPerSecond(previousMessageLogTime.getAndSet(System.currentTimeMillis()), totalMessagesCounter - previousLoggedMessageCounter.get());
+
+                        LOG.info("Read {} messages ({} per sec) from '{}', durationBehind={}, totalMessages={}", responseMessagesCounter, String.format("%.2f", messagesPerSecond), getChannelName(), channelResponse.getChannelDurationBehind(), totalMessagesCounter);
+                        if (stopConditionMet.get() || stopSignal.get()) {
+                            LOG.info("Stop reading of channel={}, stopCondition={}, stopSignal={}, durationBehind={}", getChannelName(), stopConditionMet, stopSignal.get(), channelResponse.getChannelDurationBehind());
+                        }
+
+                        previousLoggedMessageCounterMod.set(totalMessagesCounter - (totalMessagesCounter % LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE));
+                        previousLoggedMessageCounter.set(totalMessagesCounter);
+                    }
+
                 }
-            } while (!stopConditionMet);
+            } while (!stopConditionMet.get() && !stopSignal.get());
+
         } catch (final WakeupException e) {
             // ignore for shutdown
             LOG.info("Shutting down Kafka consumer");
         }
+        final double totalMessagesPerSecond = LogHelper.calculateMessagesPerSecond(firstMessageLogTime, shardMessagesCounter.get());
+        LOG.info("Read a total of {} messages from '{}', totalMessagesPerSecond={}", shardMessagesCounter.get(), getChannelName(), String.format("%.2f", totalMessagesPerSecond));
         return channelPosition;
     }
 
     @Override
     public void stop() {
         LOG.info("Channel {} received stop signal.", getChannelName());
+        stopSignal.set(true);
         kafkaConsumer.wakeup();
     }
 

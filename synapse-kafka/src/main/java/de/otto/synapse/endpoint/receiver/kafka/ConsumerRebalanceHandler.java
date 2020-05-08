@@ -78,6 +78,7 @@ class ConsumerRebalanceHandler implements ConsumerRebalanceListener {
                     kafkaConsumer.seek(topicPartition, offsets.get(topicPartition).offset());
                     break;
             }
+            LOG.info("Reading from channel={}, shard={}, position={}", channelName, shardName, shardPosition);
         }
 
         shardsAssignedAndPositioned.set(true);
