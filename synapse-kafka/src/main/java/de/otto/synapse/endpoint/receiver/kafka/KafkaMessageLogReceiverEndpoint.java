@@ -58,8 +58,8 @@ public class KafkaMessageLogReceiverEndpoint extends AbstractMessageLogReceiverE
 
         final ChannelDurationBehindHandler durationBehindHandler = new ChannelDurationBehindHandler(
                 getChannelName(),
-                eventPublisher
-        );
+                eventPublisher,
+                kafkaConsumer);
         final ConsumerRebalanceHandler rebalanceHandler = new ConsumerRebalanceHandler(
                 getChannelName(),
                 startFrom,

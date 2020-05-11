@@ -13,8 +13,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 
-import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -132,10 +132,10 @@ class KafkaRecordsConsumer implements Function<ConsumerRecords<String, String>, 
     }
 
     private ImmutableMap<String, Duration> updateAndGetDurationBehind(ConsumerRecords<String, String> records) {
-        final long now = Clock.systemUTC().millis();
         for (final TopicPartition topicPartition : records.partitions()) {
-            final long partitionBehind = now - getLast(records.records(topicPartition)).timestamp();
-            durationBehindHandler.update("" + topicPartition.partition(), ofMillis(partitionBehind));
+            ConsumerRecord<String, String> lastRecord = getLast(records.records(topicPartition));
+            final Instant lastTimestampRead = Instant.ofEpochMilli(lastRecord.timestamp());
+            durationBehindHandler.update(topicPartition, lastRecord.offset(), lastTimestampRead);
         }
 
         return durationBehindHandler

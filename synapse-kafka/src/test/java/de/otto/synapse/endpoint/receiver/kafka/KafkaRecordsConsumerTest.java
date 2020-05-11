@@ -11,10 +11,14 @@ import de.otto.synapse.message.Key;
 import de.otto.synapse.message.TextMessage;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.ApplicationEventPublisher;
+
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
@@ -34,6 +38,7 @@ import static org.mockito.Mockito.*;
 
 public class KafkaRecordsConsumerTest {
 
+    private final KafkaConsumer<String, String> kafkaConsumer = mock(KafkaConsumer.class);
     private MessageInterceptorRegistry registry = mock(MessageInterceptorRegistry.class);
     private MessageInterceptor interceptor = (m) -> m;
     private MessageDispatcher dispatcher = mock(MessageDispatcher.class);
@@ -44,7 +49,8 @@ public class KafkaRecordsConsumerTest {
         registry = new MessageInterceptorRegistry();
         registry.register(allChannelsWith(interceptor));
         dispatcher = mock(MessageDispatcher.class);
-        durationBehindHandler = new ChannelDurationBehindHandler("", mock(ApplicationEventPublisher.class));
+        when(kafkaConsumer.endOffsets(any())).thenAnswer(input -> ((Collection<TopicPartition>) input.getArgument(0)).stream().collect(Collectors.toMap(partition -> partition, partition -> 42L)));
+        durationBehindHandler = new ChannelDurationBehindHandler("", mock(ApplicationEventPublisher.class), kafkaConsumer);
     }
 
     @Test
