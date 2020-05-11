@@ -29,7 +29,7 @@ public class TeeMessageSender implements MessageSender {
     }
 
     @Override
-    public <T> CompletableFuture<Void> send(@Nonnull Message<T> message) {
+    public CompletableFuture<Void> send(@Nonnull Message<?> message) {
         return CompletableFuture.allOf(endpoints
                 .stream()
                 .map(sender -> sender.send(message))
@@ -37,7 +37,7 @@ public class TeeMessageSender implements MessageSender {
     }
 
     @Override
-    public <T> CompletableFuture<Void> sendBatch(@Nonnull Stream<Message<T>> batch) {
+    public CompletableFuture<Void> sendBatch(@Nonnull Stream<? extends Message<?>> batch) {
         return CompletableFuture.allOf(endpoints
                 .stream()
                 .map(sender -> sender.sendBatch(batch))

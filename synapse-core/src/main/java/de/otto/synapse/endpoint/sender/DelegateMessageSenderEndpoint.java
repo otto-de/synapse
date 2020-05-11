@@ -69,12 +69,12 @@ public class DelegateMessageSenderEndpoint implements MessageSenderEndpoint{
     }
 
     @Override
-    public <T> CompletableFuture<Void> send(@Nonnull Message<T> message) {
+    public CompletableFuture<Void> send(@Nonnull Message<?> message) {
         return delegate.send(message);
     }
 
     @Override
-    public <T> CompletableFuture<Void> sendBatch(@Nonnull Stream<Message<T>> batch) {
+    public CompletableFuture<Void> sendBatch(@Nonnull Stream<? extends Message<?>> batch) {
         return delegate.sendBatch(batch);
     }
 }

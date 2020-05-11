@@ -22,18 +22,16 @@ public interface MessageSender {
      * Send a single {@link Message} to the channel.
      *
      * @param message the message
-     * @param <T> the type of the message payload
      * @return a CompletableFuture that can be used for logging, error handling, waiting for completion, etc.
      */
-    <T> CompletableFuture<Void> send(@Nonnull Message<T> message);
+    CompletableFuture<Void> send(@Nonnull Message<?> message);
 
     /**
      * Send a batch of {@link Message messages} to the channel.
      *
      * @param batch the batch of messages
-     * @param <T> the type of the message payload
      * @return a CompletableFuture that can be used for logging, error handling, waiting for completion, etc.
      */
-    <T> CompletableFuture<Void> sendBatch(@Nonnull Stream<Message<T>> batch);
+    CompletableFuture<Void> sendBatch(@Nonnull Stream<? extends Message<?>> batch);
 
 }

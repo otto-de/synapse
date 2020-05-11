@@ -54,10 +54,9 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
      * Sends a {@link Message} to the message channel.
      *
      * @param message the message to send
-     * @param <T> type of the message's payload
      */
     @Override
-    public final <T> CompletableFuture<Void> send(@Nonnull final Message<T> message) {
+    public final CompletableFuture<Void> send(@Nonnull final Message<?> message) {
         final TextMessage translatedMessage = messageTranslator.apply(message);
         final TextMessage interceptedMessage = intercept(translatedMessage);
         if (interceptedMessage != null) {
@@ -72,10 +71,9 @@ public abstract class AbstractMessageSenderEndpoint extends AbstractMessageEndpo
      * batches are supported by the infrastructure. If not, the messages are send one by one.
      *
      * @param batch a stream of messages that is sent in batched mode, if supported
-     * @param <T> the type of the message payload
      */
     @Override
-    public final <T> CompletableFuture<Void> sendBatch(@Nonnull final Stream<Message<T>> batch) {
+    public final CompletableFuture<Void> sendBatch(@Nonnull final Stream<? extends Message<?>> batch) {
         return doSendBatch(batch
                 .map(messageTranslator::apply)
                 .map(this::intercept)
