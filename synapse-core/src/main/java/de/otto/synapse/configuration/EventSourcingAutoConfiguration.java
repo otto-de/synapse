@@ -14,9 +14,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Role;
+import org.springframework.context.annotation.*;
 
 import java.util.List;
 
@@ -24,14 +22,12 @@ import static de.otto.synapse.messagestore.MessageStores.emptyMessageStore;
 import static org.slf4j.LoggerFactory.getLogger;
 import static org.springframework.beans.factory.config.BeanDefinition.ROLE_INFRASTRUCTURE;
 
+@Configuration
 @Import(SynapseAutoConfiguration.class)
 @EnableConfigurationProperties(SynapseProperties.class)
 public class EventSourcingAutoConfiguration {
 
     private static final Logger LOG = getLogger(EventSourcingAutoConfiguration.class);
-
-    @Autowired(required = false)
-    private List<EventSource> eventSources;
 
     @Bean
     @ConditionalOnMissingBean(name = "defaultEventSourceBuilder")
@@ -53,7 +49,7 @@ public class EventSourcingAutoConfiguration {
             name = "consumer-process.enabled",
             havingValue = "true",
             matchIfMissing = true)
-    public EventSourceConsumerProcess eventSourceConsumerProcess() {
+    public EventSourceConsumerProcess eventSourceConsumerProcess(@Autowired(required = false) List<EventSource> eventSources) {
         return new EventSourceConsumerProcess(eventSources);
     }
 
