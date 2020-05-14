@@ -10,7 +10,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static de.otto.synapse.channel.ChannelDurationBehind.copyOf;
@@ -71,7 +74,7 @@ class ChannelDurationBehindHandler implements ConsumerRebalanceListener {
         Map<TopicPartition, Long> endOffsets = kafkaConsumer.endOffsets(Collections.singletonList(topicPartition));
 
         Duration durationBehind;
-        if (endOffsets.get(topicPartition) > lastOffsetRead) {
+        if (endOffsets.get(topicPartition) - 1 > lastOffsetRead) {
             durationBehind = Duration.between(lastTimestampRead, clock.instant());
         } else {
             durationBehind = Duration.ZERO;
@@ -81,7 +84,7 @@ class ChannelDurationBehindHandler implements ConsumerRebalanceListener {
         channelDurationBehind.updateAndGet(behind -> copyOf(behind)
                 .with("" + topicPartition.partition(), finalDurationBehind)
                 .build());
-        LOG.info("Read from '{}:{}', durationBehind={}", channelName, topicPartition.partition(), lastOffsetRead);
+        LOG.info("Read from '{}:{}', durationBehind={}", channelName, topicPartition.partition(), durationBehind);
 
         if (eventPublisher != null) {
             eventPublisher.publishEvent(builder()

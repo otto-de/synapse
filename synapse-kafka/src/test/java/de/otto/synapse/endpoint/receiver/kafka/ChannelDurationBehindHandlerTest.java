@@ -119,7 +119,7 @@ public class ChannelDurationBehindHandlerTest {
         when(kafkaConsumer.endOffsets(Collections.singletonList(partition1))).thenReturn(ImmutableMap.of(partition1, 70L));
 
         // when
-        handler.update(partition1, 70, clock.instant().minusSeconds(42));
+        handler.update(partition1, 69, clock.instant().minusSeconds(42));
 
         // then
         final ChannelDurationBehind durationBehind = handler.getChannelDurationBehind();
