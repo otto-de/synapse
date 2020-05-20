@@ -99,4 +99,20 @@ class ChannelDurationBehindHandler implements ConsumerRebalanceListener {
     ChannelDurationBehind getChannelDurationBehind() {
         return channelDurationBehind.get();
     }
+
+    public void noRecordsReceived() {
+
+        ChannelDurationBehind zeroChannelDurationBehind = ChannelDurationBehind.channelDurationBehind()
+                .with(channelName, Duration.ZERO)
+                .build();
+        channelDurationBehind.updateAndGet(behind -> zeroChannelDurationBehind);
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(builder()
+                    .withChannelName(channelName)
+                    .withChannelDurationBehind(zeroChannelDurationBehind)
+                    .withStatus(RUNNING)
+                    .withMessage("Reading from Kafka stream.")
+                    .build());
+        }
+    }
 }

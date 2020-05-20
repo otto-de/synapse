@@ -231,6 +231,23 @@ public class KafkaRecordsConsumerTest {
         assertThat(secondsBehind, is(lessThanOrEqualTo(2L)));
     }
 
+    @Test
+    public void shouldSetZeroDurationBehindOnNoRecords() {
+        // given
+        final KafkaRecordsConsumer consumer = someKafkaRecordsConsumer(fromHorizon());
+
+        // when
+        consumer.apply(ConsumerRecords.empty());
+
+        // then
+        final long secondsBehind = durationBehindHandler
+                .getChannelDurationBehind()
+                .getShardDurationsBehind()
+                .get("")
+                .getSeconds();
+        assertThat(secondsBehind, is(0L));
+    }
+
     private ConsumerRecord<String, String> someRecord(final int partition, final long offset) {
         return new ConsumerRecord<>(
                 "foo",

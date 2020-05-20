@@ -138,6 +138,10 @@ class KafkaRecordsConsumer implements Function<ConsumerRecords<String, String>, 
             durationBehindHandler.update(topicPartition, lastRecord.offset(), lastTimestampRead);
         }
 
+        if(records.isEmpty()) {
+            durationBehindHandler.noRecordsReceived();
+        }
+
         return durationBehindHandler
                 .getChannelDurationBehind()
                 .getShardDurationsBehind();
