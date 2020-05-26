@@ -1,5 +1,13 @@
 # Release Notes
 
+## 0.22.0
+*synapse-core*
+* Adds support for subscriptions, giving service the possibility to subscribe / unsubscribe to
+  messages for a number of entities.
+
+*synapse-kafka*
+* Adds support for Kafka senders and receivers.
+
 ## 0.21.7
 *synapse-aws-kinesis*
 * Log exception type and whether a failed operation will be retried in retryCondition
