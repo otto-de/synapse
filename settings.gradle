@@ -12,4 +12,6 @@ include "synapse-examples:example-eventsource-consumer"
 include "synapse-examples:example-messagelog-consumer"
 include "synapse-examples:example-messagequeue-consumer"
 include "synapse-examples:example-producer"
+include "synapse-examples:example-subscription-producer"
+include "synapse-examples:example-subscription-consumer"
 

@@ -54,6 +54,10 @@ public class InMemoryChannel extends AbstractMessageLogReceiverEndpoint implemen
         this.eventQueue = synchronizedList(new ArrayList<>());
     }
 
+    public List<TextMessage> getEventQueue() {
+        return eventQueue;
+    }
+
     public synchronized void send(final TextMessage message) {
         final int position = eventQueue.size();
         LOG.info("Sending {} to {} at position{}", message, getChannelName(), position);

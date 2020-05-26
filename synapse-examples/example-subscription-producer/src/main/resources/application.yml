@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: example-subscription-producer
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: ${spring.application.name}
+
+management:
+    context-path: /internal
+
+service:
+  encryption:
+    password: example
+    salt: example
+
+exampleservice:
+  subscription-channel-name: synapse-example-subscriptions
+  product-channel-name: synapse-example-subscribable-products
+
+logging:
+    config: classpath:logback-console.xml
+
+server:
+  port: 5555
