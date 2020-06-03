@@ -24,7 +24,7 @@ public class KafkaMessageSender extends AbstractMessageSenderEndpoint {
     public static final long UPDATE_PARTITION_DELAY = 10_000L;
 
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final AtomicReference<KafkaEncoder> encoder;
+    private final AtomicReference<KafkaEncoder> encoder = new AtomicReference<>();
 
     public KafkaMessageSender(final String channelName,
                               final MessageInterceptorRegistry interceptorRegistry,
@@ -32,16 +32,17 @@ public class KafkaMessageSender extends AbstractMessageSenderEndpoint {
                               final KafkaTemplate<String, String> kafkaTemplate) {
         super(channelName, interceptorRegistry, messageTranslator);
         this.kafkaTemplate = kafkaTemplate;
-        this.encoder = new AtomicReference<>(encoder());
     }
 
     @Scheduled(initialDelay = UPDATE_PARTITION_DELAY, fixedDelay = UPDATE_PARTITION_DELAY)
     public void updatePartitions() {
+        encoder.compareAndSet(null, encoder());
         encoder.set(encoder());
     }
 
     @Override
     protected CompletableFuture<Void> doSend(@Nonnull TextMessage message) {
+        encoder.compareAndSet(null, encoder());
         // TODO: Introduce a response object and return it instead of Void
         final ProducerRecord<String, String> record = encoder.get().apply(message);
         // Just because we need a CompletableFuture<Void>, no CompletableFuture<SendMessageBatchResponse>:
