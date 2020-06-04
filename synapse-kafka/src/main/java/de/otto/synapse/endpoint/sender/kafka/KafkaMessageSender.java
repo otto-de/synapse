@@ -36,13 +36,13 @@ public class KafkaMessageSender extends AbstractMessageSenderEndpoint {
 
     @Scheduled(initialDelay = UPDATE_PARTITION_DELAY, fixedDelay = UPDATE_PARTITION_DELAY)
     public void updatePartitions() {
-        encoder.compareAndSet(null, encoder());
-        encoder.set(encoder());
+        encoder.set(createEncoder());
     }
 
     @Override
     protected CompletableFuture<Void> doSend(@Nonnull TextMessage message) {
-        encoder.compareAndSet(null, encoder());
+        encoder.updateAndGet(x -> x != null ? x : createEncoder()); //set encoder lazily and execute createEncoder only once
+
         // TODO: Introduce a response object and return it instead of Void
         final ProducerRecord<String, String> record = encoder.get().apply(message);
         // Just because we need a CompletableFuture<Void>, no CompletableFuture<SendMessageBatchResponse>:
@@ -61,7 +61,7 @@ public class KafkaMessageSender extends AbstractMessageSenderEndpoint {
         return MessageFormat.V1;
     }
 
-    private KafkaEncoder encoder() {
+    private KafkaEncoder createEncoder() {
         final int numPartitions = kafkaTemplate.partitionsFor(getChannelName()).size();
         return new KafkaEncoder(getChannelName(), numPartitions);
     }
