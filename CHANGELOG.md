@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.22.2
+*synapse-kafka*
+* Fixes bug that partitions were fetched on every send 
+
 ## 0.22.1
 *synapse-kafka*
 * Ensures the correct order in which a partition is used in MessageSender
