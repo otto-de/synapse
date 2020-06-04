@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.22.1
+*synapse-kafka*
+* Ensures the correct order in which a partition is used in MessageSender
+
 ## 0.22.0
 *synapse-core*
 * Adds support for subscriptions, giving service the possibility to subscribe / unsubscribe to
