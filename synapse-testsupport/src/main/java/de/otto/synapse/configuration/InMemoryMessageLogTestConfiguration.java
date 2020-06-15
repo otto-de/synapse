@@ -14,6 +14,7 @@ import de.otto.synapse.messagestore.SnapshotMessageStore;
 import org.slf4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Lazy;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -37,10 +38,10 @@ public class InMemoryMessageLogTestConfiguration {
 
     private static final Logger LOG = getLogger(InMemoryMessageLogTestConfiguration.class);
 
-    @Bean
+    @Bean(name = {"messageLogSenderEndpointFactory", "kinesisMessageLogSenderEndpointFactory", "kafkaMessageLogSenderEndpointFactory"})
     public MessageSenderEndpointFactory messageLogSenderEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
                                                                         final InMemoryChannels inMemoryChannels) {
-        LOG.warn("Creating InMemoryMessageSenderEndpointFactory. This should only be used in tests");
+        LOG.warn("Creating in-memory messageLogSenderEndpointFactory. This should only be used in tests");
         return new InMemoryMessageSenderFactory(interceptorRegistry, inMemoryChannels, MessageLog.class);
     }
 

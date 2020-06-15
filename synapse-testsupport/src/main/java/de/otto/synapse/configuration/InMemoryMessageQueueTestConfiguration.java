@@ -33,8 +33,8 @@ public class InMemoryMessageQueueTestConfiguration {
 
     private static final Logger LOG = getLogger(InMemoryMessageQueueTestConfiguration.class);
 
-    @Bean
-    public MessageSenderEndpointFactory sqsMessageQueueSenderEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
+    @Bean(name = {"messageQueueSenderEndpointFactory", "sqsMessageQueueSenderEndpointFactory"})
+    public MessageSenderEndpointFactory messageQueueSenderEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
                                                                         final InMemoryChannels inMemoryChannels) {
         LOG.warn("Creating in-memory sqsMessageQueueSenderEndpointFactory. This should only be used in tests");
         return new InMemoryMessageSenderFactory(interceptorRegistry, inMemoryChannels, MessageQueue.class);

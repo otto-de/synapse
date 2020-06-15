@@ -25,4 +25,16 @@ check_configuration() {
 
 check_configuration
 
-${SCRIPT_DIR}/gradlew -Dorg.gradle.internal.http.socketTimeout=400000 -Dorg.gradle.internal.http.connectionTimeout=400000 uploadArchives closeAndReleaseRepository
+set +e
+grep 'def synapse_version = ".*-SNAPSHOT"' "$SCRIPT_DIR/build.gradle"
+NO_SNAPSHOT=$?
+set -e
+
+${SCRIPT_DIR}/gradlew -Dorg.gradle.internal.http.socketTimeout=400000 -Dorg.gradle.internal.http.connectionTimeout=400000 uploadArchives
+
+if [[ $NO_SNAPSHOT == 1 ]]; then
+  echo "Closing and releasing into Sonatype OSS repository"
+  "${SCRIPT_DIR}"/gradlew closeAndReleaseRepository
+else
+  echo "This is a snapshot release, closing in sonatype is not necessary"
+fi
