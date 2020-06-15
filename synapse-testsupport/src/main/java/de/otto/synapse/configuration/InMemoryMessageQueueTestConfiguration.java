@@ -36,13 +36,13 @@ public class InMemoryMessageQueueTestConfiguration {
     @Bean
     public MessageSenderEndpointFactory sqsMessageQueueSenderEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
                                                                         final InMemoryChannels inMemoryChannels) {
-        LOG.warn("Creating InMemoryMessageSenderEndpointFactory. This should only be used in tests");
+        LOG.warn("Creating in-memory sqsMessageQueueSenderEndpointFactory. This should only be used in tests");
         return new InMemoryMessageSenderFactory(interceptorRegistry, inMemoryChannels, MessageQueue.class);
     }
 
     @Bean
     public MessageQueueReceiverEndpointFactory messageQueueReceiverEndpointFactory(final InMemoryChannels inMemoryChannels) {
-        LOG.warn("Creating InMemoryMessageLogReceiverEndpointFactory. This should only be used in tests");
+        LOG.warn("Creating in-memory messageQueueReceiverEndpointFactory. This should only be used in tests");
         return new InMemoryMessageQueueReceiverEndpointFactory(inMemoryChannels);
     }
 
