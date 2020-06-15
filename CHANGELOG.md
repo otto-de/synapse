@@ -1,5 +1,10 @@
 # Release Notes
 
+## 0.22.3
+*synapse-testsupport*
+* Fixes bug that was introduced through renaming the default bean names of the message log and message queue
+  configurations to implementation-specific ones, which was not reflected in the in-memory variants 
+
 ## 0.22.2
 *synapse-kafka*
 * Fixes bug that partitions were fetched on every send 
