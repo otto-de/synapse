@@ -26,7 +26,7 @@ check_configuration() {
 check_configuration
 
 set +e
-grep 'def synapse_version = ".*-SNAPSHOT"' "$SCRIPT_DIR/build.gradle"
+grep 'version = ".*-SNAPSHOT"' "$SCRIPT_DIR/build.gradle"
 NO_SNAPSHOT=$?
 set -e
 
