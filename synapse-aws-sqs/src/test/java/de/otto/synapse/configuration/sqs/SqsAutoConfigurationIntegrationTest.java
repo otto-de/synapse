@@ -25,14 +25,14 @@ import static org.junit.Assert.assertThat;
 public class SqsAutoConfigurationIntegrationTest {
 
     @Autowired
-    private MessageSenderEndpointFactory messageQueueSenderEndpointFactory;
+    private MessageSenderEndpointFactory sqsMessageQueueSenderEndpointFactory;
     @Autowired
     private MessageQueueReceiverEndpointFactory messageQueueReceiverEndpointFactory;
 
     @Test
     public void shouldInjectQualifiedMessageSenderEndpointFactories() {
-        assertThat(messageQueueSenderEndpointFactory, is(notNullValue()));
-        assertThat(messageQueueSenderEndpointFactory, instanceOf(SqsMessageSenderEndpointFactory.class));
+        assertThat(sqsMessageQueueSenderEndpointFactory, is(notNullValue()));
+        assertThat(sqsMessageQueueSenderEndpointFactory, instanceOf(SqsMessageSenderEndpointFactory.class));
         assertThat(messageQueueReceiverEndpointFactory, is(notNullValue()));
         assertThat(messageQueueReceiverEndpointFactory, instanceOf(SqsMessageQueueReceiverEndpointFactory.class));
     }
