@@ -31,7 +31,7 @@ public class KafkaMessageLogReceiverEndpoint extends AbstractMessageLogReceiverE
     private static final Logger LOG = LoggerFactory.getLogger(KafkaMessageLogReceiverEndpoint.class);
 
     private static final long KAFKA_CONSUMER_POLLING_DURATION = 1000L;
-    private static final int LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE = 1_000;
+    private static final int LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE = 10_000;
 
     private final KafkaConsumer<String, String> kafkaConsumer;
     private final ExecutorService executorService;
