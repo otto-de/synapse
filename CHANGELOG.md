@@ -1,5 +1,10 @@
 # Release Notes
 
+## 0.22.4
+*synapse-kafka*
+* Create separate bean for Kafka consumer factory so that it can be overridden
+* Make Kafka receiver logging less verbose
+
 ## 0.22.3
 *synapse-testsupport*
 * Fixes bug that was introduced through renaming the default bean names of the message log and message queue
