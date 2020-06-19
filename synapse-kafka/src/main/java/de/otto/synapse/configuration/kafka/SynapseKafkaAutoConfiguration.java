@@ -69,17 +69,14 @@ public class SynapseKafkaAutoConfiguration {
     @ConditionalOnMissingBean(name = "kafkaMessageLogReceiverEndpointFactory")
     public MessageLogReceiverEndpointFactory kafkaMessageLogReceiverEndpointFactory(final KafkaProperties kafkaProperties,
                                                                                     final MessageInterceptorRegistry interceptorRegistry,
-                                                                                    final ApplicationEventPublisher eventPublisher) {
+                                                                                    final ApplicationEventPublisher eventPublisher,
+                                                                                    final ConsumerFactory<String, String> kafkaConsumerFactory) {
         LOG.info("Auto-configuring Kafka MessageLogReceiverEndpointFactory");
         final ExecutorService executorService = newCachedThreadPool(
                 new ThreadFactoryBuilder().setNameFormat("kafka-message-log-%d").build()
         );
 
-        final ConsumerFactory<String, String> consumerFactory = new DefaultKafkaConsumerFactory<>(
-                kafkaProperties.buildConsumerProperties(),
-                new StringDeserializer(),
-                new StringDeserializer());
-        final KafkaConsumer<String, String> kafkaConsumer = (KafkaConsumer<String, String>)consumerFactory.createConsumer();
+        final KafkaConsumer<String, String> kafkaConsumer = (KafkaConsumer<String, String>)kafkaConsumerFactory.createConsumer();
 
         return new KafkaMessageLogReceiverEndpointFactory(
                 interceptorRegistry,
@@ -88,4 +85,12 @@ public class SynapseKafkaAutoConfiguration {
                 eventPublisher);
     }
 
+    @Bean
+    @ConditionalOnMissingBean(name="kafkaConsumerFactory")
+    public ConsumerFactory<String, String> kafkaConsumerFactory(KafkaProperties kafkaProperties) {
+        return new DefaultKafkaConsumerFactory<>(
+                kafkaProperties.buildConsumerProperties(),
+                new StringDeserializer(),
+                new StringDeserializer());
+    }
 }
