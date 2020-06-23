@@ -2,6 +2,7 @@ package de.otto.synapse.endpoint.receiver.kafka;
 
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelDurationBehind;
+import de.otto.synapse.channel.ChannelPosition;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.Test;
@@ -11,6 +12,9 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static de.otto.synapse.channel.ChannelDurationBehind.channelDurationBehind;
 import static de.otto.synapse.info.MessageReceiverNotification.builder;
@@ -27,47 +31,47 @@ public class ChannelDurationBehindHandlerTest {
     final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
     final KafkaConsumer<String, String> kafkaConsumer = mock(KafkaConsumer.class);
     private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
-    final ChannelDurationBehindHandler handler = new ChannelDurationBehindHandler("foo", eventPublisher, clock,  kafkaConsumer);
-
+    final ChannelDurationBehindHandler handler = new ChannelDurationBehindHandler("foo", ChannelPosition.fromHorizon(), eventPublisher, clock, kafkaConsumer);
 
     @Test
     public void shouldAssignPartitions() {
         // given
-
-        // when
-        handler.onPartitionsAssigned(asList(
+        List<TopicPartition> topicPartitions = asList(
                 new TopicPartition("topic", 0),
                 new TopicPartition("topic", 1)
-        ));
+        );
+        initializeEndOffsetsToZero(topicPartitions);
+
+        // when
+        handler.onPartitionsAssigned(topicPartitions);
 
         // then
         final ChannelDurationBehind durationBehind = handler.getChannelDurationBehind();
-        assertThat(durationBehind.getDurationBehind(), is(ofMillis(Long.MAX_VALUE)));
+        assertThat(durationBehind.getDurationBehind(), is(ofMillis(0)));
         assertThat(durationBehind.getShardDurationsBehind(), is(ImmutableMap.of(
-                "0", ofMillis(Long.MAX_VALUE),
-                "1", ofMillis(Long.MAX_VALUE)
-                )));
+                "0", ofMillis(0),
+                "1", ofMillis(0)
+        )));
     }
 
     @Test
     public void shouldRevokePartitions() {
         // given
-        handler.onPartitionsAssigned(asList(
+        List<TopicPartition> topicPartitions = asList(
                 new TopicPartition("topic", 0),
                 new TopicPartition("topic", 1)
-        ));
+        );
+        initializeEndOffsetsToZero(topicPartitions);
+
+        handler.onPartitionsAssigned(topicPartitions);
 
         // when
-        handler.onPartitionsRevoked(asList(
-                new TopicPartition("topic", 1)
-        ));
+        handler.onPartitionsRevoked(Collections.singletonList(topicPartitions.get(1)));
 
         // then
         final ChannelDurationBehind durationBehind = handler.getChannelDurationBehind();
-        assertThat(durationBehind.getDurationBehind(), is(ofMillis(Long.MAX_VALUE)));
-        assertThat(durationBehind.getShardDurationsBehind(), is(ImmutableMap.of(
-                "0", ofMillis(Long.MAX_VALUE)
-        )));
+        assertThat(durationBehind.getDurationBehind(), is(ofMillis(0)));
+        assertThat(durationBehind.getShardDurationsBehind(), is(ImmutableMap.of("0", ofMillis(0))));
     }
 
     @Test
@@ -75,10 +79,13 @@ public class ChannelDurationBehindHandlerTest {
         // given
         TopicPartition partition0 = new TopicPartition("topic", 0);
         TopicPartition partition1 = new TopicPartition("topic", 1);
-        handler.onPartitionsAssigned(asList(
+        List<TopicPartition> topicPartitions = asList(
                 partition0,
                 partition1
-        ));
+        );
+        initializeEndOffsetsToZero(topicPartitions);
+        handler.onPartitionsAssigned(topicPartitions);
+
         when(kafkaConsumer.endOffsets(Collections.singletonList(partition1))).thenReturn(ImmutableMap.of(partition1, 70L));
 
         // when
@@ -87,9 +94,9 @@ public class ChannelDurationBehindHandlerTest {
         // then
         final ChannelDurationBehind durationBehind = handler.getChannelDurationBehind();
 
-        assertThat(durationBehind.getDurationBehind(), is(ofMillis(Long.MAX_VALUE)));
+        assertThat(durationBehind.getDurationBehind(), is(ofSeconds(42)));
         assertThat(durationBehind.getShardDurationsBehind(), is(ImmutableMap.of(
-                "0", ofMillis(Long.MAX_VALUE),
+                "0", ofMillis(0),
                 "1", ofSeconds(42)
         )));
 
@@ -97,7 +104,7 @@ public class ChannelDurationBehindHandlerTest {
                 .withChannelName("foo")
                 .withChannelDurationBehind(
                         channelDurationBehind()
-                                .with("0", ofMillis(Long.MAX_VALUE))
+                                .with("0", ofMillis(0))
                                 .with("1", ofSeconds(42))
                                 .build()
                 )
@@ -112,10 +119,13 @@ public class ChannelDurationBehindHandlerTest {
         // given
         TopicPartition partition0 = new TopicPartition("topic", 0);
         TopicPartition partition1 = new TopicPartition("topic", 1);
-        handler.onPartitionsAssigned(asList(
+        List<TopicPartition> topicPartitions = asList(
                 partition0,
                 partition1
-        ));
+        );
+        when(kafkaConsumer.endOffsets(topicPartitions)).thenReturn(ImmutableMap.of(partition0, 120L, partition1, 70L));
+        handler.onPartitionsAssigned(topicPartitions);
+
         when(kafkaConsumer.endOffsets(Collections.singletonList(partition1))).thenReturn(ImmutableMap.of(partition1, 70L));
 
         // when
@@ -142,5 +152,10 @@ public class ChannelDurationBehindHandlerTest {
                 .withMessage("Reading from Kafka stream.")
                 .build());
 
+    }
+
+    private void initializeEndOffsetsToZero(List<TopicPartition> topicPartitions) {
+        Map<TopicPartition, Long> endOffsets = topicPartitions.stream().collect(Collectors.toMap(topicPartition -> topicPartition, topicPartition -> 0L));
+        when(kafkaConsumer.endOffsets(topicPartitions)).thenReturn(endOffsets);
     }
 }

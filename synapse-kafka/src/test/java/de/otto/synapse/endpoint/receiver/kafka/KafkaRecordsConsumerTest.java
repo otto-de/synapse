@@ -13,6 +13,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.record.TimestampType;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.ApplicationEventPublisher;
@@ -42,7 +43,7 @@ public class KafkaRecordsConsumerTest {
     private MessageInterceptorRegistry registry = mock(MessageInterceptorRegistry.class);
     private MessageInterceptor interceptor = (m) -> m;
     private MessageDispatcher dispatcher = mock(MessageDispatcher.class);
-    private ChannelDurationBehindHandler durationBehindHandler = mock(ChannelDurationBehindHandler.class);
+    private ChannelDurationBehindHandler durationBehindHandler;
 
     @Before
     public void setup() {
@@ -50,7 +51,7 @@ public class KafkaRecordsConsumerTest {
         registry.register(allChannelsWith(interceptor));
         dispatcher = mock(MessageDispatcher.class);
         when(kafkaConsumer.endOffsets(any())).thenAnswer(input -> ((Collection<TopicPartition>) input.getArgument(0)).stream().collect(Collectors.toMap(partition -> partition, partition -> 42L)));
-        durationBehindHandler = new ChannelDurationBehindHandler("", mock(ApplicationEventPublisher.class), kafkaConsumer);
+        durationBehindHandler = new ChannelDurationBehindHandler("", ChannelPosition.fromHorizon(), mock(ApplicationEventPublisher.class), kafkaConsumer);
     }
 
     @Test
@@ -223,29 +224,35 @@ public class KafkaRecordsConsumerTest {
         consumer.apply(records);
 
         // then
-        final long secondsBehind = durationBehindHandler
-                .getChannelDurationBehind()
-                .getShardDurationsBehind()
-                .get("0")
-                .getSeconds();
+        final long secondsBehind = getSecondsBehind("0");
         assertThat(secondsBehind, is(lessThanOrEqualTo(2L)));
     }
 
     @Test
-    public void shouldSetZeroDurationBehindOnNoRecords() {
+    public void shouldNotChangeDurationBehindOnNoRecords() {
         // given
         final KafkaRecordsConsumer consumer = someKafkaRecordsConsumer(fromHorizon());
+        durationBehindHandler.onPartitionsAssigned(asList(new TopicPartition("", 0), new TopicPartition("", 1)));
+        ConsumerRecord<String,String> consumerRecord = new ConsumerRecord<>("", 0, 23, now().minusSeconds(100).toEpochMilli(), TimestampType.CREATE_TIME, 0, 0, 0, "key", "value");
+
+        consumer.apply(new ConsumerRecords<>(ImmutableMap.of(new TopicPartition("", 0), singletonList(consumerRecord))));
+        assertThat(getSecondsBehind("0"), is(100L));
+        assertThat(getSecondsBehind("1"), is(9223372036854775L));
 
         // when
         consumer.apply(ConsumerRecords.empty());
 
         // then
-        final long secondsBehind = durationBehindHandler
+        assertThat(getSecondsBehind("0"), is(100L));
+        assertThat(getSecondsBehind("1"), is(9223372036854775L));
+    }
+
+    private long getSecondsBehind(String shard) {
+        return durationBehindHandler
                 .getChannelDurationBehind()
                 .getShardDurationsBehind()
-                .get("")
+                .get(shard)
                 .getSeconds();
-        assertThat(secondsBehind, is(0L));
     }
 
     private ConsumerRecord<String, String> someRecord(final int partition, final long offset) {

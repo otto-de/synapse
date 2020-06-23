@@ -120,15 +120,13 @@ class KafkaRecordsConsumer implements Function<ConsumerRecords<String, String>, 
 
     private ImmutableList<ShardPosition> currentShardPositions() {
         return currentShardsSupplier.get()
-                    .stream()
-                    .map(shardName -> currentChannelPosition.shard(shardName))
-                    .collect(toImmutableList());
+                .stream()
+                .map(shardName -> currentChannelPosition.shard(shardName))
+                .collect(toImmutableList());
     }
 
     private void updateCurrentChannelPosition(final Collection<ShardPosition> shardPositionsFromRecords) {
-        shardPositionsFromRecords.forEach((shardPos) -> {
-            currentChannelPosition = merge(currentChannelPosition, shardPos);
-        });
+        shardPositionsFromRecords.forEach((shardPos) -> currentChannelPosition = merge(currentChannelPosition, shardPos));
     }
 
     private ImmutableMap<String, Duration> updateAndGetDurationBehind(ConsumerRecords<String, String> records) {
@@ -136,10 +134,6 @@ class KafkaRecordsConsumer implements Function<ConsumerRecords<String, String>, 
             ConsumerRecord<String, String> lastRecord = getLast(records.records(topicPartition));
             final Instant lastTimestampRead = Instant.ofEpochMilli(lastRecord.timestamp());
             durationBehindHandler.update(topicPartition, lastRecord.offset(), lastTimestampRead);
-        }
-
-        if(records.isEmpty()) {
-            durationBehindHandler.noRecordsReceived();
         }
 
         return durationBehindHandler

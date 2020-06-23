@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.22.5
+*synapse-kafka*
+* Fix durationBehind calculation for partitions with different offsets
+
 ## 0.22.4
 *synapse-kafka*
 * Create separate bean for Kafka consumer factory so that it can be overridden

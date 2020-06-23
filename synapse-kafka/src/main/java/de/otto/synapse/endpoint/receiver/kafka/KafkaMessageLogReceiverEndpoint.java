@@ -58,6 +58,7 @@ public class KafkaMessageLogReceiverEndpoint extends AbstractMessageLogReceiverE
 
         final ChannelDurationBehindHandler durationBehindHandler = new ChannelDurationBehindHandler(
                 getChannelName(),
+                startFrom,
                 eventPublisher,
                 kafkaConsumer);
         final ConsumerRebalanceHandler rebalanceHandler = new ConsumerRebalanceHandler(
@@ -119,7 +120,7 @@ public class KafkaMessageLogReceiverEndpoint extends AbstractMessageLogReceiverE
                 if (rebalanceHandler.shardsAssignedAndPositioned()) {
                     final ChannelResponse channelResponse = recordsConsumer.apply(records);
                     channelPosition = channelResponse.getChannelPosition();
-                    stopConditionMet.set(channelResponse.getShardResponses().stream().anyMatch(stopCondition));
+                    stopConditionMet.set(channelResponse.getShardResponses().stream().allMatch(stopCondition));
                     kafkaConsumer.commitAsync();
 
                     int responseMessagesCounter = records.count();
