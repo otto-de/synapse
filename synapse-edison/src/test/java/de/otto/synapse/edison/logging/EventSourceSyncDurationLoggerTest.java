@@ -61,7 +61,7 @@ public class EventSourceSyncDurationLoggerTest {
         inSyncEvent("channelA");
 
         //then
-        assertThat(logMessages.get(0), is("KinesisEventSource 'channelA' duration for getting in sync: PT5M2S"));
+        assertThat(logMessages.get(0), is("EventSource 'channelA' duration for getting in sync: PT5M2S"));
     }
 
 
@@ -77,8 +77,8 @@ public class EventSourceSyncDurationLoggerTest {
 
         //then
         assertThat(logMessages, hasSize(3));
-        assertThat(logMessages.get(0), is("KinesisEventSource 'channelA' duration for getting in sync: PT6M"));
-        assertThat(logMessages.get(1), is("KinesisEventSource 'channelB' duration for getting in sync: PT5M"));
+        assertThat(logMessages.get(0), is("EventSource 'channelA' duration for getting in sync: PT6M"));
+        assertThat(logMessages.get(1), is("EventSource 'channelB' duration for getting in sync: PT5M"));
         assertThat(logMessages.get(2), is("All channels up to date after PT6M"));
 
 

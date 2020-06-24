@@ -67,7 +67,7 @@ public class EventSourceSyncDurationLogger {
             Instant stopTime = clock.instant();
             Duration duration = Duration.between(mapChannelToStartTime.get(channelName), stopTime);
 
-            log(format("KinesisEventSource '%s' duration for getting in sync: %s", channelName, duration.toString()));
+            log(format("EventSource '%s' duration for getting in sync: %s", channelName, duration.toString()));
 
             healthyChannels.add(channelName);
             if (allChannelsAreUpToDate()) {
