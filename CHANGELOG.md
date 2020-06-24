@@ -1,6 +1,6 @@
 # Release Notes
 
-## 0.22.7-SNAPSHOT
+## 0.22.7
 *synapse-kafka*
 * Add timestamp of last received record to ShardPosition
 
