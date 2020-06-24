@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.22.7-SNAPSHOT
+*synapse-kafka*
+* Add timestamp of last received record to ShardPosition
+
 ## 0.22.5
 *synapse-kafka*
 * Fix durationBehind calculation for partitions with different offsets

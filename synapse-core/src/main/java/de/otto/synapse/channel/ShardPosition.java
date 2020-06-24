@@ -60,6 +60,13 @@ public final class ShardPosition implements Serializable {
                                               final @Nonnull Instant timestamp) {
         return new ShardPosition(shardName, timestamp);
     }
+    
+    @Nonnull
+    public static ShardPosition fromPositionAndTimestamp(final @Nonnull String shardName,
+                                                         final @Nonnull String position,
+                                                         final @Nonnull Instant timestamp) {
+        return new ShardPosition(shardName, position, timestamp, StartFrom.POSITION);
+    }
 
     @Nonnull
     @JsonProperty

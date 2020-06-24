@@ -9,6 +9,7 @@ import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.TextMessage;
+import de.otto.synapse.testsupport.TestClock;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -18,6 +19,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.time.Clock;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -25,6 +28,7 @@ import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ChannelPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromHorizon;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.channel.ShardPosition.fromPositionAndTimestamp;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.allChannelsWith;
 import static de.otto.synapse.message.Header.of;
 import static de.otto.synapse.message.TextMessage.of;
@@ -59,7 +63,8 @@ public class KafkaRecordsConsumerTest {
         // given
         final KafkaRecordsConsumer consumer = someKafkaRecordsConsumer(fromHorizon());
 
-        final ConsumerRecord<String, String> record = someRecord(0, 42L);
+        Clock fixedClock = TestClock.now();
+        final ConsumerRecord<String, String> record = someRecord(0, 42L, fixedClock);
 
         // when
         final ConsumerRecords<String,String> records = new ConsumerRecords<>(ImmutableMap.of(
@@ -70,7 +75,7 @@ public class KafkaRecordsConsumerTest {
 
         // then
         final ChannelPosition expectedChannelPosition = channelPosition(
-                fromPosition("0", "42"),
+                fromPositionAndTimestamp("0", "42", fixedClock.instant().truncatedTo(ChronoUnit.MILLIS)),
                 fromHorizon("1")
         );
         assertThat(channelResponse.getChannelPosition(), is(expectedChannelPosition));
@@ -81,8 +86,9 @@ public class KafkaRecordsConsumerTest {
         // given
         final KafkaRecordsConsumer consumer = someKafkaRecordsConsumer(fromHorizon());
 
-        final ConsumerRecord<String, String> recordOne = someRecord(0, 42);
-        final ConsumerRecord<String, String> recordTwo = someRecord(1, 4711);
+        Clock fixedClock = TestClock.now();
+        final ConsumerRecord<String, String> recordOne = someRecord(0, 42, fixedClock);
+        final ConsumerRecord<String, String> recordTwo = someRecord(1, 4711, fixedClock);
 
         // when
         final ConsumerRecords<String,String> records = new ConsumerRecords<>(ImmutableMap.of(
@@ -94,8 +100,8 @@ public class KafkaRecordsConsumerTest {
 
         // then
         final ChannelPosition expectedChannelPosition = channelPosition(
-                fromPosition("0", "42"),
-                fromPosition("1", "4711")
+                fromPositionAndTimestamp("0", "42", fixedClock.instant().truncatedTo(ChronoUnit.MILLIS)),
+                fromPositionAndTimestamp("1", "4711", fixedClock.instant().truncatedTo(ChronoUnit.MILLIS))
         );
         assertThat(channelResponse.getChannelPosition(), is(expectedChannelPosition));
     }
@@ -105,8 +111,9 @@ public class KafkaRecordsConsumerTest {
         // given
         final KafkaRecordsConsumer consumer = someKafkaRecordsConsumer(fromHorizon());
 
-        final ConsumerRecord<String, String> recordOne = someRecord(0, 42);
-        final ConsumerRecord<String, String> recordTwo = someRecord(0, 43);
+        Clock fixedClock = TestClock.now();
+        final ConsumerRecord<String, String> recordOne = someRecord(0, 42, fixedClock);
+        final ConsumerRecord<String, String> recordTwo = someRecord(0, 43, fixedClock);
 
         // when
         final ConsumerRecords<String,String> records = new ConsumerRecords<>(ImmutableMap.of(
@@ -117,7 +124,7 @@ public class KafkaRecordsConsumerTest {
 
         // then
         final ChannelPosition expectedChannelPosition = channelPosition(
-                fromPosition("0", "43"),
+                fromPositionAndTimestamp("0", "43", fixedClock.instant().truncatedTo(ChronoUnit.MILLIS)),
                 fromHorizon("1")
         );
         assertThat(channelResponse.getChannelPosition(), is(expectedChannelPosition));
@@ -128,14 +135,15 @@ public class KafkaRecordsConsumerTest {
         // given
         final KafkaRecordsConsumer consumer = someKafkaRecordsConsumer(fromHorizon());
 
-        final ConsumerRecord<String, String> recordOne = someRecord(0, 42);
+        Clock fixedClock = TestClock.now();
+        final ConsumerRecord<String, String> recordOne = someRecord(0, 42, fixedClock);
         final ConsumerRecords<String,String> firstRecords = new ConsumerRecords<>(ImmutableMap.of(
                 new TopicPartition("foo", 0), singletonList(recordOne)
         ));
         consumer.apply(firstRecords);
 
         // when
-        final ConsumerRecord<String, String> recordTwo = someRecord(0, 43);
+        final ConsumerRecord<String, String> recordTwo = someRecord(0, 43, fixedClock);
         final ConsumerRecords<String,String> followingRecords = new ConsumerRecords<>(ImmutableMap.of(
                 new TopicPartition("foo", 0), singletonList(recordTwo)
         ));
@@ -144,7 +152,7 @@ public class KafkaRecordsConsumerTest {
 
         // then
         final ChannelPosition expectedChannelPosition = channelPosition(
-                fromPosition("0", "43"),
+                fromPositionAndTimestamp("0", "43", fixedClock.instant().truncatedTo(ChronoUnit.MILLIS)),
                 fromHorizon("1")
         );
         assertThat(channelResponse.getChannelPosition(), is(expectedChannelPosition));
@@ -155,7 +163,7 @@ public class KafkaRecordsConsumerTest {
         // given
         final KafkaRecordsConsumer consumer = someKafkaRecordsConsumer(fromHorizon());
 
-        final ConsumerRecord<String, String> record = someRecord(0, 42L);
+        final ConsumerRecord<String, String> record = someRecord(0, 42L, Clock.systemDefaultZone());
 
         // when
         registry.register(allChannelsWith((m) -> {
@@ -177,7 +185,7 @@ public class KafkaRecordsConsumerTest {
         // given
         final KafkaRecordsConsumer consumer = someKafkaRecordsConsumer(fromHorizon());
 
-        final ConsumerRecord<String, String> record = someRecord(0, 42L);
+        final ConsumerRecord<String, String> record = someRecord(0, 42L, Clock.systemDefaultZone());
 
         // when
         final ConsumerRecords<String,String> records = new ConsumerRecords<>(ImmutableMap.of(
@@ -195,7 +203,7 @@ public class KafkaRecordsConsumerTest {
         // given
         final KafkaRecordsConsumer consumer = someKafkaRecordsConsumer(fromHorizon());
 
-        final ConsumerRecord<String, String> record = someRecord(0, 42L);
+        final ConsumerRecord<String, String> record = someRecord(0, 42L, Clock.systemDefaultZone());
 
         // when
         registry.register(allChannelsWith((m) -> null));
@@ -214,7 +222,7 @@ public class KafkaRecordsConsumerTest {
         // given
         final KafkaRecordsConsumer consumer = someKafkaRecordsConsumer(fromHorizon());
 
-        final ConsumerRecord<String, String> record = someRecord(0, 42L);
+        final ConsumerRecord<String, String> record = someRecord(0, 42L, Clock.systemDefaultZone());
 
         // when
         final ConsumerRecords<String,String> records = new ConsumerRecords<>(ImmutableMap.of(
@@ -255,12 +263,12 @@ public class KafkaRecordsConsumerTest {
                 .getSeconds();
     }
 
-    private ConsumerRecord<String, String> someRecord(final int partition, final long offset) {
+    private ConsumerRecord<String, String> someRecord(final int partition, final long offset, Clock clock) {
         return new ConsumerRecord<>(
                 "foo",
                 partition,
                 offset,
-                now().toEpochMilli()-1000L, LOG_APPEND_TIME,
+                clock.instant().toEpochMilli(), LOG_APPEND_TIME,
                 -1L, -1, -1,
                 "key",
                 "payload"

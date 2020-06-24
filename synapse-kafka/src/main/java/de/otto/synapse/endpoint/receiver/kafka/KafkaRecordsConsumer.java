@@ -28,10 +28,12 @@ import static com.google.common.collect.Maps.newHashMap;
 import static de.otto.synapse.channel.ChannelPosition.merge;
 import static de.otto.synapse.channel.ChannelResponse.channelResponse;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
+import static de.otto.synapse.channel.ShardPosition.fromPositionAndTimestamp;
 import static de.otto.synapse.channel.ShardResponse.shardResponse;
 import static de.otto.synapse.endpoint.EndpointType.RECEIVER;
 import static java.lang.Integer.parseInt;
 import static java.time.Duration.ofMillis;
+import static java.time.Instant.ofEpochMilli;
 import static org.slf4j.LoggerFactory.getLogger;
 
 class KafkaRecordsConsumer implements Function<ConsumerRecords<String, String>, ChannelResponse> {
@@ -115,7 +117,7 @@ class KafkaRecordsConsumer implements Function<ConsumerRecords<String, String>, 
     }
 
     private ShardPosition toShardPosition(final ConsumerRecord<String, String> record) {
-        return fromPosition("" + record.partition(), followingShardPosition("" + (record.offset())));
+        return fromPositionAndTimestamp("" + record.partition(), "" + (record.offset()), ofEpochMilli(record.timestamp()));
     }
 
     private ImmutableList<ShardPosition> currentShardPositions() {
@@ -132,17 +134,13 @@ class KafkaRecordsConsumer implements Function<ConsumerRecords<String, String>, 
     private ImmutableMap<String, Duration> updateAndGetDurationBehind(ConsumerRecords<String, String> records) {
         for (final TopicPartition topicPartition : records.partitions()) {
             ConsumerRecord<String, String> lastRecord = getLast(records.records(topicPartition));
-            final Instant lastTimestampRead = Instant.ofEpochMilli(lastRecord.timestamp());
+            final Instant lastTimestampRead = ofEpochMilli(lastRecord.timestamp());
             durationBehindHandler.update(topicPartition, lastRecord.offset(), lastTimestampRead);
         }
 
         return durationBehindHandler
                 .getChannelDurationBehind()
                 .getShardDurationsBehind();
-    }
-
-    private String followingShardPosition(final String currentPosition) {
-        return "" + (parseInt(currentPosition));
     }
 
 }
