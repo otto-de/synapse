@@ -15,7 +15,7 @@ public class KinesisShardResponse {
         final KinesisDecoder kinesisDecoder = new KinesisDecoder();
         return shardResponse(
                 shardPosition,
-                ofMillis(recordsResponse.millisBehindLatest()),
+                ofMillis(recordsResponse.millisBehindLatest() == null ? Long.MAX_VALUE : recordsResponse.millisBehindLatest()),
                 recordsResponse.records()
                         .stream()
                         .map(record -> kinesisDecoder.apply(new RecordWithShard(shardPosition.shardName(), record)))

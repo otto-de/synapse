@@ -108,7 +108,7 @@ public class KinesisShardIteratorTest {
         // given
         GetRecordsResponse response = GetRecordsResponse.builder()
                 .records(emptyList())
-                .millisBehindLatest(42L)
+                .millisBehindLatest(null)
                 .build();
         final KinesisAsyncClient kinesisClient = someKinesisClient();
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));

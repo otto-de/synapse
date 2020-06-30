@@ -102,6 +102,12 @@ public class KinesisShardIterator {
     public ShardResponse next() {
         if (!stopSignal.get()) {
             GetRecordsResponse recordsResponse = tryNextWithRetry();
+            if (recordsResponse.records() == null || recordsResponse.records().size() == 0) {
+                LOG.warn("GetRecordsResponse contains no records.");
+            }
+            if (recordsResponse.millisBehindLatest() == null || recordsResponse.millisBehindLatest() == Long.MAX_VALUE) {
+                LOG.warn("GetRecordsResponse millisBehindLatest was not set.");
+            }
             return KinesisShardResponse.kinesisShardResponse(shardPosition, recordsResponse);
         } else {
             throw new IllegalStateException(format("Cannot iterate on shard '%s' after stop signal was received", shardPosition.shardName()));
