@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.22.8
+*synapse-kinesis*
+* Bugfix: Don't throw NPEs when GetRecordsResponse contains an empty list of records.
+
 ## 0.22.7
 *synapse-kafka*
 * Add timestamp of last received record to ShardPosition
