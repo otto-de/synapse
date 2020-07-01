@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.22.9
+*synapse-kinesis*
+* Bugfix: Better handling for invalid GetRecordsResponses without millisBehindLatest.
+
 ## 0.22.8
 *synapse-kinesis*
 * Bugfix: Don't throw NPEs when GetRecordsResponse contains an empty list of records.
