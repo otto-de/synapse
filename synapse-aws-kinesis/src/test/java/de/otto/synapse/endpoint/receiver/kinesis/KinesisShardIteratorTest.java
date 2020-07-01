@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static software.amazon.awssdk.services.kinesis.model.Record.builder;
@@ -108,7 +109,7 @@ public class KinesisShardIteratorTest {
         // given
         GetRecordsResponse response = GetRecordsResponse.builder()
                 .records(emptyList())
-                .millisBehindLatest(null)
+                .millisBehindLatest(1000L)
                 .build();
         final KinesisAsyncClient kinesisClient = someKinesisClient();
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
@@ -119,6 +120,21 @@ public class KinesisShardIteratorTest {
 
         // then
         assertThat(shardIterator.getShardPosition(), is(fromPosition("someShard", "42")));
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenGetRecordsResponseIsTotallyBrokenRegardlessOfThreeRetries() {
+        // given
+        GetRecordsResponse response = GetRecordsResponse.builder()
+                .records(emptyList())
+                .millisBehindLatest(null)
+                .build();
+        final KinesisAsyncClient kinesisClient = someKinesisClient();
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
+        final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromPosition("someShard", "42"));
+
+        // when
+        assertThrows(RuntimeException.class, shardIterator::next);
     }
 
     @Test

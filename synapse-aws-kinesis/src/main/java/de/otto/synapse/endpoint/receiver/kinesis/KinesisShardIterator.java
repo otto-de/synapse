@@ -103,10 +103,7 @@ public class KinesisShardIterator {
         if (!stopSignal.get()) {
             GetRecordsResponse recordsResponse = tryNextWithRetry();
             if (recordsResponse.records() == null || recordsResponse.records().size() == 0) {
-                LOG.warn("GetRecordsResponse contains no records.");
-            }
-            if (recordsResponse.millisBehindLatest() == null || recordsResponse.millisBehindLatest() == Long.MAX_VALUE) {
-                LOG.warn("GetRecordsResponse millisBehindLatest was not set.");
+                LOG.debug("GetRecordsResponse contains no records.");
             }
             return KinesisShardResponse.kinesisShardResponse(shardPosition, recordsResponse);
         } else {
@@ -149,7 +146,7 @@ public class KinesisShardIterator {
                 return tryNext();
             } catch (RuntimeException e) {
                 exception = e;
-                LOG.warn("Failed to iterate on kinesis shard. Try to reset iterator and retry ({}/{}).", retry, MAX_RETRIES);
+                LOG.warn(String.format("Failed to iterate on kinesis shard. Try to reset iterator and retry (%d/%d).", retry, MAX_RETRIES), e);
                 id = createShardIteratorId();
             }
         }
@@ -162,6 +159,9 @@ public class KinesisShardIterator {
                 .limit(fetchRecordLimit)
                 .build())
                 .join();
+        if (response.millisBehindLatest() == null) {
+            throw new RuntimeException("millisBehindLatest inside a GetRecordsResponse was null. The response was: " + response.toString());
+        }
         this.id = response.nextShardIterator();
         LOG.debug("next() with id " + this.id + " returned " + response.records().size() + " records");
         if (!response.records().isEmpty()) {
