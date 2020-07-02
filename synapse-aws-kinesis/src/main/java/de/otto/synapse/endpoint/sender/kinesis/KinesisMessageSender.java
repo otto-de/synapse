@@ -1,6 +1,5 @@
 package de.otto.synapse.endpoint.sender.kinesis;
 
-import com.google.common.collect.Lists;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.message.TextMessage;
@@ -28,6 +27,7 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
     private static final Logger LOG = getLogger(KinesisMessageSender.class);
 
     private static final int PUT_RECORDS_BATCH_SIZE = 500;
+    private static final int PUT_RECORDS_BATCH_SIZE_BYTES = 5 * 1024 * 1024;
     private static final int MAX_RETRIES = 15;
     private static final long RETRY_DELAY_MS = 1000L;
 
@@ -65,11 +65,27 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
         // TODO: Introduce a response object and return it instead of Void
         // Just because we need a CompletableFuture<Void>, no CompletableFuture<SendMessageBatchResponse>:
         final List<PutRecordsRequestEntry> entries = createPutRecordRequestEntries(messageStream);
+        long currentBatchSize = 0;
+        List<PutRecordsRequestEntry> batch = new ArrayList<>();
         if (!entries.isEmpty()) {
-            Lists.partition(entries, PUT_RECORDS_BATCH_SIZE)
-                    .forEach(this::blockingSendBatchWithRetries);
+            for (PutRecordsRequestEntry entry : entries) {
+                currentBatchSize += getApproximateDataSize(entry);
+                if (currentBatchSize > PUT_RECORDS_BATCH_SIZE_BYTES || batch.size() + 1 > PUT_RECORDS_BATCH_SIZE) {
+                    blockingSendBatchWithRetries(batch);
+                    batch = new ArrayList<>();
+                    currentBatchSize = 0;
+                }
+                batch.add(entry);
+            }
+            if (!batch.isEmpty()) {
+                blockingSendBatchWithRetries(batch);
+            }
         }
         return CompletableFuture.completedFuture(null);
+    }
+
+    private int getApproximateDataSize(PutRecordsRequestEntry entry) {
+        return entry.data().asByteBuffer().limit() + entry.partitionKey().getBytes().length;
     }
 
     @Override
@@ -95,7 +111,8 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
 
     private boolean blockingSendBatch(List<PutRecordsRequestEntry> batch) throws ExecutionException, InterruptedException {
         AtomicBoolean isSuccessful = new AtomicBoolean(true);
-        kinesisAsyncClient.putRecords(createPutRecordsRequest(batch))
+        PutRecordsRequest putRecordsRequest = createPutRecordsRequest(batch);
+        kinesisAsyncClient.putRecords(putRecordsRequest)
                 .thenApply(response -> {
                     isSuccessful.set(response.failedRecordCount() == 0);
                     return response;

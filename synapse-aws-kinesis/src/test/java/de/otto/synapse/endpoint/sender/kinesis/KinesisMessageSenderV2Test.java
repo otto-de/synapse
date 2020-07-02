@@ -27,7 +27,10 @@ import software.amazon.awssdk.services.kinesis.model.PutRecordsResultEntry;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -290,6 +293,31 @@ public class KinesisMessageSenderV2Test {
         assertThat(currentObjectMapper().readValue(
                 new ByteBufferBackedInputStream(secondEntry.data().asByteBuffer()), Map.class).get(SYNAPSE_MSG_PAYLOAD),
                 is(singletonMap("value", "apple")));
+    }
+
+    @Test
+    public void shouldNotSendTooLargeBatches() {
+        // given
+        Random random = new Random();
+        List<Message<ExampleJsonObject>> oneMbObjects = IntStream
+                .range(0, 6)
+                .mapToObj(i -> {
+                    byte[] bytes = new byte[1024 * 1024];
+                    random.nextBytes(bytes);
+                    return Message.message("" + i, new ExampleJsonObject(new String(bytes)));
+                })
+                .collect(Collectors.toList());
+
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(completedFuture(PutRecordsResponse.builder()
+                .failedRecordCount(0)
+                .records(PutRecordsResultEntry.builder().build())
+                .build()));
+
+        // when
+        kinesisMessageSender.sendBatch(oneMbObjects.stream());
+
+        //then
+        verify(kinesisClient, times(3)).putRecords(any(PutRecordsRequest.class));
     }
 
     @Test

@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.22.10
+*synapse-kinesis*
+* Bugfix: KinesisMessageSender: split batches when total record size exceeds 5mb.
+
 ## 0.22.9
 *synapse-kinesis*
 * Bugfix: Better handling for invalid GetRecordsResponses without millisBehindLatest.
