@@ -28,8 +28,8 @@ import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
         matchIfMissing = true)
 public class MessageTraceAutoConfiguration {
 
-    @Value("${synapse.edison.trace.capacity:500}")
-    private int capacity = 500;
+    @Value("${synapse.edison.trace.capacity:100}")
+    private int capacity = 100;
 
     @Bean
     @ConditionalOnMissingBean

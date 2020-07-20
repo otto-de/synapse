@@ -5,20 +5,20 @@ import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.MessageEndpoint;
 
 import javax.annotation.concurrent.ThreadSafe;
-import java.util.Objects;
-import java.util.Queue;
-import java.util.SortedSet;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.copyOf;
+import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.Sets.newTreeSet;
 import static java.lang.Boolean.TRUE;
 
 /**
  * Thread-safe in-memory implementation of a circular MessageStore that is storing all traceEntries in insertion order
- * with a configurable capacity.
+ * per channel with a configurable capacity per channel.
  *
  * <p>Each time an element is added to a full message store, the message store automatically removes its head element.
  */
@@ -65,19 +65,19 @@ public class MessageTrace {
         }
     }
 
-    private final Queue<TraceEntry> traceEntries;
-    private final int capacity;
+    private final Map<String, Queue<TraceEntry>> traceEntries;
+    private final int capacityPerChannel;
     private final ConcurrentMap<String, Boolean> senders = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, Boolean> receivers = new ConcurrentHashMap<>();
 
     /**
-     * Creates a new instance with specified capacity.
+     * Creates a new instance with specified capacity per channel.
      *
-     * @param capacity the size of the underlying ring buffer.
+     * @param capacityPerChannel the size of the underlying ring buffers.
      */
-    public MessageTrace(final int capacity) {
-        traceEntries = EvictingQueue.create(capacity);
-        this.capacity = capacity;
+    public MessageTrace(final int capacityPerChannel) {
+        traceEntries = new ConcurrentHashMap<>();
+        this.capacityPerChannel = capacityPerChannel;
     }
 
     public SortedSet<String> getSenderChannels() {
@@ -88,8 +88,8 @@ public class MessageTrace {
         return newTreeSet(receivers.keySet());
     }
 
-    public int getCapacity() {
-        return capacity;
+    public int getCapacityPerChannel() {
+        return capacityPerChannel;
     }
 
     /**
@@ -99,7 +99,10 @@ public class MessageTrace {
      * @param traceEntry the message to add
      */
     public synchronized void add(final TraceEntry traceEntry) {
-        traceEntries.add(traceEntry);
+        traceEntries.putIfAbsent(traceEntry.getChannelName(), EvictingQueue.create(capacityPerChannel));
+
+        traceEntries.get(traceEntry.getChannelName()).add(traceEntry);
+
         if (traceEntry.getEndpointType() == EndpointType.RECEIVER) {
             receivers.putIfAbsent(traceEntry.getChannelName(), TRUE);
         } else if (traceEntry.getEndpointType() == EndpointType.SENDER) {
@@ -110,19 +113,23 @@ public class MessageTrace {
     /**
      * Returns a Stream of {@link TraceEntry traceEntries} contained in the RegisteredEndpoints.
      * <p>
-     *     The stream will maintain the insertion order of the traceEntries.
+     *     The stream will maintain the per-channel insertion order of the traceEntries, but not overall insertion order.
      * </p>
      *
      * @return Stream of traceEntries
      */
     public synchronized Stream<TraceEntry> stream() {
-        return copyOf(traceEntries).stream();
+        return copyOf(traceEntries.values())
+                .stream().flatMap(Collection::stream);
     }
 
     public synchronized Stream<TraceEntry> stream(final String channelName, final EndpointType endpointType) {
-        return copyOf(traceEntries)
+        if (!traceEntries.containsKey(channelName)) {
+            return Stream.empty();
+        }
+        return copyOf(traceEntries.get(channelName))
                 .stream()
-                .filter(traceEntry -> traceEntry.getChannelName().equals(channelName) && traceEntry.getEndpointType().equals(endpointType));
+                .filter(traceEntry -> traceEntry.getEndpointType().equals(endpointType));
     }
 
 }

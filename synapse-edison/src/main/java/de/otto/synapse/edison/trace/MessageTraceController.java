@@ -49,7 +49,7 @@ public class MessageTraceController {
                                 ? "Receiver"
                                 : "Sender",
                         "channelName", channelName,
-                        "capacity", messageTrace.getCapacity(),
+                        "capacityPerChannel", messageTrace.getCapacityPerChannel(),
                         "messages",
                         messageTrace
                                 .stream(channelName, EndpointType.valueOf(endpointType.toUpperCase()))

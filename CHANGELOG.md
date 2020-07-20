@@ -1,5 +1,12 @@
 # Release Notes
 
+## 0.22.11
+*synapse-edison*
+* Messagetrace now saves a configurable amount of messages per channel. Before, a channel could
+run empty in the message trace because of vast activity on any other channel overriding the message trace
+up to the overall capacity. Default capacity per channel is `100`. The overall message trace now only
+preserves insertion order by channel, not across all channels.
+
 ## 0.22.10
 *synapse-kinesis*
 * Bugfix: KinesisMessageSender: split batches when total record size exceeds 5mb.

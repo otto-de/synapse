@@ -37,7 +37,7 @@
                             <div class="modal-content">
                                 <span class="close">&times;</span>
                                 <h3>Message Trace</h3>
-                                <p>Displays the last <span th:text="${capacity}">5</span> messages
+                                <p>Displays the last <span th:text="${capacityPerChannel}">5</span> messages
                                     <span th:text="${endpointType == 'Receiver' ? 'received from' : 'sent to'}">received from</span>
                                     channel <span th:text="${channelName}"></span>.</p>
                             </div>
