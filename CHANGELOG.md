@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.22.12
+*synapse-compaction-aws-s3*
+* The log marker that is given to the compact()-function is also used to create the compacting event source now
+
 ## 0.22.11
 *synapse-edison*
 * Messagetrace now saves a configurable amount of messages per channel. Before, a channel could

@@ -4,6 +4,8 @@ import de.otto.synapse.compaction.s3.CompactionService;
 import de.otto.synapse.compaction.s3.SnapshotWriteService;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
 import de.otto.synapse.eventsource.EventSourceBuilder;
+import de.otto.synapse.messagestore.MessageStore;
+import de.otto.synapse.messagestore.MessageStoreFactory;
 import de.otto.synapse.state.ConcurrentMapStateRepository;
 import de.otto.synapse.state.StateRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -29,8 +31,8 @@ public class CompactionAutoConfiguration {
     @ConditionalOnProperty(prefix = "synapse.compaction", name = "enabled", havingValue = "true")
     public CompactionService compactionService(final SnapshotWriteService snapshotWriteService,
                                                final StateRepository<String> compactionStateRepository,
-                                               final EventSourceBuilder eventSourceBuilder,
-                                               final MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory) {
-        return new CompactionService(snapshotWriteService, compactionStateRepository, eventSourceBuilder, messageLogReceiverEndpointFactory);
+                                               final MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory,
+                                               final MessageStoreFactory<? extends MessageStore> messageStoreFactory) {
+        return new CompactionService(snapshotWriteService, compactionStateRepository, messageLogReceiverEndpointFactory, messageStoreFactory);
     }
 }

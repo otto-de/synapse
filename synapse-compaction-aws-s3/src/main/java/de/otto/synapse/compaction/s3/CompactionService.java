@@ -3,8 +3,11 @@ package de.otto.synapse.compaction.s3;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
+import de.otto.synapse.eventsource.DefaultEventSource;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceBuilder;
+import de.otto.synapse.messagestore.MessageStore;
+import de.otto.synapse.messagestore.MessageStoreFactory;
 import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.translator.MessageFormat;
 import org.slf4j.Logger;
@@ -22,37 +25,40 @@ public class CompactionService {
 
     private final StateRepository<String> stateRepository;
     private final SnapshotWriteService snapshotWriteService;
-    private final EventSourceBuilder eventSourceBuilder;
     private final MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory;
+    private final MessageStoreFactory<? extends MessageStore> snapshotMessageStoreFactory;
     private final Clock clock;
 
     public CompactionService(final SnapshotWriteService snapshotWriteService,
                              final StateRepository<String> stateRepository,
-                             final EventSourceBuilder eventSourceBuilder,
-                             final MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory)
+                             final MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory,
+                             final MessageStoreFactory<? extends MessageStore> messageStoreFactory)
     {
-        this(snapshotWriteService, stateRepository, eventSourceBuilder, messageLogReceiverEndpointFactory, Clock.systemDefaultZone());
+        this(snapshotWriteService, stateRepository, messageLogReceiverEndpointFactory, messageStoreFactory, Clock.systemDefaultZone());
     }
 
     public CompactionService(final SnapshotWriteService snapshotWriteService,
                              final StateRepository<String> stateRepository,
-                             final EventSourceBuilder eventSourceBuilder,
                              final MessageLogReceiverEndpointFactory messageLogReceiverEndpointFactory,
+                             final MessageStoreFactory<? extends MessageStore> messageStoreFactory,
                              final Clock clock)
     {
         this.snapshotWriteService = snapshotWriteService;
         this.stateRepository = stateRepository;
-        this.eventSourceBuilder = eventSourceBuilder;
         this.messageLogReceiverEndpointFactory = messageLogReceiverEndpointFactory;
+        this.snapshotMessageStoreFactory = messageStoreFactory;
         this.clock = clock;
     }
 
     public String compact(final String channelName, final MessageFormat messageFormat, final Marker marker) {
         LOG.info(marker, "Start compacting channel {} with MessageFormat {}", channelName, messageFormat);
         stateRepository.clear();
+
         LOG.info(marker, "Start loading entries from snapshot");
         final MessageLogReceiverEndpoint messageLog = messageLogReceiverEndpointFactory.create(channelName);
-        final EventSource compactingKinesisEventSource = eventSourceBuilder.buildEventSource(messageLog);
+        final MessageStore messageStore = snapshotMessageStoreFactory.createMessageStoreFor(channelName);
+        final EventSource compactingKinesisEventSource = new DefaultEventSource(messageStore, messageLog, marker);
+
         compactingKinesisEventSource.register(
                 new SnapshotMessageConsumer(
                         messageFormat,
