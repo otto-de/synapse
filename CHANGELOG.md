@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.19.2
+*synapse-aws-kinesis*
+* Configure skipNextEmptyParts in KinesisMessageLogReader
+
 ## 0.19.1
 *General*
 * Latest AWS SDK 2.10.4 (which brings Jackson 2.10.0 and Netty 4.1.42.Final)

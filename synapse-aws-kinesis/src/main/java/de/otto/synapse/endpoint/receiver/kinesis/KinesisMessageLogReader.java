@@ -41,6 +41,7 @@ public class KinesisMessageLogReader {
 
     public static final int SKIP_NEXT_PARTS = 8;
     private final int waitingTimeOnEmptyRecords;
+    private final int skipNextEmptyParts;
 
     private final Marker marker;
 
@@ -56,12 +57,23 @@ public class KinesisMessageLogReader {
                                    final KinesisAsyncClient kinesisClient,
                                    final ExecutorService executorService,
                                    final Clock clock, final int waitingTimeOnEmptyRecords, final Marker marker) {
+        this(channelName, kinesisClient, executorService, clock, waitingTimeOnEmptyRecords, SKIP_NEXT_PARTS, marker);
+    }
+
+    public KinesisMessageLogReader(final String channelName,
+                                   final KinesisAsyncClient kinesisClient,
+                                   final ExecutorService executorService,
+                                   final Clock clock,
+                                   final int waitingTimeOnEmptyRecords,
+                                   final int skipNextEmptyParts,
+                                   final Marker marker) {
         this.channelName = channelName;
         this.kinesisClient = kinesisClient;
         this.executorService = executorService;
         this.clock = clock;
 
         this.waitingTimeOnEmptyRecords = waitingTimeOnEmptyRecords;
+        this.skipNextEmptyParts = skipNextEmptyParts;
 
         this.marker = marker;
     }
@@ -113,7 +125,7 @@ public class KinesisMessageLogReader {
                     .map(shardReader -> supplyAsync(
                             () -> {
                                 final KinesisShardIterator shardIterator = iterator.getShardIterator(shardReader.getShardName());
-                                return fetchNext(shardIterator, SKIP_NEXT_PARTS);
+                                return fetchNext(shardIterator, skipNextEmptyParts);
                             },
                             executorService))
                     .collect(toList());
@@ -132,6 +144,11 @@ public class KinesisMessageLogReader {
         final String id = shardIterator.getId();
         final ShardResponse shardResponse = shardIterator.next();
         if(shardResponse.getMessages().isEmpty() && !shardIterator.isPoison() && !Objects.equals(shardIterator.getId(), id) && skipNextParts > 0) {
+            try {
+                Thread.sleep(50);  // avoid to many request in a short timespan
+            } catch (InterruptedException e) {
+                LOG.warn(marker, "Thread got interrupted");
+            }
             return fetchNext(shardIterator, --skipNextParts);
         }
         return shardResponse;
