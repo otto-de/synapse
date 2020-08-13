@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.22.13
+*synapse-compaction-aws-s3*
+* Bugfix: Removed file pointer leak in temp file logging function.
+
 ## 0.22.12
 *synapse-compaction-aws-s3*
 * The log marker that is given to the compact()-function is also used to create the compacting event source now
