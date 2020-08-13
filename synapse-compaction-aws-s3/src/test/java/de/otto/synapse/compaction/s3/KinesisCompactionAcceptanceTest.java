@@ -42,6 +42,7 @@ import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipInputStream;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
@@ -147,7 +148,7 @@ public class KinesisCompactionAcceptanceTest {
                 .keySet()
                 .stream()
                 .map(Thread::getName)
-                .filter((name)->name.startsWith("kinesis-message-log-"))
+                .filter((name) -> name.startsWith("kinesis-message-log-"))
                 .sorted()
                 .collect(toList());
 
@@ -158,7 +159,7 @@ public class KinesisCompactionAcceptanceTest {
                 .keySet()
                 .stream()
                 .map(Thread::getName)
-                .filter((name)->name.startsWith("kinesis-message-log-"))
+                .filter((name) -> name.startsWith("kinesis-message-log-"))
                 .sorted()
                 .collect(toList());
         assertThat(threadNamesAfter, is(not(empty())));
@@ -288,7 +289,7 @@ public class KinesisCompactionAcceptanceTest {
         ContiguousSet.create(messageKeyRange, DiscreteDomain.integers())
                 .forEach(key -> kinesisV2Sender.send(message(Key.of(valueOf(key), "PRICE#" + key), payloadPrefix + "-" + key)).join());
         ContiguousSet.create(messageKeyRange, DiscreteDomain.integers())
-                .forEach(key -> kinesisV2Sender.send(message(Key.of(valueOf(key),"AVAILABILITY#" + key), payloadPrefix + "-" + key)).join());
+                .forEach(key -> kinesisV2Sender.send(message(Key.of(valueOf(key), "AVAILABILITY#" + key), payloadPrefix + "-" + key)).join());
         sleep(20);
     }
 
@@ -304,9 +305,11 @@ public class KinesisCompactionAcceptanceTest {
     }
 
     private List<Path> getSnapshotFilePaths() throws IOException {
-        return Files.list(Paths.get(System.getProperty("java.io.tmpdir")))
-                .filter(p -> p.toFile().getName().startsWith("compaction-kinesis-compaction-test-snapshot-"))
-                .collect(Collectors.toList());
+        try (Stream<Path> filesStream = Files.list(Paths.get(System.getProperty("java.io.tmpdir")))) {
+            return filesStream
+                    .filter(p -> p.toFile().getName().startsWith("compaction-kinesis-compaction-test-snapshot-"))
+                    .collect(Collectors.toList());
+        }
     }
 
 }

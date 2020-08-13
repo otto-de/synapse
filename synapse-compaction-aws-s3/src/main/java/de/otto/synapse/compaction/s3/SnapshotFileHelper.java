@@ -13,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.StandardSystemProperty.JAVA_IO_TMPDIR;
 import static java.lang.String.format;
@@ -77,12 +78,14 @@ public final class SnapshotFileHelper {
             float freeSpace = (float) file.getFreeSpace() / 1024 / 1024 / 1024;
             LOG.info(format("Available DiskSpace: usable %.3f GB / free %.3f GB", usableSpace, freeSpace));
 
-            String tempDirContent = Files.list(Paths.get(System.getProperty("java.io.tmpdir")))
-                    .filter(path -> path.toFile().isFile())
-                    .filter(path -> path.toFile().length() > ONE_MB)
-                    .map(path -> String.format("%s %dmb", path.toString(), path.toFile().length() / ONE_MB))
-                    .collect(Collectors.joining("\n"));
-            LOG.info("files in /tmp > 1mb: \n {}", tempDirContent);
+            try (Stream<Path> tempDirStream = Files.list(Paths.get(System.getProperty("java.io.tmpdir")))) {
+                String tempDirContent = tempDirStream
+                        .filter(path -> path.toFile().isFile())
+                        .filter(path -> path.toFile().length() > ONE_MB)
+                        .map(path -> String.format("%s %dmb", path.toString(), path.toFile().length() / ONE_MB))
+                        .collect(Collectors.joining("\n"));
+                LOG.info("files in /tmp > 1mb: \n {}", tempDirContent);
+            }
 
         } catch (IOException e) {
             LOG.info("Error calculating disk usage: " + e.getMessage());

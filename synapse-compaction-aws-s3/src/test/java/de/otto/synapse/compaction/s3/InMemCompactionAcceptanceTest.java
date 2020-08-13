@@ -38,6 +38,7 @@ import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipInputStream;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
@@ -204,7 +205,7 @@ public class InMemCompactionAcceptanceTest {
         ContiguousSet.create(messageKeyRange, DiscreteDomain.integers())
                 .forEach(key -> compactionTestSender.send(message(Key.of(valueOf(key), "PRICE#" + key), payloadPrefix + "-" + key)).join());
         ContiguousSet.create(messageKeyRange, DiscreteDomain.integers())
-                .forEach(key -> compactionTestSender.send(message(Key.of(valueOf(key),"AVAILABILITY#" + key), payloadPrefix + "-" + key)).join());
+                .forEach(key -> compactionTestSender.send(message(Key.of(valueOf(key), "AVAILABILITY#" + key), payloadPrefix + "-" + key)).join());
         sleep(20);
     }
 
@@ -220,9 +221,11 @@ public class InMemCompactionAcceptanceTest {
     }
 
     private List<Path> getSnapshotFilePaths() throws IOException {
-        return Files.list(Paths.get(System.getProperty("java.io.tmpdir")))
-                .filter(p -> p.toFile().getName().startsWith("compaction-promo-compaction-test-snapshot-"))
-                .collect(Collectors.toList());
+        try (Stream<Path> filesStream = Files.list(Paths.get(System.getProperty("java.io.tmpdir")))) {
+            return filesStream
+                    .filter(p -> p.toFile().getName().startsWith("compaction-promo-compaction-test-snapshot-"))
+                    .collect(Collectors.toList());
+        }
     }
 
 }

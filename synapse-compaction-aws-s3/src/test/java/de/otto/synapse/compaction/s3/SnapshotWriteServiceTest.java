@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
@@ -153,9 +154,11 @@ public class SnapshotWriteServiceTest {
     }
 
     private List<Path> getSnapshotFilePaths() throws IOException {
-        return Files.list(Paths.get(System.getProperty("java.io.tmpdir")))
-                .filter(p -> p.toString().startsWith("/tmp/compaction-teststream-snapshot-"))
-                .collect(Collectors.toList());
+        try (Stream<Path> filesStream = Files.list(Paths.get(System.getProperty("java.io.tmpdir")))) {
+            return filesStream
+                    .filter(p -> p.toString().startsWith("/tmp/compaction-teststream-snapshot-"))
+                    .collect(Collectors.toList());
+        }
     }
 
 }

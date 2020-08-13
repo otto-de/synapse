@@ -35,6 +35,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static de.otto.synapse.channel.ChannelPosition.channelPosition;
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
@@ -132,9 +133,11 @@ public class S3SnapshotMessageStoreAcceptanceTest {
     }
 
     private List<Path> getSnapshotFilePaths() throws IOException {
-        return Files.list(Paths.get(System.getProperty("java.io.tmpdir")))
-                .filter(p -> p.toFile().getName().startsWith("compaction-promo-compaction-test-snapshot-"))
-                .collect(toList());
+        try (Stream<Path> filesStream = Files.list(Paths.get(System.getProperty("java.io.tmpdir")))) {
+            return filesStream
+                    .filter(p -> p.toFile().getName().startsWith("compaction-promo-compaction-test-snapshot-"))
+                    .collect(toList());
+        }
     }
 
 }
