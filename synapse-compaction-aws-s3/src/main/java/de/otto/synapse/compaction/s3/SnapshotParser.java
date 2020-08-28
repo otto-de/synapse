@@ -10,7 +10,6 @@ import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.TextMessage;
-import de.otto.synapse.translator.AbstractTextDecoder;
 import de.otto.synapse.translator.Decoder;
 
 import java.io.*;

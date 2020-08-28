@@ -94,12 +94,13 @@ public class SnapshotWriteService {
 
         try (FileOutputStream fos = new FileOutputStream(snapshotFile);
              BufferedOutputStream bos = new BufferedOutputStream(fos);
-             ZipOutputStream zipOutputStream = new ZipOutputStream(bos)
+             ZipOutputStream zipOutputStream = new ZipOutputStream(bos);
+             JsonGenerator jGenerator = jsonFactory.createGenerator(zipOutputStream, JsonEncoding.UTF8)
         ) {
             ZipEntry zipEntry = new ZipEntry(ZIP_ENTRY);
             zipEntry.setMethod(ZipEntry.DEFLATED);
             zipOutputStream.putNextEntry(zipEntry);
-            JsonGenerator jGenerator = jsonFactory.createGenerator(zipOutputStream, JsonEncoding.UTF8);
+
             jGenerator.writeStartObject();
             writeSequenceNumbers(currentChannelPosition, jGenerator);
             // write to data file

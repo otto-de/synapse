@@ -50,7 +50,11 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
 
     private MessageIterator messageIterator;
     private ChannelPosition channelPosition;
+
     private ZipInputStream zipInputStream;
+    private BufferedInputStream bufferedInputStream;
+    private FileInputStream fileInputStream;
+
     private Instant snapshotTimestamp;
     private final String channelName;
     private final ApplicationEventPublisher eventPublisher;
@@ -64,10 +68,12 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
         try {
             final Optional<File> latestSnapshot = snapshotReadService.retrieveLatestSnapshot(channelName);
             if (latestSnapshot.isPresent()) {
-                final File snapshot = latestSnapshot.get();
-                this.snapshotTimestamp = SnapshotFileHelper.getSnapshotTimestamp(snapshot.getName());
+                final File snapshotFile = latestSnapshot.get();
+                this.snapshotTimestamp = SnapshotFileHelper.getSnapshotTimestamp(snapshotFile.getName());
                 publishEvent(STARTED, "Retrieve snapshot file from S3.", snapshotTimestamp);
-                zipInputStream = new ZipInputStream(new BufferedInputStream(new FileInputStream(snapshot)));
+                fileInputStream = new FileInputStream(snapshotFile);
+                bufferedInputStream = new BufferedInputStream(fileInputStream);
+                zipInputStream = new ZipInputStream(bufferedInputStream);
                 zipInputStream.getNextEntry();
                 JsonFactory jsonFactory = new JsonFactory();
                 final JsonParser jsonParser = jsonFactory.createParser(zipInputStream);
@@ -92,9 +98,25 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
             }
         } catch (final Exception e) {
             try {
-                zipInputStream.close();
+                if (zipInputStream != null) {
+                    zipInputStream.close();
+                }
             } catch (final Exception e1) {
-                /* ignore */
+                LOG.error("Error closing zipInputStream", e1);
+            }
+            try {
+                if (bufferedInputStream != null) {
+                    bufferedInputStream.close();
+                }
+            } catch (IOException ioException) {
+                LOG.error("Exception closing bufferedInputStream", ioException);
+            }
+            try {
+                if (fileInputStream != null) {
+                    fileInputStream.close();
+                }
+            } catch (IOException ioException) {
+                LOG.error("Exception closing fileInputStream", ioException);
             }
             publishEvent(FAILED, "Failed to load snapshot from S3: " + e.getMessage(), snapshotTimestamp);
             throw new RuntimeException(e);
@@ -108,6 +130,12 @@ public class S3SnapshotMessageStore implements SnapshotMessageStore {
         try {
             if (zipInputStream != null) {
                 zipInputStream.close();
+            }
+            if (bufferedInputStream != null) {
+                bufferedInputStream.close();
+            }
+            if (fileInputStream != null) {
+                fileInputStream.close();
             }
         } catch (final IOException e) {
             throw new UncheckedIOException(e.getMessage(), e);

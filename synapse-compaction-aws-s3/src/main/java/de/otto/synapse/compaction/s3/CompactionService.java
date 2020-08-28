@@ -75,7 +75,6 @@ public class CompactionService {
                     .get();
 
             LOG.info(marker, "Finished updating snapshot data. StateRepository now holds {} entries.", stateRepository.size());
-
             return snapshotWriteService.writeSnapshot(channelName, currentPosition, stateRepository);
         } catch (Exception e) {
             LOG.error(marker, "Exception during compaction.", e);
