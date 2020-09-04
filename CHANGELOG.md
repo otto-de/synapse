@@ -1,5 +1,10 @@
 # Release Notes
 
+## 0.22.14
+*synapse-compaction-aws-s3*
+* Bugfix: Use multipart upload to upload snapshot files larger than 5 GB,
+          which is the current limit for simple put file operations in S3
+
 ## 0.22.13
 *synapse-compaction-aws-s3*
 * Bugfix: Removed file pointer leak in temp file logging function.
