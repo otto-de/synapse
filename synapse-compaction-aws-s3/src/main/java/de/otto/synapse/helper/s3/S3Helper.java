@@ -8,8 +8,12 @@ import software.amazon.awssdk.services.s3.model.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -20,6 +24,8 @@ import static software.amazon.awssdk.services.s3.model.Delete.builder;
 public class S3Helper {
 
     private static final Logger LOG = getLogger(S3Helper.class);
+    private static final long AWS_S3_FILE_LIMIT_OF_5GB_IN_BYTES = 5L * 1024 * 1024 * 1024; //5 GB
+    public static final int PART_SIZE_IN_BYTES = 1024 * 1024 * 100; //100 MB
 
     private final S3Client s3Client;
 
@@ -44,6 +50,12 @@ public class S3Helper {
 
     public void upload(final String bucketName,
                        final File file) {
+
+        if (file.length() >= AWS_S3_FILE_LIMIT_OF_5GB_IN_BYTES) {
+            uploadAsMultipart(bucketName, file, PART_SIZE_IN_BYTES);
+            return;
+        }
+
         try (FileInputStream fis = new FileInputStream(file)) {
             final PutObjectResponse putObjectResponse = s3Client.putObject(PutObjectRequest.builder()
                             .bucket(bucketName)
@@ -53,6 +65,52 @@ public class S3Helper {
             LOG.debug("upload {} to bucket {}: {}", file.getName(), bucketName, putObjectResponse.toString());
         } catch (IOException e) {
             LOG.error("Error while uploading {} to bucket {}", file.getName(), bucketName, e);
+        }
+    }
+
+    /**
+     *
+     * @param bucketName
+     * @param file
+     * @param partSizeInBytes The minimum file size for multipart file parts is 5 MB
+     */
+    public void uploadAsMultipart(final String bucketName, final File file, int partSizeInBytes) {
+
+        String filename = file.getName();
+
+        // First create a multipart upload and get upload id
+        CreateMultipartUploadRequest createMultipartUploadRequest = CreateMultipartUploadRequest.builder()
+                .bucket(bucketName).key(filename)
+                .build();
+        CreateMultipartUploadResponse response = s3Client.createMultipartUpload(createMultipartUploadRequest);
+        String uploadId = response.uploadId();
+
+        ArrayList<CompletedPart> parts = new ArrayList<>();
+        try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
+             FileChannel inputChannel = randomAccessFile.getChannel()) {
+            ByteBuffer byteBuffer = ByteBuffer.allocate(partSizeInBytes);
+            int partNumber = 0;
+            while (inputChannel.read(byteBuffer) > 0) {
+                byteBuffer.flip();
+                partNumber++;
+                // Upload all the different parts of the object
+                UploadPartRequest uploadPartRequest = UploadPartRequest.builder().bucket(bucketName).key(filename)
+                        .uploadId(uploadId)
+                        .partNumber(partNumber).build();
+                String etag = s3Client.uploadPart(uploadPartRequest, RequestBody.fromByteBuffer(byteBuffer)).eTag();
+                CompletedPart part = CompletedPart.builder().partNumber(partNumber).eTag(etag).build();
+                parts.add(part);
+            }
+
+            // Finally call completeMultipartUpload operation to tell S3 to merge all uploaded
+            // parts and finish the multipart operation.
+            CompletedMultipartUpload completedMultipartUpload = CompletedMultipartUpload.builder().parts(parts).build();
+            CompleteMultipartUploadRequest completeMultipartUploadRequest =
+                    CompleteMultipartUploadRequest.builder().bucket(bucketName).key(filename).uploadId(uploadId)
+                            .multipartUpload(completedMultipartUpload).build();
+            s3Client.completeMultipartUpload(completeMultipartUploadRequest);
+        } catch (IOException e) {
+            LOG.error("Something went wrong during multipart upload!!!", e);
         }
     }
 

@@ -39,3 +39,4 @@ if [[ $NO_SNAPSHOT == 1 ]]; then
 else
   echo "This is a snapshot release, closing in sonatype is not necessary"
 fi
+

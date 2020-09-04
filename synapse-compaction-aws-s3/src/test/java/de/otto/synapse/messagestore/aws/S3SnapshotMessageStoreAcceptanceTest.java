@@ -27,9 +27,13 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -72,19 +76,19 @@ public class S3SnapshotMessageStoreAcceptanceTest {
     @Autowired
     private SnapshotReadService snapshotReadService;
 
-    @Autowired
-    private S3Client s3Client;
-
     private S3Helper s3Helper;
 
     @Autowired
     private CompactionService compactionService;
 
     @Autowired
+    private S3Client s3Client;
+
+    @Autowired
     private ApplicationEventPublisher eventPublisher;
 
     @Before
-    public void setup() throws IOException {
+    public void setup() throws IOException, URISyntaxException {
         deleteSnapshotFilesFromTemp();
         s3Helper = new S3Helper(s3Client);
         s3Helper.createBucket(INTEGRATION_TEST_BUCKET);

@@ -73,6 +73,7 @@ public class KafkaStreamsTests {
         consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+
         ConsumerFactory<String, String> cf = new DefaultKafkaConsumerFactory<>(consumerProps);
 
         Consumer<String, String> consumer = cf.createConsumer();

@@ -1,5 +1,6 @@
 package de.otto.synapse.state;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.dizitart.no2.exceptions.NitriteIOException;
 import org.junit.After;
 import org.junit.Before;
@@ -189,7 +190,7 @@ public class NitriteStateRepositoryTest {
         LOG.info("Retrieved " + keys.size() + " keys");
     }
 
-
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class SomePojo {
 
         public String someString;
