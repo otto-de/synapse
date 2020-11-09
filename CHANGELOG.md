@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.22.15
+*synapse-edison*
+* Bugfix: StatusIndicatingStateRepository now starts correctly thanks to SmartLifecycle.
+
 ## 0.22.14
 *synapse-compaction-aws-s3*
 * Bugfix: Use multipart upload to upload snapshot files larger than 5 GB,
