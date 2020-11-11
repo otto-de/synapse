@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.22.16
+*synapse-edison*
+* Bugfix:  don't read variable "spring.profiles.active" directly because it's considered 'internal' and won't work with spring boot 2.4 anymore
+
 ## 0.22.15
 *synapse-edison*
 * Bugfix: StatusIndicatingStateRepository now starts correctly thanks to SmartLifecycle.
