@@ -68,7 +68,7 @@ public class MessageDispatcherTest {
             verify(appleConsumer).keyPattern();
             verify(appleConsumer).payloadType();
             verifyNoMoreInteractions(appleConsumer);
-            verifyZeroInteractions(bananaConsumer);
+            verifyNoMoreInteractions(bananaConsumer);
             throw e;
         }
     }

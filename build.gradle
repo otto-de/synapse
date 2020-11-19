@@ -10,10 +10,11 @@ buildscript {
 }
 
 ext {
-    awsSdkVersion = "2.15.23"
-    springVersion = "5.2.0.RELEASE"
-    springBootVersion = "2.2.0.RELEASE"
-    edisonVersion = "2.2.0"
+    awsSdkVersion = "2.15.31"
+    springVersion = "5.3.1"
+    springSecurityVersion = "5.4.1"
+    springBootVersion = "2.4.0"
+    edisonVersion = "2.4.0"
 }
 
 apply plugin: 'java'
@@ -23,7 +24,7 @@ apply plugin: 'io.codearte.nexus-staging'
 apply from: "${rootDir}/jacoco.gradle"
 
 task startLocalStack(type:Exec) {
-    commandLine "docker", "run", "--name", "synapse_localstack", "-d", "-p", "4566-4583:4566-4583", "localstack/localstack:latest"
+    commandLine "docker", "run", "--name", "synapse_localstack", "-d", "-p", "4566-4583:4566-4583", "localstack/localstack:0.11.2"
 }
 task stopLocalStack(type: Exec) {
     commandLine 'docker', 'rm', '-f', 'synapse_localstack'
@@ -52,7 +53,7 @@ subprojects {
 
     compileJava.dependsOn(processResources)
 
-    version = '0.22.16'
+    version = '0.22.17-SNAPSHOT'
     group = 'de.otto.synapse'
 
     repositories {

@@ -16,7 +16,7 @@ import static java.util.function.Function.identity;
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 public class BatchedRedisListIteratorTest {
 
@@ -27,7 +27,7 @@ public class BatchedRedisListIteratorTest {
 
     @Before
     public void before() {
-        initMocks(this);
+        openMocks(this);
     }
 
     @Test(expected = IllegalArgumentException.class)

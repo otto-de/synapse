@@ -18,7 +18,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 public class RedisRingBufferMessageStoreTest {
 
@@ -32,7 +32,7 @@ public class RedisRingBufferMessageStoreTest {
 
     @Before
     public void before() {
-        initMocks(this);
+        openMocks(this);
         when(redisTemplate.boundHashOps(anyString())).thenReturn(hashOperations);
         when(redisTemplate.boundSetOps(anyString())).thenReturn(setOperations);
         testee = new RedisRingBufferMessageStore("Test Store", 10, 20, redisTemplate);

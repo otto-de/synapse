@@ -22,10 +22,11 @@ dependencies {
     implementation project(':synapse-core:')
     implementation project(':synapse-kafka:')
     implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
-    implementation "org.springframework.security:spring-security-core:${springVersion}"
+    implementation "org.springframework.security:spring-security-core:${springSecurityVersion}"
     implementation("org.springframework.boot:spring-boot-starter-web:${springBootVersion}") {
         exclude module: "spring-boot-starter-tomcat:${springBootVersion}"
     }
+    implementation("org.springframework.boot:spring-boot-starter-validation:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-jetty:${springBootVersion}")
 
     implementation "ch.qos.logback:logback-core:1.2.3"

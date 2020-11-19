@@ -19,7 +19,7 @@ public class SqsTestConfiguration {
         final SqsAsyncClient sqsAsyncClient = SqsAsyncClient.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create("foobar", "foobar")))
-                .endpointOverride(URI.create("http://localhost:4576"))
+                .endpointOverride(URI.create("http://localhost:4566"))
                 .build();
         new SqsClientHelper(sqsAsyncClient).createChannelIfNotExists(SQS_INTEGRATION_TEST_CHANNEL);
         return sqsAsyncClient;

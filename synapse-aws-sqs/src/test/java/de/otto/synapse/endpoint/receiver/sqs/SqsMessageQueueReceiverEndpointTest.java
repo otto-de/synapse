@@ -61,7 +61,7 @@ public class SqsMessageQueueReceiverEndpointTest {
     @Before
     public void setUp() {
         messages.clear();
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         when(sqsAsyncClient.getQueueUrl(any(GetQueueUrlRequest.class)))
                 .thenReturn(completedFuture(GetQueueUrlResponse.builder().queueUrl(QUEUE_URL).build()));
         when(sqsAsyncClient.deleteMessage(any(DeleteMessageRequest.class))).thenReturn(completedFuture(DeleteMessageResponse.builder().build()));

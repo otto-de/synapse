@@ -283,7 +283,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         // then
         verify(interceptor, atLeast(3)).intercept(any(TextMessage.class));
 
-        verifyZeroInteractions(messageConsumer);
+        verifyNoMoreInteractions(messageConsumer);
         List<Message<String>> messages = messageArgumentCaptor.getAllValues();
 
         assertThat(messages, is(empty()));

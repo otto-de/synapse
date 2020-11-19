@@ -16,7 +16,6 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.apache.kafka.streams.StreamsConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,8 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.kafka.annotation.EnableKafkaStreams;
-import org.springframework.kafka.config.KafkaStreamsConfiguration;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
@@ -44,7 +41,6 @@ import static de.otto.synapse.message.Message.message;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.springframework.kafka.annotation.KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME;
 import static org.springframework.kafka.test.EmbeddedKafkaBroker.SPRING_EMBEDDED_KAFKA_BROKERS;
 import static org.springframework.kafka.test.utils.KafkaTestUtils.*;
 
@@ -285,19 +281,10 @@ public class KafkaMessageSenderTest {
     }
 
     @Configuration
-    @EnableKafkaStreams
     public static class TestConfiguration {
 
         @Value("${" + SPRING_EMBEDDED_KAFKA_BROKERS + "}")
         private String brokerAddresses;
-
-        @Bean(name = DEFAULT_STREAMS_CONFIG_BEAN_NAME)
-        public KafkaStreamsConfiguration kStreamsConfigs() {
-            final Map<String, Object> props = new HashMap<>();
-            props.put(StreamsConfig.APPLICATION_ID_CONFIG, "testStreams");
-            props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, this.brokerAddresses);
-            return new KafkaStreamsConfiguration(props);
-        }
 
         @Bean
         public ProducerFactory<String, String> producerFactory() {

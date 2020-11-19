@@ -8,7 +8,7 @@
         </encoder>
     </appender>
 
-    <logger name="de.otto" level="DEBUG"/>
+    <logger name="de.otto" level="INFO"/>
 
     <logger name="software.amazon.awssdk" level="INFO"/>
 
@@ -19,7 +19,7 @@
 
     <logger name="org" level="INFO"/>
 
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="console"/>
     </root>
 

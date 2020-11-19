@@ -19,7 +19,7 @@ public class InterceptorChainTest {
         final InterceptorChain chain = new InterceptorChain();
         final TextMessage message = mock(TextMessage.class);
         final TextMessage intercepted = chain.intercept(message);
-        verifyZeroInteractions(message);
+        verifyNoMoreInteractions(message);
         assertThat(message, is(intercepted));
     }
 
@@ -40,7 +40,7 @@ public class InterceptorChainTest {
         final MessageInterceptor second = mock(MessageInterceptor.class);
         final InterceptorChain chain = new InterceptorChain(ImmutableList.of(first, second));
         assertThat(chain.intercept(someMessage("foo")), is(nullValue()));
-        verifyZeroInteractions(second);
+        verifyNoMoreInteractions(second);
     }
 
     @Test

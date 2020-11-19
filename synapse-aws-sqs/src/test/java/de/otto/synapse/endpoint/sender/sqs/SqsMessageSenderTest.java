@@ -147,7 +147,7 @@ public class SqsMessageSenderTest {
         sqsMessageSender.send(message).join();
 
         // then
-        verifyZeroInteractions(sqsAsyncClient);
+        verifyNoMoreInteractions(sqsAsyncClient);
     }
 
     @Test
@@ -231,7 +231,7 @@ public class SqsMessageSenderTest {
         ));
 
         // then
-        verifyZeroInteractions(sqsAsyncClient);
+        verifyNoMoreInteractions(sqsAsyncClient);
     }
 
     @Test
