@@ -1,5 +1,12 @@
 # Release Notes
 
+## 0.23.0
+*all*
+* Update to spring boot 2.4.0
+
+*synapse-kafka*
+* Update to apache kafka 2.6.0
+
 ## 0.22.16
 *synapse-edison*
 * Bugfix:  don't read variable "spring.profiles.active" directly because it's considered 'internal' and won't work with spring boot 2.4 anymore
