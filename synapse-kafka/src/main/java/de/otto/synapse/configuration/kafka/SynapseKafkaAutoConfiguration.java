@@ -12,7 +12,7 @@ import de.otto.synapse.eventsource.DefaultEventSourceBuilder;
 import de.otto.synapse.eventsource.EventSourceBuilder;
 import de.otto.synapse.messagestore.MessageStore;
 import de.otto.synapse.messagestore.MessageStoreFactory;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -76,7 +76,7 @@ public class SynapseKafkaAutoConfiguration {
                 new ThreadFactoryBuilder().setNameFormat("kafka-message-log-%d").build()
         );
 
-        final KafkaConsumer<String, String> kafkaConsumer = (KafkaConsumer<String, String>)kafkaConsumerFactory.createConsumer();
+        final Consumer<String, String> kafkaConsumer = kafkaConsumerFactory.createConsumer();
 
         return new KafkaMessageLogReceiverEndpointFactory(
                 interceptorRegistry,

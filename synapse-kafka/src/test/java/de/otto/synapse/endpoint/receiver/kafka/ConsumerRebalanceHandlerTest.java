@@ -1,7 +1,7 @@
 package de.otto.synapse.endpoint.receiver.kafka;
 
 import de.otto.synapse.channel.ChannelPosition;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.Test;
@@ -25,7 +25,7 @@ public class ConsumerRebalanceHandlerTest {
     public void shouldInitiallyHaveNotAssignedAndPositionedShards() {
         // given
         final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
-        final KafkaConsumer<String, String> consumer = mock(KafkaConsumer.class);
+        final Consumer<String, String> consumer = mock(Consumer.class);
 
         final ConsumerRebalanceHandler handler = new ConsumerRebalanceHandler(
                 "foo",
@@ -41,7 +41,7 @@ public class ConsumerRebalanceHandlerTest {
     public void shouldHaveAssignedAndPositionedShardsAfterAssignment() {
         // given
         final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
-        final KafkaConsumer<String, String> consumer = mock(KafkaConsumer.class);
+        final Consumer<String, String> consumer = mock(Consumer.class);
 
         final ConsumerRebalanceHandler handler = new ConsumerRebalanceHandler(
                 "foo",
@@ -63,7 +63,7 @@ public class ConsumerRebalanceHandlerTest {
     public void shouldSendApplicationEventAfterAssignment() {
         // given
         final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
-        final KafkaConsumer<String, String> consumer = mock(KafkaConsumer.class);
+        final Consumer<String, String> consumer = mock(Consumer.class);
 
         final ConsumerRebalanceHandler handler = new ConsumerRebalanceHandler(
                 "foo",
@@ -88,7 +88,7 @@ public class ConsumerRebalanceHandlerTest {
     public void shouldSeekToBeginningAfterAssignmentStartingFromHorizon() {
         // given
         final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
-        final KafkaConsumer<String, String> consumer = mock(KafkaConsumer.class);
+        final Consumer<String, String> consumer = mock(Consumer.class);
 
         final ConsumerRebalanceHandler handler = new ConsumerRebalanceHandler(
                 "foo",
@@ -111,7 +111,7 @@ public class ConsumerRebalanceHandlerTest {
     public void shouldSeekToPositionAfterAssignmentStartingFromPosition() {
         // given
         final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
-        final KafkaConsumer<String, String> consumer = mock(KafkaConsumer.class);
+        final Consumer<String, String> consumer = mock(Consumer.class);
 
         final ConsumerRebalanceHandler handler = new ConsumerRebalanceHandler(
                 "foo",
@@ -134,7 +134,7 @@ public class ConsumerRebalanceHandlerTest {
     public void shouldSeekToPositionAfterAssignmentStartingAtPosition() {
         // given
         final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
-        final KafkaConsumer<String, String> consumer = mock(KafkaConsumer.class);
+        final Consumer<String, String> consumer = mock(Consumer.class);
 
         final ConsumerRebalanceHandler handler = new ConsumerRebalanceHandler(
                 "foo",
@@ -159,7 +159,7 @@ public class ConsumerRebalanceHandlerTest {
     public void shouldSeekToPositionAfterAssignmentStartingFromTimestamp() {
         // given
         final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
-        final KafkaConsumer<String, String> consumer = mock(KafkaConsumer.class);
+        final Consumer<String, String> consumer = mock(Consumer.class);
         when(consumer.offsetsForTimes(of(
                 new TopicPartition("foo", 0), 42L)))
                 .thenReturn(of(
@@ -185,7 +185,7 @@ public class ConsumerRebalanceHandlerTest {
     public void shouldRemoveShardsAfterPartitionRevoked() {
         // given
         final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
-        final KafkaConsumer<String, String> consumer = mock(KafkaConsumer.class);
+        final Consumer<String, String> consumer = mock(Consumer.class);
 
         final ConsumerRebalanceHandler handler = new ConsumerRebalanceHandler(
                 "foo",
@@ -212,7 +212,7 @@ public class ConsumerRebalanceHandlerTest {
     public void shouldRemoveShardsAfterPartitionLost() {
         // given
         final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
-        final KafkaConsumer<String, String> consumer = mock(KafkaConsumer.class);
+        final Consumer<String, String> consumer = mock(Consumer.class);
 
         final ConsumerRebalanceHandler handler = new ConsumerRebalanceHandler(
                 "foo",

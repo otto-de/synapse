@@ -12,7 +12,7 @@ import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.testsupport.TestClock;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.record.TimestampType;
 import org.junit.Before;
@@ -43,7 +43,7 @@ import static org.mockito.Mockito.*;
 
 public class KafkaRecordsConsumerTest {
 
-    private final KafkaConsumer<String, String> kafkaConsumer = mock(KafkaConsumer.class);
+    private final Consumer<String, String> kafkaConsumer = mock(Consumer.class);
     private MessageInterceptorRegistry registry = mock(MessageInterceptorRegistry.class);
     private MessageInterceptor interceptor = (m) -> m;
     private MessageDispatcher dispatcher = mock(MessageDispatcher.class);
