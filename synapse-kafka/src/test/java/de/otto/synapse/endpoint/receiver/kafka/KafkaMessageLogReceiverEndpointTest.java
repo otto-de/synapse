@@ -2,7 +2,7 @@ package de.otto.synapse.endpoint.receiver.kafka;
 
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +27,7 @@ import static org.mockito.internal.util.collections.Sets.newSet;
 
     public static final String KAFKA_TOPIC = "test-stream";
 
-    private KafkaConsumer<String, String> kafkaConsumer;
+    private Consumer<String, String> kafkaConsumer;
     private KafkaMessageLogReceiverEndpoint endpoint;
     private MessageInterceptorRegistry interceptorRegistry = new MessageInterceptorRegistry();
     private ExecutorService executorService = newSingleThreadExecutor();
@@ -36,7 +36,7 @@ import static org.mockito.internal.util.collections.Sets.newSet;
     public void setUp() {
         final String groupId = "KafkaMessageLogReceiverEndpointTest";
 
-        kafkaConsumer = mock(KafkaConsumer.class);
+        kafkaConsumer = mock(Consumer.class);
         endpoint = new KafkaMessageLogReceiverEndpoint(
                 KAFKA_TOPIC,
                 interceptorRegistry,

@@ -7,7 +7,7 @@ import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.AbstractMessageLogReceiverEndpoint;
 import de.otto.synapse.logging.LogHelper;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.errors.WakeupException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public class KafkaMessageLogReceiverEndpoint extends AbstractMessageLogReceiverE
     private static final long KAFKA_CONSUMER_POLLING_DURATION = 1000L;
     private static final int LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE = 10_000;
 
-    private final KafkaConsumer<String, String> kafkaConsumer;
+    private final Consumer<String, String> kafkaConsumer;
     private final ExecutorService executorService;
     private final ApplicationEventPublisher eventPublisher;
     private final MessageInterceptorRegistry interceptorRegistry;
@@ -41,7 +41,7 @@ public class KafkaMessageLogReceiverEndpoint extends AbstractMessageLogReceiverE
 
     public KafkaMessageLogReceiverEndpoint(final String channelName,
                                            final MessageInterceptorRegistry interceptorRegistry,
-                                           final KafkaConsumer<String, String> kafkaConsumer,
+                                           final Consumer<String, String> kafkaConsumer,
                                            final ExecutorService executorService,
                                            final ApplicationEventPublisher eventPublisher) {
         super(channelName, interceptorRegistry, eventPublisher);

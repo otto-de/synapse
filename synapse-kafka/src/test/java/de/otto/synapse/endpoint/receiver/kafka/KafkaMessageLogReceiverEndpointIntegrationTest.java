@@ -6,6 +6,7 @@ import de.otto.synapse.channel.StartFrom;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -65,7 +66,7 @@ public class KafkaMessageLogReceiverEndpointIntegrationTest {
     @Autowired
     private EmbeddedKafkaBroker embeddedKafkaBroker;
 
-    private KafkaConsumer<String, String> kafkaConsumer;
+    private Consumer<String, String> kafkaConsumer;
     private KafkaMessageLogReceiverEndpoint endpoint;
     private ExecutorService executorService = newFixedThreadPool(2);
 
@@ -77,7 +78,7 @@ public class KafkaMessageLogReceiverEndpointIntegrationTest {
                 "true",
                 embeddedKafkaBroker));
         configs.put(ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG, 10); // set to small value to enforce multiple reads from kafka
-        kafkaConsumer = new KafkaConsumer<>(configs, new StringDeserializer(), new StringDeserializer());
+        kafkaConsumer = new KafkaConsumer<String, String>(configs, new StringDeserializer(), new StringDeserializer());
 
         MessageInterceptorRegistry interceptorRegistry = new MessageInterceptorRegistry();
         endpoint = new KafkaMessageLogReceiverEndpoint(

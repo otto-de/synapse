@@ -3,7 +3,7 @@ package de.otto.synapse.endpoint.receiver.kafka;
 import de.otto.synapse.channel.ChannelDurationBehind;
 import de.otto.synapse.channel.ChannelPosition;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
@@ -33,13 +33,13 @@ class ChannelDurationBehindHandler implements ConsumerRebalanceListener {
     private final String channelName;
     private final ChannelPosition startFrom;
     private final ApplicationEventPublisher eventPublisher;
-    private final KafkaConsumer<String, String> kafkaConsumer;
+    private final Consumer<String, String> kafkaConsumer;
     private final Clock clock;
 
     ChannelDurationBehindHandler(final String channelName,
                                  final ChannelPosition startFrom,
                                  final ApplicationEventPublisher eventPublisher,
-                                 final KafkaConsumer<String, String> kafkaConsumer) {
+                                 final Consumer<String, String> kafkaConsumer) {
         this(channelName, startFrom, eventPublisher, systemDefaultZone(), kafkaConsumer);
     }
 
@@ -47,7 +47,7 @@ class ChannelDurationBehindHandler implements ConsumerRebalanceListener {
                                  final ChannelPosition startFrom,
                                  final ApplicationEventPublisher eventPublisher,
                                  final Clock clock,
-                                 final KafkaConsumer<String, String> kafkaConsumer) {
+                                 final Consumer<String, String> kafkaConsumer) {
         this.channelName = channelName;
         this.startFrom = startFrom;
         this.eventPublisher = eventPublisher;

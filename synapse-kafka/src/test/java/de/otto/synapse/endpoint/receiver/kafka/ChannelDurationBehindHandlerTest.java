@@ -3,7 +3,7 @@ package de.otto.synapse.endpoint.receiver.kafka;
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.channel.ChannelDurationBehind;
 import de.otto.synapse.channel.ChannelPosition;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.Test;
 import org.springframework.context.ApplicationEventPublisher;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.*;
 public class ChannelDurationBehindHandlerTest {
 
     final ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
-    final KafkaConsumer<String, String> kafkaConsumer = mock(KafkaConsumer.class);
+    final Consumer<String, String> kafkaConsumer = mock(Consumer.class);
     private final Clock clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
     final ChannelDurationBehindHandler handler = new ChannelDurationBehindHandler("foo", ChannelPosition.fromHorizon(), eventPublisher, clock, kafkaConsumer);
 

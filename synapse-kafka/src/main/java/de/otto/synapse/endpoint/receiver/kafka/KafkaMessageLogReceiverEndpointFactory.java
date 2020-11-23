@@ -5,7 +5,7 @@ import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.springframework.context.ApplicationEventPublisher;
 
 import javax.annotation.Nonnull;
@@ -14,12 +14,12 @@ import java.util.concurrent.ExecutorService;
 public class KafkaMessageLogReceiverEndpointFactory implements MessageLogReceiverEndpointFactory {
 
     private final MessageInterceptorRegistry interceptorRegistry;
-    private final KafkaConsumer<String, String> kafkaConsumer;
+    private final Consumer<String, String> kafkaConsumer;
     private final ApplicationEventPublisher eventPublisher;
     private final ExecutorService executorService;
 
     public KafkaMessageLogReceiverEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
-                                                  final KafkaConsumer<String, String> kafkaConsumer,
+                                                  final Consumer<String, String> kafkaConsumer,
                                                   final ExecutorService kinesisMessageLogExecutorService,
                                                   final ApplicationEventPublisher eventPublisher) {
         this.interceptorRegistry = interceptorRegistry;

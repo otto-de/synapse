@@ -3,7 +3,7 @@ package de.otto.synapse.endpoint.receiver.kafka;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.channel.ShardPosition;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
@@ -28,14 +28,14 @@ class ConsumerRebalanceHandler implements ConsumerRebalanceListener {
     private final String channelName;
     private final ChannelPosition channelPosition;
     private final ApplicationEventPublisher eventPublisher;
-    private final KafkaConsumer<String, String> kafkaConsumer;
+    private final Consumer<String, String> kafkaConsumer;
     private final Set<String> currentPartitions = newConcurrentHashSet();
     private final AtomicBoolean shardsAssignedAndPositioned = new AtomicBoolean(false);
 
     ConsumerRebalanceHandler(final String channelName,
                              final ChannelPosition startFrom,
                              final ApplicationEventPublisher eventPublisher,
-                             final KafkaConsumer<String, String> kafkaConsumer) {
+                             final Consumer<String, String> kafkaConsumer) {
         this.channelName = channelName;
         this.channelPosition = startFrom;
         this.eventPublisher = eventPublisher;
