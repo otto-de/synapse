@@ -3,7 +3,7 @@ apply plugin: 'java-library'
 dependencies {
 
     // This dependency is exported to consumers, that is to say found on their compile classpath.
-    api 'com.google.guava:guava:28.1-jre'
+    api 'com.google.guava:guava:30.1-jre'
     api "org.springframework.boot:spring-boot:${springBootVersion}"
     api "org.springframework.boot:spring-boot-autoconfigure:${springBootVersion}"
 
