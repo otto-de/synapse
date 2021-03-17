@@ -7,7 +7,7 @@ dependencies {
     implementation "com.google.guava:guava:28.1-jre"
     implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
     implementation "software.amazon.awssdk:netty-nio-client:${awsSdkVersion}"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.10.0"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.12.2"
     implementation "org.springframework.retry:spring-retry:1.2.4.RELEASE"
 
     testImplementation 'junit:junit:4.12'
