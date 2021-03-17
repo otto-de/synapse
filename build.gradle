@@ -24,7 +24,7 @@ apply plugin: 'io.codearte.nexus-staging'
 apply from: "${rootDir}/jacoco.gradle"
 
 task startLocalStack(type:Exec) {
-    commandLine "docker", "run", "--name", "synapse_localstack", "-d", "-p", "4566-4583:4566-4583", "localstack/localstack:0.11.2"
+    commandLine "docker", "run", "--name", "synapse_localstack", "-d", "-p", "4566-4583:4566-4583", "localstack/localstack:0.11.6"
 }
 task stopLocalStack(type: Exec) {
     commandLine 'docker', 'rm', '-f', 'synapse_localstack'
