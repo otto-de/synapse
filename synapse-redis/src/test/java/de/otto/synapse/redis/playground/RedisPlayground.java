@@ -2,7 +2,7 @@ package de.otto.synapse.redis.playground;
 
 import de.otto.synapse.leaderelection.LeaderElection;
 import de.otto.synapse.leaderelection.redis.RedisLeaderElection;
-import de.otto.synapse.testsupport.redis.EmbededRedis;
+import de.otto.synapse.testsupport.redis.EmbeddedRedis;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.redisson.api.RList;
@@ -29,11 +29,11 @@ import static org.slf4j.LoggerFactory.getLogger;
 @SpringBootTest(
         properties = {
                 "spring.redis.server=localhost",
-                "spring.redis.port=6379"
+                "spring.redis.port=6479"
         },
         classes = {
                 RedisPlayground.class,
-                EmbededRedis.class
+                EmbeddedRedis.class
         })
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)

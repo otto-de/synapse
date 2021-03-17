@@ -9,7 +9,7 @@ import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.messagestore.MessageStoreEntry;
-import de.otto.synapse.testsupport.redis.EmbededRedis;
+import de.otto.synapse.testsupport.redis.EmbeddedRedis;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,7 +53,7 @@ import static org.hamcrest.Matchers.*;
         },
         classes = {
                 RedisRingBufferMessageStoreIntegrationTest.class,
-                EmbededRedis.class
+                EmbeddedRedis.class
         })
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)

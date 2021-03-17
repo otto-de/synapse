@@ -12,9 +12,9 @@ import java.io.IOException;
 import static org.slf4j.LoggerFactory.getLogger;
 
 @Component
-public class EmbededRedis {
+public class EmbeddedRedis {
 
-    private static final Logger LOG = getLogger(EmbededRedis.class);
+    private static final Logger LOG = getLogger(EmbeddedRedis.class);
 
     @Value("${spring.redis.port}")
     private int redisPort;

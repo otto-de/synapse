@@ -12,7 +12,7 @@ import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.messagestore.Index;
 import de.otto.synapse.messagestore.Indexers;
 import de.otto.synapse.messagestore.MessageStoreEntry;
-import de.otto.synapse.testsupport.redis.EmbededRedis;
+import de.otto.synapse.testsupport.redis.EmbeddedRedis;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,7 +61,7 @@ import static org.slf4j.LoggerFactory.getLogger;
         },
         classes = {
                 RedisIndexedMessageStoreIntegrationTest.class,
-                EmbededRedis.class
+                EmbeddedRedis.class
         })
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)

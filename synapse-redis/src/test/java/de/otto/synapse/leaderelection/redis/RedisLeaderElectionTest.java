@@ -1,6 +1,6 @@
 package de.otto.synapse.leaderelection.redis;
 
-import de.otto.synapse.testsupport.redis.EmbededRedis;
+import de.otto.synapse.testsupport.redis.EmbeddedRedis;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.redisson.api.RedissonClient;
@@ -28,7 +28,7 @@ import static org.junit.Assert.fail;
         },
         classes = {
                 RedisLeaderElectionTest.class,
-                EmbededRedis.class
+                EmbeddedRedis.class
         })
 
 public class RedisLeaderElectionTest {
