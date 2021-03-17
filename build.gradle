@@ -10,7 +10,7 @@ buildscript {
 }
 
 ext {
-    awsSdkVersion = "2.15.31"
+    awsSdkVersion = "2.16.20"
     springVersion = "5.3.5"
     springSecurityVersion = "5.4.1"
     springBootVersion = "2.4.0"
