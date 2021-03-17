@@ -5,7 +5,7 @@ dependencies {
 
     implementation "com.google.guava:guava:28.1-jre"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.12.2"
-    implementation "org.springframework.kafka:spring-kafka:2.6.3"
+    implementation "org.springframework.kafka:spring-kafka:2.6.6"
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
