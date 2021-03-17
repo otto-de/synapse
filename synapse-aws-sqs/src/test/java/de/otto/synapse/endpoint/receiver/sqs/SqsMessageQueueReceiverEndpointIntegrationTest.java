@@ -95,7 +95,7 @@ public class SqsMessageQueueReceiverEndpointIntegrationTest {
                         .apiCallAttemptTimeout(Duration.ofMillis(200))
                         .retryPolicy(new SqsAutoConfiguration(awsProperties)
                                 .sqsRetryPolicy()).build())
-                .endpointOverride(URI.create("http://localhost:8080/"))
+                                            .endpointOverride(URI.create("http://localhost:8080/"))
                 .build();
     }
 
