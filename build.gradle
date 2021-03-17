@@ -14,7 +14,7 @@ ext {
     springVersion = "5.3.5"
     springSecurityVersion = "5.4.1"
     springBootVersion = "2.4.3"
-    edisonVersion = "2.4.0"
+    edisonVersion = "2.4.6"
 }
 
 apply plugin: 'java'
