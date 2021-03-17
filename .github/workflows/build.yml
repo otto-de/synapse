@@ -28,5 +28,9 @@ jobs:
         java-version: 8
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
+    - name: Start localstack
+      run: ./gradlew startLocalStack
     - name: Build with Gradle
       run: ./gradlew build
+    - name: Stop localstack
+      run: ./gradlew stopLocalStack
