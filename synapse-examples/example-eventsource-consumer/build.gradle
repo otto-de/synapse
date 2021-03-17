@@ -32,7 +32,7 @@ dependencies {
 
     implementation project(':synapse-testsupport:')
 
-    testCompile 'junit:junit:4.12'
+    testCompile 'junit:junit:4.13.2'
 
     testImplementation "org.springframework.boot:spring-boot-test:${springBootVersion}"
     testImplementation "org.springframework:spring-test:${springVersion}"
