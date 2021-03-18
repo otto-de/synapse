@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 import java.net.URI;
@@ -20,6 +21,7 @@ public class SqsTestConfiguration {
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create("foobar", "foobar")))
                 .endpointOverride(URI.create("http://localhost:4566"))
+                .region(Region.EU_CENTRAL_1)
                 .build();
         new SqsClientHelper(sqsAsyncClient).createChannelIfNotExists(SQS_INTEGRATION_TEST_CHANNEL);
         return sqsAsyncClient;
