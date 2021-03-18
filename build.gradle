@@ -1,11 +1,15 @@
 buildscript {
     repositories {
         mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
         //Needed only for SNAPSHOT versions
         //maven { url "http://oss.sonatype.org/content/repositories/snapshots/" }
     }
     dependencies {
         classpath "io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.30.0"
+        classpath "com.adarshr:gradle-test-logger-plugin:2.1.1"
     }
 }
 
@@ -40,9 +44,11 @@ nexusStaging {
 }
 
 subprojects {
+
     apply plugin: 'java'
     apply plugin: 'idea'
     apply plugin: 'eclipse'
+    apply plugin: "com.adarshr.test-logger"
     apply from: "${rootDir}/jacoco.gradle"
 
     sourceCompatibility = '1.8'

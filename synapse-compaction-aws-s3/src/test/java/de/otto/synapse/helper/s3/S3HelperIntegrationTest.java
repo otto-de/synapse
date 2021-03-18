@@ -10,6 +10,8 @@ import org.junit.runner.RunWith;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -42,7 +44,11 @@ public class S3HelperIntegrationTest {
 
     @Before
     public void setUp() throws URISyntaxException, IOException {
-        S3Client s3Client = S3Client.builder().endpointOverride(new URI("http://localhost:4566")).overrideConfiguration(ClientOverrideConfiguration.builder().build()).region(Region.US_EAST_1).build();
+        S3Client s3Client = S3Client.builder()
+                .endpointOverride(new URI("http://localhost:4566"))
+                .overrideConfiguration(ClientOverrideConfiguration.builder().build())
+                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("foobar", "foobar")))
+                .region(Region.US_EAST_1).build();
         s3Helper = new S3Helper(s3Client);
         s3Helper.createBucket(TESTBUCKET);
         tempDir = Files.createDirectories(Paths.get(System.getProperty("java.io.tmpdir"), "synapse-test-" + UUID.randomUUID().toString()));

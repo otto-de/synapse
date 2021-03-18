@@ -29,10 +29,8 @@ public class SnapshotReadServiceTest {
     @Before
     public void setUp() {
         s3Client = mock(S3Client.class);
-
         testee = new SnapshotReadService(snapshotProperties(), s3Client);
     }
-
 
     @Test
     public void shouldDownloadLatestSnapshotFileFromBucket() {
