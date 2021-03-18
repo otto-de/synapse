@@ -365,7 +365,7 @@ public class KinesisMessageLogReceiverEndpointTest {
         // when
         final CompletableFuture<ChannelPosition> futureChannelPosition = kinesisMessageLog.consume(fromHorizon());
         kinesisMessageLog.stop();
-        futureChannelPosition.get(1, TimeUnit.SECONDS);
+        futureChannelPosition.get(10, TimeUnit.SECONDS);
 
         // then
         assertThat(kinesisMessageLog.getCurrentKinesisShards().size(), is(1));
