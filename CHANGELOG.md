@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.23.3
+*all*
+* Update all dependencies to latest versions
+
 ## 0.23.0
 *all*
 * Update to spring boot 2.4.0
