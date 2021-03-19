@@ -26,8 +26,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -148,6 +146,17 @@ public class KinesisMessageLogReceiverEndpointIntegrationTest {
         kinesisMessageLog
                 .consumeUntil(startFrom, endOfChannel())
                 .get();
+
+        await().atMost(10, SECONDS).until(() -> {
+                final List<String> threadNamesAfter = Thread.getAllStackTraces()
+                .keySet()
+                .stream()
+                .map(Thread::getName)
+                .filter((name)->name.startsWith("kinesis-message-log-"))
+                .collect(toList());
+                return threadNamesAfter.size() == threadNamesBefore.size();
+        });
+
         final List<String> threadNamesAfter = Thread.getAllStackTraces()
                 .keySet()
                 .stream()
