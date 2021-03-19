@@ -2,7 +2,7 @@
 
 Eventsourcing & message passing for Spring Boot microservices.
 
-
+[![Build](https://github.com/otto-de/synapse/workflows/Build/badge.svg)](https://github.com/otto-de/synapse/actions?query=workflow%3ABuild)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.otto.synapse/synapse-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.otto.synapse/synapse-core)
 
 
