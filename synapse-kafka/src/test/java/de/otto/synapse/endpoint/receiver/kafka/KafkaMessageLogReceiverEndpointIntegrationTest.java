@@ -34,6 +34,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.google.common.collect.Sets.newConcurrentHashSet;
@@ -43,7 +44,6 @@ import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.channel.StopCondition.endOfChannel;
 import static java.util.concurrent.Executors.newFixedThreadPool;
 import static org.awaitility.Awaitility.waitAtMost;
-import static org.awaitility.Duration.TEN_SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.kafka.test.utils.KafkaTestUtils.consumerProps;
@@ -104,7 +104,7 @@ public class KafkaMessageLogReceiverEndpointIntegrationTest {
         final CompletableFuture<ChannelPosition> channelPosition = endpoint.consumeUntil(fromHorizon(), endOfChannel());
 
         // then
-        waitAtMost(TEN_SECONDS).until(channelPosition::isDone);
+        waitAtMost(10, TimeUnit.SECONDS).until(channelPosition::isDone);
         assertThat(channelPosition.get().shards().isEmpty(), is(false));
     }
 
@@ -117,7 +117,7 @@ public class KafkaMessageLogReceiverEndpointIntegrationTest {
         final CompletableFuture<ChannelPosition> channelPosition = endpoint.consumeUntil(fromHorizon(), endOfChannel());
 
         // then
-        waitAtMost(TEN_SECONDS).until(channelPosition::isDone);
+        waitAtMost(10, TimeUnit.SECONDS).until(channelPosition::isDone);
         assertThat(kafkaConsumer.subscription(), contains("test-stream"));
     }
 
@@ -132,7 +132,7 @@ public class KafkaMessageLogReceiverEndpointIntegrationTest {
         final CompletableFuture<ChannelPosition> channelPosition = endpoint.consumeUntil(fromHorizon(), endOfChannel());
 
         // then
-        waitAtMost(TEN_SECONDS).until(channelPosition::isDone);
+        waitAtMost(10, TimeUnit.SECONDS).until(channelPosition::isDone);
         final ShardPosition shard = channelPosition.get().shard("0");
         assertThat(shard.startFrom(), is(StartFrom.POSITION));
         assertThat(receivedMessageKeys, is(not(empty())));
@@ -154,7 +154,7 @@ public class KafkaMessageLogReceiverEndpointIntegrationTest {
         final CompletableFuture<ChannelPosition> channelPosition = endpoint.consumeUntil(fromHorizon(), endOfChannel());
 
         // then
-        waitAtMost(TEN_SECONDS).until(channelPosition::isDone);
+        waitAtMost(10, TimeUnit.SECONDS).until(channelPosition::isDone);
         assertThat(receivedMessageKeys.subList(receivedMessageKeys.size() - 10, receivedMessageKeys.size()), containsInAnyOrder("shouldStartFromHorizon0", "shouldStartFromHorizon1", "shouldStartFromHorizon2", "shouldStartFromHorizon3", "shouldStartFromHorizon4", "shouldStartFromHorizon5", "shouldStartFromHorizon6", "shouldStartFromHorizon7", "shouldStartFromHorizon8", "shouldStartFromHorizon9"));
     }
 
@@ -175,7 +175,7 @@ public class KafkaMessageLogReceiverEndpointIntegrationTest {
         final CompletableFuture<ChannelPosition> channelPosition = endpoint.consumeUntil(startFrom, endOfChannel());
 
         // then
-        waitAtMost(TEN_SECONDS).until(channelPosition::isDone);
+        waitAtMost(10, TimeUnit.SECONDS).until(channelPosition::isDone);
         assertThat(receivedMessageKeys.size(), is(48));
     }
 
@@ -200,7 +200,7 @@ public class KafkaMessageLogReceiverEndpointIntegrationTest {
             }
 
             // then
-            waitAtMost(TEN_SECONDS).until(channelPosition::isDone);
+            waitAtMost(10, TimeUnit.SECONDS).until(channelPosition::isDone);
             assertThat(receivedMessageKeys.size(), is(10));
             assertThat(receivedMessageKeys, containsInAnyOrder("continued-" + j + "/0", "continued-" + j + "/1", "continued-" + j + "/2", "continued-" + j + "/3", "continued-" + j + "/4", "continued-" + j + "/5", "continued-" + j + "/6", "continued-" + j + "/7", "continued-" + j + "/8", "continued-" + j + "/9"));
             startFrom = channelPosition.get();

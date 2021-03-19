@@ -7,7 +7,6 @@ import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.message.TextMessage;
-import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,6 +23,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.receiverChannelsWith;
 import static de.otto.synapse.endpoint.sender.sqs.SqsMessageSender.MSG_KEY_ATTR;
@@ -105,7 +105,7 @@ public class SqsMessageQueueReceiverEndpointTest {
         // then:
         // wait some time
         await()
-                .atMost(Duration.FIVE_SECONDS)
+                .atMost(5, TimeUnit.SECONDS)
                 .until(() -> messages.size() >= EXPECTED_NUMBER_OF_ENTRIES);
 
         // and:
@@ -172,7 +172,7 @@ public class SqsMessageQueueReceiverEndpointTest {
         // then:
         // wait some time
         await()
-                .atMost(Duration.FIVE_SECONDS)
+                .atMost(5, TimeUnit.SECONDS)
                 .until(() -> typedMessages.size() == 1);
 
         // and:
@@ -203,7 +203,7 @@ public class SqsMessageQueueReceiverEndpointTest {
         // then:
         // wait some time
         await()
-                .atMost(Duration.FIVE_SECONDS)
+                .atMost(5, TimeUnit.SECONDS)
                 .until(() -> messages.size() >= EXPECTED_NUMBER_OF_ENTRIES-1);
 
         // and:
@@ -229,7 +229,7 @@ public class SqsMessageQueueReceiverEndpointTest {
         // then:
         // wait until the messages are consumed
         await()
-                .atMost(Duration.FIVE_SECONDS)
+                .atMost(5, TimeUnit.SECONDS)
                 .until(() -> messages.size() >= EXPECTED_NUMBER_OF_ENTRIES);
 
         // and:
@@ -258,7 +258,7 @@ public class SqsMessageQueueReceiverEndpointTest {
         // then:
         // wait some time
         await()
-                .atMost(Duration.FIVE_SECONDS)
+                .atMost(5, TimeUnit.SECONDS)
                 .until(() -> messages.size() == 1);
 
         // and:
@@ -282,7 +282,7 @@ public class SqsMessageQueueReceiverEndpointTest {
         // then:
         // wait some time
         await()
-                .atMost(Duration.FIVE_SECONDS)
+                .atMost(5, TimeUnit.SECONDS)
                 .until(() -> messages.size() == 1);
 
         // and:
@@ -306,7 +306,7 @@ public class SqsMessageQueueReceiverEndpointTest {
         // then:
         // wait some time
         await()
-                .atMost(Duration.FIVE_SECONDS)
+                .atMost(5, TimeUnit.SECONDS)
                 .until(() -> messages.size() == 1);
 
         // and:

@@ -8,7 +8,6 @@ import de.otto.synapse.endpoint.SqsClientHelper;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.testsupport.SqsTestStreamSource;
-import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -24,6 +23,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static de.otto.synapse.configuration.sqs.SqsTestConfiguration.SQS_INTEGRATION_TEST_CHANNEL;
 import static java.util.Collections.synchronizedList;
@@ -84,7 +84,7 @@ public class SqsMessageQueueIntegrationTest {
         sqsMessageQueue.consume();
 
         await()
-                .atMost(Duration.FIVE_SECONDS)
+                .atMost(5, TimeUnit.SECONDS)
                 .until(() -> messages.size() >= EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET);
         sqsMessageQueue.stop();
 
@@ -103,7 +103,7 @@ public class SqsMessageQueueIntegrationTest {
         sqsMessageQueue.consume();
 
         await()
-                .atMost(Duration.FIVE_SECONDS)
+                .atMost(5, TimeUnit.SECONDS)
                 .until(() -> testSqsMessageInterceptor.getInterceptedMessages().size() >= EXPECTED_NUMBER_OF_ENTRIES_IN_FIRST_SET);
     }
 
