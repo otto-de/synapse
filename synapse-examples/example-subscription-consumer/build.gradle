@@ -35,7 +35,7 @@ dependencies {
     implementation project(':synapse-testsupport:')
 
     testImplementation 'junit:junit:4.13.2'
-    testImplementation "org.mockito:mockito-core:3.1.0"
+    testImplementation "org.mockito:mockito-core:3.8.0"
     testImplementation "org.springframework.boot:spring-boot-test:${springBootVersion}"
     testImplementation "org.springframework:spring-test:${springVersion}"
     testImplementation "org.awaitility:awaitility:3.1.1"
