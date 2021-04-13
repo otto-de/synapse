@@ -19,7 +19,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 ext {
     awsSdkVersion = "2.16.33"
     springVersion = "5.3.5"
-    springSecurityVersion = "5.4.5"
+    springSecurityVersion = "5.4.6"
     springBootVersion = "2.4.4"
     edisonVersion = "2.4.6"
 }
