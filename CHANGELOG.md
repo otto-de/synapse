@@ -1,5 +1,10 @@
 # Release Notes
 
+## 0.23.4
+*all*
+* Update all dependencies to latest versions
+* Update to edison-microservice 2.4.7
+
 ## 0.23.3
 *all*
 * Update all dependencies to latest versions
