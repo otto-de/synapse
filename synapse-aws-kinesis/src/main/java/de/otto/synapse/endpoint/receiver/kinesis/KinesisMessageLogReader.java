@@ -31,8 +31,6 @@ public class KinesisMessageLogReader {
 
     private static final Logger LOG = getLogger(KinesisMessageLogReader.class);
 
-    public static final int DEFAULT_WAITING_TIME_ON_EMPTY_RECORDS = 10000;
-
     private final String channelName;
     private final KinesisAsyncClient kinesisClient;
     private final ExecutorService executorService;
@@ -40,10 +38,13 @@ public class KinesisMessageLogReader {
     private final AtomicReference<List<KinesisShardReader>> kinesisShardReaders = new AtomicReference<>();
 
     public static final int SKIP_NEXT_PARTS = 8;
+    public static final int DEFAULT_WAITING_TIME_ON_EMPTY_RECORDS = 10000;
+    public static final int DEFAULT_WAITING_TIME_ON_SKIP_EMPTY_PARTS = 200; // max 5 calls per second per shard
+
     private final int waitingTimeOnEmptyRecords;
-
+    private final int skipNextEmptyParts;
+    private final int waitingTimeOnSkipEmptyParts;
     private final Marker marker;
-
 
     public KinesisMessageLogReader(final String channelName,
                                    final KinesisAsyncClient kinesisClient,
@@ -56,12 +57,25 @@ public class KinesisMessageLogReader {
                                    final KinesisAsyncClient kinesisClient,
                                    final ExecutorService executorService,
                                    final Clock clock, final int waitingTimeOnEmptyRecords, final Marker marker) {
+        this(channelName, kinesisClient, executorService, clock, waitingTimeOnEmptyRecords, SKIP_NEXT_PARTS, DEFAULT_WAITING_TIME_ON_SKIP_EMPTY_PARTS, marker);
+    }
+
+    public KinesisMessageLogReader(final String channelName,
+                                   final KinesisAsyncClient kinesisClient,
+                                   final ExecutorService executorService,
+                                   final Clock clock,
+                                   final int waitingTimeOnEmptyRecords,
+                                   final int skipNextEmptyParts,
+                                   final int waitingTimeOnSkipEmptyParts,
+                                   final Marker marker) {
         this.channelName = channelName;
         this.kinesisClient = kinesisClient;
         this.executorService = executorService;
         this.clock = clock;
 
         this.waitingTimeOnEmptyRecords = waitingTimeOnEmptyRecords;
+        this.skipNextEmptyParts = skipNextEmptyParts;
+        this.waitingTimeOnSkipEmptyParts = waitingTimeOnSkipEmptyParts;
 
         this.marker = marker;
     }
@@ -113,7 +127,7 @@ public class KinesisMessageLogReader {
                     .map(shardReader -> supplyAsync(
                             () -> {
                                 final KinesisShardIterator shardIterator = iterator.getShardIterator(shardReader.getShardName());
-                                return fetchNext(shardIterator, SKIP_NEXT_PARTS);
+                                return fetchNext(shardIterator, skipNextEmptyParts);
                             },
                             executorService))
                     .collect(toList());
@@ -132,6 +146,11 @@ public class KinesisMessageLogReader {
         final String id = shardIterator.getId();
         final ShardResponse shardResponse = shardIterator.next();
         if(shardResponse.getMessages().isEmpty() && !shardIterator.isPoison() && !Objects.equals(shardIterator.getId(), id) && skipNextParts > 0) {
+            try {
+                Thread.sleep(waitingTimeOnSkipEmptyParts);  // avoid to many request in a short timespan
+            } catch (InterruptedException e) {
+                LOG.warn(marker, "Thread got interrupted");
+            }
             return fetchNext(shardIterator, --skipNextParts);
         }
         return shardResponse;

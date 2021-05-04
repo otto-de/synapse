@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.23.4.1
+*synapse-aws-kinesis*
+* Configure skipNextEmptyParts in KinesisMessageLogReader
+
 ## 0.23.4
 *all*
 * Update all dependencies to latest versions
