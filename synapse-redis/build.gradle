@@ -8,7 +8,7 @@ dependencies {
     api "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
     api "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
     api "org.springframework.boot:spring-boot-actuator-autoconfigure:${springBootVersion}"
-    api "org.redisson:redisson-spring-boot-starter:3.15.3"
+    api "org.redisson:redisson-spring-boot-starter:3.15.6"
 
     implementation "org.springframework:spring-context:${springVersion}"
     implementation "org.springframework:spring-aop:${springVersion}"
@@ -22,7 +22,7 @@ dependencies {
     testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
     testImplementation "com.jayway.jsonpath:json-path-assert:2.6.0"
     testImplementation 'com.tngtech.java:junit-dataprovider:1.13.1'
-    testImplementation "org.awaitility:awaitility:4.0.3"
+    testImplementation "org.awaitility:awaitility:4.1.0"
     testImplementation "org.mockito:mockito-core:3.11.0"
     testImplementation "ch.qos.logback:logback-core:1.2.3"
     testImplementation "ch.qos.logback:logback-classic:1.2.3"
