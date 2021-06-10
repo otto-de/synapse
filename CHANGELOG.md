@@ -1,5 +1,9 @@
 # Release Notes
 
+# 0.23.5
+*synapse-edison*
+* Update to Edison Microservice 2.5.0 (with Spring Boot 2.5.0)
+
 ## 0.23.4
 *all*
 * Update all dependencies to latest versions
