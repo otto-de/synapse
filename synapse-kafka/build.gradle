@@ -4,7 +4,7 @@ dependencies {
     api project(':synapse-core:')
 
     implementation "com.google.guava:guava:31.0.1-jre"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.12.3"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.0"
     implementation "org.springframework.kafka:spring-kafka:2.7.7"
 
     testImplementation 'junit:junit:4.13.2'
