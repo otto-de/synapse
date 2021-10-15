@@ -17,7 +17,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 ext {
-    awsSdkVersion = "2.16.89"
+    awsSdkVersion = "2.17.61"
     springVersion = "5.3.11"
     springSecurityVersion = "5.5.2"
     springBootVersion = "2.5.5"
