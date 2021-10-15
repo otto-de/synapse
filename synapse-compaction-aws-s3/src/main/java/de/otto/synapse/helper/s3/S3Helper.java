@@ -170,16 +170,25 @@ public class S3Helper {
                 .collect(toList());
     }
 
+
     public List<S3Object> listAll(final String bucketName) {
-        final ListObjectsV2Response listObjectsV2Response = s3Client.listObjectsV2(ListObjectsV2Request.builder().bucket(bucketName).build());
+        ListObjectsV2Request request = ListObjectsV2Request.builder().bucket(bucketName).build();
+        ListObjectsV2Response response;
 
-        if (listObjectsV2Response.keyCount() > 0) {
-            return listObjectsV2Response.contents();
-        } else {
-            return Collections.emptyList();
-        }
+        ArrayList<S3Object> s3Objects = new ArrayList<>();
+        do {
+            response = s3Client.listObjectsV2(request);
+            if (response.hasContents()) {
+                s3Objects.addAll(response.contents());
+            }
+            String token = response.nextContinuationToken();
+            request = request.toBuilder().continuationToken(token).build();
+        } while (response.isTruncated());
 
+        return Collections.unmodifiableList(s3Objects);
     }
+
+
 
     private List<ObjectIdentifier> convertS3ObjectsToObjectIdentifiers(final ListObjectsV2Response listObjectsV2Response,
                                                                        final String prefix) {

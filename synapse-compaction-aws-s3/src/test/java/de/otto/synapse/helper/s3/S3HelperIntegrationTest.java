@@ -107,6 +107,20 @@ public class S3HelperIntegrationTest {
         assertThat(FileUtils.contentEquals(fileToUpload, downloadedFile), is(true));
     }
 
+    @Test
+    public void shouldNotIgnoreFilesWhenThereAreMoreThan1000InBucket() throws Exception {
+        // given
+        for (int i = 0; i < 1001; i++) {
+            s3Helper.upload(TESTBUCKET, createTestfile("test_" + i, ".txt", "Hello World!"));
+        }
+
+        // when
+        final List<String> allFiles = s3Helper.listAllFiles(TESTBUCKET);
+
+        // then
+        assertThat(allFiles, hasSize(1001));
+    }
+
     private File createTestfile(final String prefix, final String suffix, final String content) throws Exception {
         final File tempFile = createTempFile(prefix, suffix).toFile();
         try (final FileWriter writer = new FileWriter(tempFile)) {
