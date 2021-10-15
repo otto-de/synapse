@@ -148,19 +148,28 @@ public class S3Helper {
 
     public void deleteAllObjectsWithPrefixInBucket(final String bucketName,
                                                    final String prefix) {
-        final ListObjectsV2Response listObjectResponse = s3Client.listObjectsV2(ListObjectsV2Request.builder().bucket(bucketName).build());
-        if (listObjectResponse.keyCount() > 0) {
-            DeleteObjectsRequest deleteObjectsRequest = DeleteObjectsRequest.builder()
-                    .bucket(bucketName)
-                    .delete(builder()
-                            .objects(convertS3ObjectsToObjectIdentifiers(listObjectResponse, prefix))
-                            .build())
-                    .build();
-            final DeleteObjectsResponse deleteObjectsResponse = s3Client.deleteObjects(deleteObjectsRequest);
-            LOG.debug("deleteAllObjectsWithPrefixInBucket in bucket {} with prefix {}: {}", bucketName, prefix, deleteObjectsResponse);
-        } else {
-            LOG.debug("deleteAllObjectsWithPrefixInBucket listObjects found no keys in bucket {} with prefix {}: {}", bucketName, prefix, listObjectResponse);
-        }
+
+        ListObjectsV2Request request = ListObjectsV2Request.builder().bucket(bucketName).build();
+        ListObjectsV2Response response;
+
+        do {
+            response = s3Client.listObjectsV2(request);
+            if (response.hasContents()) {
+                DeleteObjectsRequest deleteObjectsRequest = DeleteObjectsRequest.builder()
+                        .bucket(bucketName)
+                        .delete(builder()
+                                .objects(convertS3ObjectsToObjectIdentifiers(response, prefix))
+                                .build())
+                        .build();
+                final DeleteObjectsResponse deleteObjectsResponse = s3Client.deleteObjects(deleteObjectsRequest);
+                LOG.debug("Deleted {} objects in bucket {} with prefix {}: {}", deleteObjectsResponse.deleted().size(), bucketName, prefix, deleteObjectsResponse);
+            } else {
+                LOG.debug("deleteAllObjectsWithPrefixInBucket listObjects found no keys in bucket {} with prefix {}: {}", bucketName, prefix, response);
+            }
+            String token = response.nextContinuationToken();
+            request = request.toBuilder().continuationToken(token).build();
+        } while (response.isTruncated());
+
     }
 
     public List<String> listAllFiles(final String bucketName) {

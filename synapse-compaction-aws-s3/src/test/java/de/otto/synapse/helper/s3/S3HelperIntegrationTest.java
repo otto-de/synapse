@@ -71,8 +71,8 @@ public class S3HelperIntegrationTest {
 
         // then
         final List<String> allFiles = s3Helper.listAllFiles(TESTBUCKET);
-        assertThat(allFiles, contains(startsWith("test")));
-        assertThat(allFiles, not(contains(startsWith("prefixed_test"))));
+        assertThat(allFiles, hasSize(1));
+        assertThat(allFiles.get(0), startsWith("test"));
     }
 
     @Test
