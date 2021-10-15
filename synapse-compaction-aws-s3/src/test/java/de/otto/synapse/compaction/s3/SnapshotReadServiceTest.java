@@ -15,8 +15,8 @@ import java.util.Optional;
 
 import static de.otto.synapse.compaction.s3.SnapshotServiceTestUtils.snapshotProperties;
 import static java.util.Collections.emptyList;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -41,7 +41,7 @@ public class SnapshotReadServiceTest {
         final S3Object obj2 = mock(S3Object.class);
         when(obj2.key()).thenReturn("compaction-test-snapshot-2.json.zip");
         when(obj2.lastModified()).thenReturn(Instant.MAX);
-        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder().keyCount(2).contents(obj1, obj2).build());
+        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder().keyCount(2).isTruncated(false).contents(obj1, obj2).build());
 
         //when
         Optional<S3Object> s3Object = testee.fetchSnapshotMetadataFromS3("testBucket", "test");
@@ -53,7 +53,7 @@ public class SnapshotReadServiceTest {
     @Test
     public void shouldReturnOptionalEmptyWhenNoFileInBucket() {
         //when
-        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder().keyCount(0).contents(emptyList()).build());
+        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder().keyCount(0).isTruncated(false).contents(emptyList()).build());
         Optional<S3Object> s3Object = testee.fetchSnapshotMetadataFromS3("testBucket", "DOES_NOT_EXIST");
 
         //then
@@ -66,7 +66,7 @@ public class SnapshotReadServiceTest {
         final S3Object s3Object = mock(S3Object.class);
         when(s3Object.key()).thenReturn("compaction-teststream-snapshot-1.json.zip");
 
-        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder().keyCount(1).contents(s3Object).build());
+        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder().keyCount(1).isTruncated(false).contents(s3Object).build());
         when(s3Client.getObject(any(GetObjectRequest.class), any(Path.class))).thenReturn(GetObjectResponse.builder().build());
 
         //when
@@ -79,7 +79,7 @@ public class SnapshotReadServiceTest {
     @Test
     public void shouldReturnEmptyWhenThereIsNoSnapshotFileInS3Bucket() {
         //given
-        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder().keyCount(0).contents(emptyList()).build());
+        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder().keyCount(0).isTruncated(false).contents(emptyList()).build());
 
         //when
         Optional<File> file = testee.getLatestSnapshot("test");
@@ -95,7 +95,7 @@ public class SnapshotReadServiceTest {
         final S3Object obj1 = mock(S3Object.class);
         when(obj1.key()).thenReturn("compaction-test-snapshot-1.json.zip");
         when(obj1.size()).thenReturn(123L);
-        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder().keyCount(1).contents(obj1).build());
+        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder().keyCount(1).isTruncated(false).contents(obj1).build());
         when(s3Client.getObject(any(GetObjectRequest.class), any(Path.class))).thenThrow(NoSuchKeyException.class);
 
         //when
@@ -112,7 +112,7 @@ public class SnapshotReadServiceTest {
                 .key("compaction-testStream-snapshot-1.json.zip")
                 .size(0L)
                 .build();
-        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder().keyCount(1).contents(obj).build());
+        when(s3Client.listObjectsV2(any(ListObjectsV2Request.class))).thenReturn(ListObjectsV2Response.builder().keyCount(1).isTruncated(false).contents(obj).build());
 
         final Path tempFile = SnapshotFileHelper.getTempFile("/compaction-testStream-snapshot-1.json.zip");
         Files.deleteIfExists(tempFile);

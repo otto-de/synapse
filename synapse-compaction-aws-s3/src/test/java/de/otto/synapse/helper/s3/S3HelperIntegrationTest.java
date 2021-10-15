@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static java.nio.file.Files.createTempFile;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
 @ContextConfiguration(classes = {S3TestConfiguration.class, SynapseAwsAuthConfiguration.class})
