@@ -1,8 +1,11 @@
 # Release Notes
 
-# 0.23.7-SNAPSHOT
+# 0.23.7
 *synapse-compaction-aws-s3*
 * Bugfix: S3Helper's listAll function is capable of returning more than 1000 files now.
+
+*all*
+* Update all dependencies to latest versions
 
 # 0.23.6
 *synapse-edison*
@@ -13,8 +16,7 @@
 * Update to Edison Microservice 2.5.0 (with Spring Boot 2.5.0)
 
 ## 0.23.4
-*all*
-* Update all dependencies to latest versions
+/Globalstrahlung:<br \/>(-?\d+\.\d+)/
 * Update to edison-microservice 2.4.7
 
 ## 0.23.3
