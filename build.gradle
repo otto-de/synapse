@@ -20,7 +20,7 @@ ext {
     awsSdkVersion = "2.17.61"
     springVersion = "5.3.11"
     springSecurityVersion = "5.5.2"
-    springBootVersion = "2.5.5"
+    springBootVersion = "2.5.6"
     edisonVersion = "2.5.3"
 }
 
