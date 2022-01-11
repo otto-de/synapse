@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.23.4.2
+*synapse-aws-kinesis*
+* Bugfix NullCheck for response.failedRecordCount() in KinesisMessageSender
+
 ## 0.23.4.1
 *synapse-aws-kinesis*
 * Configure skipNextEmptyParts in KinesisMessageLogReader
