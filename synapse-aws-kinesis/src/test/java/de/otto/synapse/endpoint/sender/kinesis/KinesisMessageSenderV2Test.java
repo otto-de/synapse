@@ -475,6 +475,32 @@ public class KinesisMessageSenderV2Test {
                 .mapToObj(i -> message(valueOf(i), Integer.toString(i)));
     }
 
+    @Test
+    public void shouldSendMessageWithUnknownFailedRecordCount() throws Exception {
+        // given
+        final Message<ExampleJsonObject> message = message("someKey", new ExampleJsonObject("banana"));
+
+        when(kinesisClient.putRecords(any(PutRecordsRequest.class))).thenReturn(completedFuture(PutRecordsResponse.builder()
+                .records(PutRecordsResultEntry.builder().build())
+                .build()));
+
+        // when
+        kinesisMessageSender.send(message).join();
+
+        // then
+        verify(kinesisClient).putRecords(putRecordsRequestCaptor.capture());
+        final PutRecordsRequest caputuredRequest = putRecordsRequestCaptor.getValue();
+
+        assertThat(caputuredRequest.streamName(), is("test"));
+        assertThat(caputuredRequest.records(), hasSize(1));
+        assertThat(caputuredRequest.records().get(0).partitionKey(), is("someKey"));
+
+        final ByteBufferBackedInputStream inputStream = new ByteBufferBackedInputStream(caputuredRequest.records().get(0).data().asByteBuffer());
+
+        final JsonNode json = currentObjectMapper().readTree(inputStream);
+        assertThat(json.get(MessageFormat.SYNAPSE_MSG_FORMAT).asText(), is("v2"));
+    }
+
     private static class ExampleJsonObject {
         @JsonProperty
         private String value;

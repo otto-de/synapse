@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import static de.otto.synapse.translator.MessageFormat.defaultMessageFormat;
+import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toCollection;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -114,7 +115,7 @@ public class KinesisMessageSender extends AbstractMessageSenderEndpoint {
         PutRecordsRequest putRecordsRequest = createPutRecordsRequest(batch);
         kinesisAsyncClient.putRecords(putRecordsRequest)
                 .thenApply(response -> {
-                    isSuccessful.set(response.failedRecordCount() == 0);
+                    isSuccessful.set(isNull(response.failedRecordCount()) || response.failedRecordCount() == 0);
                     return response;
                 }).get();
         return isSuccessful.get();

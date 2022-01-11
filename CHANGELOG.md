@@ -1,5 +1,9 @@
 # Release Notes
 
+# 0.23.8
+*synapase-kinesis*
+* Bugfix NullCheck for response.failedRecordCount() in KinesisMessageSender
+
 # 0.23.7
 *synapse-compaction-aws-s3*
 * Bugfix: S3Helper's listAll function is capable of returning more than 1000 files now.
