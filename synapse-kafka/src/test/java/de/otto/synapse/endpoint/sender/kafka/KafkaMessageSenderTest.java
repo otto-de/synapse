@@ -261,7 +261,7 @@ public class KafkaMessageSenderTest {
             messageSender.send(message).join();
 
             // then
-            final ConsumerRecord<String, String> record = getSingleRecord(consumer, KAFKA_TOPIC, 1000L);
+            final ConsumerRecord<String, String> record = getSingleRecord(consumer, KAFKA_TOPIC, 5000L);
             assertThat(record.key(), is("someKey"));
             assertThat(record.value(), is("{\"value\":\"banana\"}"));
             assertThat(record.headers().lastHeader("first").value(), is("one".getBytes()));
