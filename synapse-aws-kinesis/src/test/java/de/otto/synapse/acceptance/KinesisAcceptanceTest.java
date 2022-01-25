@@ -24,10 +24,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static de.otto.synapse.acceptance.KinesisAcceptanceTest.SomePayload.somePayload;
@@ -131,9 +134,17 @@ public class KinesisAcceptanceTest {
         assertThat(attributes, hasEntry(MSG_SENDER.key(), "Synapse"));
         assertThat(receivedMessage.getPayload(), is(somePayload("foo")));
         assertThat(receivedMessage.getKey(), is(instanceOf(SimpleKey.class)));
-        final Instant sent = receivedMessage.getHeader().getAsInstant(MSG_SENDER_TS);
+
+        //
+        // As you can see, the arrival TS is in seconds precision, the other two have microseconds, which makes
+        // it difficult to compare them with isAfter without truncating them to full seconds
+        // "synapse_msg_receiver_ts" -> "2022-01-25T19:04:06.354671Z"
+        // "synapse_msg_sender_ts" -> "2022-01-25T19:03:58.129246Z"
+        // "synapse_msg_arrival_ts" -> "2022-01-25T19:03:58Z"
+        //
+        final Instant sent = receivedMessage.getHeader().getAsInstant(MSG_SENDER_TS).truncatedTo(ChronoUnit.SECONDS);
         final Instant arrived = receivedMessage.getHeader().getAsInstant(MSG_ARRIVAL_TS);
-        final Instant received = receivedMessage.getHeader().getAsInstant(MSG_RECEIVER_TS);
+        final Instant received = receivedMessage.getHeader().getAsInstant(MSG_RECEIVER_TS).truncatedTo(ChronoUnit.SECONDS);;
         assertThat(sent.isAfter(arrived), is(false));
         assertThat(arrived.isAfter(received), is(false));
     }
@@ -184,7 +195,8 @@ public class KinesisAcceptanceTest {
         return result.get();
     }
 
-    static class SomePayload {
+    final static class SomePayload {
+
         @JsonProperty
         public String foo;
 
