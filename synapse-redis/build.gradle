@@ -8,7 +8,7 @@ dependencies {
     api "org.springframework.boot:spring-boot-starter-data-redis:${springBootVersion}"
     api "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
     api "org.springframework.boot:spring-boot-actuator-autoconfigure:${springBootVersion}"
-    api "org.redisson:redisson-spring-boot-starter:3.16.6"
+    api "org.redisson:redisson-spring-boot-starter:3.16.8"
 
     implementation "org.springframework:spring-context:${springVersion}"
     implementation "org.springframework:spring-aop:${springVersion}"
