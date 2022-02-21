@@ -81,7 +81,7 @@ public class KinesisMessageLogReaderTest {
     public void shouldRetrieveEmptyListOfShards() {
         // given
         describeStreamResponse(of());
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 100, 2, 10, null);
 
         // when
         List<KinesisShardReader> shards = logReader.getCurrentKinesisShards();
@@ -94,7 +94,7 @@ public class KinesisMessageLogReaderTest {
     public void shouldRetrieveSingleOpenShard() {
         // given
         describeStreamResponse(of(someShard("shard1", true)));
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 100, 2, 10, null);
 
         // when
         List<KinesisShardReader> shards = logReader.getCurrentKinesisShards();
@@ -112,7 +112,7 @@ public class KinesisMessageLogReaderTest {
                 someShard("shard2", false),
                 someShard("shard3", true)
         ));
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 100, 2, 10, null);
 
         // when
         List<String> shards = logReader.getOpenShards();
@@ -130,7 +130,7 @@ public class KinesisMessageLogReaderTest {
                         someShard("shard1", true),
                         someShard("shard2", false),
                         someShard("shard3", true)));
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 100, 2, 10, null);
 
         // when
         List<KinesisShardReader> shards = logReader.getCurrentKinesisShards();
@@ -152,7 +152,7 @@ public class KinesisMessageLogReaderTest {
                         someShard("shard3", true),
                         someShard("shard4", true)),
                 true);
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 100, 2, 10, null);
 
         // when
         List<KinesisShardReader> shards = logReader.getCurrentKinesisShards();
@@ -176,7 +176,7 @@ public class KinesisMessageLogReaderTest {
                         someShard("shard3", true),
                         someShard("shard4", true)),
                 true);
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock,100, 2, 10, null);
 
         // when
         List<KinesisShardReader> shards = logReader.getCurrentKinesisShards();
@@ -195,7 +195,7 @@ public class KinesisMessageLogReaderTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", true);
 
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock,100, 2, 10, null);
 
         // when
         logReader.consumeUntil(fromHorizon(), shutdown(), responseConsumer).get();
@@ -230,7 +230,7 @@ public class KinesisMessageLogReaderTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", false);
 
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock,100, 2, 10, null);
 
         // when
         ChannelPosition position = logReader.consumeUntil(fromHorizon(), endOfChannel(), responseConsumer).get();
@@ -266,7 +266,7 @@ public class KinesisMessageLogReaderTest {
         describeRecordsForShard("shard1", false);
         describeRecordsForShard("shard2", false);
 
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 100, 2, 10, null);
 
         // when
         ChannelPosition position = logReader.consumeUntil(fromHorizon(), endOfChannel(), responseConsumer).get();
@@ -290,7 +290,7 @@ public class KinesisMessageLogReaderTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", true);
 
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 100, 2, 10, null);
 
         // when
         final KinesisMessageLogIterator iterator = logReader.getMessageLogIterator(fromHorizon());
@@ -321,7 +321,7 @@ public class KinesisMessageLogReaderTest {
         describeRecordsForShard("shard1", false);
         describeRecordsForShard("shard2", false);
 
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 100, 2, 10, null);
 
         // when
         final KinesisMessageLogIterator iterator = logReader.getMessageLogIterator(fromHorizon());
@@ -383,7 +383,7 @@ public class KinesisMessageLogReaderTest {
 
 
         // when
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 100, 2, 10, null);
 
         final CompletableFuture<ChannelPosition> futurePosition = logReader.consumeUntil(fromHorizon(), shutdown(), responseConsumer);
         futurePosition.get();
@@ -407,7 +407,7 @@ public class KinesisMessageLogReaderTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", false);
 
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 1000, null);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 100, 2, 10, null);
 
         // when
         final CompletableFuture<ChannelPosition> finalChannelPosition = logReader.consumeUntil(fromHorizon(), shutdown(), responseConsumer);
@@ -428,7 +428,7 @@ public class KinesisMessageLogReaderTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", false);
 
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 1000, null);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 100, 2, 10, null);
 
 
         // when
@@ -450,7 +450,7 @@ public class KinesisMessageLogReaderTest {
         );
         describeRecordsForShard("shard1", true);
         describeRecordsForShard("failing-shard2", true);
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 100, 2, 10, null);
 
         // when
         logReader.consumeUntil(fromHorizon(), shutdown(), responseConsumer).get();
@@ -473,7 +473,7 @@ public class KinesisMessageLogReaderTest {
         describeRecordsForShard("shard1", true);
         describeRecordsForShard("shard2", true);
 
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 100, 2, 10, null);
         try {
             logReader.consumeUntil(fromHorizon(), shutdown(), responseConsumer).get();
         } catch (ExecutionException e) {

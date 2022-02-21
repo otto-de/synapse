@@ -3,6 +3,7 @@
 # 0.23.8
 *synapase-kinesis*
 * Bugfix NullCheck for response.failedRecordCount() in KinesisMessageSender
+* Bugfix configure skipNextEmptyParts in KinesisMessageLogReader
 
 # 0.23.7
 *synapse-compaction-aws-s3*
