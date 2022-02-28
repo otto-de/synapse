@@ -9,7 +9,7 @@ buildscript {
     }
     dependencies {
         classpath "io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.30.0"
-        classpath "com.adarshr:gradle-test-logger-plugin:3.0.0"
+        classpath "com.adarshr:gradle-test-logger-plugin:3.2.0"
     }
 }
 
