@@ -10,7 +10,7 @@ dependencies {
     implementation "org.springframework:spring-aop:${springVersion}"
     implementation "org.aspectj:aspectjweaver:1.9.8"
 
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.1"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.2"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.1"
 
     implementation("net.openhft:chronicle-map:3.23ea0") {
