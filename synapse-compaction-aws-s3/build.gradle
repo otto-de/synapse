@@ -8,7 +8,7 @@ dependencies {
     implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
     implementation "software.amazon.awssdk:netty-nio-client:${awsSdkVersion}"
 
-    implementation 'com.fasterxml.jackson.core:jackson-core:2.13.1'
+    implementation "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
 
     testImplementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
     testImplementation project(':synapse-aws-kinesis')

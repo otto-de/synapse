@@ -16,7 +16,7 @@ repositories {
     mavenCentral()
 }
 
-ext['jackson.version'] = "2.10.0"
+ext['jackson.version'] = "${jacksonVersion}"
 
 dependencies {
     implementation project(':synapse-core:')
