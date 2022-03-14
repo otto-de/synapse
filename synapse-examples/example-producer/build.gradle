@@ -28,8 +28,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation:${springBootVersion}")
     implementation("org.springframework.boot:spring-boot-starter-jetty:${springBootVersion}")
 
-    implementation "ch.qos.logback:logback-core:1.2.10"
-    implementation "ch.qos.logback:logback-classic:1.2.10"
+    implementation "ch.qos.logback:logback-core:1.2.11"
+    implementation "ch.qos.logback:logback-classic:1.2.11"
 
     implementation project(':synapse-testsupport:')
 

@@ -28,8 +28,8 @@ dependencies {
     }
     compile("org.springframework.boot:spring-boot-starter-jetty:${springBootVersion}")
 
-    compile "ch.qos.logback:logback-core:1.2.10"
-    compile "ch.qos.logback:logback-classic:1.2.10"
+    compile "ch.qos.logback:logback-core:1.2.11"
+    compile "ch.qos.logback:logback-classic:1.2.11"
 
     implementation project(':synapse-testsupport:')
 
