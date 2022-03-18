@@ -38,7 +38,7 @@ public class InMemoryMessageLogTestConfiguration {
 
     private static final Logger LOG = getLogger(InMemoryMessageLogTestConfiguration.class);
 
-    @Bean(name = {"messageLogSenderEndpointFactory", "kinesisMessageLogSenderEndpointFactory", "kafkaMessageLogSenderEndpointFactory"})
+    @Bean(name = {"messageLogSenderEndpointFactory", "kinesisMessageLogSenderEndpointFactory"})
     public MessageSenderEndpointFactory messageLogSenderEndpointFactory(final MessageInterceptorRegistry interceptorRegistry,
                                                                         final InMemoryChannels inMemoryChannels) {
         LOG.warn("Creating in-memory messageLogSenderEndpointFactory. This should only be used in tests");

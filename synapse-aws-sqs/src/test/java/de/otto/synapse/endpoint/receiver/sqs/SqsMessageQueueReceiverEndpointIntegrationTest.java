@@ -21,8 +21,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.awscore.AwsRequestOverrideConfiguration;
@@ -34,6 +33,7 @@ import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 
+import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -83,7 +83,10 @@ public class SqsMessageQueueReceiverEndpointIntegrationTest {
 
     @Before
     public void setUp() {
-        new SqsClientHelper(asyncClient).createChannelIfNotExists(SQS_INTEGRATION_TEST_CHANNEL);
+
+        SqsClientHelper sqsClientHelper = new SqsClientHelper(asyncClient);
+        sqsClientHelper.createChannelIfNotExists(SQS_INTEGRATION_TEST_CHANNEL);
+        sqsClientHelper.purgeQueue(SQS_INTEGRATION_TEST_CHANNEL);
 
         AwsProperties awsProperties = new AwsProperties();
         awsProperties.setRegion(Region.EU_CENTRAL_1.id());
@@ -92,10 +95,10 @@ public class SqsMessageQueueReceiverEndpointIntegrationTest {
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create("foobar", "foobar")))
                 .overrideConfiguration(ClientOverrideConfiguration.builder()
-                        .apiCallAttemptTimeout(Duration.ofMillis(200))
+                        .apiCallAttemptTimeout(Duration.ofMillis(500))
                         .retryPolicy(new SqsAutoConfiguration(awsProperties)
-                                .sqsRetryPolicy()).build())
-                                            .endpointOverride(URI.create("http://localhost:8080/"))
+                        .sqsRetryPolicy()).build())
+                .endpointOverride(URI.create("http://localhost:8080/"))
                 .build();
     }
 
@@ -140,14 +143,20 @@ public class SqsMessageQueueReceiverEndpointIntegrationTest {
     @Controller
     public static class StubController {
 
-        private static AtomicInteger count = new AtomicInteger();
+        private final static AtomicInteger count = new AtomicInteger();
 
         @Autowired
         private SqsAsyncClient asyncClient;
 
         @RequestMapping(value = "/**", produces = {"text/xml"})
         @ResponseBody
-        public ResponseEntity<?> getResponse() throws InterruptedException, ExecutionException {
+        public ResponseEntity<?> getResponse(@RequestBody String body, HttpServletRequest request) throws InterruptedException, ExecutionException {
+
+            System.err.println("Counter: " + count.get());
+            System.err.println(body);
+
+            System.err.println(request);
+
             if (returnError.get(count.getAndIncrement())) {
                 return new ResponseEntity<Void>(HttpStatus.BAD_GATEWAY);
             }
