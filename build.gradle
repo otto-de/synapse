@@ -9,7 +9,7 @@ buildscript {
     }
     dependencies {
         classpath "io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.30.0"
-        classpath "com.adarshr:gradle-test-logger-plugin:3.0.0"
+        //classpath "com.adarshr:gradle-test-logger-plugin:3.2.0"
     }
 }
 
@@ -74,12 +74,12 @@ subprojects {
         maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
     }
 
-    testlogger {
-        showStandardStreams true
-        showPassedStandardStreams false
-        showSkippedStandardStreams false
-        showFailedStandardStreams true
-    }
+//    testlogger {
+//        showStandardStreams true
+//        showPassedStandardStreams false
+//        showSkippedStandardStreams false
+//        showFailedStandardStreams true
+//    }
 
 //    tasks.withType(Test) {
 //        testLogging {

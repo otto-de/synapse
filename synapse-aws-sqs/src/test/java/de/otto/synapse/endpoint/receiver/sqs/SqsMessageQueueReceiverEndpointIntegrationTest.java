@@ -152,11 +152,6 @@ public class SqsMessageQueueReceiverEndpointIntegrationTest {
         @ResponseBody
         public ResponseEntity<?> getResponse(@RequestBody String body, HttpServletRequest request) throws InterruptedException, ExecutionException {
 
-            System.err.println("Counter: " + count.get());
-            System.err.println(body);
-
-            System.err.println(request);
-
             if (returnError.get(count.getAndIncrement())) {
                 return new ResponseEntity<Void>(HttpStatus.BAD_GATEWAY);
             }
