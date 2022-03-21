@@ -76,19 +76,18 @@ public class SqsAcceptanceTest {
         sqsSender.send(message("test-key-shouldSendAndReceiveSqsMessage", expectedPayload)).join();
         await()
                 .atMost(10, SECONDS)
-                .until(() -> {
-                    System.err.println("Key: " + lastSqsMessage.get().getKey());
-                    return lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals(Key.of("test-key-shouldSendAndReceiveSqsMessage"));
-                });
+                .until(() ->
+                        lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals(Key.of("test-key-shouldSendAndReceiveSqsMessage"))
+                );
         assertThat(expectedPayload, is(lastSqsMessage.get().getPayload()));
     }
 
     @Test
     public void shouldSendAndReceiveDefaultSqsMessageHeaders() {
         sqsSender.send(
-                message(
-                        "test-key-shouldSendAndReceiveDefaultSqsMessageHeaders",
-                        ""))
+                        message(
+                                "test-key-shouldSendAndReceiveDefaultSqsMessageHeaders",
+                                ""))
                 .join();
 
         await()
@@ -108,10 +107,10 @@ public class SqsAcceptanceTest {
                 "timestamp", ofEpochSecond(42).toString())
         );
         sqsSender.send(
-                message(
-                        "test-key-shouldSendAndReceiveCustomSqsMessageHeaders",
-                        header,
-                        ""))
+                        message(
+                                "test-key-shouldSendAndReceiveCustomSqsMessageHeaders",
+                                header,
+                                ""))
                 .join();
 
         await()
