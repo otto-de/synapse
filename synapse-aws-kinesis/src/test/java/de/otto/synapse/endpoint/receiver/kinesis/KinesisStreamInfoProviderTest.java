@@ -40,7 +40,7 @@ public class KinesisStreamInfoProviderTest {
                 .thenReturn(completedFuture(DescribeStreamResponse.builder()
                         .streamDescription(StreamDescription.builder()
                                 .streamName("someChannelName")
-                                .streamARN("arn:aws:kinesis:eu-central-1:123456789012:stream/someChannelName")
+                                .streamARN("arn:aws:kinesis:us-east-1:123456789012:stream/someChannelName")
                                 .shards(someOpenShard("firstShard"))
                                 .hasMoreShards(false)
                                 .build())
@@ -51,7 +51,7 @@ public class KinesisStreamInfoProviderTest {
 
         //then
         assertThat(kinesisStreamInfo.getChannelName(), is("someChannelName"));
-        assertThat(kinesisStreamInfo.getArn(), is("arn:aws:kinesis:eu-central-1:123456789012:stream/someChannelName"));
+        assertThat(kinesisStreamInfo.getArn(), is("arn:aws:kinesis:us-east-1:123456789012:stream/someChannelName"));
         assertThat(kinesisStreamInfo.getShardInfo(), is(ImmutableList.of(new KinesisShardInfo("firstShard", true))));
     }
 
@@ -86,7 +86,7 @@ public class KinesisStreamInfoProviderTest {
                         completedFuture(DescribeStreamResponse.builder()
                                 .streamDescription(StreamDescription.builder()
                                         .streamName("someChannelName")
-                                        .streamARN("arn:aws:kinesis:eu-central-1:123456789012:stream/someChannelName")
+                                        .streamARN("arn:aws:kinesis:us-east-1:123456789012:stream/someChannelName")
                                         .shards(someOpenShard("firstShard"))
                                         .hasMoreShards(true)
                                         .build())
@@ -94,7 +94,7 @@ public class KinesisStreamInfoProviderTest {
                         completedFuture(DescribeStreamResponse.builder()
                                 .streamDescription(StreamDescription.builder()
                                         .streamName("someChannelName")
-                                        .streamARN("arn:aws:kinesis:eu-central-1:123456789012:stream/someChannelName")
+                                        .streamARN("arn:aws:kinesis:us-east-1:123456789012:stream/someChannelName")
                                         .shards(someOpenShard("secondShard"))
                                         .hasMoreShards(false)
                                         .build())
@@ -105,7 +105,7 @@ public class KinesisStreamInfoProviderTest {
 
         //then
         assertThat(kinesisStreamInfo.getChannelName(), is("someChannelName"));
-        assertThat(kinesisStreamInfo.getArn(), is("arn:aws:kinesis:eu-central-1:123456789012:stream/someChannelName"));
+        assertThat(kinesisStreamInfo.getArn(), is("arn:aws:kinesis:us-east-1:123456789012:stream/someChannelName"));
         assertThat(kinesisStreamInfo.getShardInfo(), is(ImmutableList.of(
                 new KinesisShardInfo("firstShard", true),
                 new KinesisShardInfo("secondShard", true))));
@@ -120,7 +120,7 @@ public class KinesisStreamInfoProviderTest {
                         completedFuture(DescribeStreamResponse.builder()
                                 .streamDescription(StreamDescription.builder()
                                         .streamName("someChannelName")
-                                        .streamARN("arn:aws:kinesis:eu-central-1:123456789012:stream/someChannelName")
+                                        .streamARN("arn:aws:kinesis:us-east-1:123456789012:stream/someChannelName")
                                         .shards(someClosedShard("firstShard"))
                                         .hasMoreShards(true)
                                         .build())
@@ -128,7 +128,7 @@ public class KinesisStreamInfoProviderTest {
                         completedFuture(DescribeStreamResponse.builder()
                                 .streamDescription(StreamDescription.builder()
                                         .streamName("someChannelName")
-                                        .streamARN("arn:aws:kinesis:eu-central-1:123456789012:stream/someChannelName")
+                                        .streamARN("arn:aws:kinesis:us-east-1:123456789012:stream/someChannelName")
                                         .shards(someOpenShard("secondShard"))
                                         .hasMoreShards(false)
                                         .build())
@@ -139,7 +139,7 @@ public class KinesisStreamInfoProviderTest {
 
         //then
         assertThat(kinesisStreamInfo.getChannelName(), is("someChannelName"));
-        assertThat(kinesisStreamInfo.getArn(), is("arn:aws:kinesis:eu-central-1:123456789012:stream/someChannelName"));
+        assertThat(kinesisStreamInfo.getArn(), is("arn:aws:kinesis:us-east-1:123456789012:stream/someChannelName"));
         assertThat(kinesisStreamInfo.getShardInfo(), is(ImmutableList.of(
                 new KinesisShardInfo("firstShard", false),
                 new KinesisShardInfo("secondShard", true))));

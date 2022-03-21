@@ -78,7 +78,7 @@ public class KinesisTestConfiguration implements MessageEndpointConfigurer {
                                     .protocol(Protocol.HTTP1_1)
                                     .build())
                     .endpointOverride(URI.create("http://localhost:4566"))
-                    .region(Region.EU_CENTRAL_1)
+                    .region(Region.US_EAST_1)
                     .credentialsProvider(credentialsProvider)
                     .overrideConfiguration(ClientOverrideConfiguration.builder().retryPolicy(kinesisRetryPolicy).build())
                     .build();

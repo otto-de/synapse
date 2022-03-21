@@ -100,7 +100,7 @@ public class SqsMessageQueueReceiverEndpoint extends AbstractMessageReceiverEndp
             sqsAsyncClient.receiveMessage(ReceiveMessageRequest.builder()
                     .queueUrl(queueUrl)
                     .visibilityTimeout(VISIBILITY_TIMEOUT)
-                    .messageAttributeNames(".*")
+                    .messageAttributeNames("All")
                     .waitTimeSeconds(WAIT_TIME_SECONDS)
                     .build())
                     .thenAccept(this::processResponse)

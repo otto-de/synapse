@@ -76,7 +76,10 @@ public class SqsAcceptanceTest {
         sqsSender.send(message("test-key-shouldSendAndReceiveSqsMessage", expectedPayload)).join();
         await()
                 .atMost(10, SECONDS)
-                .until(() -> lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals(Key.of("test-key-shouldSendAndReceiveSqsMessage")));
+                .until(() -> {
+                    System.err.println("Key: " + lastSqsMessage.get().getKey());
+                    return lastSqsMessage.get() != null && lastSqsMessage.get().getKey().equals(Key.of("test-key-shouldSendAndReceiveSqsMessage"));
+                });
         assertThat(expectedPayload, is(lastSqsMessage.get().getPayload()));
     }
 

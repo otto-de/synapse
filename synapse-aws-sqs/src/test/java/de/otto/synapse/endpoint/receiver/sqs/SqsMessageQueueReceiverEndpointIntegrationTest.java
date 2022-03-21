@@ -89,7 +89,7 @@ public class SqsMessageQueueReceiverEndpointIntegrationTest {
         sqsClientHelper.purgeQueue(SQS_INTEGRATION_TEST_CHANNEL);
 
         AwsProperties awsProperties = new AwsProperties();
-        awsProperties.setRegion(Region.EU_CENTRAL_1.id());
+        awsProperties.setRegion(Region.US_EAST_1.id());
 
         delegateAsyncClient = SqsAsyncClient.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(

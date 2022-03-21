@@ -21,7 +21,7 @@ public class SqsTestConfiguration {
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create("foobar", "foobar")))
                 .endpointOverride(URI.create("http://localhost:4566"))
-                .region(Region.EU_CENTRAL_1)
+                .region(Region.US_EAST_1)
                 .build();
         new SqsClientHelper(sqsAsyncClient).createChannelIfNotExists(SQS_INTEGRATION_TEST_CHANNEL);
         return sqsAsyncClient;

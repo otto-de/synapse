@@ -21,7 +21,7 @@ jobs:
   build:
     runs-on: Ubuntu-20.04
     env:
-      AWS_REGION: eu-central-1
+      AWS_REGION: us-east-1
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 11
