@@ -50,7 +50,7 @@ subprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
     apply plugin: 'eclipse'
-    apply plugin: "com.adarshr.test-logger"
+    //apply plugin: "com.adarshr.test-logger"
     apply from: "${rootDir}/jacoco.gradle"
 
     sourceCompatibility = '1.8'
