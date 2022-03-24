@@ -21,7 +21,7 @@ ext {
     springVersion = "5.3.17"
     springSecurityVersion = "5.6.2"
     springBootVersion = "2.6.4"
-    edisonVersion = "2.6.4"
+    edisonVersion = "2.6.5"
     jacksonVersion = "2.13.2"
     logbackVersion = "1.2.11"
 }
