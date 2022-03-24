@@ -1,5 +1,12 @@
 # Release Notes
 
+# 0.24.0
+*all*
+Dependency updates
+
+*synapse-kafka*
+* Kafka support was dropped
+
 # 0.23.8
 *synapase-kinesis*
 * Bugfix NullCheck for response.failedRecordCount() in KinesisMessageSender
@@ -21,7 +28,7 @@
 * Update to Edison Microservice 2.5.0 (with Spring Boot 2.5.0)
 
 ## 0.23.4
-/Globalstrahlung:<br \/>(-?\d+\.\d+)/
+*all*
 * Update to edison-microservice 2.4.7
 
 ## 0.23.3
