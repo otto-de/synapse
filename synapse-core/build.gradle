@@ -13,7 +13,7 @@ dependencies {
     implementation "org.springframework:spring-context:${springVersion}"
 
     implementation "org.springframework:spring-aop:${springVersion}"
-    implementation "org.aspectj:aspectjweaver:1.9.9"
+    implementation "org.aspectj:aspectjweaver:1.9.9.1"
 
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${jacksonVersion}"
