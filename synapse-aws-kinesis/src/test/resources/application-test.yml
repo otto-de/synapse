@@ -8,11 +8,11 @@ edison:
 synapse:
   aws:
     profile: ft3-nonlive
+    region: us-east-1
   snapshot:
     bucket-name: de-otto-promo-compaction-test-snapshots
   compaction:
     enabled: true
-
 service:
   encryption:
     password: test
