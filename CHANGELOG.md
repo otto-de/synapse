@@ -1,8 +1,12 @@
 # Release Notes
 
+# 0.24.1
+change default synapse.aws.region back to "eu-central-1" to prevent breaking change
+
 # 0.24.0
 *all*
 Dependency updates
+change default synapse.aws.region to "us-east-1"
 
 *synapse-kafka*
 * Kafka support was dropped
