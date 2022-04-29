@@ -1,5 +1,8 @@
 # Release Notes
 
+# 0.24.2
+Dependency updates
+
 # 0.24.1
 change default synapse.aws.region back to "eu-central-1" to prevent breaking change
 
