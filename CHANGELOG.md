@@ -1,5 +1,8 @@
 # Release Notes
 
+# 0.24.3
+Dependency updates
+
 # 0.24.2
 Dependency updates
 
