@@ -1,10 +1,13 @@
 # Release Notes
 
+# 0.25.0
+* Update to Edison and Spring Boot 2.7.1
+
 # 0.24.3
-Dependency updates
+* Dependency updates
 
 # 0.24.2
-Dependency updates
+* Dependency updates
 
 # 0.24.1
 change default synapse.aws.region back to "eu-central-1" to prevent breaking change
