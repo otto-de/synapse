@@ -36,7 +36,7 @@ public class KinesisShardIterator {
 
     public static final String POISON_SHARD_ITER = "__synapse__poison__iter";
     public static final Integer DEFAULT_FETCH_RECORDS_LIMIT = 10_000;
-    public static final Integer DEFAULT_FETCH_RECORDS_TIMEOUT_MILLIS = 120_000;
+    public static final Integer DEFAULT_FETCH_RECORDS_TIMEOUT_MILLIS = 60_000;
     private static final int MAX_RETRIES = 3;
 
     private final KinesisAsyncClient kinesisClient;
