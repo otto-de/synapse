@@ -35,13 +35,14 @@ public class KinesisShardIterator {
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShardIterator.class);
 
     public static final String POISON_SHARD_ITER = "__synapse__poison__iter";
-    public static final Integer FETCH_RECORDS_LIMIT = 10000;
-    public static final int KINESIS_READ_RECORDS_TIMEOUT = 60;
+    public static final Integer DEFAULT_FETCH_RECORDS_LIMIT = 10_000;
+    public static final Integer DEFAULT_FETCH_RECORDS_TIMEOUT_MILLIS = 120_000;
     private static final int MAX_RETRIES = 3;
 
     private final KinesisAsyncClient kinesisClient;
     private final String channelName;
-    private final int fetchRecordLimit;
+    private final int fetchRecordsLimit;
+    private final int fetchRecordsTimeout;
     private final AtomicBoolean stopSignal = new AtomicBoolean(false);
     private String id;
     private ShardPosition shardPosition;
@@ -49,15 +50,17 @@ public class KinesisShardIterator {
     public KinesisShardIterator(final @Nonnull KinesisAsyncClient kinesisClient,
                                 final @Nonnull String channelName,
                                 final @Nonnull ShardPosition shardPosition) {
-        this(kinesisClient, channelName, shardPosition, FETCH_RECORDS_LIMIT);
+        this(kinesisClient, channelName, shardPosition, DEFAULT_FETCH_RECORDS_LIMIT, DEFAULT_FETCH_RECORDS_TIMEOUT_MILLIS);
     }
 
     public KinesisShardIterator(final @Nonnull KinesisAsyncClient kinesisClient,
                                 final @Nonnull String channelName,
                                 final @Nonnull ShardPosition shardPosition,
-                                final int fetchRecordLimit) {
+                                final int fetchRecordsLimit,
+                                final int fetchRecordsTimeout) {
         this.kinesisClient = kinesisClient;
-        this.fetchRecordLimit = fetchRecordLimit;
+        this.fetchRecordsLimit = fetchRecordsLimit;
+        this.fetchRecordsTimeout = fetchRecordsTimeout;
         this.channelName = channelName;
         this.shardPosition = shardPosition;
         this.id = createShardIteratorId();
@@ -79,8 +82,8 @@ public class KinesisShardIterator {
         return shardPosition;
     }
 
-    public int getFetchRecordLimit() {
-        return fetchRecordLimit;
+    public int getFetchRecordsLimit() {
+        return fetchRecordsLimit;
     }
 
     /**
@@ -161,15 +164,18 @@ public class KinesisShardIterator {
         GetRecordsResponse response = null;
         try {
             response = kinesisClient.getRecords(GetRecordsRequest.builder()
-                            .shardIterator(id)
-                            .limit(fetchRecordLimit)
-                            .build())
-                    .get(KINESIS_READ_RECORDS_TIMEOUT, TimeUnit.SECONDS);
-        } catch (final InterruptedException| ExecutionException | TimeoutException e) {
-            throw new RuntimeException(e);
+                    .shardIterator(id)
+                    .limit(fetchRecordsLimit)
+                    .build())
+                    .get(fetchRecordsTimeout, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | TimeoutException e) {
+            LOG.warn("Timeout! GetRecords call in KinesisShardIterator did not return after {} milliseconds.", fetchRecordsTimeout, e);
+            throw new RuntimeException("Timeout while executing getRecords", e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException("ExecutionException during getRecords", e);
         }
         if (response.millisBehindLatest() == null) {
-            throw new RuntimeException("millisBehindLatest inside a GetRecordsResponse was null. The response was: " + response.toString());
+            throw new RuntimeException("millisBehindLatest inside a GetRecordsResponse was null. The response was: " + response);
         }
         this.id = response.nextShardIterator();
         LOG.debug("next() with id " + this.id + " returned " + response.records().size() + " records");

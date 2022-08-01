@@ -8,29 +8,24 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
-import software.amazon.awssdk.services.kinesis.model.ExpiredIteratorException;
-import software.amazon.awssdk.services.kinesis.model.GetRecordsRequest;
-import software.amazon.awssdk.services.kinesis.model.GetRecordsResponse;
-import software.amazon.awssdk.services.kinesis.model.GetShardIteratorRequest;
-import software.amazon.awssdk.services.kinesis.model.GetShardIteratorResponse;
-import software.amazon.awssdk.services.kinesis.model.InvalidArgumentException;
-import software.amazon.awssdk.services.kinesis.model.Record;
-import software.amazon.awssdk.services.kinesis.model.ShardIteratorType;
+import software.amazon.awssdk.services.kinesis.model.*;
 
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.otto.synapse.channel.ShardPosition.*;
 import static java.time.Instant.now;
 import static java.util.Collections.emptyList;
 import static java.util.concurrent.CompletableFuture.completedFuture;
-import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static java.util.concurrent.CompletableFuture.runAsync;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static software.amazon.awssdk.services.kinesis.model.Record.builder;
@@ -44,7 +39,7 @@ public class KinesisShardIteratorTest {
         final KinesisShardIterator iterator = new KinesisShardIterator(someKinesisClient(), "", fromPosition("someShard", "42"));
         assertThat(iterator.getShardPosition(), is(fromPosition("someShard", "42")));
         assertThat(iterator.getId(), is("someShardIterator"));
-        assertThat(iterator.getFetchRecordLimit(), is(10000));
+        assertThat(iterator.getFetchRecordsLimit(), is(10000));
     }
 
     @Test
@@ -52,15 +47,15 @@ public class KinesisShardIteratorTest {
         final KinesisShardIterator iterator = new KinesisShardIterator(someKinesisClient(), "", atPosition("someShard", "42"));
         assertThat(iterator.getShardPosition(), is(atPosition("someShard", "42")));
         assertThat(iterator.getId(), is("someShardIterator"));
-        assertThat(iterator.getFetchRecordLimit(), is(10000));
+        assertThat(iterator.getFetchRecordsLimit(), is(10000));
     }
 
     @Test
     public void shouldCreateShardIteratorWithFetchRecordLimit() {
-        final KinesisShardIterator iterator = new KinesisShardIterator(someKinesisClient(), "", fromPosition("someShard", "42"), 1);
+        final KinesisShardIterator iterator = new KinesisShardIterator(someKinesisClient(), "", fromPosition("someShard", "42"), 1, KinesisShardIterator.DEFAULT_FETCH_RECORDS_TIMEOUT_MILLIS);
         assertThat(iterator.getShardPosition(), is(fromPosition("someShard", "42")));
         assertThat(iterator.getId(), is("someShardIterator"));
-        assertThat(iterator.getFetchRecordLimit(), is(1));
+        assertThat(iterator.getFetchRecordsLimit(), is(1));
     }
 
     @Test
@@ -78,7 +73,7 @@ public class KinesisShardIteratorTest {
         final KinesisAsyncClient kinesisClient = someKinesisClient();
         when(kinesisClient.getRecords(any(GetRecordsRequest.class))).thenReturn(completedFuture(response));
 
-        final KinesisShardIterator iterator = new KinesisShardIterator(kinesisClient, "", fromPosition("someShard", "42"), 1);
+        final KinesisShardIterator iterator = new KinesisShardIterator(kinesisClient, "", fromPosition("someShard", "42"), 1, KinesisShardIterator.DEFAULT_FETCH_RECORDS_TIMEOUT_MILLIS);
         final ShardResponse shardResponse = iterator.next();
 
         assertThat(shardResponse.getMessages(), hasSize(1));
@@ -167,8 +162,8 @@ public class KinesisShardIteratorTest {
         // when
         KinesisAsyncClient kinesisClient = mock(KinesisAsyncClient.class);
         when(kinesisClient.getShardIterator(any(GetShardIteratorRequest.class)))
-                .thenAnswer((Answer< CompletableFuture<GetShardIteratorResponse>>) invocation -> {
-                    if ("4711".equals(((GetShardIteratorRequest)invocation.getArgument(0)).startingSequenceNumber())) {
+                .thenAnswer((Answer<CompletableFuture<GetShardIteratorResponse>>) invocation -> {
+                    if ("4711".equals(((GetShardIteratorRequest) invocation.getArgument(0)).startingSequenceNumber())) {
                         throw InvalidArgumentException.builder().message("Bumm!").build();
                     }
                     return completedFuture(GetShardIteratorResponse.builder()
@@ -248,7 +243,7 @@ public class KinesisShardIteratorTest {
         assertThat(fetchedResponse.getShardPosition(), is(fromPosition("someShard", "someSeqNumber")));
         GetRecordsRequest expectedRequest = GetRecordsRequest.builder()
                 .shardIterator("someShardIterator")
-                .limit(KinesisShardIterator.FETCH_RECORDS_LIMIT)
+                .limit(KinesisShardIterator.DEFAULT_FETCH_RECORDS_LIMIT)
                 .build();
         verify(kinesisClient).getRecords(expectedRequest);
     }
@@ -290,6 +285,42 @@ public class KinesisShardIteratorTest {
         shardIterator.next();
 
         // then
+        assertThat(shardIterator.getId(), is("nextIteratorId"));
+    }
+
+    @Test
+    public void shouldIterateToNextIdWithRetryAfterTimeout() {
+        // given
+        GetRecordsResponse response = GetRecordsResponse.builder()
+                .records(emptyList())
+                .nextShardIterator("nextIteratorId")
+                .millisBehindLatest(42L)
+                .build();
+        KinesisAsyncClient kinesisClient = someKinesisClient();
+
+        final AtomicBoolean timeoutDidNotWorkMarker = new AtomicBoolean();
+
+        when(kinesisClient.getRecords(any(GetRecordsRequest.class)))
+                .thenAnswer(invocation -> CompletableFuture.supplyAsync(
+                                () -> {
+                                    try {
+                                        Thread.sleep(5000);
+                                        timeoutDidNotWorkMarker.set(true);
+                                        return response;
+                                    } catch (InterruptedException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                }
+                        )
+                )
+                .thenReturn(completedFuture(response));
+        final KinesisShardIterator shardIterator = new KinesisShardIterator(kinesisClient, "", fromHorizon("someShard"), KinesisShardIterator.DEFAULT_FETCH_RECORDS_LIMIT, 500);
+
+        // when
+        shardIterator.next();
+
+        // then
+        assertThat(timeoutDidNotWorkMarker.get(), is(false));
         assertThat(shardIterator.getId(), is("nextIteratorId"));
     }
 

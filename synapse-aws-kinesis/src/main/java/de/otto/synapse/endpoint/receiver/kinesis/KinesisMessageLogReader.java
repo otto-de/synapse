@@ -146,11 +146,11 @@ public class KinesisMessageLogReader {
     private ShardResponse fetchNext(final KinesisShardIterator shardIterator, int skipNextParts) {
         final String id = shardIterator.getId();
         final ShardResponse shardResponse = shardIterator.next();
-        if(shardResponse.getMessages().isEmpty() && !shardIterator.isPoison() && !Objects.equals(shardIterator.getId(), id) && skipNextParts > 0) {
+        if (shardResponse.getMessages().isEmpty() && !shardIterator.isPoison() && !Objects.equals(shardIterator.getId(), id) && skipNextParts > 0) {
             try {
                 Thread.sleep(waitingTimeOnSkipEmptyParts);  // avoid to many request in a short timespan
             } catch (InterruptedException e) {
-                LOG.warn(marker, "Thread got interrupted");
+                LOG.warn(marker, "Thread got interrupted while waiting on skip empty parts", e);
             }
             return fetchNext(shardIterator, --skipNextParts);
         }
@@ -158,10 +158,9 @@ public class KinesisMessageLogReader {
     }
 
     /**
-     *
-     * @param startFrom starting position
+     * @param startFrom     starting position
      * @param stopCondition stop condition used to stop message consumption
-     * @param consumer the consumer used to process the {@link ShardResponse shard responses}
+     * @param consumer      the consumer used to process the {@link ShardResponse shard responses}
      * @return completable future
      */
     public CompletableFuture<ChannelPosition> consumeUntil(final ChannelPosition startFrom,
