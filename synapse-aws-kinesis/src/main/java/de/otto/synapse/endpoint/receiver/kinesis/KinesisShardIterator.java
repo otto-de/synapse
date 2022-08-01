@@ -11,6 +11,9 @@ import software.amazon.awssdk.services.kinesis.model.GetShardIteratorRequest;
 import software.amazon.awssdk.services.kinesis.model.ProvisionedThroughputExceededException;
 
 import javax.annotation.Nonnull;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static de.otto.synapse.channel.ShardPosition.fromPosition;
@@ -33,6 +36,7 @@ public class KinesisShardIterator {
 
     public static final String POISON_SHARD_ITER = "__synapse__poison__iter";
     public static final Integer FETCH_RECORDS_LIMIT = 10000;
+    public static final int KINESIS_READ_RECORDS_TIMEOUT = 60;
     private static final int MAX_RETRIES = 3;
 
     private final KinesisAsyncClient kinesisClient;
@@ -154,11 +158,16 @@ public class KinesisShardIterator {
     }
 
     private GetRecordsResponse tryNext() {
-        GetRecordsResponse response = kinesisClient.getRecords(GetRecordsRequest.builder()
-                .shardIterator(id)
-                .limit(fetchRecordLimit)
-                .build())
-                .join();
+        GetRecordsResponse response = null;
+        try {
+            response = kinesisClient.getRecords(GetRecordsRequest.builder()
+                            .shardIterator(id)
+                            .limit(fetchRecordLimit)
+                            .build())
+                    .get(KINESIS_READ_RECORDS_TIMEOUT, TimeUnit.SECONDS);
+        } catch (final InterruptedException| ExecutionException | TimeoutException e) {
+            throw new RuntimeException(e);
+        }
         if (response.millisBehindLatest() == null) {
             throw new RuntimeException("millisBehindLatest inside a GetRecordsResponse was null. The response was: " + response.toString());
         }

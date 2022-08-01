@@ -1,5 +1,9 @@
 # Release Notes
 
+# 0.25.1
+*synapase-kinesis*
+* Add timeout to tryNext in KinesisShardIterator for AWS SDK > 2.17.115
+
 # 0.25.0
 * Update to Edison and Spring Boot 2.7.1
 
