@@ -12,7 +12,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
@@ -169,7 +168,7 @@ public class KinesisMessageLogReaderTest {
                         someShard("shard3", true),
                         someShard("shard4", true)),
                 true);
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock,100, 2, 10, null);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 100, 2, 10, null);
 
         // when
         List<KinesisShardReader> shards = logReader.getCurrentKinesisShards();
@@ -188,7 +187,7 @@ public class KinesisMessageLogReaderTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", true);
 
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock,100, 2, 10, null);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 100, 2, 10, null);
 
         // when
         logReader.consumeUntil(fromHorizon(), shutdown(), responseConsumer).get();
@@ -223,7 +222,7 @@ public class KinesisMessageLogReaderTest {
                         someShard("shard1", true)));
         describeRecordsForShard("shard1", false);
 
-        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock,100, 2, 10, null);
+        logReader = new KinesisMessageLogReader("channelName", kinesisClient, executorService, clock, 100, 2, 10, null);
 
         // when
         ChannelPosition position = logReader.consumeUntil(fromHorizon(), endOfChannel(), responseConsumer).get();
