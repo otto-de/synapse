@@ -8,7 +8,7 @@ dependencies {
     implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
     implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
     implementation "de.otto.edison:edison-hal:2.1.1"
-    implementation "io.micrometer:micrometer-core:1.9.2"
+    implementation "io.micrometer:micrometer-core:1.9.3"
 
     testImplementation project(':synapse-testsupport:')
     testImplementation 'junit:junit:4.13.2'
