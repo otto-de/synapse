@@ -2,7 +2,7 @@
 
 # 0.25.1
 *synapse-kinesis*
-* Add timeout of 60 seconds to GetRecords call in KinesisShardIterator which acts as workaround for a problem with AWS SDK > 2.17.115
+* Add timeout of 60 seconds to GetRecords call in KinesisShardIterator which acts as workaround for a problem with AWS SDK > 2.17.115 (https://github.com/aws/aws-sdk-java-v2/issues/3335)
 
 # 0.25.0
 * Update to Edison and Spring Boot 2.7.1
