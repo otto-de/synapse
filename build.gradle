@@ -17,7 +17,7 @@ buildscript {
 //import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 ext {
-    awsSdkVersion = "2.17.283"
+    awsSdkVersion = "2.17.284"
     springVersion = "5.3.23"
     springSecurityVersion = "5.7.3"
     springBootVersion = "2.7.4"
