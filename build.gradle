@@ -23,7 +23,7 @@ ext {
     springBootVersion = "2.7.4"
     edisonVersion = "2.7.5"
     jacksonVersion = "2.13.4"
-    logbackVersion = "1.2.11"
+    logbackVersion = "1.4.4"
 }
 
 apply plugin: 'java'
