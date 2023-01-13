@@ -13,7 +13,7 @@ dependencies {
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${jacksonVersion}"
 
-    implementation("net.openhft:chronicle-map:3.24ea0") {
+    implementation("net.openhft:chronicle-map:3.24ea2") {
         exclude group: "com.intellij", module: "annotations"
     }
 
