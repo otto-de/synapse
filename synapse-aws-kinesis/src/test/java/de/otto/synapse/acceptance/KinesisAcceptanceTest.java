@@ -176,7 +176,7 @@ public class KinesisAcceptanceTest {
     private Message<SomePayload> sendMessageAndAwait(final Message<?> message,
                                                      final MessageSenderEndpoint kinesisSender) {
         final AtomicReference<Message<SomePayload>> result = new AtomicReference<>();
-        final String messageId = "urn:message:kinesis:" + UUID.randomUUID().toString();
+        final String messageId = "urn:message:kinesis:" + UUID.randomUUID();
         kinesisSender
                 .send(copyOf(message)
                         .withKey(message.getKey() instanceof SimpleKey ? of(messageId) : of(messageId, message.getKey().compactionKey()))
