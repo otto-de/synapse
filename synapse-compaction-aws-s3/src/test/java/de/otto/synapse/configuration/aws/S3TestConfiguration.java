@@ -18,8 +18,12 @@ public class S3TestConfiguration {
 
     @Bean
     public S3Client localStackS3Client() throws URISyntaxException {
-        S3Client s3Client = S3Client.builder().endpointOverride(new URI("http://localhost:4566")).region(Region.US_EAST_1)
-                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("foobar", "foobar"))).build();
+        S3Client s3Client = S3Client.builder()
+                .endpointOverride(new URI("http://localhost:4566"))
+                .region(Region.US_EAST_1)
+                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("foobar", "foobar")))
+                .forcePathStyle(true)
+                .build();
         //localS3Client.createBucket(CreateBucketRequest.builder().bucket(INTEGRATION_TEST_SNAPSHOT_BUCKET).build());
         return s3Client;
     }

@@ -8,8 +8,10 @@ import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.journal.Journal;
 import de.otto.synapse.journal.JournalRegistry;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -26,7 +28,6 @@ import static org.springframework.beans.factory.config.BeanDefinition.ROLE_INFRA
 import static org.springframework.core.Ordered.LOWEST_PRECEDENCE;
 
 @Configuration
-@EnableConfigurationProperties(SynapseProperties.class)
 public class SynapseAutoConfiguration {
 
     private static final Logger LOG = getLogger(SynapseAutoConfiguration.class);
@@ -37,6 +38,12 @@ public class SynapseAutoConfiguration {
     @ConditionalOnMissingBean
     public ObjectMapper objectMapper() {
         return currentObjectMapper();
+    }
+
+    @Bean
+    @ConfigurationProperties(prefix = "synapse")
+    public SynapseProperties synapseProperties(@Value("${spring.application.name:Synapse}") String defaultName) {
+        return new SynapseProperties(defaultName);
     }
 
     @Bean

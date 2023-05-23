@@ -1,15 +1,11 @@
 package de.otto.synapse.configuration;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
-@ConfigurationProperties(prefix = "synapse")
 public class SynapseProperties {
     private final ConsumerProcess consumerProcess = new ConsumerProcess();
     private final Sender sender;
     private final Receiver receiver;
 
-    public SynapseProperties(@Value("${spring.application.name:Synapse}") String defaultName) {
+    public SynapseProperties(String defaultName) {
         this.sender = new Sender(defaultName);
         this.receiver = new Receiver();
     }

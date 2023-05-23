@@ -19,12 +19,12 @@ public class SynapsePropertiesTest {
     }
 
     @Test
-    public void shoulResolveSenderNamePlaceHolder() {
+    public void shouldResolveSenderNamePlaceHolder() {
 
-        context.register(SynapseAutoConfiguration.class);
         TestPropertyValues.of(
                 "spring.application.name=my service"
         ).applyTo(context);
+        context.register(SynapseAutoConfiguration.class);
         context.refresh();
 
         assertThat(context.getBean(SynapseProperties.class).getSender().getName()).isEqualTo("my service");

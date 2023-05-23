@@ -7,6 +7,7 @@ import de.otto.synapse.configuration.aws.AwsProperties;
 import de.otto.synapse.configuration.sqs.SqsAutoConfiguration;
 import de.otto.synapse.endpoint.SqsClientHelper;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,7 +34,6 @@ import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 
-import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.time.Duration;
 import java.time.LocalDateTime;

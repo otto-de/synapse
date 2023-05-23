@@ -6,7 +6,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @SpringBootApplication(scanBasePackages = {"de.otto.synapse"})
-@EnableConfigurationProperties(SynapseProperties.class)
 public class Server {
     public static void main(String[] args) {
         SpringApplication.run(Server.class, args);

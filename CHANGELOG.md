@@ -1,5 +1,8 @@
 # Release Notes
 
+# 0.30.0
+* Update to spring-boot 3.0.6
+
 # 0.25.2
 * Dependency updates
 

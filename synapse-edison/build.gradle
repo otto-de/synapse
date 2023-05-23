@@ -3,23 +3,23 @@ apply plugin: 'java-library'
 dependencies {
     api project(':synapse-core:')
     implementation "de.otto.edison:edison-core:${edisonVersion}"
-    implementation "org.springframework.boot:spring-boot-actuator:${springBootVersion}"
-    implementation "org.springframework:spring-context:${springVersion}"
-    implementation "software.amazon.awssdk:s3:${awsSdkVersion}"
-    implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
+    implementation "org.springframework.boot:spring-boot-actuator"
+    implementation "org.springframework:spring-context"
+    implementation "software.amazon.awssdk:s3"
+    implementation "software.amazon.awssdk:kinesis"
     implementation "de.otto.edison:edison-hal:2.1.1"
-    implementation "io.micrometer:micrometer-core:1.10.4"
+    implementation "io.micrometer:micrometer-core"
 
     testImplementation project(':synapse-testsupport:')
-    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'junit:junit'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
     testImplementation "de.otto.edison:edison-testsupport:${edisonVersion}"
-    testImplementation "org.mockito:mockito-core:5.1.1"
-    testImplementation "ch.qos.logback:logback-core:${logbackVersion}"
-    testImplementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    testImplementation "org.mockito:mockito-core"
+    testImplementation "ch.qos.logback:logback-core"
+    testImplementation "ch.qos.logback:logback-classic"
 }
 
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 jar {
@@ -27,83 +27,99 @@ jar {
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+    archiveClassifier = 'javadoc'
     from 'build/docs/javadoc'
 }
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
-    classifier = 'sources'
+    archiveClassifier = 'sources'
 }
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: sonatypeUsername, password: sonatypePassword)
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'synapse-edison'
+            from components.java
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
             }
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: sonatypeUsername, password: sonatypePassword)
-            }
-
-            pom.project {
-                name 'synapse-edison'
+            pom {
+                name = 'synapse-edison'
                 packaging 'jar'
-                description 'A library used at otto.de to integrate synapse-core with edison-microservice.'
-                url 'http://github.com/otto-de/synapse'
+                description = 'A library used at otto.de to integrate synapse-core with edison-microservice.'
+                url = 'http://github.com/otto-de/synapse'
 
                 scm {
-                    url 'scm:git@github.com:otto-de/synapse.git'
-                    connection 'scm:git@github.com:otto-de/synapse.git'
-                    developerConnection 'scm:git@github.com:otto-de/synapse.git'
+                    url = 'scm:git@github.com:otto-de/synapse.git'
+                    connection = 'scm:git@github.com:otto-de/synapse.git'
+                    developerConnection = 'scm:git@github.com:otto-de/synapse.git'
                 }
 
                 licenses {
                     license {
-                        name 'The Apache Software License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                        distribution 'repo'
+                        name = "The Apache Software License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                        distribution = 'repo'
                     }
                 }
-
                 developers {
                     developer {
-                        id 'gsteinacker'
-                        name 'Guido Steinacker'
+                        id = 'gsteinacker'
+                        name = 'Guido Steinacker'
                     }
                     developer {
-                        id 'mbargmann'
-                        name 'Matthias Bargmann'
+                        id = 'mbargmann'
+                        name = 'Matthias Bargmann'
                     }
                     developer {
-                        id 'fbregulla'
-                        name 'Frank Bregulla'
+                        id = 'fbregulla'
+                        name = 'Frank Bregulla'
                     }
                     developer {
-                        id 'ftorkler'
-                        name 'Florian Torkler'
+                        id = 'ftorkler'
+                        name = 'Florian Torkler'
                     }
                     developer {
-                        id 'miregel'
-                        name 'Micha Regel'
+                        id = 'miregel'
+                        name = 'Micha Regel'
                     }
                     developer {
-                        id 'hstruebe'
-                        name 'Henning Strueber'
+                        id = 'hstruebe'
+                        name = 'Henning Strueber'
                     }
                 }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "Sonatype"
+            url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+            credentials {
+                username = findProperty("sonatypeUsername")
+                password = findProperty("sonatypePassword")
+            }
+        }
+        maven {
+            name = "Sonatype_Snapshots"
+            url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+            credentials {
+                username = findProperty("sonatypeUsername")
+                password = findProperty("sonatypePassword")
             }
         }
     }
 }
 
 signing {
-    required { gradle.taskGraph.hasTask("uploadArchives") }
-    sign jar
-    sign javadocJar
-    sign sourcesJar
+    sign publishing.publications.mavenJava
 }
 
 artifacts {

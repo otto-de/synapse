@@ -5,31 +5,32 @@ dependencies {
     implementation project(':synapse-core:')
 
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
-    implementation "org.springframework:spring-context:${springVersion}"
+    implementation "org.springframework:spring-context"
 
-    implementation "org.springframework:spring-aop:${springVersion}"
-    implementation "org.aspectj:aspectjweaver:1.9.19"
+    implementation "org.springframework:spring-aop"
+    implementation "org.aspectj:aspectjweaver"
 
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:${jacksonVersion}"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8"
 
-    implementation("net.openhft:chronicle-map:3.24ea2") {
+    implementation(platform("net.openhft:chronicle-bom:2.24ea58"))
+    implementation("net.openhft:chronicle-map") {
         exclude group: "com.intellij", module: "annotations"
     }
 
     // Use JUnit test framework
-    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'junit:junit'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
-    testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
-    testImplementation "com.jayway.jsonpath:json-path-assert:2.7.0"
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
+    testImplementation "com.jayway.jsonpath:json-path-assert"
     testImplementation 'com.tngtech.java:junit-dataprovider:1.13.1'
-    testImplementation "org.awaitility:awaitility:4.2.0"
-    testImplementation "org.mockito:mockito-core:5.1.1"
-    testImplementation "ch.qos.logback:logback-core:${logbackVersion}"
-    testImplementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    testImplementation "org.awaitility:awaitility"
+    testImplementation "org.mockito:mockito-core"
+    testImplementation "ch.qos.logback:logback-core"
+    testImplementation "ch.qos.logback:logback-classic"
 }
 
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 jar {
@@ -37,87 +38,99 @@ jar {
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
+    archiveClassifier = 'javadoc'
     from 'build/docs/javadoc'
 }
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
-    classifier = 'sources'
+    archiveClassifier = 'sources'
 }
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: sonatypeUsername, password: sonatypePassword)
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'synapse-testsupport'
+            from components.java
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
             }
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: sonatypeUsername, password: sonatypePassword)
-            }
-
-            pom.project {
-                name 'synapse-testsupport'
+            pom {
+                name = 'synapse-testsupport'
                 packaging 'jar'
-                description 'A library used at otto.de to implement Spring Boot based event-sourcing microservices.'
-                url 'http://github.com/otto-de/synapse'
+                description = 'A library used at otto.de to implement Spring Boot based event-sourcing microservices.'
+                url = 'http://github.com/otto-de/synapse'
 
                 scm {
-                    url 'scm:git@github.com:otto-de/synapse.git'
-                    connection 'scm:git@github.com:otto-de/synapse.git'
-                    developerConnection 'scm:git@github.com:otto-de/synapse.git'
+                    url = 'scm:git@github.com:otto-de/synapse.git'
+                    connection = 'scm:git@github.com:otto-de/synapse.git'
+                    developerConnection = 'scm:git@github.com:otto-de/synapse.git'
                 }
 
                 licenses {
                     license {
-                        name 'The Apache Software License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                        distribution 'repo'
+                        name = "The Apache Software License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                        distribution = 'repo'
                     }
                 }
-
                 developers {
                     developer {
-                        id 'gsteinacker'
-                        name 'Guido Steinacker'
+                        id = 'gsteinacker'
+                        name = 'Guido Steinacker'
                     }
                     developer {
-                        id 'mbargmann'
-                        name 'Matthias Bargmann'
+                        id = 'mbargmann'
+                        name = 'Matthias Bargmann'
                     }
                     developer {
-                        id 'fbregulla'
-                        name 'Frank Bregulla'
+                        id = 'fbregulla'
+                        name = 'Frank Bregulla'
                     }
                     developer {
-                        id 'ftorkler'
-                        name 'Florian Torkler'
+                        id = 'ftorkler'
+                        name = 'Florian Torkler'
                     }
                     developer {
-                        id 'miregel'
-                        name 'Micha Regel'
+                        id = 'miregel'
+                        name = 'Micha Regel'
                     }
                     developer {
-                        id 'hstruebe'
-                        name 'Henning Strueber'
-                    }
-                    developer {
-                        id 'sweiler'
-                        name 'Simon Weiler'
+                        id = 'hstruebe'
+                        name = 'Henning Strueber'
                     }
                 }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "Sonatype"
+            url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+            credentials {
+                username = findProperty("sonatypeUsername")
+                password = findProperty("sonatypePassword")
+            }
+        }
+        maven {
+            name = "Sonatype_Snapshots"
+            url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+            credentials {
+                username = findProperty("sonatypeUsername")
+                password = findProperty("sonatypePassword")
             }
         }
     }
 }
 
 signing {
-    required { gradle.taskGraph.hasTask("uploadArchives") }
-    sign jar
-    sign javadocJar
-    sign sourcesJar
+    sign publishing.publications.mavenJava
 }
 
 artifacts {

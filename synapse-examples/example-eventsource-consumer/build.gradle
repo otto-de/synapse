@@ -1,14 +1,9 @@
 apply plugin: 'java'
 apply plugin: 'application'
-apply plugin: 'org.springframework.boot'
-
 
 buildscript {
     repositories {
         mavenCentral()
-    }
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
     }
 }
 
@@ -16,27 +11,39 @@ repositories {
     mavenCentral()
 }
 
-ext['jackson.version'] = "${jacksonVersion}"
+tasks.named('test', Test) {
+    // these jvm args are required so that chronicle map works with java 17 (see https://chronicle.software/chronicle-support-java-17/)
+    jvmArgs("--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED",
+            "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED",
+            "--add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+            "--add-opens=java.base/java.io=ALL-UNNAMED",
+            "--add-opens=java.base/java.util=ALL-UNNAMED")
+}
+
 
 dependencies {
-    compile project(':synapse-core:')
-    compile "software.amazon.awssdk:kinesis:${awsSdkVersion}"
+    implementation project(':synapse-core:')
+    implementation "software.amazon.awssdk:kinesis"
 
-    compile("org.springframework.boot:spring-boot-starter-web:${springBootVersion}") {
-        exclude module: "spring-boot-starter-tomcat:${springBootVersion}"
+    implementation("org.springframework.boot:spring-boot-starter-web") {
+        exclude module: "spring-boot-starter-tomcat"
     }
-    compile("org.springframework.boot:spring-boot-starter-jetty:${springBootVersion}")
+    implementation("org.springframework.boot:spring-boot-starter-jetty")
 
-    compile "ch.qos.logback:logback-core:${logbackVersion}"
-    compile "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "ch.qos.logback:logback-core"
+    implementation "ch.qos.logback:logback-classic"
 
     implementation project(':synapse-testsupport:')
 
-    testCompile 'junit:junit:4.13.2'
+    testImplementation 'junit:junit'
 
-    testImplementation "org.springframework.boot:spring-boot-test:${springBootVersion}"
-    testImplementation "org.springframework:spring-test:${springVersion}"
-    testImplementation "org.awaitility:awaitility:4.2.0"
+    testImplementation "org.springframework.boot:spring-boot-test"
+    testImplementation "org.springframework:spring-test"
+    testImplementation "org.awaitility:awaitility"
 }
 
 // Define the main class for the application

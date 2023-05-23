@@ -48,6 +48,7 @@ public class S3HelperIntegrationTest {
                 .endpointOverride(new URI("http://localhost:4566"))
                 .overrideConfiguration(ClientOverrideConfiguration.builder().build())
                 .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("foobar", "foobar")))
+                .forcePathStyle(true)
                 .region(Region.US_EAST_1).build();
         s3Helper = new S3Helper(s3Client);
         s3Helper.createBucket(TESTBUCKET);

@@ -32,7 +32,7 @@ public class ExampleProducerIntegrationTest {
     TestConsumer testConsumer;
 
     @Test
-    public void shouldProduceEvent() throws Exception {
+    public void shouldProduceEvent() {
         // when
         producer.produceSampleData();
 
@@ -51,7 +51,7 @@ public class ExampleProducerIntegrationTest {
     @Component
     public static class TestConsumer {
 
-        private AtomicInteger count = new AtomicInteger();
+        private final AtomicInteger count = new AtomicInteger();
 
         @EventSourceConsumer(
                 eventSource = "inMemorySource",

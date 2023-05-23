@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.*;
+import software.amazon.awssdk.services.kinesis.model.Record;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;

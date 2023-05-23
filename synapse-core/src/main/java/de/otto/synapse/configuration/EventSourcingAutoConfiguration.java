@@ -24,7 +24,6 @@ import static org.springframework.beans.factory.config.BeanDefinition.ROLE_INFRA
 
 @Configuration
 @Import(SynapseAutoConfiguration.class)
-@EnableConfigurationProperties(SynapseProperties.class)
 public class EventSourcingAutoConfiguration {
 
     private static final Logger LOG = getLogger(EventSourcingAutoConfiguration.class);

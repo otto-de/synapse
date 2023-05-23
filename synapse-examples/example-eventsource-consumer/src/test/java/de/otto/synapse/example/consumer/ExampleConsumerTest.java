@@ -22,7 +22,7 @@ public class ExampleConsumerTest {
     private StateRepository<BananaProduct> stateRepository;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         stateRepository = new ConcurrentMapStateRepository<>("");
         exampleConsumer = new ExampleConsumer(stateRepository);
     }
