@@ -2,9 +2,9 @@ package de.otto.synapse.example.producer.payload;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.validation.Payload;
+import jakarta.validation.Payload;
 
-public class ProductPayload implements Payload{
+public class ProductPayload implements Payload {
 
     @JsonProperty
     private String id;
@@ -26,7 +26,6 @@ public class ProductPayload implements Payload{
     public void setPrice(long price) {
         this.price = price;
     }
-
 
 
     @Override

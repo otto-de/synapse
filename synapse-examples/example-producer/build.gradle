@@ -1,14 +1,9 @@
 apply plugin: 'java'
 apply plugin: 'application'
-apply plugin: 'org.springframework.boot'
-
 
 buildscript {
     repositories {
         mavenCentral()
-    }
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
     }
 }
 
@@ -20,13 +15,13 @@ ext['jackson.version'] = "${jacksonVersion}"
 
 dependencies {
     implementation project(':synapse-core:')
-    implementation "software.amazon.awssdk:kinesis:${awsSdkVersion}"
-    implementation "org.springframework.security:spring-security-core:${springSecurityVersion}"
-    implementation("org.springframework.boot:spring-boot-starter-web:${springBootVersion}") {
-        exclude module: "spring-boot-starter-tomcat:${springBootVersion}"
+    implementation "software.amazon.awssdk:kinesis"
+    implementation "org.springframework.security:spring-security-core"
+    implementation("org.springframework.boot:spring-boot-starter-web") {
+        exclude module: "spring-boot-starter-tomcat"
     }
-    implementation("org.springframework.boot:spring-boot-starter-validation:${springBootVersion}")
-    implementation("org.springframework.boot:spring-boot-starter-jetty:${springBootVersion}")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-jetty")
 
     implementation "ch.qos.logback:logback-core:${logbackVersion}"
     implementation "ch.qos.logback:logback-classic:${logbackVersion}"
@@ -35,8 +30,8 @@ dependencies {
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation "org.mockito:mockito-core:5.1.1"
-    testImplementation "org.springframework.boot:spring-boot-test:${springBootVersion}"
-    testImplementation "org.springframework:spring-test:${springVersion}"
+    testImplementation "org.springframework.boot:spring-boot-test"
+    testImplementation "org.springframework:spring-test"
     testImplementation "org.awaitility:awaitility:4.2.0"
 
 }
