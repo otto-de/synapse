@@ -31,7 +31,7 @@ grep 'version = ".*-SNAPSHOT"' "$SCRIPT_DIR/build.gradle"
 NO_SNAPSHOT=$?
 set -e
 
-${SCRIPT_DIR}/gradlew -Dorg.gradle.internal.http.socketTimeout=400000 -Dorg.gradle.internal.http.connectionTimeout=400000 uploadArchives
+${SCRIPT_DIR}/gradlew -Dorg.gradle.internal.http.socketTimeout=400000 -Dorg.gradle.internal.http.connectionTimeout=400000 publish
 
 if [[ $NO_SNAPSHOT == 1 ]]; then
   echo "Closing and releasing into Sonatype OSS repository"
