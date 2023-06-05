@@ -35,7 +35,7 @@ ${SCRIPT_DIR}/gradlew -Dorg.gradle.internal.http.socketTimeout=400000 -Dorg.grad
 
 if [[ $NO_SNAPSHOT == 1 ]]; then
   echo "Closing and releasing into Sonatype OSS repository"
-  "${SCRIPT_DIR}"/gradlew closeAndReleaseRepository
+  "${SCRIPT_DIR}"/gradlew findSonatypeStagingRepository closeAndReleaseSonatypeStagingRepository
 else
   echo "This is a snapshot release, closing in sonatype is not necessary"
 fi

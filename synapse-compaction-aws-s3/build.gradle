@@ -34,16 +34,6 @@ jar {
     manifest.attributes provider: 'gradle'
 }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    archiveClassifier = 'javadoc'
-    from 'build/docs/javadoc'
-}
-
-task sourcesJar(type: Jar) {
-    from sourceSets.main.allSource
-    archiveClassifier = 'sources'
-}
-
 publishing {
     publications {
         mavenJava(MavenPublication) {
@@ -106,24 +96,6 @@ publishing {
         }
     }
 
-    repositories {
-        maven {
-            name = "Sonatype"
-            url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                username = findProperty("sonatypeUsername")
-                password = findProperty("sonatypePassword")
-            }
-        }
-        maven {
-            name = "Sonatype_Snapshots"
-            url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
-            credentials {
-                username = findProperty("sonatypeUsername")
-                password = findProperty("sonatypePassword")
-            }
-        }
-    }
 }
 
 

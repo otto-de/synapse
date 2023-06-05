@@ -1,10 +1,2 @@
 apply plugin: 'jacoco'
 
-jacocoTestReport {
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-    }
-}
-
-test.finalizedBy jacocoTestReport

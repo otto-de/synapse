@@ -12,6 +12,16 @@ buildscript {
     }
 }
 
+plugins {
+    id("java")
+    id("idea")
+    id("eclipse")
+    id("jacoco")
+    id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
+}
+
+version = '0.30.0'
+group = 'de.otto.synapse'
 
 ext {
     awsSdkVersion = "2.20.12"
@@ -19,11 +29,21 @@ ext {
     edisonVersion = "3.0.0-M2"
 }
 
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'eclipse'
-apply plugin: 'io.codearte.nexus-staging'
-apply from: "${rootDir}/jacoco.gradle"
+
+jacocoTestReport {
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
+nexusPublishing {
+    repositories {
+        sonatype()
+    }
+}
+
+test.finalizedBy jacocoTestReport
 
 tasks.register('startLocalStack', Exec) {
     commandLine "docker", "run", "--name", "synapse_localstack", "-d", "-p", "4566:4566", "localstack/localstack:2.0.2"
@@ -31,12 +51,6 @@ tasks.register('startLocalStack', Exec) {
 
 tasks.register('stopLocalStack', Exec) {
     commandLine 'docker', 'rm', '-f', 'synapse_localstack'
-}
-
-nexusStaging {
-    username = sonatypeUsername
-    password = sonatypePassword
-    packageGroup = 'de.otto'
 }
 
 subprojects {
@@ -64,8 +78,13 @@ subprojects {
 
     compileJava.dependsOn(processResources)
 
-    version = '0.30.0'
-    group = 'de.otto.synapse'
+    version = parent.version
+    group = parent.group
+
+    java {
+        withJavadocJar()
+        withSourcesJar()
+    }
 
     repositories {
         mavenLocal()
