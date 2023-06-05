@@ -5,12 +5,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.TextMessage;
+import jakarta.annotation.Nonnull;
 import org.dizitart.no2.Cursor;
 import org.dizitart.no2.Document;
 import org.dizitart.no2.Nitrite;
 import org.dizitart.no2.NitriteCollection;
 
-import javax.annotation.Nonnull;
 import java.util.Set;
 import java.util.stream.Stream;
 

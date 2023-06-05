@@ -5,8 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.TextMessage;
-
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import static de.otto.synapse.messagestore.Index.*;
 import static java.util.Objects.requireNonNull;

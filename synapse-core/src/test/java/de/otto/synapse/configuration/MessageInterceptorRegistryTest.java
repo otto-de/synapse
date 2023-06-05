@@ -2,12 +2,7 @@ package de.otto.synapse.configuration;
 
 import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
-import de.otto.synapse.message.Message;
 import org.junit.Test;
-import org.springframework.core.annotation.Order;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import static de.otto.synapse.endpoint.EndpointType.RECEIVER;
 import static de.otto.synapse.endpoint.EndpointType.SENDER;
@@ -16,7 +11,6 @@ import static de.otto.synapse.endpoint.MessageInterceptorRegistration.matchingRe
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.mock;
-import static org.springframework.core.Ordered.HIGHEST_PRECEDENCE;
 
 public class MessageInterceptorRegistryTest {
 

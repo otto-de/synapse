@@ -3,8 +3,8 @@ package de.otto.synapse.consumer;
 import de.otto.synapse.message.Key;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.state.StateRepository;
+import jakarta.annotation.Nonnull;
 
-import javax.annotation.Nonnull;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;

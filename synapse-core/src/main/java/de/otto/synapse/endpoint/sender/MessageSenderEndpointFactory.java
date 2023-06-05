@@ -3,8 +3,7 @@ package de.otto.synapse.endpoint.sender;
 import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.endpoint.MessageEndpointFactory;
 import de.otto.synapse.translator.MessageFormat;
-
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import static de.otto.synapse.translator.MessageFormat.defaultMessageFormat;
 

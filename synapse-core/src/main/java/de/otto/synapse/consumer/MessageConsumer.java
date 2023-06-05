@@ -4,9 +4,8 @@ import de.otto.synapse.configuration.SynapseProperties;
 import de.otto.synapse.eventsource.EventSource;
 import de.otto.synapse.eventsource.EventSourceConsumerProcess;
 import de.otto.synapse.message.Message;
+import jakarta.annotation.Nonnull;
 
-import javax.annotation.Nonnull;
-import javax.annotation.concurrent.ThreadSafe;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
@@ -37,7 +36,7 @@ import static java.util.regex.Pattern.compile;
  *
  * @param <T> the type of the messages's payload
  */
-@ThreadSafe
+
 public interface MessageConsumer<T> extends Consumer<Message<T>> {
 
     static <T> MessageConsumer<T> of(final String keyPattern,

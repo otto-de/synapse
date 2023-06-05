@@ -5,12 +5,12 @@ import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpointFactory;
+import jakarta.annotation.Nonnull;
 import org.slf4j.Marker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 
-import javax.annotation.Nonnull;
 import java.time.Clock;
 import java.util.concurrent.ExecutorService;
 

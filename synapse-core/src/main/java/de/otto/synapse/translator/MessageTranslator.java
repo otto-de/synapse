@@ -1,8 +1,8 @@
 package de.otto.synapse.translator;
 
 import de.otto.synapse.message.Message;
+import jakarta.annotation.Nonnull;
 
-import javax.annotation.Nonnull;
 import java.util.function.Function;
 
 /**

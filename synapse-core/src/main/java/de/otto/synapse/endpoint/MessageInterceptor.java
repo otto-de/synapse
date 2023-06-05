@@ -1,9 +1,8 @@
 package de.otto.synapse.endpoint;
 
 import de.otto.synapse.message.TextMessage;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * Message interceptors are used to intercept messages before they are sent or received by

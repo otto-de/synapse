@@ -8,10 +8,10 @@ import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.TextMessage;
+import jakarta.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
-import javax.annotation.Nonnull;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;

@@ -2,8 +2,8 @@ package de.otto.synapse.messagestore;
 
 import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.channel.ChannelPosition;
+import jakarta.annotation.Nonnull;
 
-import javax.annotation.Nonnull;
 import java.time.Instant;
 import java.util.Set;
 import java.util.stream.Stream;

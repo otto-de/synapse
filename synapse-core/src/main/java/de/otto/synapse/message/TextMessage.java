@@ -1,7 +1,7 @@
 package de.otto.synapse.message;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * A {@code Message} that is used by Synapse for messages with String payloads.

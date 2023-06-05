@@ -3,8 +3,7 @@ package de.otto.synapse.translator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import de.otto.synapse.message.Message;
 import de.otto.synapse.message.TextMessage;
-
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import static de.otto.synapse.translator.ObjectMappers.currentObjectMapper;
 

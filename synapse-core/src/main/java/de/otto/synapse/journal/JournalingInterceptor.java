@@ -4,9 +4,8 @@ import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.messagestore.Index;
 import de.otto.synapse.messagestore.MessageStoreEntry;
+import jakarta.annotation.Nonnull;
 import org.slf4j.Logger;
-
-import javax.annotation.Nonnull;
 
 import static com.google.common.base.Preconditions.checkState;
 import static org.slf4j.LoggerFactory.getLogger;

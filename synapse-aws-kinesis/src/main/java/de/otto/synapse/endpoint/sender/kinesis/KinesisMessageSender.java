@@ -5,12 +5,12 @@ import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.MessageTranslator;
+import jakarta.annotation.Nonnull;
 import org.slf4j.Logger;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequest;
 import software.amazon.awssdk.services.kinesis.model.PutRecordsRequestEntry;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

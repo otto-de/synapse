@@ -2,9 +2,9 @@ package de.otto.synapse.consumer;
 
 import de.otto.synapse.message.Message;
 import de.otto.synapse.message.TextMessage;
+import jakarta.annotation.Nonnull;
 import org.slf4j.Logger;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;

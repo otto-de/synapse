@@ -2,8 +2,7 @@ package de.otto.synapse.messagestore;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableSet;
-
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 /**
  * Indexes {@link MessageStoreEntry message-store entries} added to a {@link MessageStore} so it can later be

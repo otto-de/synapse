@@ -2,8 +2,8 @@ package de.otto.synapse.messagestore;
 
 import com.google.common.annotations.Beta;
 import de.otto.synapse.message.Key;
+import jakarta.annotation.Nonnull;
 
-import javax.annotation.Nonnull;
 import java.util.Objects;
 
 /**

@@ -1,7 +1,8 @@
 package de.otto.synapse.info;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
+
 import java.time.Instant;
 import java.util.Objects;
 

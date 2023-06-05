@@ -2,10 +2,9 @@ package de.otto.synapse.endpoint.receiver;
 
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * Receiver-side {@code MessageEndpoint endpoint} of a Message Channel that matches random-access like reading of

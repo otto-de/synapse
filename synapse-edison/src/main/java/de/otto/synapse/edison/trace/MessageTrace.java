@@ -4,15 +4,12 @@ import com.google.common.collect.EvictingQueue;
 import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.MessageEndpoint;
 
-import javax.annotation.concurrent.ThreadSafe;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.copyOf;
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.Sets.newTreeSet;
 import static java.lang.Boolean.TRUE;
 
@@ -22,7 +19,7 @@ import static java.lang.Boolean.TRUE;
  *
  * <p>Each time an element is added to a full message store, the message store automatically removes its head element.
  */
-@ThreadSafe
+
 public class MessageTrace {
 
     private static final class RegisteredEndpoints {

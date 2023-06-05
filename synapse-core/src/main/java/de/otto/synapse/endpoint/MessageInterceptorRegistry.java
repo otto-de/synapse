@@ -1,9 +1,9 @@
 package de.otto.synapse.endpoint;
 
 import com.google.common.collect.ImmutableList;
+import jakarta.annotation.Nonnull;
 import org.springframework.core.OrderComparator;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static java.util.Collections.synchronizedList;
-import static java.util.Comparator.comparing;
 
 public class MessageInterceptorRegistry {
 

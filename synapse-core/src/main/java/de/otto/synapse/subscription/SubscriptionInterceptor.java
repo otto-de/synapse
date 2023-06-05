@@ -3,9 +3,8 @@ package de.otto.synapse.subscription;
 import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.message.TextMessage;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 public class SubscriptionInterceptor implements MessageInterceptor {
     private final Subscription subscription;

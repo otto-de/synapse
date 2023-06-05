@@ -6,9 +6,9 @@ import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpoint;
 import de.otto.synapse.endpoint.sender.MessageSenderEndpointFactory;
 import de.otto.synapse.translator.MessageFormat;
+import jakarta.annotation.Nonnull;
 import org.junit.Test;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 
 import static java.util.Arrays.asList;

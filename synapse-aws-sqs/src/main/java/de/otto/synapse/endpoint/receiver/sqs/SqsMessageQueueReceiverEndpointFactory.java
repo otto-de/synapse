@@ -4,11 +4,11 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpoint;
 import de.otto.synapse.endpoint.receiver.MessageQueueReceiverEndpointFactory;
+import jakarta.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 
-import javax.annotation.Nonnull;
 import java.util.concurrent.ExecutorService;
 
 import static java.util.concurrent.Executors.newCachedThreadPool;

@@ -4,7 +4,6 @@ import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.channel.ChannelPosition;
 
-import javax.annotation.concurrent.ThreadSafe;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -23,7 +22,7 @@ import java.util.stream.Stream;
  *     <li>No support for indexing of messages.</li>
  * </ul>
  */
-@ThreadSafe
+
 public class OnHeapRingBufferMessageStore implements MessageStore {
 
     private final Queue<MessageStoreEntry> entries;

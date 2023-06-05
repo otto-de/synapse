@@ -5,7 +5,6 @@ import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Key;
 
-import javax.annotation.concurrent.ThreadSafe;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -26,7 +25,7 @@ import java.util.stream.Stream;
  *     <li>No indexing of messages is supported.</li>
  * </ul>
  */
-@ThreadSafe
+
 public class OnHeapCompactingMessageStore implements MessageStore {
 
 

@@ -18,6 +18,8 @@ dependencies {
         exclude group: "com.intellij", module: "annotations"
     }
 
+    implementation "jakarta.annotation:jakarta.annotation-api:2.1.1"
+
     // Use JUnit test framework
     testImplementation 'junit:junit'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'

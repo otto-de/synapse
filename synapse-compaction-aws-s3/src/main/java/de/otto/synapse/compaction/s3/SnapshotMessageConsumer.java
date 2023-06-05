@@ -6,10 +6,10 @@ import de.otto.synapse.message.Message;
 import de.otto.synapse.state.StateRepository;
 import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.TextEncoder;
+import jakarta.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;

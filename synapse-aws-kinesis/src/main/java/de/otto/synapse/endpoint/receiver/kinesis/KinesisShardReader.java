@@ -12,7 +12,6 @@ import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
 import software.amazon.awssdk.services.kinesis.model.GetShardIteratorRequest;
 import software.amazon.awssdk.services.kinesis.model.ShardIteratorType;
 
-import javax.annotation.concurrent.ThreadSafe;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Map;
@@ -26,7 +25,7 @@ import java.util.function.Predicate;
 
 import static de.otto.synapse.endpoint.receiver.kinesis.KinesisMessageLogReader.DEFAULT_WAITING_TIME_ON_EMPTY_RECORDS;
 
-@ThreadSafe
+
 public class KinesisShardReader {
     private static final Logger LOG = LoggerFactory.getLogger(KinesisShardReader.class);
     public static final int LOG_MESSAGE_COUNTER_EVERY_NTH_MESSAGE = 1_000;

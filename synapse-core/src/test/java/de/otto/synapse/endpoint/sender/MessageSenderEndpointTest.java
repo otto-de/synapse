@@ -7,10 +7,10 @@ import de.otto.synapse.message.Message;
 import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.translator.MessageTranslator;
 import de.otto.synapse.translator.TextMessageTranslator;
+import jakarta.annotation.Nonnull;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

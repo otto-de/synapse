@@ -4,9 +4,9 @@ import de.otto.synapse.configuration.SynapseProperties;
 import de.otto.synapse.message.DefaultHeaderAttr;
 import de.otto.synapse.message.Header;
 import de.otto.synapse.message.TextMessage;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.time.Clock;
 import java.util.EnumSet;
 import java.util.Set;
@@ -14,7 +14,6 @@ import java.util.UUID;
 
 import static de.otto.synapse.message.DefaultHeaderAttr.*;
 import static de.otto.synapse.message.Header.copyOf;
-import static de.otto.synapse.message.Message.message;
 
 /**
  * A {@link MessageInterceptor message interceptor} that is able to add some commonly required header attributes in

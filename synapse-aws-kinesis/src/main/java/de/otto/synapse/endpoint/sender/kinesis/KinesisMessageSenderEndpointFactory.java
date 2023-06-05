@@ -9,9 +9,8 @@ import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.MessageTranslator;
 import de.otto.synapse.translator.TextMessageTranslator;
+import jakarta.annotation.Nonnull;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
-
-import javax.annotation.Nonnull;
 
 public class KinesisMessageSenderEndpointFactory implements MessageSenderEndpointFactory {
 

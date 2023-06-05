@@ -6,6 +6,7 @@ dependencies {
 
     implementation "com.google.guava:guava:31.1-jre"
     implementation "software.amazon.awssdk:sqs"
+    implementation "jakarta.annotation:jakarta.annotation-api:2.1.1"
 
     // Use JUnit test framework
     testImplementation 'junit:junit'

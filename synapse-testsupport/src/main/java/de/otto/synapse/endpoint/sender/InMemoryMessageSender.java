@@ -3,10 +3,9 @@ package de.otto.synapse.endpoint.sender;
 import de.otto.synapse.channel.InMemoryChannel;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.message.TextMessage;
-import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.MessageTranslator;
+import jakarta.annotation.Nonnull;
 
-import javax.annotation.Nonnull;
 import java.util.concurrent.CompletableFuture;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;

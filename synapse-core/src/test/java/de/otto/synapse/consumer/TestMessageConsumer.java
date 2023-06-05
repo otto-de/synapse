@@ -1,8 +1,8 @@
 package de.otto.synapse.consumer;
 
 import de.otto.synapse.message.Message;
+import jakarta.annotation.Nonnull;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;

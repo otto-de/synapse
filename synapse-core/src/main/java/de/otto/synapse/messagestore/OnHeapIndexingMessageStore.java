@@ -3,7 +3,6 @@ package de.otto.synapse.messagestore;
 import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.channel.ChannelPosition;
 
-import javax.annotation.concurrent.ThreadSafe;
 import java.util.Deque;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -26,7 +25,7 @@ import static de.otto.synapse.messagestore.Indexers.noOpIndexer;
  *     <li>Supports ndexing of messages.</li>
  * </ul>
  */
-@ThreadSafe
+
 public class OnHeapIndexingMessageStore implements MessageStore {
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();

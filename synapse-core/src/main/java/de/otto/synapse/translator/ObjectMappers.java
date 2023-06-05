@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import javax.annotation.concurrent.ThreadSafe;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.Objects.requireNonNull;
@@ -12,7 +11,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Manages the ObjectMapper used by Synapse applications for serialization and deserialization purposes.
  */
-@ThreadSafe
+
 public final class ObjectMappers {
 
     private static final ObjectMapper DEFAULT_OBJECT_MAPPER;

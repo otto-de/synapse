@@ -21,12 +21,11 @@ import de.otto.synapse.messagestore.Index;
 import de.otto.synapse.messagestore.MessageStoreEntry;
 import de.otto.synapse.messagestore.SnapshotMessageStore;
 import de.otto.synapse.translator.Decoder;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.NotThreadSafe;
 import java.io.*;
 import java.time.Instant;
 import java.util.Iterator;
@@ -43,7 +42,6 @@ import static de.otto.synapse.channel.ShardPosition.fromPosition;
 import static de.otto.synapse.info.SnapshotReaderStatus.*;
 import static org.slf4j.LoggerFactory.getLogger;
 
-@NotThreadSafe
 public class S3SnapshotMessageStore implements SnapshotMessageStore {
 
     private static final Logger LOG = getLogger(S3SnapshotMessageStore.class);

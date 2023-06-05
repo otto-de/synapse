@@ -1,9 +1,8 @@
 package de.otto.synapse.endpoint;
 
 import de.otto.synapse.message.TextMessage;
+import jakarta.annotation.Nonnull;
 import org.junit.Test;
-
-import javax.annotation.Nonnull;
 
 import static de.otto.synapse.endpoint.EndpointType.SENDER;
 import static de.otto.synapse.endpoint.MessageInterceptorRegistration.senderChannelsWith;

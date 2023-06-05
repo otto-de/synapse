@@ -3,8 +3,7 @@ package de.otto.synapse.endpoint.receiver;
 import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.MessageEndpoint;
-
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 /**
  * Receiver-side {@code MessageEndpoint endpoint} of a Message Channel

@@ -3,11 +3,9 @@ package de.otto.synapse.endpoint;
 import com.google.common.collect.ImmutableList;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
 import de.otto.synapse.message.TextMessage;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.slf4j.Logger;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.ThreadSafe;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -30,7 +28,6 @@ import static org.slf4j.LoggerFactory.getLogger;
  *
  * @see <a href="https://en.wikipedia.org/wiki/Composite_pattern">Composite Pattern</a>
  */
-@ThreadSafe
 public final class InterceptorChain implements MessageInterceptor {
 
     private static final Logger LOG = getLogger(InterceptorChain.class);

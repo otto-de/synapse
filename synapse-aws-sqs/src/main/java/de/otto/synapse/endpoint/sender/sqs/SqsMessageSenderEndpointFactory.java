@@ -9,10 +9,9 @@ import de.otto.synapse.message.TextMessage;
 import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.MessageTranslator;
 import de.otto.synapse.translator.TextMessageTranslator;
+import jakarta.annotation.Nonnull;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
-
-import javax.annotation.Nonnull;
 
 public class SqsMessageSenderEndpointFactory implements MessageSenderEndpointFactory {
 

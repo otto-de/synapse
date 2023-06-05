@@ -2,9 +2,9 @@ package de.otto.synapse.configuration.kinesis;
 
 import de.otto.synapse.endpoint.MessageInterceptor;
 import de.otto.synapse.message.TextMessage;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 

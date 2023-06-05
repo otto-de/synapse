@@ -2,10 +2,9 @@ package de.otto.synapse.configuration.sqs;
 
 import de.otto.synapse.annotation.MessageInterceptor;
 import de.otto.synapse.message.Message;
+import jakarta.annotation.Nonnull;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 

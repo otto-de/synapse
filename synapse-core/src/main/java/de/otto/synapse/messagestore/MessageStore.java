@@ -4,8 +4,8 @@ import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.channel.ChannelPosition;
 import de.otto.synapse.message.Header;
+import jakarta.annotation.Nonnull;
 
-import javax.annotation.Nonnull;
 import java.util.Set;
 import java.util.stream.Stream;
 

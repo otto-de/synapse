@@ -7,9 +7,9 @@ import de.otto.synapse.consumer.MessageConsumer;
 import de.otto.synapse.consumer.MessageDispatcher;
 import de.otto.synapse.endpoint.BestMatchingSelectableComparator;
 import de.otto.synapse.endpoint.receiver.MessageLogReceiverEndpoint;
+import jakarta.annotation.Nonnull;
 import org.springframework.context.ApplicationContext;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;

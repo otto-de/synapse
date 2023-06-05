@@ -1,6 +1,6 @@
 package de.otto.synapse.endpoint;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 /*
  * A factory used to create {@link MessageSenderEndpoint} instances.

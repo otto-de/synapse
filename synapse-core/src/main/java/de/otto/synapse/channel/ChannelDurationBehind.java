@@ -1,9 +1,8 @@
 package de.otto.synapse.channel;
 
 import com.google.common.collect.ImmutableMap;
+import jakarta.annotation.Nonnull;
 
-import javax.annotation.Nonnull;
-import javax.annotation.concurrent.ThreadSafe;
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.*;
@@ -12,7 +11,7 @@ import static com.google.common.base.Functions.constant;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
-@ThreadSafe
+
 public final class ChannelDurationBehind implements Serializable {
 
     private static final Duration MAX_DURATION = Duration.ofMillis(Long.MAX_VALUE);

@@ -1,8 +1,8 @@
 package de.otto.synapse.consumer;
 
 import de.otto.synapse.message.Message;
+import jakarta.annotation.Nonnull;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Objects;

@@ -2,8 +2,8 @@ package de.otto.synapse.messagestore;
 
 import com.google.common.collect.ImmutableMap;
 import de.otto.synapse.message.TextMessage;
+import jakarta.annotation.Nonnull;
 
-import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.Objects;
 

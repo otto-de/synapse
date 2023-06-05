@@ -3,8 +3,7 @@ package de.otto.synapse.messagestore;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import static de.otto.synapse.messagestore.MessageStoreEntry.of;
 import static java.util.Objects.requireNonNull;

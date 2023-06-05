@@ -1,8 +1,8 @@
 package de.otto.synapse.endpoint.receiver.kinesis;
 
 import com.google.common.collect.ImmutableMap;
+import jakarta.annotation.Nonnull;
 
-import javax.annotation.Nonnull;
 import java.util.List;
 
 import static com.google.common.collect.Maps.uniqueIndex;

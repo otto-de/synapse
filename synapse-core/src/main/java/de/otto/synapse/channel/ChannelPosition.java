@@ -3,8 +3,8 @@ package de.otto.synapse.channel;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import org.springframework.lang.NonNull;
 
-import javax.annotation.Nonnull;
 import java.io.Serializable;
 import java.util.*;
 
@@ -76,7 +76,7 @@ public final class ChannelPosition implements Serializable {
      * @param shard the shard id
      * @return ShardPosition
      */
-    @Nonnull
+    @NonNull
     public ShardPosition shard(final String shard) {
         return shardPositions.getOrDefault(shard, ShardPosition.fromHorizon(shard));
     }

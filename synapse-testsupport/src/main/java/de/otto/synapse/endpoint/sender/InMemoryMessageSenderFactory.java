@@ -5,8 +5,7 @@ import de.otto.synapse.channel.selector.Selector;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.translator.MessageFormat;
 import de.otto.synapse.translator.TextMessageTranslator;
-
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 public class InMemoryMessageSenderFactory implements MessageSenderEndpointFactory {
 

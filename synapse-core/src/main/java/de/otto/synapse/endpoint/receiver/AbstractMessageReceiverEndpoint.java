@@ -8,10 +8,10 @@ import de.otto.synapse.endpoint.EndpointType;
 import de.otto.synapse.endpoint.MessageInterceptorRegistry;
 import de.otto.synapse.info.MessageReceiverNotification;
 import de.otto.synapse.info.MessageReceiverStatus;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.springframework.context.ApplicationEventPublisher;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Objects;
 
 import static de.otto.synapse.endpoint.EndpointType.RECEIVER;

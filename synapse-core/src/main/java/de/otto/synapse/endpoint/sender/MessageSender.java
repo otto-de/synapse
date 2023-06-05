@@ -1,8 +1,8 @@
 package de.otto.synapse.endpoint.sender;
 
 import de.otto.synapse.message.Message;
+import jakarta.annotation.Nonnull;
 
-import javax.annotation.Nonnull;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 

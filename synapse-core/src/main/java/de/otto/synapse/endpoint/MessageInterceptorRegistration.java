@@ -3,16 +3,15 @@ package de.otto.synapse.endpoint;
 import com.google.common.collect.ImmutableSet;
 import de.otto.synapse.endpoint.receiver.AbstractMessageReceiverEndpoint;
 import de.otto.synapse.endpoint.sender.AbstractMessageSenderEndpoint;
+import jakarta.annotation.Nonnull;
 import org.springframework.core.Ordered;
 
-import javax.annotation.Nonnull;
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import static com.google.common.collect.ImmutableSet.copyOf;
-import static com.google.common.collect.ImmutableSet.of;
 import static java.util.Objects.requireNonNull;
 import static java.util.regex.Pattern.compile;
 

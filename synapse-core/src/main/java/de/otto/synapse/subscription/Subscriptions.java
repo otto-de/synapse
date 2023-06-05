@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 
-import javax.annotation.concurrent.ThreadSafe;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -14,7 +13,7 @@ import java.util.concurrent.ConcurrentMap;
 import static com.google.common.collect.Maps.newConcurrentMap;
 import static org.slf4j.LoggerFactory.getLogger;
 
-@ThreadSafe
+
 public class Subscriptions {
 
     private static final Logger LOG = getLogger(Subscriptions.class);

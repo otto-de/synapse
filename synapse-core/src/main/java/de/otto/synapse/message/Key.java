@@ -3,8 +3,8 @@ package de.otto.synapse.message;
 import de.otto.synapse.annotation.EventSourceConsumer;
 import de.otto.synapse.annotation.MessageQueueConsumer;
 import de.otto.synapse.consumer.MessageConsumer;
+import jakarta.annotation.Nonnull;
 
-import javax.annotation.Nonnull;
 import java.io.Serializable;
 
 /**
