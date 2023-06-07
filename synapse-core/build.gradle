@@ -12,7 +12,7 @@ dependencies {
     api "org.springframework.boot:spring-boot"
     api "org.springframework.boot:spring-boot-autoconfigure"
 
-    implementation(platform("net.openhft:chronicle-bom:2.24ea58"))
+    implementation(platform("net.openhft:chronicle-bom:2.24ea64"))
     implementation "jakarta.annotation:jakarta.annotation-api:2.1.1"
 
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
