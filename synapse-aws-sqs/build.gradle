@@ -4,7 +4,7 @@ dependencies {
     api project(':synapse-core:')
     api project(':synapse-aws-auth:')
 
-    implementation "com.google.guava:guava:31.1-jre"
+    implementation "com.google.guava:guava:32.0.1-jre"
     implementation "software.amazon.awssdk:sqs"
     implementation "jakarta.annotation:jakarta.annotation-api:2.1.1"
 
