@@ -1,5 +1,8 @@
 # Release Notes
 
+# 0.30.1
+* Fix deprecation warnings for thymeleaf includes which started with spring boot 3.x.
+
 # 0.30.0
 * Update to spring-boot 3.1.0
 
