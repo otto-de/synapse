@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 
-<head th:replace="fragments/head  :: head" />
+<head th:replace="~{fragments/head  :: head}" />
 
 <body>
 
@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" th:href="@{/css/help.css}" />
 
 
-    <div th:replace="fragments/navigation  :: navigation" />
+    <div th:replace="~{fragments/navigation  :: navigation}" />
 
     <div class="container-fluid">
         <div class="row">
@@ -42,14 +42,14 @@
                                     channel <span th:text="${channelName}"></span>.</p>
                             </div>
                         </div>
-                        <span th:replace="fragments/message :: list(${messages})" />
+                        <span th:replace="~{fragments/message :: list(${messages})}" />
                     </div>
                 </div>
             </div>
         </div>
     </div> <!-- /container -->
 
-    <span th:replace="fragments/footer :: footer" />
+    <span th:replace="~{fragments/footer :: footer}" />
     <script type="text/javascript" th:src="@{/js/init-fullscreen.js}"></script>
     <script type="text/javascript" th:src="@{/js/help.js}"></script>
 

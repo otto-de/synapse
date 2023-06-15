@@ -63,11 +63,11 @@
                 <td class="col-md-1" th:text="${message.sequenceNumber}">#</td>
                 <td class="col-md-11">
                     <div class="col-md-3">
-                        <span th:replace="fragments/message :: key(${message})" />
-                        <span th:replace="fragments/message :: header(${message})" />
+                        <span th:replace="~{fragments/message :: key(${message})}" />
+                        <span th:replace="~{fragments/message :: header(${message})}" />
                     </div>
                     <div class="col-md-9">
-                        <span th:replace="fragments/message :: payload(${message})" />
+                        <span th:replace="~{fragments/message :: payload(${message})}" />
                     </div>
                 </td>
             </tr>
