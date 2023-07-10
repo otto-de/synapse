@@ -1,5 +1,8 @@
 # Release Notes
 
+# 0.30.2
+* Add -parameters compile flag to avoid warnings
+
 # 0.30.1
 * Fix deprecation warnings for thymeleaf includes which started with spring boot 3.x.
 

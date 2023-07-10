@@ -78,6 +78,12 @@ subprojects {
 
     compileJava.dependsOn(processResources)
 
+    project.afterEvaluate {
+        tasks.withType(JavaCompile).configureEach {
+            options.compilerArgs.add("-parameters")
+        }
+    }
+
     version = parent.version
     group = parent.group
 
