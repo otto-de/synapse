@@ -3,7 +3,7 @@ apply plugin: 'java-library'
 dependencies {
     api project(':synapse-core:')
 
-    api "com.google.guava:guava:31.1-jre"
+    api "com.google.guava:guava:32.1.2-jre"
     api "software.amazon.awssdk:auth"
     api "software.amazon.awssdk:profiles"
     api "software.amazon.awssdk:regions"
