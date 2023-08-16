@@ -24,7 +24,7 @@ version = '0.30.3-SNAPSHOT'
 group = 'de.otto.synapse'
 
 ext {
-    awsSdkVersion = "2.20.12"
+    awsSdkVersion = "2.20.127"
     springBootVersion = "3.1.0"
     edisonVersion = "3.0.0-M2"
 }
