@@ -47,7 +47,7 @@ nexusPublishing {
 test.finalizedBy jacocoTestReport
 
 tasks.register('startLocalStack', Exec) {
-    commandLine "docker", "run", "--name", "synapse_localstack", "-d", "-p", "4566:4566", "localstack/localstack:2.0.2"
+    commandLine "docker", "run", "--name", "synapse_localstack", "-d", "-p", "4566:4566", "localstack/localstack:3.0.2"
 }
 
 tasks.register('stopLocalStack', Exec) {
