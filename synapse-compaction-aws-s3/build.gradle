@@ -23,7 +23,7 @@ dependencies {
     testImplementation "org.mockito:mockito-core"
     testImplementation "ch.qos.logback:logback-core"
     testImplementation "ch.qos.logback:logback-classic"
-    testImplementation "commons-io:commons-io:2.13.0"
+    testImplementation "commons-io:commons-io:2.15.1"
 
 }
 
