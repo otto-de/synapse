@@ -48,8 +48,8 @@ import static org.hamcrest.Matchers.*;
         basePackages = {"de.otto.synapse.messagestore.redis"})
 @SpringBootTest(
         properties = {
-                "spring.redis.server=localhost",
-                "spring.redis.port=6079"
+                "spring.data.redis.host=localhost",
+                "spring.data.redis.port=6079"
         },
         classes = {
                 RedisRingBufferMessageStoreIntegrationTest.class,

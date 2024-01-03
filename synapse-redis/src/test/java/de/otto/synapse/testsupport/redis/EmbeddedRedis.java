@@ -1,13 +1,14 @@
 package de.otto.synapse.testsupport.redis;
 
+import com.redis.testcontainers.RedisContainer;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import redis.embedded.RedisServer;
+import org.testcontainers.utility.DockerImageName;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import java.io.IOException;
+import java.util.List;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -16,21 +17,21 @@ public class EmbeddedRedis {
 
     private static final Logger LOG = getLogger(EmbeddedRedis.class);
 
-    @Value("${spring.redis.port}")
+    @Value("${spring.data.redis.port}")
     private int redisPort;
-
-    private RedisServer redisServer;
+    private RedisContainer redisContainer;
 
     @PostConstruct
-    public void startRedis() throws IOException {
-        LOG.info("Starting embedded Redis server on port {}", redisPort);
-        redisServer = new RedisServer(redisPort);
-        redisServer.start();
+    public void startRedis() {
+        LOG.info("Starting embedded Redis server on port {}.", redisPort);
+        redisContainer = new RedisContainer(DockerImageName.parse("redis:7"));
+        redisContainer.setPortBindings(List.of(String.format("%d:6379", redisPort)));
+        redisContainer.start();
     }
 
     @PreDestroy
     public void stopRedis() {
         LOG.info("Stopping embedded Redis server.");
-        redisServer.stop();
+        redisContainer.stop();
     }
 }

@@ -23,8 +23,8 @@ import static org.junit.Assert.fail;
         basePackages = {"de.otto.synapse.leaderelection"})
 @SpringBootTest(
         properties = {
-                "spring.redis.server=localhost",
-                "spring.redis.port=6379"
+                "spring.data.redis.host=localhost",
+                "spring.data.redis.port=6379"
         },
         classes = {
                 RedisLeaderElectionTest.class,

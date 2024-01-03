@@ -15,8 +15,6 @@ dependencies {
 
     testImplementation project(':synapse-testsupport:')
 
-    testImplementation 'com.github.kstyrc:embedded-redis:0.6'
-
     testImplementation 'junit:junit'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
     testImplementation "org.springframework.boot:spring-boot-starter-test"
@@ -26,6 +24,8 @@ dependencies {
     testImplementation "org.mockito:mockito-core"
     testImplementation "ch.qos.logback:logback-core"
     testImplementation "ch.qos.logback:logback-classic"
+    testImplementation "org.testcontainers:testcontainers"
+    testImplementation "com.redis:testcontainers-redis:2.0.1"
 }
 
 apply plugin: 'maven-publish'

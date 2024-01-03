@@ -56,8 +56,8 @@ import static org.slf4j.LoggerFactory.getLogger;
         basePackages = {"de.otto.synapse.messagestore.redis"})
 @SpringBootTest(
         properties = {
-                "spring.redis.server=localhost",
-                "spring.redis.port=6080"
+                "spring.data.redis.host=localhost",
+                "spring.data.redis.port=6080"
         },
         classes = {
                 RedisIndexedMessageStoreIntegrationTest.class,
