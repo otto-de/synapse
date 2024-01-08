@@ -1,5 +1,9 @@
 # Release Notes
 
+# 0.31.0
+* Dependency updates
+  * aws-sdk 2.22.9 changes communication format for sqs from XML to JSON
+
 # 0.30.2
 * Add -parameters compile flag to avoid warnings
 
