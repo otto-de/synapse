@@ -22,7 +22,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.awscore.AwsRequestOverrideConfiguration;
@@ -44,7 +46,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static de.otto.synapse.configuration.sqs.SqsTestConfiguration.SQS_INTEGRATION_TEST_CHANNEL;
 import static de.otto.synapse.message.Message.message;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.stream.Collectors.joining;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -89,14 +90,14 @@ public class SqsMessageQueueReceiverEndpointIntegrationTest {
         AwsProperties awsProperties = new AwsProperties();
         awsProperties.setRegion(Region.US_EAST_1.id());
 
-        //build sqs client that sends requests to stub controller so we can simulate erroneous responses
+        // build sqs client that sends requests to stub controller so we can simulate erroneous responses
         delegateAsyncClient = SqsAsyncClient.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create("foobar", "foobar")))
                 .overrideConfiguration(ClientOverrideConfiguration.builder()
                         .apiCallAttemptTimeout(Duration.ofMillis(500))
                         .retryPolicy(new SqsAutoConfiguration(awsProperties)
-                        .sqsRetryPolicy()).build())
+                                .sqsRetryPolicy()).build())
                 .endpointOverride(URI.create("http://localhost:8080/"))
                 .build();
     }
@@ -107,13 +108,16 @@ public class SqsMessageQueueReceiverEndpointIntegrationTest {
     }
 
     @Test
-    public void shouldRetryAfterTimeout() throws ExecutionException, InterruptedException {
-        //given queue returns error on first request, ok on second request (see stub controller below)
+    public void retryPolicyShouldExecuteRetryAfterRetryableError() throws ExecutionException, InterruptedException {
+        // given queue returns error on first request, ok on second request (see stub controller below)
         returnError = ImmutableList.of(true, false);
         final String expectedPayload = "some payload: " + LocalDateTime.now();
+
+        // sqsSender pushes message to queue SQS_INTEGRATION_TEST_CHANNEL
         sqsSender.send(message("test-key-shouldSendAndReceiveSqsMessage", expectedPayload)).join();
 
-        //when queue returns error in first request
+        // delegateAsyncClient uses StubController, StubController pops via asynClient from queue SQS_INTEGRATION_TEST_CHANNEL
+        // when queue SQS_INTEGRATION_TEST_CHANNEL returns error in first request
         receiveMessageRequest = buildReceiveMessageRequest();
         CompletableFuture<ReceiveMessageResponse> receiveMessageResponseCompletableFuture = delegateAsyncClient.receiveMessage(receiveMessageRequest);
         await()
@@ -150,8 +154,9 @@ public class SqsMessageQueueReceiverEndpointIntegrationTest {
         @RequestMapping(value = "/**", produces = {"application/x-amz-json-1.0"})
         @ResponseBody
         public ResponseEntity<?> getResponse(@RequestBody String body, HttpServletRequest request) throws InterruptedException, ExecutionException {
+            int currentCount = count.getAndIncrement();
 
-            if (returnError.get(count.getAndIncrement())) {
+            if (returnError.get(currentCount)) {
                 return new ResponseEntity<Void>(HttpStatus.BAD_GATEWAY);
             }
 
