@@ -89,6 +89,7 @@ public class SqsMessageQueueReceiverEndpointIntegrationTest {
         AwsProperties awsProperties = new AwsProperties();
         awsProperties.setRegion(Region.US_EAST_1.id());
 
+        //build sqs client that sends requests to stub controller so we can simulate erroneous responses
         delegateAsyncClient = SqsAsyncClient.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create("foobar", "foobar")))
@@ -107,7 +108,7 @@ public class SqsMessageQueueReceiverEndpointIntegrationTest {
 
     @Test
     public void shouldRetryAfterTimeout() throws ExecutionException, InterruptedException {
-        //given queue returns error on first request, ok on second request
+        //given queue returns error on first request, ok on second request (see stub controller below)
         returnError = ImmutableList.of(true, false);
         final String expectedPayload = "some payload: " + LocalDateTime.now();
         sqsSender.send(message("test-key-shouldSendAndReceiveSqsMessage", expectedPayload)).join();
@@ -154,6 +155,7 @@ public class SqsMessageQueueReceiverEndpointIntegrationTest {
                 return new ResponseEntity<Void>(HttpStatus.BAD_GATEWAY);
             }
 
+            // get actual sqs response from localstack and transform to JSON
             ReceiveMessageResponse receiveMessageResponse = asyncClient.receiveMessage(receiveMessageRequest).get();
             return ResponseEntity.ok(mockedJsonResponse(receiveMessageResponse.messages().get(0)));
         }
@@ -163,22 +165,24 @@ public class SqsMessageQueueReceiverEndpointIntegrationTest {
         }
 
         private String mockedJsonResponse(software.amazon.awssdk.services.sqs.model.Message message) {
-            return "{\n" +
-                    "    \"Messages\": [\n" +
-                    "        {\n" +
-                    "            \"Attributes\": {\n" +
-                    "                \"SenderId\": \"AIDASSYFHUBOBT7F4XT75\",\n" +
-                    "                \"ApproximateFirstReceiveTimestamp\": \"1677112433437\",\n" +
-                    "                \"ApproximateReceiveCount\": \"1\",\n" +
-                    "                \"SentTimestamp\": \"1677112427387\"\n" +
-                    "            },\n" +
-                    "            \"Body\": \"" + message.body() + "\",\n" +
-                    "            \"MD5OfBody\": \"" + message.md5OfBody() + "\",\n" +
-                    "            \"MessageId\": \"219f8380-5770-4cc2-8c3e-5c715e145f5e\",\n" +
-                    "            \"ReceiptHandle\": \"AQEBaZ+j5qUoOAoxlmrCQPkBm9njMWXqemmIG6shMHCO6fV20JrQYg/AiZ8JELwLwOu5U61W+aIX5Qzu7GGofxJuvzymr4Ph53RiR0mudj4InLSgpSspYeTRDteBye5tV/txbZDdNZxsi+qqZA9xPnmMscKQqF6pGhnGIKrnkYGl45Nl6GPIZv62LrIRb6mSqOn1fn0yqrvmWuuY3w2UzQbaYunJWGxpzZze21EOBtywknU3Je/g7G9is+c6K9hGniddzhLkK1tHzZKjejOU4jokaiB4nmi0dF3JqLzDsQuPF0Gi8qffhEvw56nl8QCbluSJScFhJYvoagGnDbwOnd9z50L239qtFIgETdpKyirlWwl/NGjWJ45dqWpiW3d2Ws7q\"\n" +
-                    "        }\n" +
-                    "    ]\n" +
-                    "}";
+            return String.format("""
+                    {
+                        "Messages": [
+                            {
+                                "Attributes": {
+                                    "SenderId": "AIDASSYFHUBOBT7F4XT75",
+                                    "ApproximateFirstReceiveTimestamp": "1677112433437",
+                                    "ApproximateReceiveCount": "1",
+                                    "SentTimestamp": "1677112427387"
+                                },
+                                "Body": "%s",
+                                "MD5OfBody": "%s",
+                                "MessageId": "219f8380-5770-4cc2-8c3e-5c715e145f5e",
+                                "ReceiptHandle": "AQEBaZ+j5qUoOAoxlmrCQPkBm9njMWXqemmIG6shMHCO6fV20JrQYg/AiZ8JELwLwOu5U61W+aIX5Qzu7GGofxJuvzymr4Ph53RiR0mudj4InLSgpSspYeTRDteBye5tV/txbZDdNZxsi+qqZA9xPnmMscKQqF6pGhnGIKrnkYGl45Nl6GPIZv62LrIRb6mSqOn1fn0yqrvmWuuY3w2UzQbaYunJWGxpzZze21EOBtywknU3Je/g7G9is+c6K9hGniddzhLkK1tHzZKjejOU4jokaiB4nmi0dF3JqLzDsQuPF0Gi8qffhEvw56nl8QCbluSJScFhJYvoagGnDbwOnd9z50L239qtFIgETdpKyirlWwl/NGjWJ45dqWpiW3d2Ws7q"
+                            }
+                        ]
+                    }
+                    """, message.body(), message.md5OfBody());
         }
     }
 }
