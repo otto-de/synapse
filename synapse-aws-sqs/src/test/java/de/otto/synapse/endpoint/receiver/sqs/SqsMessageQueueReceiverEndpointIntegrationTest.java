@@ -30,7 +30,6 @@ import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.model.GetQueueUrlRequest;
-import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 
@@ -38,7 +37,6 @@ import java.net.URI;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -148,7 +146,7 @@ public class SqsMessageQueueReceiverEndpointIntegrationTest {
         @Autowired
         private SqsAsyncClient asyncClient;
 
-        @RequestMapping(value = "/**", produces = {"text/xml"})
+        @RequestMapping(value = "/**", produces = {"application/x-amz-json-1.0"})
         @ResponseBody
         public ResponseEntity<?> getResponse(@RequestBody String body, HttpServletRequest request) throws InterruptedException, ExecutionException {
 
@@ -157,42 +155,30 @@ public class SqsMessageQueueReceiverEndpointIntegrationTest {
             }
 
             ReceiveMessageResponse receiveMessageResponse = asyncClient.receiveMessage(receiveMessageRequest).get();
-            return ResponseEntity.ok(mockedXmlResponse(receiveMessageResponse.messages().get(0)));
+            return ResponseEntity.ok(mockedJsonResponse(receiveMessageResponse.messages().get(0)));
         }
 
         public static int getCount() {
             return count.get();
         }
 
-        private String mockedXmlResponse(software.amazon.awssdk.services.sqs.model.Message message) {
-            return "<ReceiveMessageResponse xmlns=\"http://queue.amazonaws.com/doc/2012-11-05/\">\n" +
-                    "              <ReceiveMessageResult>\n" +
-                    "                <Message>\n" +
-                    "                  <MessageId>" + message.messageId() + "</MessageId>\n" +
-                    "                  <ReceiptHandle>" + message.receiptHandle() + "</ReceiptHandle>\n" +
-                    "                  <MD5OfBody>" + message.md5OfBody() + "</MD5OfBody>\n" +
-                    "                  <Body>" + message.body() + "</Body>\n" +
-                    "                  \n" +
-                    "                  <MD5OfMessageAttributes>" + message.md5OfMessageAttributes() + "</MD5OfMessageAttributes>\n" +
-                    "                 " + mockedXmlMessageAttributes(message.messageAttributes()) +
-                    "                </Message>\n" +
-                    "              </ReceiveMessageResult>\n" +
-                    "              <ResponseMetadata>\n" +
-                    "                <RequestId>00000000-0000-0000-0000-000000000000</RequestId>\n" +
-                    "              </ResponseMetadata>\n" +
-                    "            </ReceiveMessageResponse>";
-        }
-
-        private String mockedXmlMessageAttributes(Map<String, MessageAttributeValue> messageAttributes) {
-            return messageAttributes.keySet().stream().map(key ->
-                    "<MessageAttribute>\n" +
-                            "                         <Name>" + key + "</Name>\n" +
-                            "                         <Value>\n" +
-                            "                           <DataType>" + messageAttributes.get(key).dataType() + "</DataType>\n" +
-                            "                           <StringValue>" + messageAttributes.get(key).stringValue() + "</StringValue>\n" +
-                            "                         </Value>\n" +
-                            "                       </MessageAttribute>\\n"
-            ).collect(joining());
+        private String mockedJsonResponse(software.amazon.awssdk.services.sqs.model.Message message) {
+            return "{\n" +
+                    "    \"Messages\": [\n" +
+                    "        {\n" +
+                    "            \"Attributes\": {\n" +
+                    "                \"SenderId\": \"AIDASSYFHUBOBT7F4XT75\",\n" +
+                    "                \"ApproximateFirstReceiveTimestamp\": \"1677112433437\",\n" +
+                    "                \"ApproximateReceiveCount\": \"1\",\n" +
+                    "                \"SentTimestamp\": \"1677112427387\"\n" +
+                    "            },\n" +
+                    "            \"Body\": \"" + message.body() + "\",\n" +
+                    "            \"MD5OfBody\": \"" + message.md5OfBody() + "\",\n" +
+                    "            \"MessageId\": \"219f8380-5770-4cc2-8c3e-5c715e145f5e\",\n" +
+                    "            \"ReceiptHandle\": \"AQEBaZ+j5qUoOAoxlmrCQPkBm9njMWXqemmIG6shMHCO6fV20JrQYg/AiZ8JELwLwOu5U61W+aIX5Qzu7GGofxJuvzymr4Ph53RiR0mudj4InLSgpSspYeTRDteBye5tV/txbZDdNZxsi+qqZA9xPnmMscKQqF6pGhnGIKrnkYGl45Nl6GPIZv62LrIRb6mSqOn1fn0yqrvmWuuY3w2UzQbaYunJWGxpzZze21EOBtywknU3Je/g7G9is+c6K9hGniddzhLkK1tHzZKjejOU4jokaiB4nmi0dF3JqLzDsQuPF0Gi8qffhEvw56nl8QCbluSJScFhJYvoagGnDbwOnd9z50L239qtFIgETdpKyirlWwl/NGjWJ45dqWpiW3d2Ws7q\"\n" +
+                    "        }\n" +
+                    "    ]\n" +
+                    "}";
         }
     }
 }
