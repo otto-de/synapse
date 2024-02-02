@@ -1,5 +1,8 @@
 # Release Notes
 
+# 0.32.0
+* Upgrade to spring-boot 3.2.2
+
 # 0.31.0
 * Dependency updates
   * aws-sdk 2.22.9 changes communication format for sqs from XML to JSON
