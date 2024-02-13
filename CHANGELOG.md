@@ -1,5 +1,8 @@
 # Release Notes
 
+# 0.32.1
+* Fix warnings that the bean post processors are declared through a non-static factory method
+
 # 0.32.0
 * Upgrade to spring-boot 3.2.2
 

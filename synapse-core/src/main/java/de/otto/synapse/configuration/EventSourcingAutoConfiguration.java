@@ -54,7 +54,7 @@ public class EventSourcingAutoConfiguration {
 
     @Bean
     @Role(ROLE_INFRASTRUCTURE)
-    public EventSourceConsumerBeanPostProcessor eventSourceConsumerAnnotationBeanPostProcessor() {
+    public static EventSourceConsumerBeanPostProcessor eventSourceConsumerAnnotationBeanPostProcessor() {
         return new EventSourceConsumerBeanPostProcessor();
     }
 

@@ -113,7 +113,7 @@ public class SynapseAutoConfiguration {
      */
     @Bean
     @Role(ROLE_INFRASTRUCTURE)
-    public MessageInterceptorBeanPostProcessor messageInterceptorBeanPostProcessor() {
+    public static MessageInterceptorBeanPostProcessor messageInterceptorBeanPostProcessor() {
         return new MessageInterceptorBeanPostProcessor();
     }
 

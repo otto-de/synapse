@@ -31,7 +31,7 @@ public class MessageQueueReceiverEndpointAutoConfiguration {
 
     @Bean
     @Role(ROLE_INFRASTRUCTURE)
-    public MessageQueueConsumerBeanPostProcessor messageQueueConsumerAnnotationBeanPostProcessor() {
+    public static MessageQueueConsumerBeanPostProcessor messageQueueConsumerAnnotationBeanPostProcessor() {
         return new MessageQueueConsumerBeanPostProcessor();
     }
 

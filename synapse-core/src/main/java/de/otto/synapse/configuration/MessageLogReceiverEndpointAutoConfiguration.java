@@ -12,7 +12,7 @@ public class MessageLogReceiverEndpointAutoConfiguration {
 
     @Bean
     @Role(ROLE_INFRASTRUCTURE)
-    public MessageLogConsumerBeanPostProcessor messageLogConsumerAnnotationBeanPostProcessor() {
+    public static MessageLogConsumerBeanPostProcessor messageLogConsumerAnnotationBeanPostProcessor() {
         return new MessageLogConsumerBeanPostProcessor();
     }
 
