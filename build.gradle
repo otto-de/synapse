@@ -20,7 +20,7 @@ plugins {
     id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
 }
 
-version = '0.32.1-SNAPSHOT'
+version = '0.32.1'
 group = 'de.otto.synapse'
 
 ext {
