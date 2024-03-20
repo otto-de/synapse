@@ -26,7 +26,7 @@ group = 'de.otto.synapse'
 ext {
     awsSdkVersion = "2.23.14"
     springBootVersion = "3.2.2"
-    edisonVersion = "3.2.0"
+    edisonVersion = "3.2.2"
     testcontainersVersion = "1.19.4"
 }
 
