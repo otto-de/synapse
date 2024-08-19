@@ -1,5 +1,9 @@
 # Release Notes
 
+# 0.33.0
+* Update to Spring Boot 3.3.2 and Edison 3.3.0
+* Dependency updates
+
 # 0.32.1
 * Fix warnings that the bean post processors are declared through a non-static factory method
 
