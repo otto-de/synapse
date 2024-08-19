@@ -5,7 +5,7 @@ dependencies {
     api project(':synapse-aws-auth:')
 
     implementation "jakarta.annotation:jakarta.annotation-api:3.0.0"
-    implementation "com.google.guava:guava:33.1.0-jre"
+    implementation "com.google.guava:guava:33.3.0-jre"
     implementation "software.amazon.awssdk:kinesis"
     implementation "software.amazon.awssdk:netty-nio-client"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
