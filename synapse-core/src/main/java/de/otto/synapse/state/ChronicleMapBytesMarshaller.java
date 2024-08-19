@@ -30,7 +30,7 @@ public final class ChronicleMapBytesMarshaller<V> implements
     }
 
     @Override
-    public V read(Bytes in, V using) {
+    public V read(Bytes<?> in, V using) {
         try {
             return objectMapper.readValue(in.inputStream(), clazz);
         } catch (IOException e) {
@@ -39,7 +39,7 @@ public final class ChronicleMapBytesMarshaller<V> implements
     }
 
     @Override
-    public void write(Bytes out, V toWrite) {
+    public void write(Bytes<?> out, V toWrite) {
         try {
             objectMapper.writeValue(out.writer(), toWrite);
         } catch (IOException e) {
