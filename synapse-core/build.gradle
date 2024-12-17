@@ -8,7 +8,7 @@ configurations.configureEach {
 
 dependencies {
     // This dependency is exported to consumers, that is to say found on their compile classpath.
-    api 'com.google.guava:guava:33.3.1-jre'
+    api 'com.google.guava:guava:33.4.0-jre'
     api "org.springframework.boot:spring-boot"
     api "org.springframework.boot:spring-boot-autoconfigure"
 
