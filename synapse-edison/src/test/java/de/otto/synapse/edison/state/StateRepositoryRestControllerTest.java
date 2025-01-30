@@ -91,7 +91,7 @@ public class StateRepositoryRestControllerTest {
                 .andExpect(
                         status().isOk())
                 .andExpect(
-                        content().string("{\"entity\":\"one\",\"_links\":{\"self\":{\"href\":\"http://localhost/internal/test/staterepositories/first\"},\"collection\":{\"href\":\"http://localhost/internal/staterepositories/test{?page,pageSize}\",\"templated\":true}}}"));
+                        content().json("{\"entity\":\"one\",\"_links\":{\"self\":{\"href\":\"http://localhost/internal/test/staterepositories/first\"},\"collection\":{\"href\":\"http://localhost/internal/staterepositories/test{?page,pageSize}\",\"templated\":true}}}"));
     }
 
     @Test

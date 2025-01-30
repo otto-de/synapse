@@ -1,4 +1,7 @@
 # Release Notes
+* Update to Spring Boot 3.4.2
+* Update to Edison 3.4.2
+* Update to AWS SDK 2.30.8
 
 # 0.33.0
 * Update to Spring Boot 3.3.2 and Edison 3.3.0

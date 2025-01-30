@@ -61,9 +61,9 @@ public class HistoryControllerTest {
                 .perform(get("/internal/history/foo/4711"))
                 .andDo(log())
                 .andExpect(status().isOk())
-                .andExpect(content().string(is("{\"history\":{\"entityId\":\"4711\",\"entries\":[" +
+                .andExpect(content().json("{\"history\":{\"entityId\":\"4711\",\"entries\":[" +
                         "{\"messageKey\":\"4711\",\"messagePayload\":{\"price\":45},\"senderTimestamp\":null,\"receiverTimestamp\":null,\"channelName\":\"test-products\",\"diffs\":[{\"key\":\"price\",\"previousValue\":46,\"newValue\":45,\"equal\":false}]}," +
-                        "{\"messageKey\":\"4711\",\"messagePayload\":{\"price\":42},\"senderTimestamp\":null,\"receiverTimestamp\":null,\"channelName\":\"test-products\",\"diffs\":[{\"key\":\"price\",\"previousValue\":45,\"newValue\":42,\"equal\":false}]}]}}")));
+                        "{\"messageKey\":\"4711\",\"messagePayload\":{\"price\":42},\"senderTimestamp\":null,\"receiverTimestamp\":null,\"channelName\":\"test-products\",\"diffs\":[{\"key\":\"price\",\"previousValue\":45,\"newValue\":42,\"equal\":false}]}]}}"));
     }
 
     public History someHistory() {
