@@ -19,7 +19,7 @@ on:
 
 jobs:
   build:
-    runs-on: Ubuntu-20.04
+    runs-on: ubuntu-latest
     env:
       AWS_REGION: eu-central-1
     steps:
