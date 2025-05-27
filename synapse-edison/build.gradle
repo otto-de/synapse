@@ -7,7 +7,7 @@ dependencies {
     implementation "org.springframework:spring-context"
     implementation "software.amazon.awssdk:s3"
     implementation "software.amazon.awssdk:kinesis"
-    implementation "de.otto.edison:edison-hal:2.1.1"
+    implementation "de.otto.edison:edison-hal:2.2.0"
     implementation "io.micrometer:micrometer-core"
 
     testImplementation project(':synapse-testsupport:')
