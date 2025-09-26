@@ -1,5 +1,8 @@
 # OTTO Synapse
 
+> [!IMPORTANT]  
+> Synapse was archived, as it is not in use at OTTO any more. If you want to take over the maintenance, feel free to contact us via opensource@otto.de.
+
 Eventsourcing & message passing for Spring Boot microservices.
 
 [![Build](https://github.com/otto-de/synapse/workflows/Build/badge.svg)](https://github.com/otto-de/synapse/actions?query=workflow%3ABuild&branch=main)
